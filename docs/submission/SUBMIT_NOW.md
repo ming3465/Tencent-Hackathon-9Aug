@@ -1,148 +1,72 @@
 # Kampung SG — Submission Runbook (TheTwoGuys)
 
-Deadline is today. This is the only checklist you need. Work top to bottom.
+> **Status as of 2026-08-01.** The submission form is NOT yet released — the
+> organisers delayed it on credit issues and will announce it in Discord.
+> Working assumption: the window opens on short notice and closes around
+> **Aug 7–8**; finalists ~Aug 7±, Singapore Demo Day ~Aug 16. **Be
+> submission-ready by Aug 5.** This file is the single checklist for that
+> window. Strategy lives in `docs/WINNING_PLAYBOOK.md`; outstanding product
+> work in `docs/IMPROVEMENTS.md`.
 
----
+## ⏰ Daily until the form drops (5 min/day)
+
+- [ ] Check Discord (`discord.gg/5aE7nB78K`) and email for the form.
+- [ ] Check the portal `tch.cloud.tencent.com` — the 赛事资料 section has a
+      downloadable Game Development Challenge handbook with the full fine
+      print. **Fetch it the day it appears; read the IP/T&C terms.**
+- [ ] The moment the form drops: screenshot it, read every required field,
+      confirm the real deadline and timezone, and tell the AI agent so the
+      checklist below can be re-verified against the actual fields.
 
 ## Deliverable status
 
-| # | Required by the brief | Status |
+| # | Required | Status |
 | --- | --- | --- |
-| 1 | **Game Web Link** | ✅ **DONE** — https://ming3465.github.io/Tencent-Hackathon-9Aug/ (HTTP 200, HTTPS enforced, auto-redeploys on every push to `main`) |
-| 2 | **Project Introduction Deck (PPT)** | ⚠️ **BUILT, needs 2 fields** — `docs/deck/Kampung SG-Project Introduction Deck-TheTwoGuys.pptx` + `.pdf`. Slides 7 and 8 have `FILL:` markers. |
-| 3 | **Game Demo Video** | ❌ **NOT RECORDED** — shot-by-shot script ready at `docs/submission/VIDEO_SCRIPT.md` |
-| + | Social bonus (+5) | ❌ **NOT POSTED** — copy ready at `docs/submission/SOCIAL_POST.md` |
+| 1 | **Game Web Link** | ✅ https://ming3465.github.io/Tencent-Hackathon-9Aug/ — auto-deploys from `main`. Judge path: append `?demo=1` (see `docs/DEMO_MODE.md`). |
+| 2 | **Project Introduction Deck (PPT)** | ✅ `docs/deck/Kampung SG-Project Introduction Deck-TheTwoGuys.pptx` + `.pdf`, team details in. ⚠️ Numbers drift — re-export before submitting (see "Final re-verification"). |
+| 3 | **Game Demo Video** | ❌ **NOT RECORDED — the critical item.** Beat sheet: `docs/WINNING_PLAYBOOK.md` §4. Shoot on `?demo=1`. Name it `Kampung SG-Game Demo Video-TheTwoGuys.mp4`. |
+| + | Social bonus (+5) | ❌ Copy ready in `docs/submission/SOCIAL_POST.md`. Confirmed hashtags: `#CodeBuddy #腾讯云黑客松` (+ event tags) on Xiaohongshu / YouTube / X. Post before submission, screenshot each. |
 
-Required filename pattern is `[Project Name]-[Deliverable Name]-[Team Name]`.
-The deck files are already named correctly. Name the video:
+## USER actions before the window (owner: you two)
 
-```
-Kampung SG-Game Demo Video-TheTwoGuys.mp4
-```
+| # | Action | Time | Notes |
+| --- | --- | --- | --- |
+| U1 | **One genuine CodeBuddy pass + export the chat history.** | 1–2 h | The published mainland rules list CodeBuddy chat history as a submission artifact; our only artifact today is the documented *failure*. Use the ready-made prompt in `docs/prompts/codebuddy-age-signal.txt` (age-signalling task). Keep the failure log too — the story is "what worked, what didn't, both documented". |
+| U2 | **Record the demo video** on `?demo=1`. | ~1 day | Beat sheet in the playbook §4: cold open on golden hour, three resident beats, AI-receipts montage quoting the rules verbatim, 8–10 s end slate with QR. Keep a local MP4; upload YouTube early; consider an unlisted Bilibili mirror. |
+| U3 | **Playtest with 3–5 real older adults** (a grandparent counts). | half day | Consent script in `docs/PLAYTEST_PROTOCOL.md`. Capture: short quotes, one photo (with consent), one design change made from feedback. Quotes about fun/recognition only — never anything medical. |
+| U4 | **Miora key art** (miora.design, 1,000 free credits on signup). | 1 h | Poster / social image / deck hero. Log every prompt in `docs/AI_USAGE_LOG.md`. Feeds U5. |
+| U5 | **Social posts** on all three platforms with the confirmed hashtags. | 1 h | Before submission. While there, spend 15 min scanning the hashtags for rival entries — free competitor intel. |
+| U6 | **EdgeOne deploy** (optional but Shenzhen-proofing). | 1–2 h | `edgeone login -s global` then deploy `dist` with **`-a overseas`** (never the default `global` — its free URL 401s after 3 h). Keep GitHub Pages as fallback; print both URLs. |
+| U7 | **Submit early**, verify every link logged-out, save the confirmation. | 1 h | File names must follow `[Kampung SG]-[Deliverable]-[TheTwoGuys]`. |
 
----
+## AI-agent actions before the window
 
-## Do these in this order
+- [ ] Prepare deck re-export the day of submission (numbers drift; see below).
+- [ ] Add playtest evidence slide once U3 happens (quotes + the one change).
+- [ ] Add the "rules verbatim" AI-compliance line to the deck if not already
+      present after the handbook is read (see playbook §2 action 9).
+- [ ] Density pass on the judge path (IMPROVEMENTS P1) if time remains after
+      the video exists — never instead of it.
 
-### 1. Open the submission form — 5 min — **DO THIS FIRST**
-
-Nobody has looked at it. Confirm registration went through, confirm the real
-deadline and timezone, and read every required field. This is the only failure
-mode that can zero a finished submission, and five minutes buys certainty.
-Discord invite from the brief: `https://discord.gg/5aE7nB78K`
-
-### 2. Send me two things — 2 min
-
-1. **Both team members' names + one-line roles** (e.g. "design & direction",
-   "engineering & AI workflow")
-2. **A contact email** for the team slide
-
-I will fill them into the deck and re-export both files in under a minute.
-Until then the deck says `FILL:` on slide 8, which reads as abandonment.
-
-Also tell me your **playtest answer** for slide 7: if nobody has played it,
-I will write "No human playtest was conducted before submission" — stating that
-plainly is worth more than an empty bullet, and far more than an invented one.
-
-### 3. Record the demo video — 40 min
-
-Follow `docs/submission/VIDEO_SCRIPT.md`. It has exact timecodes, the keyboard
-route through the map, word-for-word narration timed at ~2.5 words/second, and
-caption text.
-
-- Record with **Cmd-Shift-5** on macOS, or `screencapture -v out.mov`
-- Use a browser window ~1300px wide — narrower than 1000px triggers the mobile
-  layout and hides the journal
-- Record the **deployed link**, not the dev server
-- `ffmpeg` is installed if you need to trim or convert
-
-Two beats that earn the most and did not exist this morning — make sure they
-are in the cut:
-- **A resident says something different after you act on their invitation.**
-  Uncle Ravi opens with "Ah, a new face. Help me decide what goes on the board?"
-  and afterwards says "Two neighbours signed up while you were walking around."
-  That is the "intelligent NPCs" the 40-point criterion names.
-- **The golden-hour transition** when your third activity lands and the whole
-  estate fades to dusk. It is the single most cinematic moment in the game.
-
-### 4. Submit — 15 min
-
-Upload the link, the video, and the deck. **Submit before you do anything
-optional below.** Save the confirmation screenshot and timestamp.
-
----
-
-## Optional, only after you have submitted
-
-### 5. Social bonus (+5) — 20 min
-
-Copy is written in `docs/submission/SOCIAL_POST.md`, character-counted against
-X's weighting. Required hashtags: `#CodeBuddy #WorkBuddy #Miora
-#TencentCloudHackathon`.
-
-**Read the honesty note in that file before posting.** The required hashtags
-include tools we did not use today. The file gives you a one-line disclosure
-that keeps the tags without claiming the tools. A judge who catches a false
-AI-tool claim will take far more than 5 points off.
-
-### 6. EdgeOne mirror — 25 min — **read the trap first**
-
-The brief suggests EdgeOne, so a working EdgeOne link earns goodwill with
-Tencent judges. GitHub Pages already satisfies the deliverable, so this is
-upside only.
-
-> ⚠️ **The trap:** the CLI defaults to `-a global`, which means "including
-> Chinese mainland". That region requires real-name verification and MIIT ICP
-> filing, **and its free preview URL returns 401 after three hours.** A link
-> that dies three hours after you submit it is a silent catastrophe.
->
-> **Always pass `-a overseas`.**
+## Final re-verification (run on submission day, before export)
 
 ```bash
-npm install -g edgeone
-edgeone login -s global
-npm run build
-edgeone makers deploy ./dist -n kampung-sg-thetwoguys -a overseas -e production
+npm run typecheck && npm test && npm run build && npm audit && npm run smoke
 ```
 
-Signup at `edgeone.ai/register` needs no credit card and no ID. If it works,
-send me the URL and I will add it to the deck as a mirror. **If it stalls for
-more than 25 minutes, abandon it** — the submitted link stays GitHub Pages.
+Then grep the deck source and submission docs for stale numbers (test count,
+smoke-check count, bundle size) and re-export:
 
-Do **not** use `pages.edgeone.ai/deploy` (the no-account drop): it expires
-after one hour.
-
-### 7. Art — only if you have real time left
-
-`docs/MIORA_ASSET_BIBLE.md` has the locked style key, palette, camera angle and
-prompt templates ready to paste. Worth knowing: **the brief says Miora grants
-1,000 credits automatically as welcome credits on new signup** — so a fresh
-signup is free, and it is the officially recommended tool, which scores better
-than any alternative. Two signups = 2,000 credits.
-
-Hard cap at 5 assets: title illustration, three resident portraits, one
-environment piece. Log every prompt. If nothing ships, the deck already tells
-the truth — all art is procedural — and that costs less than being caught.
-
----
-
-## Verified state, if a judge asks
-
-```
-npm run typecheck   passes, strict TypeScript
-npm test            65 tests across 3 files
-npm run build       24.35 kB initial JS, Phaser lazy-loaded
-npm audit           0 vulnerabilities
-npm run smoke       21/21 production-browser checks
+```bash
+node scripts/capture-deck.mjs && <venv>/bin/python scripts/build-pptx.py
+# + Chrome --headless --print-to-pdf for the PDF (see git history for the exact command)
 ```
 
-`npm run smoke` is self-contained — it builds, starts its own preview server,
-drives real headless Chrome through a full playthrough plus a second
-playthrough, and shuts down. Anyone can run that one command and see it pass.
+Current truth as of 2026-08-01: **70 tests · 22 smoke checks · 0 vulnerabilities**.
+If those numbers appear anywhere as something else, fix before submitting.
 
-## What we deliberately do not claim
+## Claim boundaries (unchanged, non-negotiable)
 
-No human playtest. No generated art asset ships. No second CodeBuddy run — its
-credits stayed exhausted and none were bought. No medical, cognitive, or
-dementia claim of any kind. All of this is stated plainly in the deck, the AI
-evidence page, and the usage log rather than papered over.
+No medical/cognitive/dementia claims. No invented playtests, users, metrics, or
+AI-tool runs. Demo mode is a pacing device — never claim the full game is
+3 minutes. The CodeBuddy failure stays documented; honesty is the strategy.

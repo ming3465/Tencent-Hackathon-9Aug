@@ -1,0 +1,23 @@
+Read docs/IMPROVEMENTS.md (constraints section) and src/game/sandboxScene.ts
+before changing anything. Then implement exactly one bounded task and stop.
+
+TASK: Age-signal the characters in src/game/sandboxScene.ts. All art must stay
+procedural (drawn in code, zero image assets).
+
+Requirements:
+- The three activity residents (Aunty Mei, Uncle Ravi, Mdm Siti) and the older
+  ambient neighbours (Uncle Seng, Auntie Rosnah, Pak Yusof, Coach Meng) must
+  read as older adults at game scale: silver/grey hair tones, small posture
+  offset, and one dignified accessory each drawn in code (e.g. glasses, hand
+  fan, flat cap, walking cane held upright). Wei Ling stays visibly younger.
+- Vary silhouettes: at least two heights and two builds across the cast.
+- At least one clearly female elder must keep a distinct silhouette.
+- Dignity rule (non-negotiable): props are tools, never punchlines. No frailty
+  stereotypes, no hunched caricature, no medical imagery.
+- Keep the existing ink outline weight (INK constant) and the four skin tones
+  already present. Do not change any dialogue, collision, or game rules.
+- Do not add dependencies, assets, or new files beyond what the task needs.
+
+Acceptance: npm run typecheck passes; npm test passes (70 tests); npm run smoke
+passes (22 checks). Report files changed and the checks you ran. Do not claim
+success unless the checks actually pass. Stop after this task.
