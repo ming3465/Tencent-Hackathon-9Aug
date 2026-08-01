@@ -27,9 +27,25 @@ only after a separate consent and privacy plan is approved.
 
 ## Primary Event Source
 
-The local hackathon brief states that Age Well concerns security,
+The official hackathon brief states that Age Well concerns security,
 independence, dignity, purpose, social bonds, and technology that enables rather
 than excludes older adults. It recommends CodeBuddy for Game Track code and
-Miora for Game Track art.
+Miora for Game Track art, and suggests EdgeOne for deployment.
 
-Source: `C:\Users\User\Downloads\AI_CAN_DO_IT___“Age_Well”_Social_Good_Challenge_Singapore.pdf`
+**Source:** *AI CAN DO IT | Tencent Cloud Hackathon - "Age Well" Social Good
+Challenge Singapore*, official brief PDF, 2026.
+
+### Verified quotations
+
+These are the only external claims the project makes. Both were read directly
+from the brief on 2026-08-01 and are quoted verbatim.
+
+| Page | Verbatim quotation | Where we use it |
+| --- | --- | --- |
+| 5 | "Singapore is ageing faster than any other nation on Earth. By 2030, nearly one in four citizens will be aged 65 and above." | Deck slide 2 |
+| 4 | "'Age Well' is not merely about adding years to life, but about adding life to years" | Framing only, not quoted on a slide |
+
+Do not cite any ageing, health, or population figure that is not in this table.
+If a number is needed that the brief does not contain, find a primary government
+source and add it here with its own verbatim quotation before it appears in any
+deliverable.

@@ -33,8 +33,8 @@ Measured on the repo at `2026-08-01`, immediately before this copy was written:
 | Type checking | passes clean, strict TypeScript | `npm run typecheck` |
 | Dependency audit | **0 vulnerabilities** | `npm audit` |
 | Initial JS | **24.35 kB** (8.85 kB gzip) | `npm run build` |
-| Lazy Phaser chunk | 1,498 kB (345.7 kB gzip), loads only after "Begin" | `npm run build` |
-| Browser smoke | **18 checks, 18 passing, 0 failing**, run 2026-08-01 against the **production** bundle | `npm run smoke` (`scripts/browser-smoke.mjs`, Node + Chrome DevTools Protocol, macOS/Linux) |
+| Lazy Phaser chunk | 1,498 kB (345.64 kB gzip), loads only after "Begin" | `npm run build` |
+| Browser smoke | **19 checks, 19 passing, 0 failing**, run 2026-08-01 against the **production** bundle | `npm run smoke` (`scripts/browser-smoke.mjs`, Node + Chrome DevTools Protocol, macOS/Linux) |
 | Audio | Web Audio API synthesis, **zero audio files shipped**, mute + music/effects sliders | `src/game/audio.ts` |
 | Live link | `https://ming3465.github.io/Tencent-Hackathon-9Aug/` — HTTP 200, HTTPS enforced | `curl -I` |
 | Repo | **public**: `https://github.com/ming3465/Tencent-Hackathon-9Aug` | open it in a signed-out browser |
@@ -75,7 +75,8 @@ Measured on the repo at `2026-08-01`, immediately before this copy was written:
 Full-bleed hero screenshot: the player standing at the void deck with a resident marker active and the
 three Kampung Spirit meters visible in the HUD. Pick the frame with the most colour and the most
 recognisable Singapore geometry. Overlay the tagline bottom-left; keep the live URL small, bottom-right.
-[PLACEHOLDER: capture at 1280×720 logical or wider — narrower triggers the compact layout at 1000px]
+Capture at 1280×720 logical or wider — narrower triggers the compact layout at 1000px. The smoke run
+already writes usable frames (`hero-day.png`, `hero-evening.png`) via `npm run smoke`; not a placeholder.
 
 ---
 
@@ -85,7 +86,7 @@ recognisable Singapore geometry. Overlay the tagline bottom-left; keep the live 
 **One In Four, By 2030**
 
 ### Bullets
-- By 2030, nearly one in four Singapore citizens aged 65+
+- Singapore: by 2030, nearly one in four citizens aged 65+
 - Age Well means dignity, purpose, independence, social bonds
 - The gap is belonging, not supervision
 - We design for contributors, never for patients
@@ -99,7 +100,7 @@ citizens will be aged 65 and above."* The slide bullet must stay inside that wor
 say "nearly", and keep the page reference on the slide.
 
 ### Speaker note (~20s)
-> The brief for this challenge gives us the number: by 2030, nearly one in four Singapore citizens will
+> The brief for this challenge gives us the number: by 2030, nearly one in four citizens will
 > be aged 65 and above. It defines Age Well as security, independence, dignity, purpose, social bonds,
 > and technology that includes rather than excludes. So we asked one question: what does a game look
 > like if it treats an older resident as the person with the expertise, and the neighbourhood as the
@@ -186,7 +187,7 @@ estate now grows them."*
 
 | AI produced | What our gate caught | What we did | Verification after |
 | --- | --- | --- | --- |
-| 10 files incl. the match engine that still ships today | 2 TypeScript errors · 3 failing tests · 1 unused dependency · 4 audit findings · 1 stale-timer race | Rewrote tests off an invalid constant-RNG shuffle assumption; added session-aware timer cancellation | `tsc --noEmit` clean · 59/59 tests · `npm audit` 0 · 18/18 production-bundle browser smoke |
+| 10 files incl. the match engine that still ships today | 2 TypeScript errors · 3 failing tests · 1 unused dependency · 4 audit findings · 1 stale-timer race | Rewrote tests off an invalid constant-RNG shuffle assumption; added session-aware timer cancellation | `tsc --noEmit` clean · 59/59 tests · `npm audit` 0 · 19/19 production-bundle browser smoke |
 
 ### Which agent wrote which part — say it this precisely, never fuse it into one line
 
@@ -247,15 +248,15 @@ unretouched screenshot. It is the most credible pixel in the entire deck.
 ### Bullets
 - Vite + TypeScript + Phaser 3, strict mode
 - 24.35 kB initial JS; engine loads only on play
-- 59 tests, 0 vulnerabilities, 18/18 production browser checks
+- 59 tests, 0 vulnerabilities, 19/19 production browser checks
 - Keyboard, touch, or Journal — all finish the game
 - Zero accounts, zero analytics, zero data collected
 
 ### Speaker note (~20s)
 > The title screen ships 24.35 kilobytes of JavaScript; the game engine only downloads when you press
 > Begin, which matters on an older phone. Fifty-nine deterministic tests cover the domain logic, and an
-> eighteen-check Chrome DevTools smoke run drives the real production bundle, ending at a 360-pixel
-> viewport — all eighteen passing on the first of August. There is no
+> nineteen-check Chrome DevTools smoke run drives the real production bundle, ending at a 360-pixel
+> viewport — all nineteen passing on the first of August. There is no
 > backend, no account, no analytics, and no personal data — nothing about you leaves your device,
 > because nothing is ever collected. All sound is synthesised at runtime, so there are no audio files
 > to fail to load.
@@ -280,23 +281,23 @@ otherwise delete this line rather than promising a mirror]
 
 ### Bullets
 - Automated: typecheck, 59 tests, 0-vulnerability audit
-- Automated: 18/18 browser checks on the production bundle
+- Automated: 19/19 browser checks on the production bundle
 - Automated: no overflow at 360px, touch targets ≥ 44px
 - We never claim to prevent, delay, or treat dementia
 - No human playtest yet — the social claim stays a hypothesis
 
-### What the 18 automated browser checks actually assert — do not overstate this list
+### What the 19 automated browser checks actually assert — do not overstate this list
 
-Run: `npm run smoke` (`scripts/browser-smoke.mjs`), 2026-08-01, **18 checks, 18 passing, 0 failing**,
+Run: `npm run smoke` (`scripts/browser-smoke.mjs`), 2026-08-01, **19 checks, 19 passing, 0 failing**,
 against the production build. The two numbers people get wrong:
 
 - The touch-target assertion is **≥ 44px**, not 48px. Never print 48.
-- **Focus restoration is NOT one of the 18 checks.** It belongs on the manual list below, or nowhere.
+- **Focus restoration is NOT one of the 19 checks.** It belongs on the manual list below, or nowhere.
 
 Verified automatically: title renders · start button present · exactly one Phaser canvas · world reports
 ready (`aria-busy` cleared) · sound controls present · spawn offers the first resident · keyboard movement
 reaches a different activity · touch d-pad movement returns to the resident · dialogue opens with two
-choices · a choice raises a Kampung Spirit meter · three activities unlock the evening · the evening
+choices · Space activates a focused dialogue choice · a choice raises a Kampung Spirit meter · three activities unlock the evening · the evening
 reflection names the player's real choices · exiting destroys the canvas · a second playthrough starts
 with one canvas · the second playthrough resets the meters · no horizontal overflow at 360px · all
 visible touch targets ≥ 44px · no uncaught console errors.
@@ -314,7 +315,7 @@ deck means the harness asserted it.)*
 
 ### Speaker note (~20s)
 > We want to be precise about the difference between what we built and what we've proven. The software
-> is verified: type checking, fifty-nine tests, a clean audit, and eighteen out of eighteen browser
+> is verified: type checking, fifty-nine tests, a clean audit, and nineteen out of nineteen browser
 > checks on the real production bundle — including no horizontal overflow at three-sixty pixels and
 > every touch target at forty-four pixels or larger. The social impact is a design hypothesis: we have
 > run zero human playtests, so we are not going to stand here and tell you it works on people. The
@@ -328,13 +329,15 @@ deck means the harness asserted it.)*
 | What we can support | What we deliberately do not claim |
 | --- | --- |
 | Strict TypeScript, 59 passing tests, 0 vulnerabilities | Any cognitive, memory, or dementia benefit |
-| 18/18 browser checks on the production bundle, incl. 360px layout and ≥ 44px touch targets | Any clinical or health outcome |
+| 19/19 browser checks on the production bundle, incl. 360px layout and ≥ 44px touch targets | Any clinical or health outcome |
 | Completable by keyboard, touch, or Journal shortcuts alone | Any measured user or population result |
 | No data collection, no account, no network dependency | Any playtest finding — **zero human playtests have been run** |
 | Choice-driven evening reflection built from real player choices | Any accessibility outcome the harness does not assert (e.g. focus restoration, screen-reader wording) |
 
 ### Speaker note addendum — say this if a judge asks "why so cautious?"
-> Because the evidence on brain-training transfer to everyday functioning is genuinely uncertain, and
+> Because we are a game team, not a clinical one. We have run no study and we hold no outcome data, so
+> we are not qualified to say what a game does to anyone's cognition. We scope what we claim to what we
+> can observe. Overclaiming on ageing is how good intentions become harm, and
 > overclaiming on ageing is how good intentions become harm. Our research guardrails file bans those
 > claims by name. We would rather score lower on a slide than be wrong about someone's health.
 
@@ -373,15 +376,20 @@ the guardrails and the consent-and-privacy protocol exist as artifacts, not as a
 ### Credits and licences block to print small on the slide
 - **Engine:** Phaser 3 (MIT). **Build:** Vite, TypeScript, Vitest (MIT).
 - **Audio:** synthesised at runtime with the Web Audio API. No third-party audio files, no licence obligations.
-- **Art:** [PLACEHOLDER: "Procedural Phaser geometry, authored by the team" OR "Procedural geometry plus
-  N assets generated with Miora" — state exactly what shipped]
-- **Ageing statistic:** official "AI CAN DO IT" — "Age Well" Social Good Challenge Singapore hackathon brief.
-- **AI assistance:** CodeBuddy CLI 2.127.0 and AI coding agents under human direction; full record in
-  `docs/AI_USAGE_LOG.md`.
+- **Art:** procedural Phaser geometry, authored in code under the team's art direction. No image assets
+  shipped; no Miora-generated assets shipped.
+- **Ageing statistic:** official "AI CAN DO IT" — "Age Well" Social Good Challenge Singapore hackathon
+  brief (2026), p.5.
+- **AI assistance, in order of use, all under human direction:** CodeBuddy CLI 2.127.0 (the ten pre-pivot
+  files), then OpenCode (post-pivot sandbox rebuild), then Claude Code (Opus 5) for the 2026-08-01 audio,
+  residents, lighting, smoke harness, deploy workflow and deck. Full record in `docs/AI_USAGE_LOG.md`.
 - Kampung SG is an original work. It does not copy any existing game's art, characters, maps, or branding.
 
 ### Visual
-Two team cards with [PLACEHOLDER: photo or initial avatar] and role. Large QR code to the live game —
+Two team cards with [FILL: photo or initial avatar] and role — names and roles are still unknown, so the
+cards ship as `FILL:` markers until a human supplies them; never invent a name to fill the layout.
+Large QR code to the live game (`docs/deck/qr.png` is already wired into slide 8 of the built deck —
+scan it with a real phone before export and confirm it lands on the Pages URL) —
 judges scan it on their phone from their seat, which is exactly the behaviour you want. Repeat the URL
 as text under the QR in case the code scans badly on a projector.
 
@@ -389,11 +397,31 @@ as text under the QR in case the code scans badly on a projector.
 
 ## Appendix — export checklist
 
-- [ ] Every `[PLACEHOLDER: ...]` filled or its bullet deleted. **Search the exported file for the word
-      "PLACEHOLDER" before submitting.**
-- [ ] Numbers re-verified against `npm test` / `npm run build` / `npm audit` on the final commit.
+- [ ] Every `[FILL: ...]` filled or its bullet deleted. **Search the exported file for both "FILL" and
+      "PLACEHOLDER" before submitting.** Still open: both team member names, both roles, contact email,
+      EdgeOne mirror (if any).
+- [ ] Numbers re-verified against `npm test` / `npm run build` / `npm audit` / `npm run smoke` on the
+      final commit.
+- [ ] No slide says **48px** — the harness asserts **≥ 44px**.
+- [ ] No slide lists **focus restoration** as verified — it is not one of the 19 automated checks.
+- [ ] No slide cites `scripts/browser-smoke.ps1` — superseded, pre-pivot, tested a deleted game.
+- [ ] No slide says "Built with CodeBuddy, Phaser 3, Vite, TypeScript" or any other fused tool+stack line.
+- [ ] The "1 in 4 by 2030" slide carries the page reference (brief, 2026, **p.5**).
 - [ ] Live URL opened in a private window on a phone, not just on the build machine.
-- [ ] Miora / CodeBuddy claims match what actually ran — cross-check `docs/AI_USAGE_LOG.md`.
+- [ ] Repo URL opened signed-out to confirm it is still public.
+- [ ] Miora / CodeBuddy claims match what actually ran — cross-check `docs/AI_USAGE_LOG.md`. As of
+      2026-08-01: zero Miora assets, zero human playtests.
 - [ ] Filenames exactly `Kampung SG-Project Introduction Deck-TheTwoGuys.pptx` / `.pdf`.
 - [ ] Speaker notes pasted into the PowerPoint notes pane for every slide.
 - [ ] Deck opened once in the installed PowerPoint to confirm it renders before submitting.
+
+### Export status — 2026-08-01
+
+Both deliverables are **already exported** and live in `docs/deck/`:
+
+- `docs/deck/Kampung SG-Project Introduction Deck-TheTwoGuys.pptx` — 8 slides, speaker notes in the notes pane
+- `docs/deck/Kampung SG-Project Introduction Deck-TheTwoGuys.pdf`
+
+Built from `docs/deck/index.html` via `scripts/capture-deck.mjs` (slide PNGs land in `docs/deck/slides/`)
+then `scripts/build-pptx.py`. **Any change in this copy file must be re-applied to `docs/deck/index.html`
+and both files re-exported** — otherwise the shipped deck and this source of truth drift apart.

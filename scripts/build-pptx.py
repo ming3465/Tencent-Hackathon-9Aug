@@ -50,7 +50,7 @@ NOTES = [
     # 6 - Engineering
     "The title screen ships 24 kilobytes of JavaScript; the game engine only downloads when you "
     "press Begin, which matters on an older phone. Fifty-nine deterministic tests cover the domain "
-    "logic, and an eighteen-check Chrome DevTools smoke test drives the real production bundle at "
+    "logic, and a nineteen-check Chrome DevTools smoke test drives the real production bundle at "
     "a 360-pixel viewport. There is no backend, no account, no analytics and no personal data, "
     "because nothing is ever collected. All sound is synthesised at runtime, so there are no audio "
     "files to fail to load.",

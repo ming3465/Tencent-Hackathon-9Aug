@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "smoke": "node scripts/browser-smoke.mjs"
+    "smoke": "npm run build && node scripts/browser-smoke.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

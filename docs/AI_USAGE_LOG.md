@@ -365,8 +365,8 @@ correction and pivot passes.
   audio, and 31 in matchEngine. The suite was 42 tests before today.
 - `npm audit`: zero known vulnerabilities.
 - `npm run build`: passed. Initial JavaScript 24.35 kB, 8.85 kB gzip. Lazy
-  Phaser chunk 1,498 kB, 345.7 kB gzip.
-- `npm run smoke`: 18 checks, 18 passing, 0 failing, run on 2026-08-01
+  Phaser chunk 1,498 kB, 345.64 kB gzip.
+- `npm run smoke`: 19 checks, 19 passing, 0 failing, run on 2026-08-01
   against the production bundle. The touch-target assertion in that harness
   is a 44px minimum, not 48px.
 - Live deployment at https://ming3465.github.io/Tencent-Hackathon-9Aug/
@@ -389,7 +389,7 @@ are not evidence for the current game.
 - The Phaser lazy chunk still triggers Vite's standard 500 kB chunk warning.
 - Screen-reader announcement checks and a 200 percent zoom pass still require
   a human.
-- Focus restoration is not one of the 18 automated smoke checks and was not
+- Focus restoration is not one of the 19 automated smoke checks and was not
   automatically verified today.
 - FILL - team member names, roles, and email addresses are still unknown and
   are marked as FILL in the deck. The team name is TheTwoGuys.

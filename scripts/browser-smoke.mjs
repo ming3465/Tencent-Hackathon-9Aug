@@ -7,8 +7,11 @@
  * Puppeteer dependency to install or audit.
  *
  * Usage:
- *   npm run build && npm run preview -- --port 4173 &
- *   node scripts/browser-smoke.mjs [--url http://127.0.0.1:4173] [--shots dist-shots]
+ *   npm run smoke
+ *
+ * Self-contained: builds nothing, but starts its own `vite preview` if the
+ * target URL is not already being served, and shuts it down afterwards. Pass
+ * --url to point at an already-running server (or a deployed build) instead.
  */
 
 import { spawn } from "node:child_process";
@@ -150,6 +153,40 @@ class Session {
     return true;
   }
 }
+
+/** Starts a preview server only if nothing is already answering on the URL. */
+async function ensureServer(url) {
+  try {
+    await fetch(url);
+    return null;
+  } catch {
+    // Nothing listening yet - start our own.
+  }
+
+  const port = new URL(url).port || "4173";
+  const server = spawn(
+    "node_modules/.bin/vite",
+    ["preview", "--port", port, "--strictPort", "--host", "127.0.0.1"],
+    { stdio: "ignore" }
+  );
+
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    await sleep(500);
+    try {
+      await fetch(url);
+      return server;
+    } catch {
+      // keep waiting
+    }
+  }
+
+  server.kill();
+  throw new Error(
+    `Could not start a preview server on ${url}. Run "npm run build" first.`
+  );
+}
+
+const server = await ensureServer(APP_URL);
 
 const chrome = spawn(
   CHROME,
@@ -363,6 +400,7 @@ try {
 } finally {
   cdp?.close();
   chrome.kill();
+  server?.kill();
 }
 
 console.log("\nKampung SG production-browser smoke\n");
