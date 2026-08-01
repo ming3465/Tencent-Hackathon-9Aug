@@ -1,0 +1,28 @@
+Implement Phase 1 only: a complete graybox vertical slice for Kampung SG.
+
+Requirements:
+
+- Use Vite, TypeScript, Phaser, and Vitest.
+- Provide a responsive title screen.
+- Provide Solo and same-device Together Mode selection.
+- Include one placeholder Singapore chapter with six matching pairs.
+- Implement flip, match, mismatch, turn, completion, restart, replay, and
+  return-to-title states.
+- Support mouse, touch, and keyboard operation.
+- Keep menus and controls as semantic HTML outside the Phaser canvas.
+- Isolate core matching logic from rendering.
+- Add unit tests for shuffle determinism, valid pairs, turn handling, matching,
+  mismatching, restart, and completion.
+- Add typed configuration for card count, preview duration, mismatch delay, and
+  future hint timing.
+- Do not add final artwork, a backend, analytics, medical claims, adaptive
+  difficulty, or unapproved dependencies.
+
+Before editing, inspect the workspace and state the acceptance criteria. Build
+the smallest end-to-end version. Run type checking, tests, and a production
+build. Self-review the result against `docs/ACCESSIBILITY.md` and
+`docs/QA_CHECKLIST.md`, update `docs/AI_USAGE_LOG.md`, and stop after Phase 1.
+
+In the final response report files changed, commands and results, manual checks
+still required, known limitations, and the recommended next phase. Do not claim
+success unless the checks actually pass.

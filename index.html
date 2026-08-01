@@ -1,0 +1,1226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#173f4f" />
+    <title>Kampung SG - Every Small Act Grows the Kampung</title>
+    <style>
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+
+      :root {
+        --night: #102e3b;
+        --ink: #173f4f;
+        --ink-soft: #365f69;
+        --cream: #fff6dc;
+        --paper: #fffbef;
+        --sand: #ead9b7;
+        --coral: #d96756;
+        --coral-dark: #ad493d;
+        --gold: #f2b84b;
+        --teal: #287271;
+        --green: #5b8c5a;
+        --purple: #775b91;
+        --white: #ffffff;
+        --shadow: 0 18px 50px rgba(16, 46, 59, 0.2);
+        --radius-lg: 24px;
+        --radius-md: 14px;
+        --font-display: Georgia, "Times New Roman", serif;
+        --font-ui: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+        font-size: 18px;
+      }
+
+      html {
+        min-width: 320px;
+        background: var(--night);
+      }
+
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 85% 5%, rgba(242, 184, 75, 0.2), transparent 26rem),
+          var(--night);
+        font-family: var(--font-ui);
+      }
+
+      button {
+        min-width: 48px;
+        min-height: 48px;
+        border: 0;
+        border-radius: 12px;
+        font: inherit;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      :focus-visible {
+        outline: 4px solid var(--gold);
+        outline-offset: 4px;
+      }
+
+      .skip-link {
+        position: fixed;
+        top: 0.75rem;
+        left: -100vw;
+        z-index: 1000;
+        padding: 0.75rem 1rem;
+        color: var(--night);
+        background: var(--gold);
+        border-radius: 8px;
+        font-weight: 800;
+      }
+
+      .skip-link:focus {
+        left: 0.75rem;
+      }
+
+      .screen {
+        display: none;
+        width: 100%;
+        min-width: 0;
+      }
+
+      .screen.active {
+        display: block;
+      }
+
+      .primary-button {
+        padding: 0.9rem 1.25rem;
+        color: var(--white);
+        background: var(--coral);
+        box-shadow: 0 5px 0 var(--coral-dark);
+        transition: transform 140ms ease, box-shadow 140ms ease;
+      }
+
+      .primary-button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 7px 0 var(--coral-dark);
+      }
+
+      .secondary-button {
+        padding: 0.75rem 1rem;
+        color: var(--ink);
+        background: var(--cream);
+        border: 2px solid var(--ink);
+      }
+
+      .eyebrow {
+        margin: 0 0 0.7rem;
+        color: var(--coral);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      /* Title */
+      #screen-title {
+        min-height: 100dvh;
+        padding: clamp(1rem, 4vw, 3rem);
+        background:
+          linear-gradient(115deg, rgba(255, 246, 220, 0.98), rgba(255, 251, 239, 0.95)),
+          var(--cream);
+      }
+
+      .title-shell {
+        width: min(1180px, 100%);
+        min-height: calc(100dvh - clamp(2rem, 8vw, 6rem));
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(430px, 1.1fr);
+        align-items: center;
+        gap: clamp(2rem, 5vw, 5rem);
+      }
+
+      .title-copy h1 {
+        max-width: 8ch;
+        margin: 0;
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-size: clamp(3.6rem, 8vw, 7rem);
+        line-height: 0.84;
+        letter-spacing: -0.055em;
+      }
+
+      .title-copy h1 span {
+        display: block;
+        color: var(--coral);
+        font-family: var(--font-ui);
+        font-size: 0.28em;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        margin-bottom: 0.6rem;
+      }
+
+      .title-lede {
+        max-width: 36rem;
+        margin: 1.5rem 0 1.6rem;
+        color: var(--ink-soft);
+        font-family: var(--font-display);
+        font-size: clamp(1.15rem, 2.3vw, 1.5rem);
+        line-height: 1.55;
+      }
+
+      .title-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .control-note {
+        margin: 1rem 0 0;
+        color: var(--ink-soft);
+        font-size: 0.84rem;
+        font-weight: 700;
+      }
+
+      .title-world {
+        position: relative;
+        min-height: 560px;
+        overflow: hidden;
+        border: 7px solid var(--ink);
+        border-radius: 40px 40px 120px 40px;
+        background:
+          linear-gradient(180deg, #84c4c2 0 42%, #b6ce83 42% 100%);
+        box-shadow: var(--shadow);
+        isolation: isolate;
+      }
+
+      .title-sun {
+        position: absolute;
+        top: 48px;
+        right: 64px;
+        width: 112px;
+        height: 112px;
+        border: 6px solid var(--ink);
+        border-radius: 50%;
+        background: var(--gold);
+        z-index: -1;
+      }
+
+      .title-hdb {
+        position: absolute;
+        top: 120px;
+        left: 46px;
+        width: 68%;
+        height: 245px;
+        border: 6px solid var(--ink);
+        background: #f0dfc2;
+        box-shadow: 18px 18px 0 rgba(23, 63, 79, 0.18);
+      }
+
+      .title-hdb::before {
+        content: "";
+        position: absolute;
+        top: -26px;
+        left: -18px;
+        width: calc(100% + 36px);
+        height: 26px;
+        border: 6px solid var(--ink);
+        background: var(--coral);
+      }
+
+      .title-windows {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 18px;
+        padding: 34px;
+      }
+
+      .title-windows span {
+        aspect-ratio: 1;
+        border: 4px solid var(--ink);
+        background: #7297a8;
+      }
+
+      .title-windows span:nth-child(3n) {
+        background: var(--gold);
+      }
+
+      .title-path {
+        position: absolute;
+        left: -5%;
+        bottom: 28px;
+        width: 110%;
+        height: 125px;
+        border: 6px solid var(--ink);
+        background: var(--sand);
+        transform: rotate(-4deg);
+      }
+
+      .title-garden {
+        position: absolute;
+        right: 28px;
+        bottom: 105px;
+        width: 190px;
+        height: 125px;
+        border: 6px solid var(--ink);
+        border-radius: 18px;
+        background:
+          radial-gradient(circle, var(--gold) 0 7px, transparent 8px) 6px 6px / 42px 42px,
+          var(--green);
+        transform: rotate(3deg);
+      }
+
+      .title-person {
+        position: absolute;
+        left: 47%;
+        bottom: 105px;
+        width: 52px;
+        height: 72px;
+        border: 5px solid var(--ink);
+        border-radius: 18px 18px 10px 10px;
+        background: var(--teal);
+        z-index: 3;
+      }
+
+      .title-person::before {
+        content: "";
+        position: absolute;
+        top: -35px;
+        left: 5px;
+        width: 32px;
+        height: 32px;
+        border: 5px solid var(--ink);
+        border-radius: 50%;
+        background: #d9a77f;
+      }
+
+      .title-sign {
+        position: absolute;
+        left: 34px;
+        bottom: 30px;
+        z-index: 4;
+        padding: 0.55rem 0.75rem;
+        color: var(--cream);
+        background: var(--ink);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        transform: rotate(2deg);
+      }
+
+      /* Sandbox */
+      #screen-sandbox {
+        min-height: 100dvh;
+        padding: 0.75rem;
+        background:
+          linear-gradient(rgba(255, 246, 220, 0.94), rgba(255, 246, 220, 0.94)),
+          repeating-linear-gradient(90deg, transparent 0 48px, rgba(23, 63, 79, 0.06) 49px 50px);
+      }
+
+      .topbar {
+        width: min(1500px, 100%);
+        margin: 0 auto 0.75rem;
+        display: grid;
+        grid-template-columns: auto minmax(340px, 1fr) auto;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+        border: 3px solid var(--ink);
+        border-radius: var(--radius-md);
+        background: var(--paper);
+        box-shadow: 0 5px 0 var(--ink);
+      }
+
+      .brand-lockup {
+        display: flex;
+        align-items: baseline;
+        gap: 0.55rem;
+        white-space: nowrap;
+      }
+
+      .brand-lockup strong {
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-size: 1.45rem;
+      }
+
+      .brand-lockup span {
+        color: var(--coral);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .meters {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(100px, 1fr));
+        gap: 0.55rem;
+      }
+
+      .meter {
+        min-width: 0;
+      }
+
+      .meter-label {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 0.28rem;
+        color: var(--ink-soft);
+        font-size: 0.72rem;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .meter-track {
+        height: 12px;
+        overflow: hidden;
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        background: var(--sand);
+      }
+
+      .meter-fill {
+        display: block;
+        width: 0;
+        height: 100%;
+        background: var(--coral);
+        transition: width 300ms ease;
+      }
+
+      .meter:nth-child(2) .meter-fill { background: var(--teal); }
+      .meter:nth-child(3) .meter-fill { background: var(--purple); }
+
+      .topbar-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .icon-button {
+        padding: 0.6rem 0.8rem;
+        color: var(--cream);
+        background: var(--ink);
+        font-size: 0.78rem;
+      }
+
+      .game-layout {
+        width: min(1500px, 100%);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 310px;
+        gap: 0.75rem;
+        align-items: stretch;
+      }
+
+      .world-shell {
+        position: relative;
+        min-width: 0;
+        height: clamp(520px, calc(100dvh - 115px), 780px);
+        overflow: hidden;
+        border: 5px solid var(--ink);
+        border-radius: var(--radius-lg);
+        background: #b7cf8a;
+        box-shadow: var(--shadow);
+      }
+
+      #sandbox-stage {
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        touch-action: none;
+      }
+
+      #sandbox-stage canvas {
+        display: block !important;
+      }
+
+      #sandbox-stage:focus-visible {
+        outline-offset: -8px;
+      }
+
+      .area-chip {
+        position: absolute;
+        top: 0.8rem;
+        left: 0.8rem;
+        z-index: 4;
+        margin: 0;
+        padding: 0.45rem 0.7rem;
+        color: var(--cream);
+        background: rgba(16, 46, 59, 0.9);
+        border: 2px solid var(--gold);
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .interaction-prompt {
+        position: absolute;
+        left: 50%;
+        bottom: 1rem;
+        z-index: 6;
+        width: min(620px, calc(100% - 2rem));
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.7rem 0.8rem 0.7rem 1rem;
+        color: var(--cream);
+        background: rgba(16, 46, 59, 0.94);
+        border: 3px solid var(--gold);
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(16, 46, 59, 0.3);
+        transform: translate(-50%, calc(100% + 2rem));
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 180ms ease, opacity 180ms ease;
+      }
+
+      .interaction-prompt.visible {
+        transform: translate(-50%, 0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .interaction-prompt p {
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 800;
+      }
+
+      .interact-button {
+        flex: 0 0 auto;
+        min-height: 48px;
+        padding: 0.55rem 0.8rem;
+        color: var(--night);
+        background: var(--gold);
+      }
+
+      .touch-controls {
+        position: absolute;
+        inset: auto 0.75rem 0.75rem;
+        z-index: 5;
+        display: none;
+        justify-content: space-between;
+        align-items: end;
+        pointer-events: none;
+      }
+
+      .dpad {
+        display: grid;
+        grid-template-columns: repeat(3, 52px);
+        grid-template-rows: repeat(2, 52px);
+        gap: 5px;
+        pointer-events: auto;
+      }
+
+      .dpad button {
+        color: var(--cream);
+        background: rgba(16, 46, 59, 0.88);
+        border: 2px solid var(--gold);
+        touch-action: none;
+        user-select: none;
+      }
+
+      .dpad [data-direction="up"] { grid-column: 2; }
+      .dpad [data-direction="left"] { grid-column: 1; grid-row: 2; }
+      .dpad [data-direction="down"] { grid-column: 2; grid-row: 2; }
+      .dpad [data-direction="right"] { grid-column: 3; grid-row: 2; }
+
+      .touch-interact {
+        width: 72px;
+        height: 72px;
+        color: var(--night);
+        background: rgba(242, 184, 75, 0.94);
+        border: 4px solid var(--ink);
+        border-radius: 50%;
+        pointer-events: auto;
+        touch-action: none;
+      }
+
+      .journal-panel {
+        display: flex;
+        min-height: 0;
+        flex-direction: column;
+        overflow: hidden;
+        border: 4px solid var(--ink);
+        border-radius: var(--radius-lg);
+        background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+
+      .journal-header {
+        padding: 1rem 1rem 0.8rem;
+        color: var(--cream);
+        background: var(--ink);
+      }
+
+      .journal-header p {
+        margin: 0 0 0.25rem;
+        color: var(--gold);
+        font-size: 0.7rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .journal-header h2 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: 1.55rem;
+      }
+
+      .journal-close {
+        display: none;
+        position: absolute;
+        top: 0.6rem;
+        right: 0.6rem;
+        color: var(--ink);
+        background: var(--gold);
+      }
+
+      .journal-list {
+        flex: 1;
+        margin: 0;
+        padding: 0.65rem;
+        overflow-y: auto;
+        list-style: none;
+      }
+
+      .journal-item {
+        display: grid;
+        grid-template-columns: 42px 1fr;
+        gap: 0.65rem;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 2px dashed var(--sand);
+      }
+
+      .journal-status {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        color: var(--ink);
+        background: var(--sand);
+        border: 2px solid var(--ink);
+        border-radius: 50%;
+        font-size: 0.67rem;
+        font-weight: 900;
+      }
+
+      .journal-item.completed .journal-status {
+        color: var(--cream);
+        background: var(--green);
+      }
+
+      .journal-item h3 {
+        margin: 0 0 0.18rem;
+        font-size: 0.9rem;
+      }
+
+      .journal-item p {
+        margin: 0;
+        color: var(--ink-soft);
+        font-size: 0.76rem;
+        line-height: 1.35;
+      }
+
+      .journal-action {
+        min-height: 48px;
+        margin-top: 0.55rem;
+        padding: 0.45rem 0.65rem;
+        color: var(--cream);
+        background: var(--teal);
+        border: 2px solid var(--ink);
+        font-size: 0.72rem;
+      }
+
+      .evening-card {
+        margin: 0.65rem;
+        padding: 0.85rem;
+        border: 3px solid var(--ink);
+        border-radius: 14px;
+        background: var(--cream);
+      }
+
+      .evening-card p {
+        margin: 0 0 0.65rem;
+        color: var(--ink-soft);
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+
+      #btn-evening {
+        width: 100%;
+      }
+
+      /* Dialogs */
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: none;
+        place-items: center;
+        padding: 1rem;
+        background: rgba(10, 33, 43, 0.78);
+        backdrop-filter: blur(5px);
+      }
+
+      .modal.active {
+        display: grid;
+      }
+
+      .dialog-card {
+        width: min(680px, 100%);
+        max-height: min(760px, calc(100dvh - 2rem));
+        overflow-y: auto;
+        border: 5px solid var(--ink);
+        border-radius: 26px;
+        background: var(--paper);
+        box-shadow: 12px 12px 0 var(--gold);
+      }
+
+      .dialog-stripe {
+        height: 15px;
+        background: repeating-linear-gradient(90deg, var(--coral) 0 70px, var(--gold) 70px 140px, var(--teal) 140px 210px);
+      }
+
+      .dialog-content {
+        padding: clamp(1.1rem, 4vw, 2rem);
+      }
+
+      .dialog-kicker {
+        margin: 0 0 0.35rem;
+        color: var(--coral);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .dialog-content h2 {
+        margin: 0 0 0.8rem;
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-size: clamp(1.65rem, 5vw, 2.4rem);
+      }
+
+      .dialog-text {
+        margin: 0;
+        color: var(--ink-soft);
+        font-family: var(--font-display);
+        font-size: 1.08rem;
+        line-height: 1.6;
+      }
+
+      .dialog-choices {
+        display: grid;
+        gap: 0.7rem;
+        margin-top: 1.2rem;
+      }
+
+      .choice-button {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        text-align: left;
+        color: var(--ink);
+        background: var(--cream);
+        border: 3px solid var(--ink);
+        box-shadow: 4px 4px 0 var(--ink);
+      }
+
+      .choice-button:hover {
+        background: #ffe8ad;
+        transform: translate(-1px, -1px);
+        box-shadow: 6px 6px 0 var(--ink);
+      }
+
+      .dialog-footer {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 1.2rem;
+      }
+
+      /* Memory mini-game */
+      .memory-dialog {
+        width: min(760px, 100%);
+      }
+
+      .memory-header {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.85rem;
+      }
+
+      .memory-progress {
+        margin: 0;
+        padding: 0.4rem 0.6rem;
+        color: var(--cream);
+        background: var(--ink);
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 900;
+        white-space: nowrap;
+      }
+
+      #memory-board {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(70px, 1fr));
+        gap: 0.65rem;
+        margin: 1rem 0;
+      }
+
+      .memory-card {
+        aspect-ratio: 1;
+        padding: 0;
+        color: transparent;
+        background: var(--teal);
+        border: 3px solid var(--ink);
+        font-size: clamp(1.6rem, 6vw, 2.5rem);
+      }
+
+      .memory-card::before {
+        content: "?";
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      .memory-card[data-state="face-up"],
+      .memory-card[data-state="matched"] {
+        color: var(--ink);
+        background: var(--cream);
+      }
+
+      .memory-card[data-state="face-up"]::before,
+      .memory-card[data-state="matched"]::before {
+        content: "";
+      }
+
+      .memory-card[data-state="matched"] {
+        border-color: var(--green);
+        box-shadow: inset 0 0 0 4px var(--green);
+      }
+
+      .memory-actions,
+      .evening-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.65rem;
+      }
+
+      .memory-complete {
+        display: none;
+        margin: 1rem 0;
+        padding: 0.85rem;
+        color: var(--ink);
+        background: #dce9c5;
+        border: 3px solid var(--green);
+        border-radius: 12px;
+        font-weight: 800;
+      }
+
+      .memory-complete.visible {
+        display: block;
+      }
+
+      .evening-summary {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.6rem;
+        margin: 1.1rem 0;
+      }
+
+      .summary-stat {
+        padding: 0.8rem 0.5rem;
+        text-align: center;
+        border: 3px solid var(--ink);
+        border-radius: 12px;
+        background: var(--cream);
+      }
+
+      .summary-stat strong {
+        display: block;
+        font-family: var(--font-display);
+        font-size: 1.8rem;
+      }
+
+      .summary-stat span {
+        color: var(--ink-soft);
+        font-size: 0.7rem;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      #live-region {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+
+      @media (max-width: 1000px) {
+        .title-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .title-copy {
+          padding-top: 2rem;
+        }
+
+        .title-copy h1 {
+          max-width: none;
+        }
+
+        .title-world {
+          min-height: 440px;
+        }
+
+        .topbar {
+          grid-template-columns: 1fr auto;
+        }
+
+        .meters {
+          grid-column: 1 / -1;
+          grid-row: 2;
+        }
+
+        .game-layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .journal-panel {
+          position: fixed;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 80;
+          width: min(350px, calc(100% - 2rem));
+          border-radius: 24px 0 0 24px;
+          transform: translateX(calc(100% + 20px));
+          transition: transform 200ms ease;
+        }
+
+        .journal-panel.open {
+          transform: translateX(0);
+        }
+
+        .journal-close {
+          display: block;
+        }
+      }
+
+      @media (max-width: 680px) {
+        :root { font-size: 16px; }
+
+        #screen-title { padding: 1rem; }
+
+        .title-shell {
+          min-height: auto;
+          gap: 2rem;
+        }
+
+        .title-copy h1 {
+          font-size: clamp(3.4rem, 18vw, 5.2rem);
+        }
+
+        .title-world {
+          min-height: 360px;
+          border-width: 5px;
+          border-radius: 28px 28px 70px 28px;
+        }
+
+        .title-hdb {
+          top: 95px;
+          left: 25px;
+          width: 72%;
+          height: 170px;
+        }
+
+        .title-windows {
+          gap: 10px;
+          padding: 24px 18px;
+        }
+
+        .title-garden {
+          width: 140px;
+          height: 95px;
+          bottom: 80px;
+        }
+
+        #screen-sandbox {
+          padding: 0.4rem;
+        }
+
+        .topbar {
+          margin-bottom: 0.4rem;
+          padding: 0.55rem;
+          gap: 0.55rem;
+          border-width: 2px;
+          box-shadow: 0 3px 0 var(--ink);
+        }
+
+        .brand-lockup span { display: none; }
+        .brand-lockup strong { font-size: 1.15rem; }
+        .icon-button { padding: 0.45rem 0.55rem; }
+        .meter-label { font-size: 0.62rem; }
+
+        .world-shell {
+          height: min(67dvh, 610px);
+          min-height: 470px;
+          border-width: 3px;
+          border-radius: 18px;
+        }
+
+        .interaction-prompt {
+          bottom: 8.2rem;
+          align-items: stretch;
+        }
+
+        .interaction-prompt p {
+          font-size: 0.8rem;
+        }
+
+        .interaction-prompt .interact-button {
+          display: none;
+        }
+
+        .touch-controls {
+          display: flex;
+        }
+
+        #memory-board {
+          grid-template-columns: repeat(4, 1fr);
+          gap: 0.4rem;
+        }
+
+        .dialog-card {
+          border-width: 3px;
+          border-radius: 18px;
+          box-shadow: 7px 7px 0 var(--gold);
+        }
+
+        .evening-summary {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (pointer: coarse) {
+        .touch-controls {
+          display: flex;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <div id="live-region" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <main id="main" tabindex="-1">
+      <section id="screen-title" class="screen active" aria-labelledby="game-title">
+        <div class="title-shell">
+          <div class="title-copy">
+            <p class="eyebrow">A cozy Singapore neighbourhood sandbox</p>
+            <h1 id="game-title"><span>Tencent Cloud Hackathon</span>Kampung SG</h1>
+            <p class="title-lede">
+              Wander one HDB estate, meet the neighbours, and choose the small acts
+              that turn shared spaces into a community.
+            </p>
+            <div class="title-actions">
+              <button id="btn-start" class="primary-button" type="button">Begin a neighbourhood day</button>
+            </div>
+            <p class="control-note">Move with WASD or arrow keys. Interact with E, Space, or touch controls.</p>
+          </div>
+
+          <div class="title-world" aria-hidden="true">
+            <div class="title-sun"></div>
+            <div class="title-hdb">
+              <div class="title-windows">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+            <div class="title-path"></div>
+            <div class="title-garden"></div>
+            <div class="title-person"></div>
+            <div class="title-sign">EVERY SMALL ACT GROWS THE KAMPUNG</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-sandbox" class="screen" aria-label="Kampung SG neighbourhood">
+        <header class="topbar">
+          <div class="brand-lockup">
+            <strong>Kampung SG</strong>
+            <span>Day 1</span>
+          </div>
+
+          <div class="meters" aria-label="Kampung Spirit">
+            <div class="meter" id="meter-connection" role="progressbar" aria-label="Connection" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0">
+              <div class="meter-label"><span>Connection</span><span class="meter-value">0/6</span></div>
+              <div class="meter-track"><span class="meter-fill"></span></div>
+            </div>
+            <div class="meter" id="meter-purpose" role="progressbar" aria-label="Purpose" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0">
+              <div class="meter-label"><span>Purpose</span><span class="meter-value">0/6</span></div>
+              <div class="meter-track"><span class="meter-fill"></span></div>
+            </div>
+            <div class="meter" id="meter-comfort" role="progressbar" aria-label="Comfort" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0">
+              <div class="meter-label"><span>Comfort</span><span class="meter-value">0/6</span></div>
+              <div class="meter-track"><span class="meter-fill"></span></div>
+            </div>
+          </div>
+
+          <div class="topbar-actions">
+            <button id="btn-journal" class="icon-button" type="button" aria-expanded="false" aria-controls="journal-panel">Journal</button>
+            <button id="btn-return-title" class="icon-button" type="button">Exit</button>
+          </div>
+        </header>
+
+        <div class="game-layout">
+          <div class="world-shell">
+            <div id="sandbox-stage" tabindex="0" aria-label="Top-down neighbourhood. Use WASD or arrow keys to move and E or Space to interact."></div>
+            <p id="area-name" class="area-chip">Community Court</p>
+
+            <div id="interaction-prompt" class="interaction-prompt" aria-hidden="true">
+              <p id="nearby-text">Move closer to a neighbour or activity.</p>
+              <button id="btn-interact" class="interact-button" type="button">Interact</button>
+            </div>
+
+            <div class="touch-controls" aria-label="Touch movement controls">
+              <div class="dpad">
+                <button type="button" data-direction="up" aria-label="Move up">&uarr;</button>
+                <button type="button" data-direction="left" aria-label="Move left">&larr;</button>
+                <button type="button" data-direction="down" aria-label="Move down">&darr;</button>
+                <button type="button" data-direction="right" aria-label="Move right">&rarr;</button>
+              </div>
+              <button id="btn-touch-interact" class="touch-interact" type="button">Talk</button>
+            </div>
+          </div>
+
+          <aside id="journal-panel" class="journal-panel" aria-labelledby="journal-title" tabindex="-1">
+            <button id="btn-journal-close" class="journal-close" type="button" aria-label="Close journal">Close</button>
+            <div class="journal-header">
+              <p>Neighbourhood notes</p>
+              <h2 id="journal-title">Open Invitations</h2>
+            </div>
+            <ul class="journal-list">
+              <li id="journal-garden" class="journal-item" data-activity="garden">
+                <span class="journal-status">OPEN</span>
+                <div>
+                  <h3>Community Garden</h3>
+                  <p>Find Aunty Mei near the garden beds.</p>
+                  <button class="journal-action" type="button" data-journal-activity="garden">Open invitation</button>
+                </div>
+              </li>
+              <li id="journal-noticeboard" class="journal-item" data-activity="noticeboard">
+                <span class="journal-status">OPEN</span>
+                <div>
+                  <h3>Void-Deck Noticeboard</h3>
+                  <p>Uncle Ravi has space for a new invitation.</p>
+                  <button class="journal-action" type="button" data-journal-activity="noticeboard">Open invitation</button>
+                </div>
+              </li>
+              <li id="journal-safe-route" class="journal-item" data-activity="safe-route">
+                <span class="journal-status">OPEN</span>
+                <div>
+                  <h3>Shaded Route</h3>
+                  <p>Mdm Siti knows where the daily route needs care.</p>
+                  <button class="journal-action" type="button" data-journal-activity="safe-route">Open invitation</button>
+                </div>
+              </li>
+              <li id="journal-memory-table" class="journal-item" data-activity="memory-table">
+                <span class="journal-status">OPTION</span>
+                <div>
+                  <h3>Memory Table</h3>
+                  <p>A quiet matching activity waits at the void deck.</p>
+                  <button class="journal-action" type="button" data-journal-activity="memory-table">Open invitation</button>
+                </div>
+              </li>
+            </ul>
+            <div class="evening-card">
+              <p id="day-progress">Complete any 3 activities to gather at the void deck. 0 of 3 ready.</p>
+              <button id="btn-evening" class="primary-button" type="button" disabled>Gather for the evening</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <div id="dialog-overlay" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-speaker" aria-describedby="dialog-text">
+      <div class="dialog-card">
+        <div class="dialog-stripe"></div>
+        <div class="dialog-content">
+          <p id="dialog-kicker" class="dialog-kicker">Neighbourhood invitation</p>
+          <h2 id="dialog-speaker">Neighbour</h2>
+          <p id="dialog-text" class="dialog-text"></p>
+          <div id="dialog-choices" class="dialog-choices"></div>
+          <div class="dialog-footer">
+            <button id="btn-dialog-close" class="secondary-button" type="button">Maybe later</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="memory-overlay" class="modal" role="dialog" aria-modal="true" aria-labelledby="memory-title" aria-describedby="memory-intro">
+      <div class="dialog-card memory-dialog">
+        <div class="dialog-stripe"></div>
+        <div class="dialog-content">
+          <div class="memory-header">
+            <div>
+              <p class="dialog-kicker">Optional activity</p>
+              <h2 id="memory-title">The Memory Table</h2>
+            </div>
+            <p id="memory-progress" class="memory-progress">0 of 4 pairs</p>
+          </div>
+          <p id="memory-intro" class="dialog-text">Match the keepsakes at your own pace. There is no timer and no score.</p>
+          <div id="memory-board" role="group" aria-label="Memory matching cards"></div>
+          <p id="memory-complete" class="memory-complete">All pairs found. The table is ready for the next neighbours.</p>
+          <div class="memory-actions">
+            <button id="btn-memory-restart" class="secondary-button" type="button">New shuffle</button>
+            <button id="btn-memory-leave" class="secondary-button" type="button">Return to neighbourhood</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="evening-overlay" class="modal" role="dialog" aria-modal="true" aria-labelledby="evening-title" aria-describedby="evening-text">
+      <div class="dialog-card">
+        <div class="dialog-stripe"></div>
+        <div class="dialog-content">
+          <p class="dialog-kicker">Void deck, 6:30 PM</p>
+          <h2 id="evening-title">The block feels different tonight.</h2>
+          <p id="evening-text" class="dialog-text">Small choices have made more room for neighbours to contribute, rest, and meet.</p>
+          <div class="evening-summary">
+            <div class="summary-stat"><strong id="summary-connection">0</strong><span>Connection</span></div>
+            <div class="summary-stat"><strong id="summary-purpose">0</strong><span>Purpose</span></div>
+            <div class="summary-stat"><strong id="summary-comfort">0</strong><span>Comfort</span></div>
+          </div>
+          <div class="evening-actions">
+            <button id="btn-keep-exploring" class="secondary-button" type="button">Keep exploring</button>
+            <button id="btn-end-day" class="primary-button" type="button">End the day</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
