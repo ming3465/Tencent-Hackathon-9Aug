@@ -1,0 +1,75 @@
+MIORA KEY ART PROMPTS - Kampung SG
+===================================
+
+Where: miora.design (1,000 free credits on new signup - each of you sign up).
+What these are FOR: the deck hero image, the video end slate, the YouTube
+thumbnail, and the +5 social posts.
+
+What they are NOT for: the game itself. The build ships zero image assets and
+the deck says so - it is a selling point and an IP-cleanliness claim. Save
+outputs to docs/art/ (NOT public/), so nothing enters the shipped bundle.
+
+Log every generation in docs/AI_USAGE_LOG.md: prompt, date, selected vs
+rejected variants, and why. Rejections are evidence too.
+
+--------------------------------------------------------------------
+PROMPT 1 - MASTER KEY ART (generate this first; 16:9)
+--------------------------------------------------------------------
+
+Warm flat-design illustration of a Singapore HDB housing estate at golden
+hour. A cream apartment block with a coral-red roof edge, rows of square
+windows - some glowing warm gold - with bamboo laundry poles jutting from the
+windows, colourful clothes drying. Open void deck on pillars at ground level.
+In the foreground, a dignified silver-haired Singaporean elder holding a
+walking cane stands mid-conversation with a younger visitor on a sandy
+footpath; both relaxed, warm, equals. Around them: a broad flat-crowned rain
+tree, a community garden bed with neat soil rows and green seedlings, a small
+wooden bench.
+
+Style: cozy storybook flat illustration with bold, uniform deep-teal ink
+outlines (#173F4F) around every shape, simplified readable geometry, subtle
+grain texture. Strict palette: deep teal #173F4F, warm cream #FFF6DC, coral
+#D96756, golden yellow #F2B84B, community teal #287271, garden green #5B8C5A,
+soft purple #775B91, concrete sand #EAD9B7. Light from the upper left, long
+soft golden-hour glow. Calm, welcoming, lived-in, distinctly Singaporean
+without tourist cliches.
+
+No text, no lettering, no signage with words, no logo, no watermark, no UI,
+no photorealism, no 3D render, no anime, no caricature, no hospital or
+medical imagery, no frailty stereotypes - the elder is confident and at ease.
+
+--------------------------------------------------------------------
+PROMPT 2 - SOCIAL SQUARE (1:1, after Prompt 1 locks the look)
+--------------------------------------------------------------------
+
+Same style, palette, outlines, and golden-hour light as the approved key art.
+Close-up composition: the silver-haired elder and the younger visitor sharing
+a kopitiam round table with two cups of kopi, the HDB block with laundry
+poles softly behind them. Warm, unhurried, equals in conversation. Square
+composition with breathing room at the top. Same "No text..." block as
+Prompt 1.
+
+--------------------------------------------------------------------
+PROMPT 3 - THUMBNAIL PLATE (16:9, empty copy-space right)
+--------------------------------------------------------------------
+
+Same style, palette, outlines, and golden-hour light as the approved key art.
+The elder and visitor stand at the left third of the frame beside the garden
+bed; the right two-thirds is a calm, uncluttered golden sky and soft grass -
+deliberately empty for headline text to be added later in editing. Same
+"No text..." block as Prompt 1.
+
+--------------------------------------------------------------------
+ACCEPTANCE CHECKLIST (from docs/MIORA_ASSET_BIBLE.md, adapted)
+--------------------------------------------------------------------
+- Palette actually matches the hexes; outlines consistent everywhere.
+- The elder reads as dignified and active - reject anything frail, hunched,
+  hospital-adjacent, or cartoonishly aged.
+- Contemporary lightweight Singapore clothing, no ethnic-costume cliche.
+- No baked-in text or watermark anywhere (zoom in and check corners).
+- Light comes from the upper left.
+- Looks like OUR game's world (laundry poles, void deck, rain tree), not a
+  generic western village or a farming-game pastiche.
+
+Pick the best variant, note the generation link/ID, and drop finals into
+docs/art/ with names: key-art-16x9.png, social-1x1.png, thumb-plate-16x9.png.
