@@ -295,3 +295,109 @@ definition of done, and immediate handoffs.
 
 No unknown registration, team, credit, deployment, testing, or submission item
 was marked complete without user confirmation.
+
+## 2026-08-01 - Audio System, Living Estate, Node Smoke Harness, Deployment, and Deck
+
+**Tool:** Claude Code (Opus 5), working under human direction.
+
+**Context:** The user explicitly deprioritised CodeBuddy and Miora for this
+session because credits were unavailable. None were purchased, so neither tool
+was run today. Earlier history stands as already recorded: CodeBuddy CLI
+2.127.0 authored the initial ten pre-pivot files, and OpenCode performed the
+correction and pivot passes.
+
+**Implemented:**
+
+- Added `src/game/audio.ts`, a centralized Web Audio synthesis system with
+  separate music, sfx, and ui buses, a global mute, per-category volume,
+  per-sound throttling, and suspension while the browser tab is hidden. No
+  audio file is shipped; every sound is generated at runtime.
+- Added 17 unit tests for that system in `src/game/__tests__/audio.test.ts`.
+- Residents now wander, turn to face the player, and change their spoken line
+  after the player acts on their invitation. This replaces the fixed-position
+  residents noted as a limitation in the 2026-07-25 pivot entry.
+- Added a golden-hour lighting pass that fades the estate toward dusk when the
+  third activity unlocks.
+- Added character shadows, a walk bob, pond ripples, and butterflies as
+  ambient life.
+- Replaced the Windows-only PowerShell smoke test with a Node and Chrome
+  DevTools Protocol harness at `scripts/browser-smoke.mjs`, exposed as
+  `npm run smoke`, which runs on macOS and Linux.
+- Added a GitHub Pages auto-deploy workflow at `.github/workflows/deploy.yml`.
+- Built an 8-slide project introduction deck from `docs/deck/index.html` using
+  `scripts/capture-deck.mjs` and `scripts/build-pptx.py`, exported as
+  `docs/deck/Kampung SG-Project Introduction Deck-TheTwoGuys.pptx` and the
+  matching `.pdf`, with speaker notes in the PowerPoint notes pane. Its one
+  external statistic, "By 2030, nearly one in four citizens will be aged 65
+  and above," is quoted from the official "AI CAN DO IT" - "Age Well" Social
+  Good Challenge Singapore hackathon brief (2026), p.5.
+
+**Defects found and fixed by verification:**
+
+- The golden-hour overlay did not render at all in its first version. The
+  overlay was constructed with `fillAlpha` 0 while the tween animated the
+  GameObject's `alpha`, so the fill never drew at any tween value. The code
+  read as correct; the defect was caught only by inspecting an actual
+  smoke-test screenshot.
+- The first version of the smoke harness sized the overlay from
+  `camera.width` during `create()`, before canvas layout had settled.
+- A synthetic-pointer crash risk in `setPointerCapture` was surfaced by the
+  smoke test and guarded.
+
+**Files added or substantially changed:**
+
+- `src/game/audio.ts`
+- `src/game/__tests__/audio.test.ts`
+- `src/game/sandboxScene.ts`
+- `scripts/browser-smoke.mjs`
+- `scripts/capture-deck.mjs`
+- `scripts/build-pptx.py`
+- `.github/workflows/deploy.yml`
+- `package.json`
+- `docs/deck/index.html`
+- `docs/deck/Kampung SG-Project Introduction Deck-TheTwoGuys.pptx`
+- `docs/deck/Kampung SG-Project Introduction Deck-TheTwoGuys.pdf`
+
+**Verified results:**
+
+- `npm run typecheck`: passed under strict TypeScript.
+- `npm test`: 59 tests passed across three files - 11 in sandboxState, 17 in
+  audio, and 31 in matchEngine. The suite was 42 tests before today.
+- `npm audit`: zero known vulnerabilities.
+- `npm run build`: passed. Initial JavaScript 24.35 kB, 8.85 kB gzip. Lazy
+  Phaser chunk 1,498 kB, 345.7 kB gzip.
+- `npm run smoke`: 18 checks, 18 passing, 0 failing, run on 2026-08-01
+  against the production bundle. The touch-target assertion in that harness
+  is a 44px minimum, not 48px.
+- Live deployment at https://ming3465.github.io/Tencent-Hackathon-9Aug/
+  returned HTTP 200 with HTTPS enforced. The repository is public at
+  https://github.com/ming3465/Tencent-Hackathon-9Aug.
+
+**Superseded evidence:** `scripts/browser-smoke.ps1` is retained only as the
+pre-pivot PowerShell harness. It exercised the deleted card-matching build
+(12 cards, Together Mode, Solo Mode), which no longer exists, so its results
+are not evidence for the current game.
+
+**Known limitations:**
+
+- No human playtest has occurred. Zero older adults, or anyone else, have
+  played this build.
+- No Miora asset exists. `public/assets/miora/` still contains only its
+  README, and all visuals remain procedural.
+- No additional CodeBuddy run happened. Account credits remained exhausted and
+  none were purchased.
+- The Phaser lazy chunk still triggers Vite's standard 500 kB chunk warning.
+- Screen-reader announcement checks and a 200 percent zoom pass still require
+  a human.
+- Focus restoration is not one of the 18 automated smoke checks and was not
+  automatically verified today.
+- FILL - team member names, roles, and email addresses are still unknown and
+  are marked as FILL in the deck. The team name is TheTwoGuys.
+
+**Claim boundary:** This entry does not claim any human playtest, participant,
+user, or observer; any usage, engagement, wellbeing, or outcome metric; any
+Miora-generated asset; any CodeBuddy or Miora run on this date; any
+endorsement or third-party review; or any medical, cognitive, or
+dementia-related effect. The 18 smoke checks are automated browser assertions
+against the production bundle and are evidence that the build loads and
+responds, not evidence that it is enjoyable, accessible, or effective.

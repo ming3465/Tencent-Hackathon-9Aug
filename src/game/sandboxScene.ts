@@ -211,6 +211,16 @@ export class SandboxScene extends Phaser.Scene {
 
   setControlsEnabled(enabled: boolean): void {
     this.controlsEnabled = enabled;
+
+    // Phaser captures SPACE at the window, which would otherwise swallow the
+    // keypress that activates a focused dialogue button. Capture it only while
+    // the player is actually walking around, so overlays stay keyboard-operable.
+    const keyboard = this.input.keyboard;
+    if (keyboard) {
+      if (enabled) keyboard.addCapture([Phaser.Input.Keyboard.KeyCodes.SPACE]);
+      else keyboard.removeCapture([Phaser.Input.Keyboard.KeyCodes.SPACE]);
+    }
+
     if (!enabled && this.player) {
       this.player.setVelocity(0, 0);
       this.virtualDirection.set(0, 0);

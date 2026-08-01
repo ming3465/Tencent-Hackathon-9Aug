@@ -265,8 +265,15 @@ try {
   );
   await page.shot(`${SHOT_DIR}/04-dialogue.png`);
 
-  await page.eval(`document.querySelectorAll("#dialog-choices .choice-button")[0].click()`);
+  // The game tells players Space works, so a focused choice button must accept it.
+  await page.eval(`document.querySelectorAll("#dialog-choices .choice-button")[0].focus()`);
+  await page.key("keyDown", " ", "Space", 32);
+  await page.key("keyUp", " ", "Space", 32);
   await sleep(700);
+  check(
+    "Space activates a focused dialogue choice",
+    (await page.eval(`document.querySelectorAll("#dialog-choices .choice-button").length`)) === 0
+  );
   check(
     "Choice raises a Kampung Spirit meter",
     Number(await page.eval(`document.getElementById("summary-connection").textContent`)) > 0
