@@ -160,14 +160,14 @@ CodeBuddy CLI overran its turn limit and shipped 2 type errors, 3 failing tests,
 We caught all of it. That's the point.
 ```
 
-**4/5 — the gate** *(attach: terminal screenshot — typecheck clean, 59/59, audit 0)*
+**4/5 — the gate** *(attach: terminal screenshot — typecheck clean, 65/65, audit 0)*
 
 ```
 We treat AI output as a pull request, not a deliverable.
 
-Every agent run hits the same gate: tsc --noEmit → 59 unit tests → npm audit → a headless-Chrome smoke test on the PRODUCTION bundle.
+Every agent run hits the same gate: tsc --noEmit → 65 unit tests → npm audit → a headless-Chrome smoke test on the PRODUCTION bundle.
 
-Today: clean, 59/59, 0 vulnerabilities, 24.4 kB initial JS.
+Today: clean, 65/65, 0 vulnerabilities, 24.4 kB initial JS.
 ```
 
 **5/5 — link, limits, tags**
@@ -207,7 +207,7 @@ ready, which sheltered route home has shade at 2pm.
 No timer, no fail state, no score. Every choice is between two good options, and the
 evening reflection is assembled from what you actually chose.
 
-The engineering: 59 passing tests, zero npm vulnerabilities, 24.4 kB of initial
+The engineering: 65 passing tests, zero npm vulnerabilities, 24.4 kB of initial
 JavaScript, completable without a mouse, no account, no data collected.
 
 The honest part: our first AI coding run failed its own checks. We caught it, fixed
@@ -276,7 +276,7 @@ evening reflection is assembled from the decisions you actually made.
 00:15  Walking the estate
 00:35  A choice, and the consequence you can see in the world
 00:55  How this was built with AI — including the run that failed
-01:20  Verification gate: typecheck, 59 tests, audit, production smoke test
+01:20  Verification gate: typecheck, 65 tests, audit, production smoke test
 01:35  Honest limits
 [PLACEHOLDER: replace timestamps with the real ones after the final cut]
 
@@ -285,7 +285,7 @@ WHAT'S IN THE BUILD
 • 3 older residents, 4 activities, non-punitive binary choices
 • 3 "Kampung Spirit" meters and 6 visible world consequences
 • An evening reflection generated from your own choices
-• 59 passing unit tests, 0 npm vulnerabilities, 24.4 kB initial JS
+• 65 passing unit tests, 0 npm vulnerabilities, 24.4 kB initial JS
 • Completable without a mouse. No account, no backend, no data collected.
 
 HOW AI WAS ACTUALLY USED
@@ -390,7 +390,7 @@ miss the window.
 | 1 | **Gameplay wide shot** — player mid-estate, an NPC and a marker visible | X 1/5, Rednote cover, LinkedIn | Best-looking frame you have. This is the first impression. |
 | 2 | **Dialogue-choice moment** — the two-option card open | X 1/5, LinkedIn | Shows the core mechanic in one image. |
 | 3 | **Evening reflection screen** | X 2/5 | Proves the ending is composed from choices. |
-| 4 | **Terminal screenshot** — `npm run typecheck` clean + `59 passed` + `npm audit` 0 | X 4/5, LinkedIn | The credibility image. Do not crop out the command. |
+| 4 | **Terminal screenshot** — `npm run typecheck` clean + `65 passed` + `npm audit` 0 | X 4/5, LinkedIn | The credibility image. Do not crop out the command. |
 | 5 | **15–30 s silent clip** — walk → approach a resident → choose → see the world change | X 1/5 (or as its own post), Rednote | `screencapture -v -V 25 -x -k -C -R 60,100,1280,720 clip.mp4`. Record at ≥1280 logical width — below 1000 px the compact layout kicks in. |
 | 6 | **YouTube thumbnail** — game frame + the words "Kampung SG" | YouTube | Custom thumbnail, not auto-selected. |
 | 7 | **Post screenshots** (your own published posts, URL bar visible) | The submission form / deck | Filename: `Kampung SG-Social Media Post-TheTwoGuys.png` |

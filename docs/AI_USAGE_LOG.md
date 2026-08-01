@@ -401,3 +401,63 @@ endorsement or third-party review; or any medical, cognitive, or
 dementia-related effect. The 18 smoke checks are automated browser assertions
 against the production bundle and are evidence that the build loads and
 responds, not evidence that it is enjoyable, accessible, or effective.
+
+## 2026-08-01 - Visual-Novel Dialogue, Story Content, and Marker Pass
+
+**Tool:** Claude Code (Opus 5), working under human direction.
+
+**Goal:** Replace the single-paragraph dialogue box with a paced visual-novel
+conversation so residents can demonstrate their expertise instead of having it
+asserted, and shrink the oversized interaction markers.
+
+**Implemented:**
+
+- Rewrote every activity conversation as a sequence of authored lines:
+  `introLines`, per-choice `responseLines`, and `completedLines` for revisits.
+  Aunty Mei, Uncle Ravi and Mdm Siti now each have a four-line introduction that
+  establishes what they know and why, and three-line responses per choice.
+- Added `buildDialogueScript` and `buildChoiceScript` as pure, Phaser-free
+  functions so conversation selection is unit-testable.
+- Added a visual-novel dialogue panel: pixel-style SVG portrait drawn from the
+  same palette as the world sprites, speaker nameplate, an "n of m" line
+  counter, a typewriter reveal with a blinking caret, and a Continue control.
+  Choices are withheld until the conversation has been read to the end.
+- The typewriter is decorative only: the complete line is written to a
+  visually-hidden node immediately, and the animated node is `aria-hidden`, so
+  screen-reader users receive whole lines rather than partial text.
+  `prefers-reduced-motion` disables the animation entirely.
+- The memory table now opens with three narration lines and a "Sit down and
+  play" control, and stays replayable through "Play another round".
+- Reduced the interaction marker from radius 25 to 15 with proportionally
+  smaller badge and label offsets.
+
+**Defect found by verification:** the browser smoke test failed after the
+rewrite because choices no longer exist at the moment the dialogue opens. That
+was the harness encoding the old flow, not a product bug; the harness now reads
+through the conversation before asserting on choices, and gained two checks
+covering the new sequencing.
+
+**Verified results:**
+
+- `npm run typecheck`: passed.
+- `npm test`: 65 tests across 3 files (31 match engine, 17 sandbox state,
+  17 audio settings), including 6 new dialogue-script tests that assert every
+  activity and every choice has non-empty authored content.
+- `npm run build`: passed.
+- `npm audit`: 0 vulnerabilities.
+- `npm run smoke`: 21 checks, 21 passing, 0 failing, against the production
+  bundle.
+
+**Known limitations:**
+
+- No human has played the visual-novel flow yet; line pacing is an authoring
+  judgement, not a tested one.
+- The conversation is authored ahead of time and selected by deterministic code.
+  No language model runs at play time, by design.
+- Portraits are procedural SVG, not generated art. No Miora asset exists.
+- Screen-reader behaviour of the dialogue panel has been designed for but not
+  confirmed with a human running assistive technology.
+
+**Claim boundary:** this entry claims a conversation system, its tests, and its
+verification. It does not claim playtesting, generated art, or any measured
+effect on a player.

@@ -244,7 +244,7 @@ export class SandboxScene extends Phaser.Scene {
 
     marker.ring.setFillStyle(0x3f7a57, 0.95);
     marker.ring.setStrokeStyle(4, 0xf4d58d, 1);
-    marker.badge.setText("OK").setFontSize(13);
+    marker.badge.setText("OK").setFontSize(10);
     marker.label.setText(`${marker.label.text.replace("  DONE", "")}  DONE`);
 
     const resident = this.residents.find((candidate) => candidate.activityId === activityId);
@@ -813,16 +813,16 @@ export class SandboxScene extends Phaser.Scene {
 
   private createInteractionMarkers(): void {
     for (const interaction of WORLD_INTERACTIONS) {
-      const ring = this.add.circle(interaction.x, interaction.y, 25, 0xf2b84b, 0.92)
-        .setStrokeStyle(4, 0x173f4f, 1)
+      const ring = this.add.circle(interaction.x, interaction.y, 15, 0xf2b84b, 0.92)
+        .setStrokeStyle(3, 0x173f4f, 1)
         .setDepth(interaction.y + 30);
       const badge = this.add.text(interaction.x, interaction.y, "!", {
         color: "#173f4f",
         fontFamily: "ui-monospace, monospace",
-        fontSize: "24px",
+        fontSize: "15px",
         fontStyle: "bold",
       }).setOrigin(0.5).setDepth(interaction.y + 31);
-      const label = this.add.text(interaction.x, interaction.y + 34, interaction.shortLabel, {
+      const label = this.add.text(interaction.x, interaction.y + 22, interaction.shortLabel, {
         color: "#173f4f",
         fontFamily: "system-ui, sans-serif",
         fontSize: "13px",

@@ -9,7 +9,8 @@ export interface KampungMeters {
 export interface ActivityChoice {
   id: string;
   label: string;
-  response: string;
+  /** Shown one line at a time after the player picks this choice. */
+  responseLines: readonly string[];
   effects: KampungMeters;
 }
 
@@ -17,7 +18,11 @@ export interface ActivityDefinition {
   id: ActivityId;
   title: string;
   resident: string;
-  introduction: string;
+  /** The conversation before any choice is offered, one line per screen. */
+  introLines: readonly string[];
+  /** Shown when the player returns after finishing this activity. */
+  completedLines: readonly string[];
+  /** One-line summary for the journal entry. */
   completedMessage: string;
   choices: readonly ActivityChoice[];
 }
@@ -38,23 +43,37 @@ export const ACTIVITIES: readonly ActivityDefinition[] = [
     id: "garden",
     title: "Community Garden",
     resident: "Aunty Mei",
-    introduction:
-      "The noon sun is strong, but this soil can feed the whole block. What should we grow together?",
+    introLines: [
+      "You found the plot. Good — most people walk straight past. They think it is just weeds.",
+      "Forty years I cooked for this block. Weddings, funerals, one very memorable Chinese New Year.",
+      "Standing at a stove all day is behind me now. My hands still know what to grow, though.",
+      "This soil is tired but honest. Help me decide what goes into it.",
+    ],
     completedMessage:
       "The new garden bed is already drawing neighbours over for a look.",
+    completedLines: [
+      "Come, look. Two days and the block is already treating it like it has always been here.",
+      "That is how you know it worked. Nobody remembers it was ever a decision.",
+    ],
     choices: [
       {
         id: "herbs",
-        label: "Herbs for shared meals",
-        response:
-          "Aunty Mei marks out pandan, mint, and curry leaf. She will teach the younger neighbours when to harvest them.",
+        label: "Herbs — things people actually cook with",
+        responseLines: [
+          "Good. Pandan, mint, curry leaf. Things that end up in somebody's pot on a Tuesday.",
+          "I will teach the young ones when to pick. Too early and the pandan has no smell at all.",
+          "Then it stops being my garden. It becomes the block's garden.",
+        ],
         effects: { connection: 1, purpose: 2, comfort: 0 },
       },
       {
         id: "flowers",
-        label: "Flowers around a seat",
-        response:
-          "Aunty Mei plans a bright corner where people can pause, chat, and trade gardening tips.",
+        label: "Flowers, with somewhere to sit",
+        responseLines: [
+          "Flowers. So you want people to sit down and stay a while.",
+          "I will put the bench where the four o'clock shade lands. That is the good hour.",
+          "Nobody comes to look at flowers. They come because somebody is already sitting there.",
+        ],
         effects: { connection: 2, purpose: 1, comfort: 1 },
       },
     ],
@@ -63,23 +82,37 @@ export const ACTIVITIES: readonly ActivityDefinition[] = [
     id: "noticeboard",
     title: "Void-Deck Noticeboard",
     resident: "Uncle Ravi",
-    introduction:
-      "This board has plenty of notices but not enough invitations. What should we host this weekend?",
+    introLines: [
+      "Ah! A face I do not know. Come, come — you can settle something for me.",
+      "This board has fourteen notices. Town council, pest control, lift upgrade. All information.",
+      "Not one of them invites anybody to do anything.",
+      "I have Saturday morning free and a folding table. So — what should I put up?",
+    ],
     completedMessage:
       "The fresh invitation is up. Uncle Ravi is already greeting the first curious neighbour.",
+    completedLines: [
+      "It is up. Two people have already asked me about it, and one of them never talks to anybody.",
+      "Fourteen notices telling people things. One asking them to come. Guess which one worked.",
+    ],
     choices: [
       {
         id: "chess",
-        label: "A friendly chess circle",
-        response:
-          "Uncle Ravi offers to teach the opening moves. Beginners and experienced players will share the same table.",
+        label: "A chess circle for beginners",
+        responseLines: [
+          "Chess, then. And I will write BEGINNERS WELCOME bigger than the word chess.",
+          "That is the whole trick. People stay away if they think they will look stupid.",
+          "I lost my first forty games. Somebody sat down with me anyway.",
+        ],
         effects: { connection: 2, purpose: 1, comfort: 0 },
       },
       {
         id: "stories",
-        label: "A neighbourhood story swap",
-        response:
-          "Uncle Ravi pins up a call for old photos and new stories. Everyone gets a turn to contribute.",
+        label: "A story swap — bring one photo",
+        responseLines: [
+          "Stories. Bring one photograph, tell us who is in it. That is the entire rule.",
+          "Half this block has been here since the flats were new. Nobody has ever asked them about it.",
+          "You watch. The quiet ones talk the most, once somebody finally asks.",
+        ],
         effects: { connection: 2, purpose: 2, comfort: 0 },
       },
     ],
@@ -88,23 +121,37 @@ export const ACTIVITIES: readonly ActivityDefinition[] = [
     id: "safe-route",
     title: "Shaded Route",
     resident: "Mdm Siti",
-    introduction:
-      "I use this path every day. The route is direct, but the afternoon stretch needs more care. Where should we begin?",
+    introLines: [
+      "You walk fast. You have never done this route at three in the afternoon, have you?",
+      "Block 12 to the wet market and back. Every day, thirty-one years.",
+      "I know where the shade breaks. I know which stretch floods first when the monsoon comes.",
+      "The town council keeps asking residents for feedback. So. This is my feedback. Where do we start?",
+    ],
     completedMessage:
       "Mdm Siti tests the improved route herself and adds one more practical note to the plan.",
+    completedLines: [
+      "I walked it again this morning to check. It is better. I have three more notes for next time.",
+      "Thirty-one years of walking somewhere finally counts as knowing something about it.",
+    ],
     choices: [
       {
         id: "rest-point",
-        label: "Add a comfortable rest point",
-        response:
-          "Mdm Siti chooses a spot with a clear view and room for walking aids. The bench becomes a natural meeting place.",
+        label: "A bench where the shade actually lands",
+        responseLines: [
+          "A bench. Not a decorative one — placed properly, where the shade is at four o'clock.",
+          "And with room beside it. A walking frame has to go somewhere too.",
+          "Watch what happens. Once there is a bench, people stop being on their way somewhere.",
+        ],
         effects: { connection: 1, purpose: 0, comfort: 2 },
       },
       {
         id: "shelter",
-        label: "Extend the sheltered path",
-        response:
-          "Mdm Siti maps the rain and sun exposure from experience. Her route notes guide the new shelter plan.",
+        label: "Close the gap in the shelter",
+        responseLines: [
+          "The shelter. That gap before the market is where everybody gets caught in the rain.",
+          "I have had it mapped in my head for years. Now somebody is finally writing it down.",
+          "Thirty-one years of walking it. That should count as a survey, don't you think?",
+        ],
         effects: { connection: 0, purpose: 1, comfort: 2 },
       },
     ],
@@ -112,17 +159,24 @@ export const ACTIVITIES: readonly ActivityDefinition[] = [
   {
     id: "memory-table",
     title: "Memory Table",
-    resident: "Community Table",
-    introduction:
-      "A small matching game is laid out here for anyone who wants a quiet shared activity.",
+    resident: "The Void Deck",
+    introLines: [
+      "Somebody has left a set of keepsake cards out on the table, squared up and ready.",
+      "A kite. A lantern. A bumboat. A flower. Small things, all from around here.",
+      "There is no timer on the table and nobody is keeping score. Play a round if you like.",
+    ],
     completedMessage:
       "The final pair clicks into place. A nearby family starts another round together.",
+    completedLines: [
+      "The cards are squared up again, face down, waiting for whoever sits here next.",
+    ],
     choices: [
       {
         id: "completed",
         label: "Complete the matching game",
-        response:
+        responseLines: [
           "You finish the table together and leave the cards ready for the next neighbours.",
+        ],
         effects: { connection: 1, purpose: 0, comfort: 1 },
       },
     ],
@@ -185,6 +239,55 @@ export function endDay(state: SandboxState): SandboxState {
 
 export function isActivityComplete(state: SandboxState, id: ActivityId): boolean {
   return state.completedActivities.includes(id);
+}
+
+export type DialoguePhase = "intro" | "response" | "completed";
+
+export interface DialogueScript {
+  phase: DialoguePhase;
+  title: string;
+  speaker: string;
+  lines: readonly string[];
+  /** Choices are presented only once an intro script has been read to the end. */
+  offersChoices: boolean;
+}
+
+/**
+ * Picks the conversation to play when the player opens an activity: the full
+ * introduction the first time, or the shorter revisit lines afterwards.
+ */
+export function buildDialogueScript(
+  state: SandboxState,
+  activityId: ActivityId
+): DialogueScript {
+  const activity = getActivity(activityId);
+  const completed = isActivityComplete(state, activityId);
+  return {
+    phase: completed ? "completed" : "intro",
+    title: activity.title,
+    speaker: activity.resident,
+    lines: completed ? activity.completedLines : activity.introLines,
+    offersChoices: !completed,
+  };
+}
+
+/** The conversation that plays after the player commits to a choice. */
+export function buildChoiceScript(
+  activityId: ActivityId,
+  choiceId: string
+): DialogueScript {
+  const activity = getActivity(activityId);
+  const choice = activity.choices.find((candidate) => candidate.id === choiceId);
+  if (!choice) {
+    throw new Error(`Unknown choice ${choiceId} for activity ${activityId}`);
+  }
+  return {
+    phase: "response",
+    title: activity.title,
+    speaker: activity.resident,
+    lines: choice.responseLines,
+    offersChoices: false,
+  };
 }
 
 const EVENING_MOMENTS: Record<ActivityId, Record<string, string>> = {

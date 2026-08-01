@@ -14,6 +14,8 @@ import {
   ACTIVITIES,
   ACTIVITIES_REQUIRED_FOR_EVENING,
   METER_MAX,
+  buildChoiceScript,
+  buildDialogueScript,
   buildEveningReflection,
   completeActivity,
   createSandboxState,
@@ -21,6 +23,7 @@ import {
   getActivity,
   isActivityComplete,
   type ActivityId,
+  type DialogueScript,
   type KampungMeters,
   type SandboxState,
 } from "./game/sandboxState.js";
@@ -63,6 +66,11 @@ const dialogOverlay = byId<HTMLElement>("dialog-overlay");
 const dialogKicker = byId<HTMLElement>("dialog-kicker");
 const dialogSpeaker = byId<HTMLElement>("dialog-speaker");
 const dialogText = byId<HTMLElement>("dialog-text");
+const dialogTextA11y = byId<HTMLElement>("dialog-text-a11y");
+const dialogPortrait = byId<HTMLElement>("dialog-portrait");
+const dialogProgress = byId<HTMLElement>("dialog-progress");
+const dialogScroll = document.querySelector<HTMLElement>(".dialog-scroll")!;
+const btnDialogAdvance = byId<HTMLButtonElement>("btn-dialog-advance");
 const dialogChoices = byId<HTMLElement>("dialog-choices");
 const btnDialogClose = byId<HTMLButtonElement>("btn-dialog-close");
 
@@ -204,58 +212,194 @@ function updateNearbyPrompt(interaction: WorldInteraction | null): void {
   }
 }
 
-function openInteraction(activityId: ActivityId): void {
-  if (activityId === "memory-table") {
-    openMemory();
+/**
+ * Simple pixel-style busts drawn from the same palette as the world sprites, so
+ * the conversation panel and the map read as one place. No image files.
+ */
+const PORTRAIT_PALETTE: Record<string, { shirt: string; hair: string; brow: number }> = {
+  "Aunty Mei": { shirt: "#c85c5c", hair: "#2a2523", brow: 2 },
+  "Uncle Ravi": { shirt: "#3d7a80", hair: "#404040", brow: 3 },
+  "Mdm Siti": { shirt: "#7b5aa6", hair: "#4c3b5f", brow: 1 },
+};
+
+function portraitSvg(speaker: string): string {
+  const palette = PORTRAIT_PALETTE[speaker];
+  const open = '<svg viewBox="0 0 16 16" shape-rendering="crispEdges" role="presentation">';
+
+  if (!palette) {
+    // The memory table speaks as a place, not a person.
+    return `${open}
+      <rect width="16" height="16" fill="#fff6dc"/>
+      <rect x="2" y="9" width="12" height="2" fill="#86624b"/>
+      <rect x="3" y="11" width="1" height="3" fill="#6f4f36"/>
+      <rect x="12" y="11" width="1" height="3" fill="#6f4f36"/>
+      <rect x="4" y="5" width="3" height="4" fill="#f2c96d" stroke="#173f4f" stroke-width="0.4"/>
+      <rect x="9" y="5" width="3" height="4" fill="#f2c96d" stroke="#173f4f" stroke-width="0.4"/>
+    </svg>`;
+  }
+
+  const { shirt, hair, brow } = palette;
+  return `${open}
+    <rect width="16" height="16" fill="#fff6dc"/>
+    <rect x="2" y="12" width="12" height="4" fill="${shirt}"/>
+    <rect x="7" y="10" width="2" height="2" fill="#d9a77f"/>
+    <rect x="5" y="4" width="6" height="7" fill="#d9a77f"/>
+    <rect x="4" y="${brow}" width="8" height="${5 - brow}" fill="${hair}"/>
+    <rect x="4" y="5" width="1" height="4" fill="${hair}"/>
+    <rect x="11" y="5" width="1" height="4" fill="${hair}"/>
+    <rect x="6" y="7" width="1" height="1" fill="#173f4f"/>
+    <rect x="9" y="7" width="1" height="1" fill="#173f4f"/>
+    <rect x="7" y="9" width="2" height="1" fill="#b9765d"/>
+  </svg>`;
+}
+
+const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+let dialogueLines: readonly string[] = [];
+let dialogueIndex = 0;
+let dialogueActivity: ActivityId | null = null;
+let dialogueOffersChoices = false;
+let typeTimer: ReturnType<typeof setInterval> | null = null;
+
+function stopTyping(): void {
+  if (typeTimer !== null) {
+    clearInterval(typeTimer);
+    typeTimer = null;
+  }
+  dialogText.classList.remove("typing");
+}
+
+function isTyping(): boolean {
+  return typeTimer !== null;
+}
+
+function playScript(script: DialogueScript, activityId: ActivityId): void {
+  dialogueActivity = activityId;
+  dialogueLines = script.lines;
+  dialogueIndex = 0;
+  dialogueOffersChoices = script.offersChoices;
+
+  dialogKicker.textContent = script.title;
+  dialogSpeaker.textContent = script.speaker;
+  dialogPortrait.innerHTML = portraitSvg(script.speaker);
+  dialogChoices.innerHTML = "";
+  btnDialogClose.textContent = script.offersChoices ? "Maybe later" : "Back to neighbourhood";
+
+  showDialogueLine();
+}
+
+function showDialogueLine(): void {
+  const line = dialogueLines[dialogueIndex] ?? "";
+  stopTyping();
+
+  // Screen readers get the whole line immediately; the typewriter is decorative.
+  dialogTextA11y.textContent = line;
+  dialogProgress.textContent =
+    dialogueLines.length > 1 ? `${dialogueIndex + 1} of ${dialogueLines.length}` : "";
+
+  btnDialogAdvance.classList.add("visible");
+  btnDialogAdvance.disabled = false;
+
+  if (REDUCED_MOTION.matches) {
+    dialogText.textContent = line;
     return;
   }
 
-  const activity = getActivity(activityId);
-  dialogKicker.textContent = activity.title;
-  dialogSpeaker.textContent = activity.resident;
-  dialogChoices.innerHTML = "";
+  dialogText.textContent = "";
+  dialogText.classList.add("typing");
+  let index = 0;
+  const step = Math.max(1, Math.ceil(line.length / 90));
+  typeTimer = setInterval(() => {
+    index = Math.min(line.length, index + step);
+    dialogText.textContent = line.slice(0, index);
+    if (index >= line.length) stopTyping();
+  }, 16);
+}
 
-  if (isActivityComplete(sandboxState, activityId)) {
-    dialogText.textContent = activity.completedMessage;
-    btnDialogClose.textContent = "Back to neighbourhood";
-  } else {
-    dialogText.textContent = activity.introduction;
-    btnDialogClose.textContent = "Maybe later";
-    for (const choice of activity.choices) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "choice-button";
-      button.textContent = choice.label;
-      button.addEventListener("click", () => selectActivityChoice(activityId, choice.id));
-      dialogChoices.appendChild(button);
-    }
+function advanceDialogue(): void {
+  if (isTyping()) {
+    stopTyping();
+    dialogText.textContent = dialogueLines[dialogueIndex] ?? "";
+    return;
   }
 
+  if (dialogueIndex < dialogueLines.length - 1) {
+    dialogueIndex += 1;
+    audio.play("overlay-open");
+    showDialogueLine();
+    return;
+  }
+
+  endDialogueScript();
+}
+
+function endDialogueScript(): void {
+  stopTyping();
+  btnDialogAdvance.classList.remove("visible");
+  dialogProgress.textContent = "";
+
+  if (dialogueActivity === null) {
+    btnDialogClose.focus();
+    return;
+  }
+
+  // The memory table is sat down at rather than decided, and stays replayable.
+  if (dialogueActivity === "memory-table") {
+    const played = isActivityComplete(sandboxState, "memory-table");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "choice-button";
+    button.textContent = played ? "Play another round" : "Sit down and play";
+    button.addEventListener("click", () => {
+      closeDialog(false);
+      openMemory();
+    });
+    dialogChoices.appendChild(button);
+    button.focus();
+    return;
+  }
+
+  if (!dialogueOffersChoices) {
+    btnDialogClose.focus();
+    return;
+  }
+
+  const activity = getActivity(dialogueActivity);
+  const activityId = dialogueActivity;
+  for (const choice of activity.choices) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "choice-button";
+    button.textContent = choice.label;
+    button.addEventListener("click", () => selectActivityChoice(activityId, choice.id));
+    dialogChoices.appendChild(button);
+  }
+  dialogChoices.querySelector<HTMLButtonElement>("button")?.focus();
+  announce(`${activity.resident} is waiting for your answer. Two options.`);
+}
+
+function openInteraction(activityId: ActivityId): void {
   dialogOverlay.classList.add("active");
   setWorldControls(false);
   audio.play("overlay-open");
-  const firstChoice = dialogChoices.querySelector<HTMLButtonElement>("button");
-  (firstChoice ?? btnDialogClose).focus();
+  playScript(buildDialogueScript(sandboxState, activityId), activityId);
+  btnDialogAdvance.focus();
 }
 
 function selectActivityChoice(activityId: ActivityId, choiceId: string): void {
   const activity = getActivity(activityId);
-  const choice = activity.choices.find((candidate) => candidate.id === choiceId);
-  if (!choice) return;
-
   sandboxState = completeActivity(sandboxState, activityId, choiceId);
   sandboxHandle?.scene.applyActivityChoice(activityId, choiceId);
   audio.play("choice");
   renderSandboxState();
-  dialogText.textContent = choice.response;
-  dialogChoices.innerHTML = "";
-  btnDialogClose.textContent = "Back to neighbourhood";
-  btnDialogClose.focus();
   announce(`${activity.title} added to the neighbourhood journal.`);
+  playScript(buildChoiceScript(activityId, choiceId), activityId);
+  btnDialogAdvance.focus();
 }
 
 function closeDialog(restoreFocus = true): void {
   if (!dialogOverlay.classList.contains("active")) return;
+  stopTyping();
   dialogOverlay.classList.remove("active");
   setWorldControls(true);
   audio.play("overlay-close");
@@ -578,6 +722,10 @@ for (const button of document.querySelectorAll<HTMLButtonElement>("[data-journal
   });
 }
 
+btnDialogAdvance.addEventListener("click", advanceDialogue);
+dialogScroll.addEventListener("click", () => {
+  if (btnDialogAdvance.classList.contains("visible")) advanceDialogue();
+});
 btnDialogClose.addEventListener("click", () => closeDialog());
 btnMemoryRestart.addEventListener("click", restartMemoryGame);
 btnMemoryLeave.addEventListener("click", () => closeMemory());

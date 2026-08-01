@@ -296,11 +296,35 @@ try {
 
   await page.eval(`document.getElementById("btn-interact").click()`);
   await sleep(600);
+
+  const firstLine = await page.eval(`document.getElementById("dialog-text-a11y").textContent`);
   check(
-    "Resident dialogue opens with two choices",
-    (await page.eval(`document.querySelectorAll("#dialog-choices .choice-button").length`)) === 2
+    "Dialogue opens on a story line with a portrait",
+    firstLine.length > 20 &&
+      (await page.eval(`!!document.querySelector("#dialog-portrait svg")`)),
+    firstLine.slice(0, 60)
   );
   await page.shot(`${SHOT_DIR}/04-dialogue.png`);
+
+  /** Clicks Continue until the conversation hands over to choices. */
+  async function readThroughDialogue(limit = 12) {
+    for (let step = 0; step < limit; step += 1) {
+      const advancing = await page.eval(
+        `document.getElementById("btn-dialog-advance").classList.contains("visible")`
+      );
+      if (!advancing) return step;
+      await page.eval(`document.getElementById("btn-dialog-advance").click()`);
+      await sleep(260);
+    }
+    return limit;
+  }
+
+  const linesRead = await readThroughDialogue();
+  check("Story lines advance one at a time", linesRead >= 3, `advanced ${linesRead} times`);
+  check(
+    "Choices appear only after the conversation",
+    (await page.eval(`document.querySelectorAll("#dialog-choices .choice-button").length`)) === 2
+  );
 
   // The game tells players Space works, so a focused choice button must accept it.
   await page.eval(`document.querySelectorAll("#dialog-choices .choice-button")[0].focus()`);
@@ -325,8 +349,10 @@ try {
       `document.querySelector('[data-journal-activity="${activity}"]').click()`
     );
     await sleep(500);
+    await readThroughDialogue();
     await page.eval(`document.querySelectorAll("#dialog-choices .choice-button")[0].click()`);
-    await sleep(600);
+    await sleep(500);
+    await readThroughDialogue();
     await page.eval(`document.getElementById("btn-dialog-close").click()`);
     await sleep(400);
   }

@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   ACTIVITIES,
   METER_MAX,
+  buildChoiceScript,
+  buildDialogueScript,
   buildEveningReflection,
   completeActivity,
   createSandboxState,
   endDay,
+  getActivity,
   isActivityComplete,
 } from "../sandboxState.js";
 
@@ -93,5 +96,66 @@ describe("sandbox progression", () => {
 
   it("provides a safe fallback before any activity is complete", () => {
     expect(buildEveningReflection(createSandboxState())).toContain("room for tomorrow's neighbours");
+  });
+});
+
+describe("buildDialogueScript", () => {
+  it("plays the full introduction before an activity is completed", () => {
+    const state = createSandboxState();
+    const script = buildDialogueScript(state, "garden");
+    expect(script.phase).toBe("intro");
+    expect(script.speaker).toBe("Aunty Mei");
+    expect(script.lines).toEqual(getActivity("garden").introLines);
+    expect(script.lines.length).toBeGreaterThan(1);
+    expect(script.offersChoices).toBe(true);
+  });
+
+  it("plays the shorter revisit lines once the activity is done", () => {
+    const state = completeActivity(createSandboxState(), "garden", "herbs");
+    const script = buildDialogueScript(state, "garden");
+    expect(script.phase).toBe("completed");
+    expect(script.lines).toEqual(getActivity("garden").completedLines);
+    expect(script.offersChoices).toBe(false);
+  });
+
+  it("gives every activity a non-empty script in both states", () => {
+    for (const activity of ACTIVITIES) {
+      const fresh = buildDialogueScript(createSandboxState(), activity.id);
+      expect(fresh.lines.length).toBeGreaterThan(0);
+      fresh.lines.forEach((line) => expect(line.trim().length).toBeGreaterThan(0));
+
+      const done = completeActivity(
+        createSandboxState(),
+        activity.id,
+        activity.choices[0].id
+      );
+      const revisit = buildDialogueScript(done, activity.id);
+      expect(revisit.lines.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("buildChoiceScript", () => {
+  it("returns the response lines for the chosen option", () => {
+    const script = buildChoiceScript("noticeboard", "chess");
+    expect(script.phase).toBe("response");
+    expect(script.offersChoices).toBe(false);
+    expect(script.lines).toEqual(
+      getActivity("noticeboard").choices.find((c) => c.id === "chess")?.responseLines
+    );
+  });
+
+  it("gives every choice of every activity a non-empty response", () => {
+    for (const activity of ACTIVITIES) {
+      for (const choice of activity.choices) {
+        const script = buildChoiceScript(activity.id, choice.id);
+        expect(script.lines.length).toBeGreaterThan(0);
+        script.lines.forEach((line) => expect(line.trim().length).toBeGreaterThan(0));
+      }
+    }
+  });
+
+  it("rejects a choice that does not belong to the activity", () => {
+    expect(() => buildChoiceScript("garden", "chess")).toThrow();
   });
 });

@@ -762,12 +762,116 @@
         font-size: clamp(1.65rem, 5vw, 2.4rem);
       }
 
+      /* ---- Visual-novel dialogue ---- */
+
+      .dialog-head {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        margin-bottom: 0.9rem;
+      }
+
+      .dialog-portrait {
+        flex: 0 0 auto;
+        width: 74px;
+        height: 74px;
+        border: 3px solid var(--ink);
+        border-radius: 16px;
+        background: var(--cream);
+        overflow: hidden;
+        box-shadow: 4px 4px 0 var(--ink);
+      }
+
+      .dialog-portrait svg { display: block; width: 100%; height: 100%; }
+
+      .dialog-ident { min-width: 0; }
+
+      .dialog-progress {
+        margin: 0.25rem 0 0;
+        color: var(--ink-soft);
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        opacity: 0.75;
+      }
+
+      /* Reserve height so the card does not jump between short and long lines. */
+      .dialog-scroll {
+        display: flex;
+        align-items: flex-start;
+        min-height: 7.2rem;
+        padding: 1rem 1.1rem;
+        border: 3px solid var(--ink);
+        border-radius: 16px;
+        background: var(--cream);
+      }
+
       .dialog-text {
         margin: 0;
-        color: var(--ink-soft);
+        color: var(--ink);
         font-family: var(--font-display);
-        font-size: 1.08rem;
-        line-height: 1.6;
+        font-size: 1.12rem;
+        line-height: 1.62;
+      }
+
+      .dialog-text::after {
+        content: "";
+        display: inline-block;
+        width: 0.55ch;
+        height: 1.05em;
+        margin-left: 0.12em;
+        vertical-align: -0.16em;
+        background: var(--coral);
+        opacity: 0;
+      }
+
+      .dialog-text.typing::after {
+        opacity: 1;
+        animation: caret 0.9s steps(2, end) infinite;
+      }
+
+      @keyframes caret {
+        0%, 49% { opacity: 1; }
+        50%, 100% { opacity: 0; }
+      }
+
+      .dialog-advance {
+        display: none;
+        width: 100%;
+        margin-top: 0.85rem;
+        padding: 0.8rem 1rem;
+        color: var(--cream);
+        background: var(--ink);
+        border: 3px solid var(--ink);
+        border-radius: 12px;
+        font-weight: 800;
+        box-shadow: 4px 4px 0 var(--gold);
+      }
+
+      .dialog-advance.visible { display: block; }
+
+      .dialog-advance:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 6px 6px 0 var(--gold);
+      }
+
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .dialog-text.typing::after { animation: none; opacity: 1; }
+        .dialog-advance:hover { transform: none; }
       }
 
       .dialog-choices {
@@ -1235,9 +1339,24 @@
       <div class="dialog-card">
         <div class="dialog-stripe"></div>
         <div class="dialog-content">
-          <p id="dialog-kicker" class="dialog-kicker">Neighbourhood invitation</p>
-          <h2 id="dialog-speaker">Neighbour</h2>
-          <p id="dialog-text" class="dialog-text"></p>
+          <div class="dialog-head">
+            <div id="dialog-portrait" class="dialog-portrait" aria-hidden="true"></div>
+            <div class="dialog-ident">
+              <p id="dialog-kicker" class="dialog-kicker">Neighbourhood invitation</p>
+              <h2 id="dialog-speaker">Neighbour</h2>
+              <p id="dialog-progress" class="dialog-progress"></p>
+            </div>
+          </div>
+
+          <div class="dialog-scroll">
+            <p id="dialog-text" class="dialog-text" aria-hidden="true"></p>
+            <p id="dialog-text-a11y" class="visually-hidden"></p>
+          </div>
+
+          <button id="btn-dialog-advance" class="dialog-advance" type="button">
+            Continue <span aria-hidden="true">▸</span>
+          </button>
+
           <div id="dialog-choices" class="dialog-choices"></div>
           <div class="dialog-footer">
             <button id="btn-dialog-close" class="secondary-button" type="button">Maybe later</button>

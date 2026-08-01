@@ -43,10 +43,10 @@ diagnose, measure, prevent, delay, or treat any medical condition. See
 | Gate | Result |
 | --- | --- |
 | `npm run typecheck` | passes, strict TypeScript |
-| `npm test` | 59 tests across 3 files |
+| `npm test` | 65 tests across 3 files |
 | `npm run build` | 24.4 kB initial JS, Phaser lazy-loaded |
 | `npm audit` | 0 vulnerabilities |
-| `npm run smoke` | 19/19 production-browser checks |
+| `npm run smoke` | 21/21 production-browser checks |
 
 No human playtest has taken place, and no generated art asset ships in this
 build. Both are stated plainly rather than implied away.
@@ -97,7 +97,7 @@ npx vite preview --port 4173 --strictPort --host 127.0.0.1 &
 npm run smoke
 ```
 
-The 19 checks cover Phaser startup, keyboard and touch movement, resident
+The 21 checks cover Phaser startup, keyboard and touch movement, resident
 dialogue, Space-key operability of focused buttons, meter and journal
 progression, the golden-hour evening transition, a full second playthrough,
 scene teardown, 360px layout overflow, touch-target size, and console errors.

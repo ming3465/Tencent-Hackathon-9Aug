@@ -130,10 +130,10 @@ the truth — all art is procedural — and that costs less than being caught.
 
 ```
 npm run typecheck   passes, strict TypeScript
-npm test            59 tests across 3 files
+npm test            65 tests across 3 files
 npm run build       24.35 kB initial JS, Phaser lazy-loaded
 npm audit           0 vulnerabilities
-npm run smoke       19/19 production-browser checks
+npm run smoke       21/21 production-browser checks
 ```
 
 `npm run smoke` is self-contained — it builds, starts its own preview server,
