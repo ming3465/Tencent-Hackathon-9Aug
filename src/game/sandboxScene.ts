@@ -19,6 +19,7 @@ export interface SandboxSceneCallbacks {
   onNearbyInteraction: (interaction: WorldInteraction | null) => void;
   onInteract: (interaction: WorldInteraction) => void;
   onAreaChange: (areaName: string) => void;
+  onStep: () => void;
 }
 
 interface MarkerView {
@@ -26,6 +27,69 @@ interface MarkerView {
   badge: Phaser.GameObjects.Text;
   label: Phaser.GameObjects.Text;
 }
+
+interface ResidentDefinition {
+  activityId: ActivityId;
+  name: string;
+  texture: string;
+  x: number;
+  y: number;
+  greeting: string;
+  afterChoice: string;
+}
+
+interface ResidentView extends ResidentDefinition {
+  sprite: Phaser.GameObjects.Sprite;
+  shadow: Phaser.GameObjects.Ellipse;
+  nameplate: Phaser.GameObjects.Text;
+  bubble: Phaser.GameObjects.Text;
+  home: Phaser.Math.Vector2;
+  position: Phaser.Math.Vector2;
+  target: Phaser.Math.Vector2;
+  pauseUntil: number;
+  bobPhase: number;
+  bubbleVisible: boolean;
+}
+
+/**
+ * Residents drift within a small radius of their own corner of the estate and
+ * greet the player as they approach. The lines change once the player has acted
+ * on that resident's invitation, so the neighbourhood acknowledges what the
+ * player did without any runtime language model.
+ */
+const RESIDENTS: readonly ResidentDefinition[] = [
+  {
+    activityId: "garden",
+    name: "Aunty Mei",
+    texture: "resident-mei",
+    x: 1117,
+    y: 673,
+    greeting: "Come, I will show you which herbs like this soil.",
+    afterChoice: "The new bed is settling in already. Taste the mint next week.",
+  },
+  {
+    activityId: "noticeboard",
+    name: "Uncle Ravi",
+    texture: "resident-ravi",
+    x: 735,
+    y: 365,
+    greeting: "Ah, a new face. Help me decide what goes on the board?",
+    afterChoice: "Two neighbours signed up while you were walking around.",
+  },
+  {
+    activityId: "safe-route",
+    name: "Mdm Siti",
+    texture: "resident-siti",
+    x: 448,
+    y: 748,
+    greeting: "I walk this route daily. I know exactly where the sun bites.",
+    afterChoice: "Much better. Come, test the new stretch with me sometime.",
+  },
+];
+
+const RESIDENT_WANDER_RADIUS = 46;
+const RESIDENT_SPEED = 17;
+const BUBBLE_DISTANCE = 190;
 
 const WORLD_INTERACTIONS: readonly WorldInteraction[] = [
   {
@@ -72,6 +136,11 @@ export class SandboxScene extends Phaser.Scene {
   private virtualDirection = new Phaser.Math.Vector2();
   private controlsEnabled = true;
   private currentArea = "";
+  private residents: ResidentView[] = [];
+  private playerShadow!: Phaser.GameObjects.Ellipse;
+  private eveningLight!: Phaser.GameObjects.Rectangle;
+  private ripples: Phaser.GameObjects.Arc[] = [];
+  private walkPhase = 0;
 
   constructor(callbacks: SandboxSceneCallbacks) {
     super("kampung-sandbox");
@@ -85,9 +154,11 @@ export class SandboxScene extends Phaser.Scene {
 
     this.createTextures();
     this.drawNeighbourhood();
+    this.createAmbientLife();
     this.createResidents();
     this.createInteractionMarkers();
     this.createPlayer();
+    this.createEveningLight();
     this.configureInput();
 
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09);
@@ -97,7 +168,10 @@ export class SandboxScene extends Phaser.Scene {
     this.callbacks.onReady();
   }
 
-  update(): void {
+  update(time: number, delta: number): void {
+    this.updateResidents(time, delta);
+    this.updatePlayerShadow();
+
     if (!this.controlsEnabled) {
       this.player.setVelocity(0, 0);
       return;
@@ -118,8 +192,13 @@ export class SandboxScene extends Phaser.Scene {
       this.player.setVelocity(movement.x, movement.y);
       this.player.setFlipX(movement.x < 0);
       this.player.setDepth(this.player.y + 24);
+
+      this.walkPhase += delta / 1000;
+      this.player.setScale(1, 1 + Math.sin(this.walkPhase * 13) * 0.035);
+      this.callbacks.onStep();
     } else {
       this.player.setVelocity(0, 0);
+      this.player.setScale(1, 1);
     }
 
     if (this.interactKeys.some((key) => Phaser.Input.Keyboard.JustDown(key))) {
@@ -157,6 +236,9 @@ export class SandboxScene extends Phaser.Scene {
     marker.ring.setStrokeStyle(4, 0xf4d58d, 1);
     marker.badge.setText("OK").setFontSize(13);
     marker.label.setText(`${marker.label.text.replace("  DONE", "")}  DONE`);
+
+    const resident = this.residents.find((candidate) => candidate.activityId === activityId);
+    resident?.bubble.setText(resident.afterChoice);
   }
 
   applyActivityChoice(activityId: ActivityId, choiceId: string): void {
@@ -185,6 +267,7 @@ export class SandboxScene extends Phaser.Scene {
   }
 
   private createPlayer(): void {
+    this.playerShadow = this.add.ellipse(790, 469, 30, 10, 0x2f3a24, 0.3).setDepth(472);
     this.player = this.physics.add.sprite(790, 450, "player");
     this.player.setCollideWorldBounds(true);
     this.player.setDepth(this.player.y + 24);
@@ -546,21 +629,176 @@ export class SandboxScene extends Phaser.Scene {
   }
 
   private createResidents(): void {
-    this.addResident(1117, 673, "resident-mei", "Aunty Mei");
-    this.addResident(735, 365, "resident-ravi", "Uncle Ravi");
-    this.addResident(448, 748, "resident-siti", "Mdm Siti");
+    for (const definition of RESIDENTS) {
+      const shadow = this.add
+        .ellipse(definition.x, definition.y + 20, 34, 11, 0x2f3a24, 0.28)
+        .setDepth(definition.y + 18);
+      const sprite = this.add.sprite(definition.x, definition.y, definition.texture);
+      const nameplate = this.add
+        .text(definition.x, definition.y - 42, definition.name, {
+          color: "#fff8e8",
+          fontFamily: "system-ui, sans-serif",
+          fontSize: "13px",
+          fontStyle: "bold",
+          backgroundColor: "#173f4fe8",
+          padding: { x: 6, y: 3 },
+        })
+        .setOrigin(0.5, 1);
+      const bubble = this.add
+        .text(definition.x, definition.y - 66, definition.greeting, {
+          color: "#173f4f",
+          fontFamily: "system-ui, sans-serif",
+          fontSize: "13px",
+          backgroundColor: "#fff8e8f2",
+          padding: { x: 9, y: 6 },
+          wordWrap: { width: 210 },
+          align: "center",
+        })
+        .setOrigin(0.5, 1)
+        .setAlpha(0);
+
+      this.residents.push({
+        ...definition,
+        sprite,
+        shadow,
+        nameplate,
+        bubble,
+        home: new Phaser.Math.Vector2(definition.x, definition.y),
+        position: new Phaser.Math.Vector2(definition.x, definition.y),
+        target: new Phaser.Math.Vector2(definition.x, definition.y),
+        pauseUntil: 0,
+        bobPhase: Math.random() * Math.PI * 2,
+        bubbleVisible: false,
+      });
+    }
   }
 
-  private addResident(x: number, y: number, texture: string, name: string): void {
-    this.add.sprite(x, y, texture).setDepth(y + 20);
-    this.add.text(x, y - 42, name, {
-      color: "#fff8e8",
-      fontFamily: "system-ui, sans-serif",
-      fontSize: "13px",
-      fontStyle: "bold",
-      backgroundColor: "#173f4fe8",
-      padding: { x: 6, y: 3 },
-    }).setOrigin(0.5, 1).setDepth(y + 22);
+  private updateResidents(time: number, delta: number): void {
+    const step = delta / 1000;
+
+    for (const resident of this.residents) {
+      if (time >= resident.pauseUntil) {
+        const distance = resident.position.distance(resident.target);
+        if (distance < 3) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = Math.random() * RESIDENT_WANDER_RADIUS;
+          resident.target.set(
+            resident.home.x + Math.cos(angle) * radius,
+            resident.home.y + Math.sin(angle) * radius
+          );
+          resident.pauseUntil = time + 1400 + Math.random() * 3200;
+        } else {
+          const stepX = ((resident.target.x - resident.position.x) / distance) * RESIDENT_SPEED * step;
+          const stepY = ((resident.target.y - resident.position.y) / distance) * RESIDENT_SPEED * step;
+          resident.position.x += stepX;
+          resident.position.y += stepY;
+          if (Math.abs(stepX) > 0.01) resident.sprite.setFlipX(stepX < 0);
+        }
+      }
+
+      resident.bobPhase += step * 2.4;
+      const bob = Math.sin(resident.bobPhase) * 1.6;
+      const { x } = resident.position;
+      const y = resident.position.y + bob;
+
+      resident.sprite.setPosition(x, y).setDepth(resident.position.y + 20);
+      resident.shadow.setPosition(x, resident.position.y + 20).setDepth(resident.position.y + 18);
+      resident.nameplate.setPosition(x, y - 42).setDepth(resident.position.y + 22);
+      resident.bubble.setPosition(x, y - 66).setDepth(resident.position.y + 23);
+
+      const near =
+        Phaser.Math.Distance.Between(this.player.x, this.player.y, x, resident.position.y) <
+        BUBBLE_DISTANCE;
+      if (near !== resident.bubbleVisible) {
+        resident.bubbleVisible = near;
+        if (near) resident.sprite.setFlipX(this.player.x < x);
+        this.tweens.add({
+          targets: resident.bubble,
+          alpha: near ? 1 : 0,
+          duration: 220,
+          ease: "Sine.easeOut",
+        });
+      }
+    }
+  }
+
+  private updatePlayerShadow(): void {
+    this.playerShadow
+      .setPosition(this.player.x, this.player.y + 19)
+      .setDepth(this.player.y + 22);
+  }
+
+  private createAmbientLife(): void {
+    for (const [x, y] of [
+      [150, 660],
+      [235, 700],
+      [190, 730],
+    ]) {
+      const ripple = this.add.circle(x, y, 6, 0xffffff, 0).setStrokeStyle(2, 0xdff0ee, 0.7);
+      ripple.setDepth(4);
+      this.ripples.push(ripple);
+      this.tweens.add({
+        targets: ripple,
+        scale: { from: 0.4, to: 2.4 },
+        alpha: { from: 0.8, to: 0 },
+        duration: 3200,
+        delay: Math.random() * 2600,
+        repeat: -1,
+        ease: "Sine.easeOut",
+      });
+    }
+
+    for (const [x, y, colour] of [
+      [980, 620, 0xfff2a8],
+      [1240, 560, 0xffd9ec],
+      [610, 520, 0xfff2a8],
+    ] as [number, number, number][]) {
+      const flutter = this.add.circle(x, y, 4, colour, 0.95).setDepth(y + 40);
+      this.tweens.add({
+        targets: flutter,
+        x: x + 70 + Math.random() * 60,
+        y: y - 40 - Math.random() * 40,
+        duration: 4200 + Math.random() * 1800,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+      this.tweens.add({
+        targets: flutter,
+        scaleY: 0.4,
+        duration: 240,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+    }
+  }
+
+  /**
+   * A warm multiply pass over the whole viewport. It stays invisible during the
+   * day and fades up when the evening gathering unlocks, so the player's three
+   * completed activities visibly change the light in the estate.
+   */
+  private createEveningLight(): void {
+    // Sized to the world rather than the camera: the canvas has not finished
+    // laying out when create() runs, so camera.width is unreliable here.
+    this.eveningLight = this.add
+      .rectangle(0, 0, WORLD_WIDTH, WORLD_HEIGHT, 0xffa95e, 1)
+      .setOrigin(0, 0)
+      .setAlpha(0)
+      .setDepth(99_000)
+      .setBlendMode(Phaser.BlendModes.MULTIPLY);
+  }
+
+  /** Called when the third activity unlocks the evening gathering. */
+  setEveningMood(evening: boolean): void {
+    if (!this.eveningLight) return;
+    this.tweens.add({
+      targets: this.eveningLight,
+      alpha: evening ? 0.42 : 0,
+      duration: 2600,
+      ease: "Sine.easeInOut",
+    });
   }
 
   private createInteractionMarkers(): void {

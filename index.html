@@ -658,6 +658,59 @@
         width: 100%;
       }
 
+      .sound-card {
+        margin: 0 0.65rem 0.65rem;
+        padding: 0.75rem 0.85rem 0.85rem;
+        border: 3px solid var(--ink);
+        border-radius: 14px;
+        background: var(--paper);
+      }
+
+      .sound-card h3 {
+        margin: 0 0 0.5rem;
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-size: 0.95rem;
+      }
+
+      .sound-row {
+        display: grid;
+        grid-template-columns: 4.5rem 1fr;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 0.45rem;
+      }
+
+      .sound-row label {
+        color: var(--ink-soft);
+        font-size: 0.76rem;
+        font-weight: 800;
+      }
+
+      .sound-row input[type="range"] {
+        width: 100%;
+        min-height: 30px;
+        accent-color: var(--coral);
+        cursor: pointer;
+      }
+
+      .sound-row input[type="range"]:focus-visible {
+        outline: 3px solid var(--ink);
+        outline-offset: 3px;
+      }
+
+      .sound-note {
+        margin: 0.55rem 0 0;
+        color: var(--ink-soft);
+        font-size: 0.68rem;
+        line-height: 1.4;
+      }
+
+      #btn-sound[aria-pressed="true"] {
+        background: var(--ink);
+        color: var(--cream);
+      }
+
       /* Dialogs */
       .modal {
         position: fixed;
@@ -1089,6 +1142,7 @@
           </div>
 
           <div class="topbar-actions">
+            <button id="btn-sound" class="icon-button" type="button" aria-pressed="false">Sound on</button>
             <button id="btn-journal" class="icon-button" type="button" aria-expanded="false" aria-controls="journal-panel">Journal</button>
             <button id="btn-return-title" class="icon-button" type="button">Exit</button>
           </div>
@@ -1159,6 +1213,19 @@
               <p id="day-progress">Complete any 3 activities to gather at the void deck. 0 of 3 ready.</p>
               <button id="btn-evening" class="primary-button" type="button" disabled>Gather for the evening</button>
             </div>
+
+            <section class="sound-card" aria-labelledby="sound-title">
+              <h3 id="sound-title">Sound</h3>
+              <div class="sound-row">
+                <label for="volume-music">Music</label>
+                <input id="volume-music" type="range" min="0" max="100" step="5" value="45" />
+              </div>
+              <div class="sound-row">
+                <label for="volume-sfx">Effects</label>
+                <input id="volume-sfx" type="range" min="0" max="100" step="5" value="70" />
+              </div>
+              <p class="sound-note">All sound is generated in your browser. No audio files are downloaded.</p>
+            </section>
           </aside>
         </div>
       </section>

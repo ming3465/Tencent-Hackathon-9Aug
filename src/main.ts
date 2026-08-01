@@ -28,6 +28,7 @@ import type {
   SandboxGameHandle,
   WorldInteraction,
 } from "./game/sandboxScene.js";
+import { KampungAudio, readStoredAudioSettings } from "./game/audio.js";
 
 function byId<T extends HTMLElement>(id: string): T {
   const element = document.getElementById(id);
@@ -47,6 +48,10 @@ const interactionPrompt = byId<HTMLElement>("interaction-prompt");
 const nearbyText = byId<HTMLElement>("nearby-text");
 const btnInteract = byId<HTMLButtonElement>("btn-interact");
 const btnTouchInteract = byId<HTMLButtonElement>("btn-touch-interact");
+
+const btnSound = byId<HTMLButtonElement>("btn-sound");
+const volumeMusic = byId<HTMLInputElement>("volume-music");
+const volumeSfx = byId<HTMLInputElement>("volume-sfx");
 
 const btnJournal = byId<HTMLButtonElement>("btn-journal");
 const btnJournalClose = byId<HTMLButtonElement>("btn-journal-close");
@@ -101,6 +106,9 @@ let memoryTimer: ReturnType<typeof setTimeout> | null = null;
 let memoryVersion = 0;
 let announceTimer: ReturnType<typeof setTimeout> | null = null;
 let journalOpen = false;
+let eveningAnnounced = false;
+
+const audio = new KampungAudio(readStoredAudioSettings());
 
 function showScreen(id: "screen-title" | "screen-sandbox"): void {
   screenTitle.classList.toggle("active", id === "screen-title");
@@ -132,7 +140,9 @@ function focusWorld(): void {
 async function startNewDay(): Promise<void> {
   btnStart.disabled = true;
   btnStart.textContent = "Opening the neighbourhood...";
+  audio.unlock();
   sandboxState = createSandboxState();
+  eveningAnnounced = false;
   renderSandboxState();
   showScreen("screen-sandbox");
   sandboxStage.setAttribute("aria-busy", "true");
@@ -143,6 +153,7 @@ async function startNewDay(): Promise<void> {
       onReady: () => {
         sandboxStage.setAttribute("aria-busy", "false");
         focusWorld();
+        audio.startAmbience();
         announce("Neighbourhood open. Explore with the arrow keys or WASD.");
       },
       onNearbyInteraction: updateNearbyPrompt,
@@ -150,6 +161,7 @@ async function startNewDay(): Promise<void> {
       onAreaChange: (name) => {
         areaName.textContent = name;
       },
+      onStep: () => audio.play("step"),
     });
 
   } catch (error) {
@@ -169,6 +181,8 @@ function returnToTitle(): void {
   closeEvening(false);
   cancelMemoryTimer();
   updateNearbyPrompt(null);
+  audio.stopAmbience();
+  audio.setEveningMood(false);
   sandboxHandle?.game.destroy(true);
   sandboxHandle = null;
   sandboxStage.innerHTML = "";
@@ -219,6 +233,7 @@ function openInteraction(activityId: ActivityId): void {
 
   dialogOverlay.classList.add("active");
   setWorldControls(false);
+  audio.play("overlay-open");
   const firstChoice = dialogChoices.querySelector<HTMLButtonElement>("button");
   (firstChoice ?? btnDialogClose).focus();
 }
@@ -230,6 +245,7 @@ function selectActivityChoice(activityId: ActivityId, choiceId: string): void {
 
   sandboxState = completeActivity(sandboxState, activityId, choiceId);
   sandboxHandle?.scene.applyActivityChoice(activityId, choiceId);
+  audio.play("choice");
   renderSandboxState();
   dialogText.textContent = choice.response;
   dialogChoices.innerHTML = "";
@@ -242,12 +258,20 @@ function closeDialog(restoreFocus = true): void {
   if (!dialogOverlay.classList.contains("active")) return;
   dialogOverlay.classList.remove("active");
   setWorldControls(true);
+  audio.play("overlay-close");
   if (restoreFocus) focusWorld();
 }
 
 function renderSandboxState(): void {
   renderMeters();
   renderJournal();
+
+  if (sandboxState.eveningReady && !eveningAnnounced) {
+    eveningAnnounced = true;
+    sandboxHandle?.scene.setEveningMood(true);
+    audio.setEveningMood(true);
+  }
+
   const completedForEvening = Math.min(
     sandboxState.completedActivities.length,
     ACTIVITIES_REQUIRED_FOR_EVENING
@@ -343,6 +367,7 @@ function openMemory(): void {
   btnMemoryRestart.textContent = "New shuffle";
   memoryOverlay.classList.add("active");
   setWorldControls(false);
+  audio.play("overlay-open");
   renderMemoryBoard();
   focusFirstMemoryCard();
 }
@@ -397,12 +422,14 @@ function handleMemoryCard(cardId: number): void {
   memoryState = result.state;
   if (result.kind === "matched") {
     renderMemoryBoard(cardId);
+    audio.play("match");
     if (isComplete(memoryState)) completeMemoryActivity();
     else announce("A pair found at the memory table.");
     return;
   }
 
   renderMemoryBoard();
+  audio.play("mismatch");
   announce("Those keepsakes are different. They will turn back over.");
   const expectedVersion = memoryVersion;
   memoryTimer = setTimeout(() => {
@@ -422,6 +449,7 @@ function completeMemoryActivity(): void {
   memoryComplete.classList.add("visible");
   btnMemoryRestart.textContent = "Play another shuffle";
   btnMemoryLeave.focus();
+  audio.play("activity-complete");
   announce("All memory-table pairs found. The activity is complete.");
 }
 
@@ -459,6 +487,7 @@ function openEvening(): void {
   btnEndDay.textContent = "End the day";
   eveningOverlay.classList.add("active");
   setWorldControls(false);
+  audio.play("evening");
   btnKeepExploring.focus();
 }
 
@@ -478,6 +507,7 @@ function handleEndDay(): void {
     btnKeepExploring.hidden = true;
     btnEndDay.textContent = "Return to title";
     btnEndDay.focus();
+    audio.play("day-complete");
     announce("Day complete. Every small act grew the kampung.");
     return;
   }
@@ -507,6 +537,31 @@ btnStart.addEventListener("click", () => void startNewDay());
 btnReturnTitle.addEventListener("click", returnToTitle);
 btnInteract.addEventListener("click", () => sandboxHandle?.scene.tryInteract());
 btnTouchInteract.addEventListener("click", () => sandboxHandle?.scene.tryInteract());
+
+function renderSoundControls(): void {
+  const settings = audio.getSettings();
+  btnSound.setAttribute("aria-pressed", String(settings.muted));
+  btnSound.textContent = settings.muted ? "Sound off" : "Sound on";
+  volumeMusic.value = String(Math.round(settings.music * 100));
+  volumeSfx.value = String(Math.round(settings.sfx * 100));
+}
+
+btnSound.addEventListener("click", () => {
+  audio.unlock();
+  audio.setMuted(!audio.getSettings().muted);
+  renderSoundControls();
+  announce(audio.getSettings().muted ? "Sound muted." : "Sound on.");
+});
+
+volumeMusic.addEventListener("input", () => {
+  audio.unlock();
+  audio.setVolume("music", Number(volumeMusic.value) / 100);
+});
+
+volumeSfx.addEventListener("input", () => {
+  audio.unlock();
+  audio.setVolume("sfx", Number(volumeSfx.value) / 100);
+});
 
 btnJournal.addEventListener("click", () => {
   if (journalOpen) closeJournal();
@@ -542,7 +597,12 @@ for (const button of document.querySelectorAll<HTMLButtonElement>("[data-directi
 
   const startMovement = (event: PointerEvent) => {
     event.preventDefault();
-    button.setPointerCapture(event.pointerId);
+    try {
+      button.setPointerCapture(event.pointerId);
+    } catch {
+      // Some browsers reject capture for pointers they no longer track; movement
+      // still works through the pointerup/pointercancel handlers below.
+    }
     sandboxHandle?.scene.setVirtualDirection(vector[0], vector[1]);
   };
   const stopMovement = () => sandboxHandle?.scene.setVirtualDirection(0, 0);
@@ -566,5 +626,6 @@ eveningOverlay.addEventListener("keydown", (event) => trapModalFocus(event, even
 
 showScreen("screen-title");
 renderSandboxState();
+renderSoundControls();
 syncJournalLayout();
 btnStart.focus();
