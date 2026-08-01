@@ -354,12 +354,13 @@ the guardrails and the consent-and-privacy protocol exist as artifacts, not as a
 **TheTwoGuys — Built In Public**
 
 ### Bullets
-- [FILL: Member 1 name — role, e.g. design & direction]
-- [FILL: Member 2 name — role, e.g. engineering & AI workflow]
+- Sutolimin Widjaja
+- Andreas Auwyano
+- Contact: sutolimin.45@gmail.com
 - Play now: ming3465.github.io/Tencent-Hackathon-9Aug
 - Code: github.com/ming3465/Tencent-Hackathon-9Aug — public
 - Phaser 3, Vite, TypeScript; three AI agents, human-directed
-- [FILL: contact email — do not guess one]
+- Contact: sutolimin.45@gmail.com
 
 > **Do not write "Built with CodeBuddy, Phaser 3, Vite, TypeScript."** That single line is banned by this
 > pack's own honesty rules: it reads as "CodeBuddy built the game", and CodeBuddy authored only the ten
@@ -386,8 +387,8 @@ the guardrails and the consent-and-privacy protocol exist as artifacts, not as a
 - Kampung SG is an original work. It does not copy any existing game's art, characters, maps, or branding.
 
 ### Visual
-Two team cards with [FILL: photo or initial avatar] and role — names and roles are still unknown, so the
-cards ship as `FILL:` markers until a human supplies them; never invent a name to fill the layout.
+Two team cards: Sutolimin Widjaja and Andreas Auwyano. The team chose not to publish per-person roles,
+so the cards carry names only — do not invent roles to fill the layout.
 Large QR code to the live game (`docs/deck/qr.png` is already wired into slide 8 of the built deck —
 scan it with a real phone before export and confirm it lands on the Pages URL) —
 judges scan it on their phone from their seat, which is exactly the behaviour you want. Repeat the URL
