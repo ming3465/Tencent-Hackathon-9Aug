@@ -623,16 +623,28 @@ function closeMemory(restoreFocus = true): void {
   if (restoreFocus) focusWorld();
 }
 
+const CLOSING_REFLECTION =
+  "Ageing well is not one perfect solution. It is a neighbourhood that keeps making room for people to contribute on their own terms.";
+
 function openEvening(): void {
   if (!sandboxState.eveningReady) return;
-  eveningTitle.textContent = "The block feels different tonight.";
-  eveningText.textContent = buildEveningReflection(sandboxState);
-  btnKeepExploring.hidden = false;
-  btnEndDay.textContent = "End the day";
-  eveningOverlay.classList.add("active");
+
+  if (sandboxState.dayEnded) {
+    // Closing the ending and reopening it must not rewind the day.
+    eveningTitle.textContent = "A day worth returning to.";
+    eveningText.textContent = CLOSING_REFLECTION;
+    btnKeepExploring.hidden = true;
+    btnEndDay.textContent = "Return to title";
+  } else {
+    eveningTitle.textContent = "The block feels different tonight.";
+    eveningText.textContent = buildEveningReflection(sandboxState);
+    btnKeepExploring.hidden = false;
+    btnEndDay.textContent = "End the day";
+  }
+
   setWorldControls(false);
   audio.play("evening");
-  btnKeepExploring.focus();
+  (sandboxState.dayEnded ? btnEndDay : btnKeepExploring).focus();
 }
 
 function closeEvening(restoreFocus = true): void {
@@ -646,8 +658,7 @@ function handleEndDay(): void {
   if (!sandboxState.dayEnded) {
     sandboxState = endDay(sandboxState);
     eveningTitle.textContent = "A day worth returning to.";
-    eveningText.textContent =
-      "Ageing well is not one perfect solution. It is a neighbourhood that keeps making room for people to contribute on their own terms.";
+    eveningText.textContent = CLOSING_REFLECTION;
     btnKeepExploring.hidden = true;
     btnEndDay.textContent = "Return to title";
     btnEndDay.focus();
@@ -664,7 +675,7 @@ function trapModalFocus(event: KeyboardEvent, overlay: HTMLElement): void {
     overlay.querySelectorAll<HTMLElement>(
       'button:not(:disabled):not([hidden]), [href], [tabindex]:not([tabindex="-1"])'
     )
-  ).filter((element) => !element.hidden);
+  ).filter((element) => element.getClientRects().length > 0);
   if (!focusable.length) return;
   const first = focusable[0];
   const last = focusable[focusable.length - 1];
@@ -733,27 +744,49 @@ btnEvening.addEventListener("click", openEvening);
 btnKeepExploring.addEventListener("click", () => closeEvening());
 btnEndDay.addEventListener("click", handleEndDay);
 
+const DIRECTION_VECTORS: Record<string, [number, number]> = {
+  up: [0, -1],
+  down: [0, 1],
+  left: [-1, 0],
+  right: [1, 0],
+};
+
+// Held directions are tracked as a set so two buttons give a diagonal, and
+// releasing one does not stop the player while the other is still down.
+const heldDirections = new Set<string>();
+
+function applyHeldDirections(): void {
+  let x = 0;
+  let y = 0;
+  for (const direction of heldDirections) {
+    const vector = DIRECTION_VECTORS[direction];
+    if (!vector) continue;
+    x += vector[0];
+    y += vector[1];
+  }
+  sandboxHandle?.scene.setVirtualDirection(x, y);
+}
+
 for (const button of document.querySelectorAll<HTMLButtonElement>("[data-direction]")) {
-  const vectors: Record<string, [number, number]> = {
-    up: [0, -1],
-    down: [0, 1],
-    left: [-1, 0],
-    right: [1, 0],
-  };
-  const vector = vectors[button.dataset.direction ?? ""];
-  if (!vector) continue;
+  const direction = button.dataset.direction ?? "";
+  if (!DIRECTION_VECTORS[direction]) continue;
 
   const startMovement = (event: PointerEvent) => {
     event.preventDefault();
     try {
       button.setPointerCapture(event.pointerId);
     } catch {
-      // Some browsers reject capture for pointers they no longer track; movement
-      // still works through the pointerup/pointercancel handlers below.
+      // Some browsers reject capture for pointers they no longer track; the
+      // release handlers below still clear the direction.
     }
-    sandboxHandle?.scene.setVirtualDirection(vector[0], vector[1]);
+    heldDirections.add(direction);
+    applyHeldDirections();
   };
-  const stopMovement = () => sandboxHandle?.scene.setVirtualDirection(0, 0);
+  const stopMovement = () => {
+    heldDirections.delete(direction);
+    applyHeldDirections();
+  };
+
   button.addEventListener("pointerdown", startMovement);
   button.addEventListener("pointerup", stopMovement);
   button.addEventListener("pointercancel", stopMovement);

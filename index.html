@@ -369,7 +369,7 @@
 
       .meters {
         display: grid;
-        grid-template-columns: repeat(3, minmax(100px, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 0.55rem;
       }
 
@@ -1348,7 +1348,7 @@
       </section>
     </main>
 
-    <div id="dialog-overlay" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-speaker" aria-describedby="dialog-text">
+    <div id="dialog-overlay" class="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-speaker" aria-describedby="dialog-text-a11y">
       <div class="dialog-card">
         <div class="dialog-stripe"></div>
         <div class="dialog-content">
@@ -1363,7 +1363,7 @@
 
           <div class="dialog-scroll">
             <p id="dialog-text" class="dialog-text" aria-hidden="true"></p>
-            <p id="dialog-text-a11y" class="visually-hidden"></p>
+            <p id="dialog-text-a11y" class="visually-hidden" aria-live="polite"></p>
           </div>
 
           <button id="btn-dialog-advance" class="dialog-advance" type="button">

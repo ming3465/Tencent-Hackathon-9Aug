@@ -6,8 +6,9 @@ const WORLD_HEIGHT = 1600;
 
 /**
  * The palette locked in docs/MIORA_ASSET_BIBLE.md, plus working tones mixed
- * from it. Everything drawn in this scene comes from here, so the estate reads
- * as one authored place rather than a set of separately-coloured rectangles.
+ * from it. These cover the ground, paths, structures and outlines; district
+ * accents and character clothing still carry their own colours and are being
+ * migrated onto this palette (see docs/IMPROVEMENTS.md).
  * Light is treated as arriving from the upper left throughout: lit edges get a
  * lighter tone on their top and left, shaded edges a darker one.
  */
@@ -62,7 +63,8 @@ interface ResidentDefinition {
   x: number;
   y: number;
   greeting: string;
-  afterChoice: string;
+  /** Keyed by choice id, so the world never references a choice you did not make. */
+  afterChoice: Readonly<Record<string, string>>;
 }
 
 interface ResidentView extends ResidentDefinition {
@@ -92,7 +94,10 @@ const RESIDENTS: readonly ResidentDefinition[] = [
     x: 1117,
     y: 673,
     greeting: "Come, I will show you which herbs like this soil.",
-    afterChoice: "The new bed is settling in already. Taste the mint next week.",
+    afterChoice: {
+      herbs: "The mint is already taking. Come back next week and taste it.",
+      flowers: "Bench goes in on Thursday. Somebody will be sitting on it by Friday.",
+    },
   },
   {
     activityId: "noticeboard",
@@ -101,7 +106,10 @@ const RESIDENTS: readonly ResidentDefinition[] = [
     x: 735,
     y: 365,
     greeting: "Ah, a new face. Help me decide what goes on the board?",
-    afterChoice: "Two neighbours signed up while you were walking around.",
+    afterChoice: {
+      chess: "Two signed up already. One has never played before — perfect.",
+      stories: "Someone brought a photo already. Nineteen seventy-eight, no lift yet.",
+    },
   },
   {
     activityId: "safe-route",
@@ -110,7 +118,10 @@ const RESIDENTS: readonly ResidentDefinition[] = [
     x: 448,
     y: 748,
     greeting: "I walk this route daily. I know exactly where the sun bites.",
-    afterChoice: "Much better. Come, test the new stretch with me sometime.",
+    afterChoice: {
+      "rest-point": "Bench is marked out. Exactly where the four o'clock shade lands.",
+      shelter: "They are extending it. Thirty-one years of walking finally counted.",
+    },
   },
 ];
 
@@ -145,7 +156,7 @@ const NEIGHBOURS: readonly NeighbourDefinition[] = [
     x: 1735,
     y: 300,
     lines: [
-      "Kopi-o kosong, half sugar. I know already. Thirty-one years, same order.",
+      "Kopi-o kosong. Same order thirty-one years. I know before you sit down.",
       "The morning crowd comes at six. Not for the coffee — for the company.",
       "My son says retire lah. And do what? Sit at home and wait for Sunday?",
     ],
@@ -190,7 +201,7 @@ const NEIGHBOURS: readonly NeighbourDefinition[] = [
     y: 785,
     lines: [
       "We only moved in last month. I did not expect people to actually say hello.",
-      "Aunty Mei gave us pandan from the garden. I had to look up what to do with it.",
+      "People here hand you things before they know your name. I am still adjusting.",
       "My own mother is overseas. It helps, having aunties around.",
     ],
   },
@@ -366,7 +377,7 @@ export class SandboxScene extends Phaser.Scene {
     }
   }
 
-  markActivityComplete(activityId: ActivityId): void {
+  markActivityComplete(activityId: ActivityId, choiceId?: string): void {
     this.completedActivities.add(activityId);
     const marker = this.markers.get(activityId);
     if (!marker) return;
@@ -376,12 +387,13 @@ export class SandboxScene extends Phaser.Scene {
     marker.badge.setText("OK").setFontSize(10);
     marker.label.setText(`${marker.label.text.replace("  DONE", "")}  DONE`);
 
-    const resident = this.residents.find((candidate) => candidate.activityId === activityId);
-    resident?.bubble.setText(resident.afterChoice);
+    const resident = this.residentByActivity.get(activityId);
+    const line = choiceId ? resident?.afterChoice[choiceId] : undefined;
+    if (resident && line) resident.bubble.setText(line);
   }
 
   applyActivityChoice(activityId: ActivityId, choiceId: string): void {
-    this.markActivityComplete(activityId);
+    this.markActivityComplete(activityId, choiceId);
     if (this.appliedChoices.has(activityId)) return;
     this.appliedChoices.set(activityId, choiceId);
 
@@ -439,7 +451,7 @@ export class SandboxScene extends Phaser.Scene {
   private createTextures(): void {
     if (!this.textures.exists("player")) {
       const graphics = this.make.graphics({ x: 0, y: 0 });
-      graphics.fillStyle(0x173f5f, 1);
+      graphics.fillStyle(INK, 1);
       graphics.fillRect(7, 20, 18, 18);
       graphics.fillStyle(0xf4c9a8, 1);
       graphics.fillRect(9, 7, 14, 14);
@@ -1159,7 +1171,6 @@ export class SandboxScene extends Phaser.Scene {
         const markerY = y - 84;
         marker.ring.setPosition(x, markerY).setDepth(resident.position.y + 24);
         marker.badge.setPosition(x, markerY).setDepth(resident.position.y + 25);
-        marker.label.setVisible(false);
 
         const target = resident.bubbleVisible ? 0 : 1;
         const alpha = Phaser.Math.Linear(marker.ring.alpha, target, 0.1);
@@ -1355,6 +1366,10 @@ export class SandboxScene extends Phaser.Scene {
         backgroundColor: "#fff8e8e6",
         padding: { x: 5, y: 3 },
       }).setOrigin(0.5, 0).setDepth(interaction.y + 32);
+
+      // A resident's own nameplate already says who they are, so the marker
+      // label would just be a second caption stacked on the same person.
+      if (this.residentByActivity.has(interaction.id)) label.setVisible(false);
 
       this.markers.set(interaction.id, { ring, badge, label });
     }
