@@ -398,6 +398,30 @@ try {
     (await page.eval(`document.getElementById("summary-connection").textContent`)) === "0"
   );
 
+  // Judge path: ?demo=1 must reach the evening after two activities.
+  await page.send("Page.navigate", { url: `${APP_URL}${APP_URL.includes("?") ? "&" : "?"}demo=1` });
+  await sleep(2200);
+  await page.eval(`document.getElementById("btn-start").click()`);
+  await sleep(3800);
+  for (const activity of ["noticeboard", "garden"]) {
+    await page.eval(`document.querySelector('[data-journal-activity="${activity}"]').click()`);
+    await sleep(500);
+    await readThroughDialogue();
+    await page.eval(`document.querySelectorAll("#dialog-choices .choice-button")[0].click()`);
+    await sleep(500);
+    await readThroughDialogue();
+    await page.eval(`document.getElementById("btn-dialog-close").click()`);
+    await sleep(400);
+  }
+  check(
+    "Demo mode unlocks the evening after two activities",
+    (await page.eval(`document.getElementById("btn-evening").disabled`)) === false
+  );
+  await page.eval(`document.getElementById("btn-return-title").click()`);
+  await sleep(900);
+  await page.send("Page.navigate", { url: APP_URL });
+  await sleep(2200);
+
   // Mobile viewport regression.
   await page.send("Emulation.setDeviceMetricsOverride", {
     width: 360,

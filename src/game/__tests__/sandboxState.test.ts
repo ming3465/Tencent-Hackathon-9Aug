@@ -159,3 +159,40 @@ describe("buildChoiceScript", () => {
     expect(() => buildChoiceScript("garden", "chess")).toThrow();
   });
 });
+
+describe("demo-mode judge path", () => {
+  it("defaults to three activities for the real game", () => {
+    expect(createSandboxState().requiredForEvening).toBe(3);
+  });
+
+  it("unlocks the evening after two activities when configured for demo", () => {
+    let state = createSandboxState(2);
+    state = completeActivity(state, "noticeboard", "chess");
+    expect(state.eveningReady).toBe(false);
+    state = completeActivity(state, "garden", "herbs");
+    expect(state.eveningReady).toBe(true);
+  });
+
+  it("does not unlock the real game early", () => {
+    let state = createSandboxState();
+    state = completeActivity(state, "noticeboard", "chess");
+    state = completeActivity(state, "garden", "herbs");
+    expect(state.eveningReady).toBe(false);
+  });
+
+  it("clamps nonsense thresholds into the playable range", () => {
+    expect(createSandboxState(0).requiredForEvening).toBe(1);
+    expect(createSandboxState(99).requiredForEvening).toBe(4);
+  });
+
+  it("still ends the day and reflects the two demo choices", () => {
+    let state = createSandboxState(2);
+    state = completeActivity(state, "noticeboard", "chess");
+    state = completeActivity(state, "safe-route", "shelter");
+    state = endDay(state);
+    expect(state.dayEnded).toBe(true);
+    const reflection = buildEveningReflection(state);
+    expect(reflection).toContain("Uncle Ravi");
+    expect(reflection).toContain("Mdm Siti");
+  });
+});

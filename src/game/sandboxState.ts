@@ -33,6 +33,12 @@ export interface SandboxState {
   meters: KampungMeters;
   eveningReady: boolean;
   dayEnded: boolean;
+  /**
+   * How many activities unlock the evening gathering. 3 in the real game;
+   * demo mode (?demo=1) lowers it to 2 so a judge reaches the golden-hour
+   * ending inside their judging window. Nothing else about the rules changes.
+   */
+  requiredForEvening: number;
 }
 
 export const METER_MAX = 6;
@@ -183,13 +189,16 @@ export const ACTIVITIES: readonly ActivityDefinition[] = [
   },
 ];
 
-export function createSandboxState(): SandboxState {
+export function createSandboxState(
+  requiredForEvening: number = ACTIVITIES_REQUIRED_FOR_EVENING
+): SandboxState {
   return {
     completedActivities: [],
     choices: {},
     meters: { connection: 0, purpose: 0, comfort: 0 },
     eveningReady: false,
     dayEnded: false,
+    requiredForEvening: Math.max(1, Math.min(requiredForEvening, ACTIVITIES.length)),
   };
 }
 
@@ -226,7 +235,7 @@ export function completeActivity(
       purpose: Math.min(METER_MAX, state.meters.purpose + choice.effects.purpose),
       comfort: Math.min(METER_MAX, state.meters.comfort + choice.effects.comfort),
     },
-    eveningReady: completedActivities.length >= ACTIVITIES_REQUIRED_FOR_EVENING,
+    eveningReady: completedActivities.length >= state.requiredForEvening,
   };
 }
 

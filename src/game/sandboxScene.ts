@@ -260,6 +260,7 @@ const WORLD_INTERACTIONS: readonly WorldInteraction[] = [
 
 export class SandboxScene extends Phaser.Scene {
   private readonly callbacks: SandboxSceneCallbacks;
+  private readonly playerSpeed: number;
   private player!: Phaser.Physics.Arcade.Sprite;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private movementKeys!: Record<"up" | "down" | "left" | "right", Phaser.Input.Keyboard.Key>;
@@ -280,9 +281,10 @@ export class SandboxScene extends Phaser.Scene {
   private ripples: Phaser.GameObjects.Arc[] = [];
   private walkPhase = 0;
 
-  constructor(callbacks: SandboxSceneCallbacks) {
+  constructor(callbacks: SandboxSceneCallbacks, options: SandboxGameOptions = {}) {
     super("kampung-sandbox");
     this.callbacks = callbacks;
+    this.playerSpeed = options.playerSpeed ?? PLAYER_SPEED;
   }
 
   create(): void {
@@ -328,7 +330,7 @@ export class SandboxScene extends Phaser.Scene {
     );
 
     if (movement.lengthSq() > 0) {
-      movement.normalize().scale(PLAYER_SPEED);
+      movement.normalize().scale(this.playerSpeed);
       this.player.setVelocity(movement.x, movement.y);
       this.player.setFlipX(movement.x < 0);
       this.player.setDepth(this.player.y + 24);
@@ -1478,11 +1480,17 @@ export interface SandboxGameHandle {
   scene: SandboxScene;
 }
 
+export interface SandboxGameOptions {
+  /** Overrides walking speed; demo mode uses this to compress the judge path. */
+  playerSpeed?: number;
+}
+
 export function createSandboxGame(
   parent: string,
-  callbacks: SandboxSceneCallbacks
+  callbacks: SandboxSceneCallbacks,
+  options: SandboxGameOptions = {}
 ): SandboxGameHandle {
-  const scene = new SandboxScene(callbacks);
+  const scene = new SandboxScene(callbacks, options);
   const game = new Phaser.Game({
     type: Phaser.CANVAS,
     parent,

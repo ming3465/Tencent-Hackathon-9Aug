@@ -100,6 +100,14 @@ const summaryElements = {
 } satisfies Record<keyof KampungMeters, HTMLElement>;
 
 const MEMORY_PAIRS = CHAPTER_1_PAIRS.slice(0, 4);
+
+/**
+ * Judge path: ?demo=1 compresses the session for a timed judging window - the
+ * evening unlocks after 2 activities instead of 3, and the player walks a
+ * little faster. Every rule, line, and consequence is the shipped game's own.
+ */
+const DEMO_MODE = new URLSearchParams(window.location.search).has("demo");
+const REQUIRED_FOR_EVENING = DEMO_MODE ? 2 : ACTIVITIES_REQUIRED_FOR_EVENING;
 const COMPACT_LAYOUT = window.matchMedia("(max-width: 1000px)");
 const JOURNAL_OPEN_COPY: Record<ActivityId, string> = {
   garden: "Find Aunty Mei near the garden beds.",
@@ -149,7 +157,7 @@ async function startNewDay(): Promise<void> {
   btnStart.disabled = true;
   btnStart.textContent = "Opening the neighbourhood...";
   audio.unlock();
-  sandboxState = createSandboxState();
+  sandboxState = createSandboxState(REQUIRED_FOR_EVENING);
   eveningAnnounced = false;
   renderSandboxState();
   showScreen("screen-sandbox");
@@ -170,7 +178,7 @@ async function startNewDay(): Promise<void> {
         areaName.textContent = name;
       },
       onStep: () => audio.play("step"),
-    });
+    }, { playerSpeed: DEMO_MODE ? 260 : undefined });
 
   } catch (error) {
     console.error(error);
@@ -418,11 +426,11 @@ function renderSandboxState(): void {
 
   const completedForEvening = Math.min(
     sandboxState.completedActivities.length,
-    ACTIVITIES_REQUIRED_FOR_EVENING
+    sandboxState.requiredForEvening
   );
   dayProgress.textContent = sandboxState.eveningReady
     ? "The evening gathering is ready. You can join now or keep exploring."
-    : `Complete any 3 activities to gather at the void deck. ${completedForEvening} of ${ACTIVITIES_REQUIRED_FOR_EVENING} ready.`;
+    : `Complete any ${sandboxState.requiredForEvening} activities to gather at the void deck. ${completedForEvening} of ${sandboxState.requiredForEvening} ready.`;
   btnEvening.disabled = !sandboxState.eveningReady;
 }
 

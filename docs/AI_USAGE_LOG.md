@@ -461,3 +461,31 @@ covering the new sequencing.
 **Claim boundary:** this entry claims a conversation system, its tests, and its
 verification. It does not claim playtesting, generated art, or any measured
 effect on a player.
+
+## 2026-08-01 - Judge Path (Demo Mode)
+
+**Tool:** Claude Code (Opus 5), working under human direction.
+
+**Goal:** Research on judging mechanics showed judges give an entry 3-10
+minutes and the finalist cut is decided largely from the video, while our full
+loop runs 6-8 minutes. Build a compressed judge path without touching the real
+game's rules.
+
+**Implemented:**
+
+- `?demo=1` query parameter: evening unlocks after 2 activities instead of 3,
+  walking speed 215 -> 260 px/s. Nothing else changes; the progress copy reads
+  the threshold from state so the UI stays truthful in both modes.
+- `requiredForEvening` moved onto `SandboxState` (clamped 1..4);
+  `SandboxGameOptions.playerSpeed` added to the scene factory.
+- 5 new unit tests (70 total) and 1 new browser-smoke check (22 total) that
+  drives `?demo=1` end-to-end in headless Chrome.
+- `docs/DEMO_MODE.md` documents usage, the exact levers, the honesty boundary
+  (a pacing device, never a content device), and the 3-minute route for the
+  video and the Demo Day stage.
+
+**Verified results:** typecheck clean; 70/70 tests; production build; 22/22
+browser smoke including the new judge-path check.
+
+**Claim boundary:** demo mode compresses pacing for a timed judging window.
+The full game remains 6-8 minutes by design, and no demo-only content exists.
