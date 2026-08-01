@@ -361,7 +361,7 @@
 
       .brand-lockup span {
         color: var(--coral);
-        font-size: 0.72rem;
+        font-size: 0.8rem;
         font-weight: 900;
         letter-spacing: 0.12em;
         text-transform: uppercase;
@@ -383,7 +383,7 @@
         gap: 0.5rem;
         margin-bottom: 0.28rem;
         color: var(--ink-soft);
-        font-size: 0.72rem;
+        font-size: 0.8rem;
         font-weight: 900;
         text-transform: uppercase;
       }
@@ -465,7 +465,7 @@
         background: rgba(16, 46, 59, 0.9);
         border: 2px solid var(--gold);
         border-radius: 8px;
-        font-size: 0.75rem;
+        font-size: 0.82rem;
         font-weight: 900;
         letter-spacing: 0.08em;
         text-transform: uppercase;
@@ -575,7 +575,7 @@
       .journal-header p {
         margin: 0 0 0.25rem;
         color: var(--gold);
-        font-size: 0.7rem;
+        font-size: 0.78rem;
         font-weight: 900;
         letter-spacing: 0.12em;
         text-transform: uppercase;
@@ -621,7 +621,7 @@
         background: var(--sand);
         border: 2px solid var(--ink);
         border-radius: 50%;
-        font-size: 0.67rem;
+        font-size: 0.82rem;
         font-weight: 900;
       }
 
@@ -638,7 +638,7 @@
       .journal-item p {
         margin: 0;
         color: var(--ink-soft);
-        font-size: 0.76rem;
+        font-size: 0.82rem;
         line-height: 1.35;
       }
 
@@ -649,7 +649,7 @@
         color: var(--cream);
         background: var(--teal);
         border: 2px solid var(--ink);
-        font-size: 0.72rem;
+        font-size: 0.8rem;
       }
 
       .evening-card {
@@ -696,7 +696,7 @@
 
       .sound-row label {
         color: var(--ink-soft);
-        font-size: 0.76rem;
+        font-size: 0.82rem;
         font-weight: 800;
       }
 
@@ -715,7 +715,7 @@
       .sound-note {
         margin: 0.55rem 0 0;
         color: var(--ink-soft);
-        font-size: 0.68rem;
+        font-size: 0.78rem;
         line-height: 1.4;
       }
 
@@ -762,7 +762,7 @@
       .dialog-kicker {
         margin: 0 0 0.35rem;
         color: var(--coral);
-        font-size: 0.72rem;
+        font-size: 0.8rem;
         font-weight: 900;
         letter-spacing: 0.12em;
         text-transform: uppercase;
@@ -802,7 +802,7 @@
       .dialog-progress {
         margin: 0.25rem 0 0;
         color: var(--ink-soft);
-        font-size: 0.68rem;
+        font-size: 0.78rem;
         font-weight: 800;
         letter-spacing: 0.14em;
         text-transform: uppercase;
@@ -1022,7 +1022,7 @@
 
       .summary-stat span {
         color: var(--ink-soft);
-        font-size: 0.7rem;
+        font-size: 0.78rem;
         font-weight: 900;
         text-transform: uppercase;
       }
@@ -1141,7 +1141,7 @@
         .brand-lockup span { display: none; }
         .brand-lockup strong { font-size: 1.15rem; }
         .icon-button { padding: 0.45rem 0.55rem; }
-        .meter-label { font-size: 0.62rem; }
+        .meter-label { font-size: 0.74rem; }
 
         .world-shell {
           height: min(67dvh, 610px);
@@ -1186,6 +1186,19 @@
       @media (pointer: coarse) {
         .touch-controls {
           display: flex;
+        }
+
+        /*
+         * Once the d-pad and its Talk button are on screen, the prompt's own
+         * Interact button is a third way to do the same thing. On a tablet all
+         * three were showing at once.
+         */
+        .interact-button {
+          display: none;
+        }
+
+        .interaction-prompt {
+          justify-content: flex-start;
         }
       }
 

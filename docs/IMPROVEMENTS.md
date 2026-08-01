@@ -1,10 +1,64 @@
 # Kampung SG — Improvement Backlog
 
-Compiled 2026-08-01 from four independent audits (art, UX/accessibility, code
-health, content) plus a merge pass. Written to be read by someone who was not
-in the conversation that produced it.
+> **For any agent or contributor picking this up.** This is the single source of
+> truth for outstanding work on Kampung SG. Read this file before proposing
+> changes. It was compiled 2026-08-01 from four independent audits (art,
+> UX/accessibility, code health, content/narrative) and a merge pass.
 
-# Kampung SG — Unified Improvement Backlog
+## How to use this file
+
+1. **Check "Already done" below before starting anything** — a chunk of P0 has
+   already landed and the audit text further down still describes the old state.
+2. Work top-down: P0 before P1 before P2. Inside a tier, order is by score-per-hour.
+3. **Never break these project constraints**, which are published in the deck and
+   the design docs: no timer, no failure state, no energy system, no punishment,
+   no dark patterns, no medical/cognitive/dementia claim, no data collection, no
+   account, no backend, no runtime LLM. Older adults are contributors and
+   experts, never passive recipients.
+4. After ANY change, re-run the full gate and re-sync anything that quotes a
+   number (see "Verification" at the end).
+
+## Verification gate — run all of these
+
+```bash
+npm run typecheck    # strict TypeScript
+npm test             # unit tests
+npm run build        # production build
+npm audit            # dependency audit
+npm run smoke        # self-contained headless-Chrome run of the built bundle
+```
+
+`npm run smoke` builds, starts its own preview server, drives a full playthrough
+plus a second playthrough, and writes fresh screenshots to `docs/screenshots/`.
+
+## Already done (do not redo)
+
+| Item | Landed |
+| --- | --- |
+| Talk to residents rather than fixed ground positions; residents stop and face the player | 2026-08-01 |
+| Visual-novel dialogue: portraits, line-by-line advance, typewriter, choices withheld until read | 2026-08-01 |
+| Map expanded to 2560×1600 with six new districts; five ambient neighbours added | 2026-08-01 |
+| Custom art pass: palette constants, ground tufts/patches, kerbed paths, laundry poles, striped awnings, layered rain trees, structure outlines | 2026-08-01 |
+| Character pass: ink outlines, eyes, four skin tones across eight residents, player no longer the palest person on screen | 2026-08-01 |
+| Typography: monospace debug labels replaced with estate signage; in-world text raised to 14px+; UI type scale raised; `"OK"` badge replaced with a check glyph | 2026-08-01 |
+| Focus ring removed from the world canvas (kept on buttons/links) | 2026-08-01 |
+| **P0-3** dialogue focus trap now filters `display:none` | 2026-08-01 |
+| **P0-4** dialogue line node has `aria-live` and is the `aria-describedby` target | 2026-08-01 |
+| **P0-8** 320px meter-row overflow fixed | 2026-08-01 |
+| **P0-12** Singlish error (`kopi-o kosong, half sugar`) and state-false neighbour lines fixed | 2026-08-01 |
+| **P0-13** resident follow-up lines are choice-aware | 2026-08-01 |
+| **P0-15** touch d-pad tracks held directions, so diagonals work | 2026-08-01 |
+| **P0-16** player shirt hex typo; per-frame label hiding; ending could be un-ended | 2026-08-01 |
+| **P0-17** duplicate interact button hidden on touch devices | 2026-08-01 |
+
+**Biggest remaining item: P0-1**, the character rebuild (silhouette variety, age
+signalling, build/height variation). Outlines, faces and skin tones are done;
+everyone still shares one silhouette and nothing signals age.
+
+---
+
+# Unified Improvement Backlog
+
 
 **Repo:** `/Users/elbertwidjaja/Project/Tencent-Hackathon-9Aug`
 **Compiled:** 2026-08-01, from four independent audits (art, UX/accessibility, code health, content/narrative).

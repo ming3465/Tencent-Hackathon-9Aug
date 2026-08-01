@@ -384,7 +384,7 @@ export class SandboxScene extends Phaser.Scene {
 
     marker.ring.setFillStyle(0x3f7a57, 0.95);
     marker.ring.setStrokeStyle(4, 0xf4d58d, 1);
-    marker.badge.setText("OK").setFontSize(10);
+    marker.badge.setText("\u2713").setFontSize(18);
     marker.label.setText(`${marker.label.text.replace("  DONE", "")}  DONE`);
 
     const resident = this.residentByActivity.get(activityId);
@@ -452,8 +452,13 @@ export class SandboxScene extends Phaser.Scene {
     if (!this.textures.exists("player")) {
       const graphics = this.make.graphics({ x: 0, y: 0 });
       graphics.fillStyle(INK, 1);
+      graphics.fillRect(6, 19, 20, 20);
+      graphics.fillRect(8, 6, 16, 16);
+      graphics.fillRect(3, 21, 7, 15);
+      graphics.fillRect(22, 21, 7, 15);
+      graphics.fillStyle(0x2d5f74, 1);
       graphics.fillRect(7, 20, 18, 18);
-      graphics.fillStyle(0xf4c9a8, 1);
+      graphics.fillStyle(0xd39c6d, 1);
       graphics.fillRect(9, 7, 14, 14);
       graphics.fillStyle(0x2a2523, 1);
       graphics.fillRect(8, 4, 16, 6);
@@ -468,33 +473,59 @@ export class SandboxScene extends Phaser.Scene {
       graphics.destroy();
     }
 
-    this.createResidentTexture("resident-mei", 0xc85c5c, 0x2a2523);
-    this.createResidentTexture("resident-ravi", 0x3d7a80, 0x404040);
-    this.createResidentTexture("resident-siti", 0x7b5aa6, 0x4c3b5f);
-    this.createResidentTexture("resident-seng", 0x8a6b3d, 0x35302b);
-    this.createResidentTexture("resident-rosnah", 0x2f7d5f, 0x2a2523);
-    this.createResidentTexture("resident-yusof", 0x4a6fa5, 0x50504a);
-    this.createResidentTexture("resident-meng", 0xd98a3c, 0x3a3a3a);
-    this.createResidentTexture("resident-weiling", 0xc76a9a, 0x241f1c);
+    this.createResidentTexture("resident-mei", 0xc85c5c, 0x6b6560, 0xe3b58c);
+    this.createResidentTexture("resident-ravi", 0x3d7a80, 0x4a4340, 0xb87f52);
+    this.createResidentTexture("resident-siti", 0x7b5aa6, 0x4c3b5f, 0xcf9a6c);
+    this.createResidentTexture("resident-seng", 0x8a6b3d, 0x8d8880, 0xe8c49b);
+    this.createResidentTexture("resident-rosnah", 0x2f7d5f, 0x2a2523, 0xa8703f);
+    this.createResidentTexture("resident-yusof", 0x4a6fa5, 0x7d7873, 0xcf9a6c);
+    this.createResidentTexture("resident-meng", 0xd98a3c, 0x5a5550, 0xe3b58c);
+    this.createResidentTexture("resident-weiling", 0xc76a9a, 0x241f1c, 0xecc6a0);
   }
 
-  private createResidentTexture(key: string, shirtColour: number, hairColour: number): void {
+  /**
+   * Residents share one builder but not one look: each carries its own skin
+   * tone, and everyone gets the same ink outline weight the buildings use, so
+   * people stop reading as pasted in from another game.
+   */
+  private createResidentTexture(
+    key: string,
+    shirtColour: number,
+    hairColour: number,
+    skinColour: number
+  ): void {
     if (this.textures.exists(key)) return;
     const graphics = this.make.graphics({ x: 0, y: 0 });
-    graphics.fillStyle(0x6b4f3f, 0.25);
-    graphics.fillEllipse(4, 37, 34, 10);
+
+    // Ink silhouette first; every coloured shape sits one pixel inside it.
+    graphics.fillStyle(INK, 1);
+    graphics.fillRect(7, 19, 22, 22);
+    graphics.fillRect(4, 22, 6, 14);
+    graphics.fillRect(26, 22, 6, 14);
+    graphics.fillRect(9, 6, 18, 17);
+    graphics.fillRect(8, 3, 20, 9);
+    graphics.fillRect(9, 38, 9, 6);
+    graphics.fillRect(19, 38, 9, 6);
+
     graphics.fillStyle(shirtColour, 1);
     graphics.fillRect(8, 20, 20, 20);
-    graphics.fillStyle(0xd9a77f, 1);
+
+    graphics.fillStyle(skinColour, 1);
     graphics.fillRect(10, 7, 16, 15);
-    graphics.fillStyle(hairColour, 1);
-    graphics.fillRect(9, 4, 18, 7);
-    graphics.fillStyle(0xf4d58d, 1);
     graphics.fillRect(5, 23, 4, 12);
     graphics.fillRect(27, 23, 4, 12);
+
+    graphics.fillStyle(hairColour, 1);
+    graphics.fillRect(9, 4, 18, 7);
+
+    graphics.fillStyle(0x2a2523, 1);
+    graphics.fillRect(13, 13, 2, 3);
+    graphics.fillRect(21, 13, 2, 3);
+
     graphics.fillStyle(0x352f2a, 1);
     graphics.fillRect(10, 39, 7, 4);
     graphics.fillRect(20, 39, 7, 4);
+
     graphics.generateTexture(key, 36, 44);
     graphics.destroy();
   }
@@ -1007,11 +1038,11 @@ export class SandboxScene extends Phaser.Scene {
   private addChoiceLabel(x: number, y: number, text: string, depth: number): void {
     this.add.text(x, y, text, {
       color: "#fff6dc",
-      fontFamily: "ui-monospace, monospace",
-      fontSize: "12px",
+      fontFamily: "system-ui, -apple-system, sans-serif",
+      fontSize: "14px",
       fontStyle: "bold",
       backgroundColor: "#173f4fe8",
-      padding: { x: 6, y: 3 },
+      padding: { x: 8, y: 4 },
     }).setOrigin(0.5, 0).setDepth(depth);
   }
 
@@ -1044,14 +1075,19 @@ export class SandboxScene extends Phaser.Scene {
   }
 
   private addMapLabel(x: number, y: number, text: string): void {
-    this.add.text(x, y, text, {
-      color: "#173f4f",
-      fontFamily: "ui-monospace, monospace",
-      fontSize: "15px",
-      fontStyle: "bold",
-      backgroundColor: "#f7edcfdd",
-      padding: { x: 8, y: 5 },
-    }).setDepth(y + 1);
+    // Quiet estate signage rather than a debug print: no plate, a cream halo so
+    // it stays legible over grass and concrete alike.
+    this.add
+      .text(x, y, text, {
+        color: "#2c4d5a",
+        fontFamily: "Georgia, 'Times New Roman', serif",
+        fontSize: "17px",
+        fontStyle: "bold italic",
+        padding: { x: 2, y: 2 },
+      })
+      .setStroke("#fff6dc", 4)
+      .setAlpha(0.82)
+      .setDepth(y + 1);
   }
 
   private addObstacle(x: number, y: number, width: number, height: number): void {
@@ -1070,7 +1106,7 @@ export class SandboxScene extends Phaser.Scene {
         .text(definition.x, definition.y - 42, definition.name, {
           color: "#fff8e8",
           fontFamily: "system-ui, sans-serif",
-          fontSize: "13px",
+          fontSize: "14px",
           fontStyle: "bold",
           backgroundColor: "#173f4fe8",
           padding: { x: 6, y: 3 },
@@ -1080,7 +1116,7 @@ export class SandboxScene extends Phaser.Scene {
         .text(definition.x, definition.y - 66, definition.greeting, {
           color: "#173f4f",
           fontFamily: "system-ui, sans-serif",
-          fontSize: "13px",
+          fontSize: "14px",
           backgroundColor: "#fff8e8f2",
           padding: { x: 9, y: 6 },
           wordWrap: { width: 210 },
@@ -1203,7 +1239,7 @@ export class SandboxScene extends Phaser.Scene {
         .text(definition.x, definition.y - 42, definition.name, {
           color: "#fff8e8",
           fontFamily: "system-ui, sans-serif",
-          fontSize: "13px",
+          fontSize: "14px",
           fontStyle: "bold",
           backgroundColor: "#173f4fe8",
           padding: { x: 6, y: 3 },
@@ -1214,7 +1250,7 @@ export class SandboxScene extends Phaser.Scene {
         .text(definition.x, definition.y - 66, definition.lines[0], {
           color: "#173f4f",
           fontFamily: "system-ui, sans-serif",
-          fontSize: "13px",
+          fontSize: "14px",
           backgroundColor: "#fff8e8f2",
           padding: { x: 9, y: 6 },
           wordWrap: { width: 210 },
@@ -1354,14 +1390,14 @@ export class SandboxScene extends Phaser.Scene {
         .setDepth(interaction.y + 30);
       const badge = this.add.text(interaction.x, interaction.y, "!", {
         color: "#173f4f",
-        fontFamily: "ui-monospace, monospace",
-        fontSize: "15px",
+        fontFamily: "Georgia, 'Times New Roman', serif",
+        fontSize: "17px",
         fontStyle: "bold",
       }).setOrigin(0.5).setDepth(interaction.y + 31);
       const label = this.add.text(interaction.x, interaction.y + 22, interaction.shortLabel, {
         color: "#173f4f",
         fontFamily: "system-ui, sans-serif",
-        fontSize: "13px",
+        fontSize: "14px",
         fontStyle: "bold",
         backgroundColor: "#fff8e8e6",
         padding: { x: 5, y: 3 },
