@@ -114,6 +114,13 @@
         transition: transform 140ms ease, box-shadow 140ms ease;
       }
 
+      /* Focus stays visible for keyboard users, but as an ink ring - the gold
+         outline on the coral button read as a decorative frame. */
+      .primary-button:focus-visible {
+        outline: 4px solid var(--ink);
+        outline-offset: 3px;
+      }
+
       .primary-button:hover:not(:disabled) {
         transform: translateY(-2px);
         box-shadow: 0 7px 0 var(--coral-dark);

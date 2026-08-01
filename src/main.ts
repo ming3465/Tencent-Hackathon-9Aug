@@ -817,4 +817,3 @@ showScreen("screen-title");
 renderSandboxState();
 renderSoundControls();
 syncJournalLayout();
-btnStart.focus();
