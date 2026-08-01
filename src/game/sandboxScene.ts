@@ -91,6 +91,22 @@ const RESIDENT_WANDER_RADIUS = 46;
 const RESIDENT_SPEED = 17;
 const BUBBLE_DISTANCE = 190;
 
+/** A resident stops drifting and turns to the player inside this radius. */
+const RESIDENT_ATTENTION_DISTANCE = 170;
+
+/**
+ * Residents are talked to from further away than objects: they are the thing
+ * the player is aiming at, and a person you are standing beside should already
+ * be listening.
+ */
+const RESIDENT_TALK_DISTANCE = 130;
+
+/**
+ * Once a target is selected the player must walk clearly away before it is
+ * dropped, so the prompt cannot flicker while a resident shifts their weight.
+ */
+const TALK_HYSTERESIS = 35;
+
 const WORLD_INTERACTIONS: readonly WorldInteraction[] = [
   {
     id: "noticeboard",
@@ -137,6 +153,7 @@ export class SandboxScene extends Phaser.Scene {
   private controlsEnabled = true;
   private currentArea = "";
   private residents: ResidentView[] = [];
+  private residentByActivity = new Map<ActivityId, ResidentView>();
   private playerShadow!: Phaser.GameObjects.Ellipse;
   private eveningLight!: Phaser.GameObjects.Rectangle;
   private ripples: Phaser.GameObjects.Arc[] = [];
@@ -277,8 +294,8 @@ export class SandboxScene extends Phaser.Scene {
   }
 
   private createPlayer(): void {
-    this.playerShadow = this.add.ellipse(790, 469, 30, 10, 0x2f3a24, 0.3).setDepth(472);
-    this.player = this.physics.add.sprite(790, 450, "player");
+    this.playerShadow = this.add.ellipse(790, 449, 30, 10, 0x2f3a24, 0.3).setDepth(452);
+    this.player = this.physics.add.sprite(790, 430, "player");
     this.player.setCollideWorldBounds(true);
     this.player.setDepth(this.player.y + 24);
     const body = this.player.body as Phaser.Physics.Arcade.Body;
@@ -667,7 +684,7 @@ export class SandboxScene extends Phaser.Scene {
         .setOrigin(0.5, 1)
         .setAlpha(0);
 
-      this.residents.push({
+      const view: ResidentView = {
         ...definition,
         sprite,
         shadow,
@@ -679,15 +696,40 @@ export class SandboxScene extends Phaser.Scene {
         pauseUntil: 0,
         bobPhase: Math.random() * Math.PI * 2,
         bubbleVisible: false,
-      });
+      };
+      this.residents.push(view);
+      this.residentByActivity.set(definition.activityId, view);
     }
+  }
+
+  /**
+   * Where an activity is actually talked to. Resident-led activities travel with
+   * the resident, so the player addresses the person rather than the spot they
+   * happened to be standing on. The memory table has no resident and stays put.
+   */
+  private interactionPoint(interaction: WorldInteraction): { x: number; y: number } {
+    return this.residentByActivity.get(interaction.id)?.position ?? interaction;
   }
 
   private updateResidents(time: number, delta: number): void {
     const step = delta / 1000;
 
     for (const resident of this.residents) {
-      if (time >= resident.pauseUntil) {
+      const playerDistance = Phaser.Math.Distance.Between(
+        this.player.x,
+        this.player.y,
+        resident.position.x,
+        resident.position.y
+      );
+
+      // Someone walking up to you is a reason to stop and look at them.
+      const attentive = playerDistance < RESIDENT_ATTENTION_DISTANCE;
+      if (attentive) {
+        resident.sprite.setFlipX(this.player.x < resident.position.x);
+        resident.pauseUntil = Math.max(resident.pauseUntil, time + 600);
+      }
+
+      if (!attentive && time >= resident.pauseUntil) {
         const distance = resident.position.distance(resident.target);
         if (distance < 3) {
           const angle = Math.random() * Math.PI * 2;
@@ -716,12 +758,20 @@ export class SandboxScene extends Phaser.Scene {
       resident.nameplate.setPosition(x, y - 42).setDepth(resident.position.y + 22);
       resident.bubble.setPosition(x, y - 66).setDepth(resident.position.y + 23);
 
-      const near =
-        Phaser.Math.Distance.Between(this.player.x, this.player.y, x, resident.position.y) <
-        BUBBLE_DISTANCE;
+      // The activity marker travels with its resident and sits at their feet,
+      // so it reads as "this neighbour has something to say" rather than
+      // labelling a patch of ground.
+      const marker = this.markers.get(resident.activityId);
+      if (marker) {
+        const markerY = resident.position.y + 30;
+        marker.ring.setPosition(x, markerY).setDepth(markerY);
+        marker.badge.setPosition(x, markerY).setDepth(markerY + 1);
+        marker.label.setPosition(x, markerY + 16).setDepth(markerY + 2);
+      }
+
+      const near = playerDistance < BUBBLE_DISTANCE;
       if (near !== resident.bubbleVisible) {
         resident.bubbleVisible = near;
-        if (near) resident.sprite.setFlipX(this.player.x < x);
         this.tweens.add({
           targets: resident.bubble,
           alpha: near ? 1 : 0,
@@ -837,18 +887,30 @@ export class SandboxScene extends Phaser.Scene {
 
   private updateNearbyInteraction(force: boolean): void {
     let nearest: WorldInteraction | null = null;
-    let nearestDistance = INTERACTION_DISTANCE;
+    let bestScore = Number.POSITIVE_INFINITY;
 
     for (const interaction of WORLD_INTERACTIONS) {
+      const point = this.interactionPoint(interaction);
       const distance = Phaser.Math.Distance.Between(
         this.player.x,
         this.player.y,
-        interaction.x,
-        interaction.y
+        point.x,
+        point.y
       );
-      if (distance < nearestDistance) {
+
+      const reach = this.residentByActivity.has(interaction.id)
+        ? RESIDENT_TALK_DISTANCE
+        : INTERACTION_DISTANCE;
+      const limit =
+        this.nearbyInteraction?.id === interaction.id ? reach + TALK_HYSTERESIS : reach;
+      if (distance >= limit) continue;
+
+      // Compare how far inside each reach the player is, not raw distance, so a
+      // nearby object cannot outrank the person the player is clearly stood with.
+      const score = distance / reach;
+      if (score < bestScore) {
         nearest = interaction;
-        nearestDistance = distance;
+        bestScore = score;
       }
     }
 
