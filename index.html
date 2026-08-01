@@ -67,6 +67,19 @@
         outline-offset: 4px;
       }
 
+      /*
+       * The world canvas takes focus programmatically so keyboard movement
+       * works, but it is a viewport rather than a control - a ring around it
+       * reads as chrome sitting on top of the artwork. Buttons and links keep
+       * their focus ring above, which is what keyboard navigation actually
+       * needs.
+       */
+      #sandbox-stage,
+      #sandbox-stage:focus,
+      #sandbox-stage:focus-visible {
+        outline: none;
+      }
+
       .skip-link {
         position: fixed;
         top: 0.75rem;

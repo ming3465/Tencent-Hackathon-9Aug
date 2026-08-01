@@ -3,6 +3,33 @@ import type { ActivityId } from "./sandboxState.js";
 
 const WORLD_WIDTH = 2560;
 const WORLD_HEIGHT = 1600;
+
+/**
+ * The palette locked in docs/MIORA_ASSET_BIBLE.md, plus working tones mixed
+ * from it. Everything drawn in this scene comes from here, so the estate reads
+ * as one authored place rather than a set of separately-coloured rectangles.
+ * Light is treated as arriving from the upper left throughout: lit edges get a
+ * lighter tone on their top and left, shaded edges a darker one.
+ */
+const INK = 0x173f4f;
+const CORAL = 0xd96756;
+const GOLD = 0xf2b84b;
+const TEAL = 0x287271;
+const SAND = 0xead9b7;
+
+const GRASS = 0x9fc079;
+const GRASS_DARK = 0x8caf68;
+const GRASS_TUFT = 0x7a9d59;
+const CONCRETE = 0xe3d3b0;
+const CONCRETE_EDGE = 0xcbb894;
+const CONCRETE_LIT = 0xf1e4c8;
+const SHADOW = 0x2f3a24;
+
+/** Stable value noise, so the estate looks hand-placed but never reshuffles. */
+function noise(x: number, y: number): number {
+  const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+  return value - Math.floor(value);
+}
 const PLAYER_SPEED = 215;
 const INTERACTION_DISTANCE = 92;
 
@@ -462,25 +489,16 @@ export class SandboxScene extends Phaser.Scene {
 
   private drawNeighbourhood(): void {
     const graphics = this.add.graphics().setDepth(0);
-    graphics.fillStyle(0xb7cf8a, 1);
-    graphics.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    this.drawGround(graphics);
 
-    for (let y = 0; y < WORLD_HEIGHT; y += 32) {
-      for (let x = 0; x < WORLD_WIDTH; x += 32) {
-        if ((x / 32 + y / 32) % 3 === 0) {
-          graphics.fillStyle(0xadc481, 0.45);
-          graphics.fillRect(x + 3, y + 4, 5, 3);
-        }
-      }
-    }
+    this.drawPath(graphics, 0, 405, WORLD_WIDTH, 150);
+    this.drawPath(graphics, 690, 240, 170, 1000);
+    this.drawPath(graphics, 240, 695, 900, 125);
+    this.drawPath(graphics, 150, 1140, 2280, 120);
+    this.drawPath(graphics, 1640, 350, 150, 830);
 
-    graphics.fillStyle(0xd8cfb7, 1);
-    graphics.fillRect(0, 405, WORLD_WIDTH, 150);
-    graphics.fillRect(690, 240, 170, 1000);
-    graphics.fillRect(240, 695, 900, 125);
-    graphics.fillRect(150, 1140, 2280, 120);
-    graphics.fillRect(1640, 350, 150, 830);
-    graphics.lineStyle(3, 0xb8ad96, 1);
+    // Centre markings on the two through-roads.
+    graphics.lineStyle(3, CONCRETE_EDGE, 1);
     for (let x = 0; x < WORLD_WIDTH; x += 64) {
       graphics.lineBetween(x, 480, x + 30, 480);
       graphics.lineBetween(x, 1200, x + 30, 1200);
@@ -519,6 +537,91 @@ export class SandboxScene extends Phaser.Scene {
     this.addMapLabel(2080, 1010, "COMMUNITY CENTRE");
     this.addMapLabel(200, 1430, "MORNING EXERCISE");
     this.addMapLabel(910, 1270, "BUS STOP");
+  }
+
+  /** Grass with drifting patches and scattered tufts, so no area reads as flat. */
+  private drawGround(graphics: Phaser.GameObjects.Graphics): void {
+    graphics.fillStyle(GRASS, 1);
+    graphics.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+
+    for (let y = 0; y < WORLD_HEIGHT; y += 96) {
+      for (let x = 0; x < WORLD_WIDTH; x += 96) {
+        const value = noise(x, y);
+        if (value <= 0.6) continue;
+        graphics.fillStyle(GRASS_DARK, 0.55);
+        graphics.fillRoundedRect(
+          x + value * 22,
+          y + value * 18,
+          64 + value * 46,
+          48 + value * 34,
+          24
+        );
+      }
+    }
+
+    for (let y = 0; y < WORLD_HEIGHT; y += 26) {
+      for (let x = 0; x < WORLD_WIDTH; x += 26) {
+        const value = noise(x * 0.7, y * 1.3);
+        if (value <= 0.74) continue;
+        const tuftX = x + value * 14;
+        const tuftY = y + value * 12;
+        graphics.fillStyle(GRASS_TUFT, 0.6);
+        graphics.fillRect(tuftX, tuftY, 2, 6);
+        graphics.fillRect(tuftX + 4, tuftY + 2, 2, 4);
+        graphics.fillRect(tuftX - 4, tuftY + 1, 2, 5);
+      }
+    }
+  }
+
+  /** Concrete with kerbed edges and worn speckle rather than a flat slab. */
+  private drawPath(
+    graphics: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ): void {
+    graphics.fillStyle(CONCRETE, 1);
+    graphics.fillRect(x, y, width, height);
+    graphics.fillStyle(CONCRETE_LIT, 1);
+    graphics.fillRect(x, y, width, 4);
+    graphics.fillStyle(CONCRETE_EDGE, 1);
+    graphics.fillRect(x, y + height - 4, width, 4);
+
+    for (let sy = y; sy < y + height; sy += 20) {
+      for (let sx = x; sx < x + width; sx += 20) {
+        if (noise(sx * 1.7, sy * 0.9) <= 0.79) continue;
+        graphics.fillStyle(CONCRETE_EDGE, 0.55);
+        graphics.fillRect(sx + 5, sy + 6, 3, 3);
+      }
+    }
+  }
+
+  /**
+   * Bamboo drying poles jutting from the windows. Nothing says Singapore HDB
+   * faster, and no other estate game in the room will have them.
+   */
+  private drawLaundryPoles(
+    graphics: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    seed: number
+  ): void {
+    const cloth = [CORAL, GOLD, TEAL, 0xfff6dc, 0x7fa9c9];
+    const poles = 2 + Math.floor(noise(seed, seed * 1.7) * 2);
+
+    for (let pole = 0; pole < poles; pole += 1) {
+      const poleY = y + 6 + pole * 9;
+      graphics.fillStyle(0xb08d5a, 1);
+      graphics.fillRect(x, poleY, 44, 3);
+
+      const items = 2 + Math.floor(noise(seed + pole, poleY) * 2);
+      for (let item = 0; item < items; item += 1) {
+        const value = noise(seed + pole * 3 + item, poleY + item);
+        graphics.fillStyle(cloth[Math.floor(value * cloth.length) % cloth.length], 1);
+        graphics.fillRect(x + 5 + item * 13, poleY + 3, 9, 11 + value * 7);
+      }
+    }
   }
 
   private drawKopitiam(graphics: Phaser.GameObjects.Graphics): void {
@@ -644,48 +747,89 @@ export class SandboxScene extends Phaser.Scene {
   }
 
   private drawHdb(graphics: Phaser.GameObjects.Graphics): void {
-    graphics.fillStyle(0x6b594d, 0.2);
-    graphics.fillRect(94, 80, 622, 276);
-    graphics.fillStyle(0xf0dfc2, 1);
+    graphics.fillStyle(SHADOW, 0.18);
+    graphics.fillRect(94, 84, 622, 276);
+
+    graphics.fillStyle(0xf3e3c6, 1);
     graphics.fillRect(70, 55, 620, 278);
-    graphics.fillStyle(0xd26a4f, 1);
-    graphics.fillRect(58, 45, 644, 24);
-    graphics.fillStyle(0x8b7666, 1);
+    graphics.fillStyle(CONCRETE_LIT, 1);
+    graphics.fillRect(70, 55, 620, 9);
+    graphics.fillStyle(CONCRETE_EDGE, 1);
+    graphics.fillRect(70, 262, 620, 8);
+
+    graphics.fillStyle(CORAL, 1);
+    graphics.fillRect(58, 41, 644, 26);
+    graphics.fillStyle(0xe8836f, 1);
+    graphics.fillRect(58, 41, 644, 7);
+
+    // Open void deck: shaded, with the structural pillars that define it.
+    graphics.fillStyle(0x9c8874, 1);
     graphics.fillRect(70, 280, 620, 53);
+    graphics.fillStyle(0xcbb894, 1);
+    for (let pillar = 0; pillar < 9; pillar += 1) {
+      graphics.fillRect(86 + pillar * 70, 280, 16, 53);
+    }
+    graphics.fillStyle(0x4d6671, 1);
+    graphics.fillRect(342, 284, 78, 49);
 
     for (let row = 0; row < 3; row += 1) {
       for (let column = 0; column < 8; column += 1) {
         const x = 105 + column * 70;
         const y = 90 + row * 60;
-        graphics.fillStyle((row + column) % 4 === 0 ? 0xf4b942 : 0x7393a7, 1);
+        const value = noise(x, y);
+
+        graphics.fillStyle(value > 0.72 ? GOLD : 0x7393a7, 1);
         graphics.fillRect(x, y, 36, 32);
-        graphics.lineStyle(3, 0x705d50, 1);
+        graphics.fillStyle(0xffffff, 0.22);
+        graphics.fillRect(x, y, 36, 7);
+        graphics.lineStyle(3, INK, 0.85);
         graphics.strokeRect(x, y, 36, 32);
+
+        if (value > 0.45) this.drawLaundryPoles(graphics, x + 2, y + 34, x + y);
       }
     }
 
-    graphics.fillStyle(0x4d6671, 1);
-    graphics.fillRect(342, 280, 78, 53);
+    graphics.lineStyle(4, INK, 1);
+    graphics.strokeRect(70, 55, 620, 278);
     this.addObstacle(70, 55, 620, 278);
   }
 
   private drawHawker(graphics: Phaser.GameObjects.Graphics): void {
-    graphics.fillStyle(0x5f5147, 0.18);
-    graphics.fillRect(1060, 92, 440, 290);
-    graphics.fillStyle(0xe9d9bd, 1);
+    graphics.fillStyle(SHADOW, 0.18);
+    graphics.fillRect(1060, 96, 440, 290);
+    graphics.fillStyle(SAND, 1);
     graphics.fillRect(1035, 70, 440, 285);
-    graphics.fillStyle(0x287271, 1);
+    graphics.fillStyle(CONCRETE_LIT, 1);
+    graphics.fillRect(1035, 70, 440, 8);
+
+    graphics.fillStyle(TEAL, 1);
     graphics.fillRect(1018, 55, 474, 30);
+    graphics.fillStyle(0x3a8b8a, 1);
+    graphics.fillRect(1018, 55, 474, 7);
 
     for (let column = 0; column < 4; column += 1) {
       const x = 1070 + column * 95;
-      graphics.fillStyle(column % 2 === 0 ? 0xd36b5f : 0xe2a84a, 1);
+
+      // Striped awning over each stall.
+      graphics.fillStyle(column % 2 === 0 ? CORAL : GOLD, 1);
       graphics.fillRect(x, 120, 72, 28);
+      graphics.fillStyle(0xfff6dc, 0.75);
+      for (let stripe = 0; stripe < 4; stripe += 1) {
+        graphics.fillRect(x + 6 + stripe * 18, 120, 7, 28);
+      }
+      graphics.lineStyle(3, INK, 0.8);
+      graphics.strokeRect(x, 120, 72, 28);
+
       graphics.fillStyle(0x5b4a42, 1);
       graphics.fillRect(x, 148, 72, 70);
       graphics.fillStyle(0xf4e8cf, 1);
       graphics.fillRect(x + 8, 159, 56, 32);
+      graphics.fillStyle(CONCRETE_EDGE, 1);
+      graphics.fillRect(x + 8, 196, 56, 8);
     }
+
+    graphics.lineStyle(4, INK, 1);
+    graphics.strokeRect(1035, 70, 440, 285);
     this.addObstacle(1035, 70, 440, 285);
   }
 
@@ -859,13 +1003,32 @@ export class SandboxScene extends Phaser.Scene {
     }).setOrigin(0.5, 0).setDepth(depth);
   }
 
+  /**
+   * A broad, flat-crowned rain tree - the tree that actually shades Singapore
+   * estates - built in three tonal layers with the light coming from upper left.
+   */
   private drawTree(graphics: Phaser.GameObjects.Graphics, x: number, y: number): void {
-    graphics.fillStyle(0x76563e, 1);
-    graphics.fillRect(x - 5, y, 10, 32);
-    graphics.fillStyle(0x3d7750, 1);
-    graphics.fillCircle(x - 14, y - 5, 25);
-    graphics.fillCircle(x + 15, y - 8, 28);
-    graphics.fillCircle(x, y - 25, 30);
+    graphics.fillStyle(SHADOW, 0.2);
+    graphics.fillEllipse(x + 10, y + 24, 78, 22);
+
+    graphics.fillStyle(0x6d5138, 1);
+    graphics.fillRect(x - 6, y - 6, 13, 34);
+    graphics.fillStyle(0x88673f, 1);
+    graphics.fillRect(x - 6, y - 6, 5, 34);
+
+    graphics.fillStyle(0x35633f, 1);
+    graphics.fillCircle(x - 22, y - 8, 26);
+    graphics.fillCircle(x + 22, y - 10, 28);
+    graphics.fillCircle(x, y - 30, 31);
+
+    graphics.fillStyle(0x437a4a, 1);
+    graphics.fillCircle(x - 18, y - 15, 20);
+    graphics.fillCircle(x + 17, y - 18, 21);
+    graphics.fillCircle(x - 2, y - 35, 23);
+
+    graphics.fillStyle(0x5f9a58, 1);
+    graphics.fillCircle(x - 12, y - 27, 13);
+    graphics.fillCircle(x + 7, y - 33, 11);
   }
 
   private addMapLabel(x: number, y: number, text: string): void {
@@ -993,7 +1156,7 @@ export class SandboxScene extends Phaser.Scene {
       // close enough to actually speak, the marker fades out as redundant.
       const marker = this.markers.get(resident.activityId);
       if (marker) {
-        const markerY = y - 62;
+        const markerY = y - 84;
         marker.ring.setPosition(x, markerY).setDepth(resident.position.y + 24);
         marker.badge.setPosition(x, markerY).setDepth(resident.position.y + 25);
         marker.label.setVisible(false);
