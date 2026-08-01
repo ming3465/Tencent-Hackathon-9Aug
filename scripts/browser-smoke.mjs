@@ -129,6 +129,26 @@ class Session {
     const { data } = await this.send("Page.captureScreenshot", { format: "png" });
     await writeFile(path, Buffer.from(data, "base64"));
   }
+
+  /** Captures a single element, used for clean canvas-only marketing stills. */
+  async shotElement(selector, path, scale = 2) {
+    const box = await this.eval(`
+      (() => {
+        const el = document.querySelector(${JSON.stringify(selector)});
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { x: r.x + scrollX, y: r.y + scrollY, width: r.width, height: r.height };
+      })()
+    `);
+    if (!box) return false;
+    const { data } = await this.send("Page.captureScreenshot", {
+      format: "png",
+      captureBeyondViewport: true,
+      clip: { ...box, scale },
+    });
+    await writeFile(path, Buffer.from(data, "base64"));
+    return true;
+  }
 }
 
 const chrome = spawn(
@@ -196,6 +216,7 @@ try {
     await page.eval(`!!document.getElementById("btn-sound") && !!document.getElementById("volume-music")`)
   );
   await page.shot(`${SHOT_DIR}/02-neighbourhood.png`);
+  await page.shotElement("#sandbox-stage canvas", `${SHOT_DIR}/hero-day.png`);
 
   // The player spawns beside Uncle Ravi, so proximity detection is live immediately.
   const spawnPrompt = await page.eval(`document.getElementById("nearby-text").textContent`);
@@ -272,6 +293,7 @@ try {
   );
   await sleep(2400); // let the golden-hour light finish fading up
   await page.shot(`${SHOT_DIR}/06-evening-light.png`);
+  await page.shotElement("#sandbox-stage canvas", `${SHOT_DIR}/hero-evening.png`);
 
   await page.eval(`document.getElementById("btn-evening").click()`);
   await sleep(700);
