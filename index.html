@@ -159,19 +159,21 @@
         margin: 0;
         color: var(--ink);
         font-family: var(--font-display);
-        font-size: clamp(3.6rem, 8vw, 7rem);
-        line-height: 0.84;
-        letter-spacing: -0.055em;
+        font-size: clamp(3.4rem, 7.4vw, 6.3rem);
+        line-height: 0.86;
+        letter-spacing: -0.05em;
       }
 
       .title-copy h1 span {
         display: block;
         color: var(--coral);
         font-family: var(--font-ui);
-        font-size: 0.28em;
-        letter-spacing: 0.2em;
+        font-size: 0.19em;
+        font-weight: 900;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
-        margin-bottom: 0.6rem;
+        margin-bottom: 0.7rem;
+        white-space: nowrap;
       }
 
       .title-lede {
@@ -197,130 +199,344 @@
         font-weight: 700;
       }
 
+      /*
+       * Title illustration: the same flat-ink language as the in-game art -
+       * golden-hour sky, an HDB block with laundry and an open void deck, rain
+       * trees, a worked garden bed, and an elder with the player mid-chat.
+       * Everything is drawn in CSS; no image ships.
+       */
       .title-world {
         position: relative;
         min-height: 560px;
         overflow: hidden;
         border: 7px solid var(--ink);
         border-radius: 40px 40px 120px 40px;
-        background:
-          linear-gradient(180deg, #84c4c2 0 42%, #b6ce83 42% 100%);
+        background: linear-gradient(
+          180deg,
+          #7ec1bd 0%,
+          #9fcbb0 36%,
+          #f0d9a0 50%,
+          #a8c47f 50.4%,
+          #9cba73 100%
+        );
         box-shadow: var(--shadow);
         isolation: isolate;
       }
 
-      .title-sun {
-        position: absolute;
-        top: 48px;
-        right: 64px;
-        width: 112px;
-        height: 112px;
-        border: 6px solid var(--ink);
-        border-radius: 50%;
-        background: var(--gold);
-        z-index: -1;
-      }
-
-      .title-hdb {
-        position: absolute;
-        top: 120px;
-        left: 46px;
-        width: 68%;
-        height: 245px;
-        border: 6px solid var(--ink);
-        background: #f0dfc2;
-        box-shadow: 18px 18px 0 rgba(23, 63, 79, 0.18);
-      }
-
-      .title-hdb::before {
+      /* Grass speckle over the lower half so the ground never reads flat. */
+      .title-world::after {
         content: "";
         position: absolute;
-        top: -26px;
+        inset: 52% 0 0 0;
+        background:
+          radial-gradient(rgba(122, 157, 89, 0.4) 2px, transparent 2.6px) 0 0 / 36px 28px,
+          radial-gradient(rgba(122, 157, 89, 0.25) 2px, transparent 2.6px) 18px 14px / 36px 28px;
+        pointer-events: none;
+      }
+
+      .tw-sun {
+        position: absolute;
+        top: 42px;
+        right: 46px;
+        width: 96px;
+        height: 96px;
+        border: 6px solid var(--ink);
+        border-radius: 50%;
+        background: radial-gradient(circle at 34% 30%, #f8d27c, var(--gold) 62%);
+        box-shadow:
+          0 0 0 16px rgba(242, 184, 75, 0.26),
+          0 0 0 36px rgba(242, 184, 75, 0.1);
+      }
+
+      .tw-hdb {
+        position: absolute;
+        top: 104px;
+        left: 40px;
+        width: 62%;
+        height: 252px;
+        border: 6px solid var(--ink);
+        background: linear-gradient(#f8ecd3 0 16px, #f3e3c6 16px);
+        box-shadow: 16px 16px 0 rgba(23, 63, 79, 0.16);
+      }
+
+      .tw-hdb::before {
+        content: "";
+        position: absolute;
+        top: -28px;
         left: -18px;
         width: calc(100% + 36px);
         height: 26px;
         border: 6px solid var(--ink);
-        background: var(--coral);
+        background: linear-gradient(var(--coral) 0 8px, #c25647 8px);
       }
 
-      .title-windows {
+      .tw-windows {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
-        gap: 18px;
-        padding: 34px;
+        gap: 14px;
+        padding: 22px 24px 0;
       }
 
-      .title-windows span {
+      .tw-windows span {
+        position: relative;
         aspect-ratio: 1;
         border: 4px solid var(--ink);
-        background: #7297a8;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0 28%, transparent 28%),
+          #7297a8;
       }
 
-      .title-windows span:nth-child(3n) {
-        background: var(--gold);
+      .tw-windows span:nth-child(3n) {
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0 28%, transparent 28%),
+          var(--gold);
       }
 
-      .title-path {
+      /* Bamboo laundry poles under a few windows - the HDB signature. */
+      .tw-windows span:nth-child(4n + 2)::after {
+        content: "";
+        position: absolute;
+        left: -10%;
+        top: calc(100% + 3px);
+        width: 120%;
+        height: 8px;
+        border: 2px solid var(--ink);
+        background: repeating-linear-gradient(
+          90deg,
+          var(--coral) 0 7px,
+          var(--cream) 7px 13px,
+          var(--teal) 13px 20px,
+          var(--gold) 20px 26px
+        );
+      }
+
+      /* Open void deck with pillars along the base of the block. */
+      .tw-deck {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 38px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-around;
+        border-top: 4px solid var(--ink);
+        background: #9c8874;
+      }
+
+      .tw-deck span {
+        width: 15px;
+        height: 100%;
+        border: 3px solid var(--ink);
+        border-top: 0;
+        border-bottom: 0;
+        background: #e3d3b0;
+      }
+
+      .tw-path {
         position: absolute;
         left: -5%;
-        bottom: 28px;
+        bottom: 24px;
         width: 110%;
-        height: 125px;
+        height: 112px;
         border: 6px solid var(--ink);
-        background: var(--sand);
+        background: linear-gradient(
+          var(--paper) 0 10px,
+          var(--sand) 10px calc(100% - 12px),
+          #cbb894 calc(100% - 12px)
+        );
         transform: rotate(-4deg);
       }
 
-      .title-garden {
+      .tw-tree {
         position: absolute;
-        right: 28px;
-        bottom: 105px;
-        width: 190px;
-        height: 125px;
-        border: 6px solid var(--ink);
-        border-radius: 18px;
-        background:
-          radial-gradient(circle, var(--gold) 0 7px, transparent 8px) 6px 6px / 42px 42px,
-          var(--green);
-        transform: rotate(3deg);
+        width: 14px;
+        height: 52px;
+        border: 4px solid var(--ink);
+        background: linear-gradient(90deg, #88673f 0 45%, #6d5138 45%);
+        z-index: 2;
       }
 
-      .title-person {
+      .tw-tree::before {
+        content: "";
         position: absolute;
-        left: 47%;
-        bottom: 105px;
-        width: 52px;
-        height: 72px;
+        left: 50%;
+        bottom: calc(100% - 12px);
+        width: 128px;
+        height: 82px;
+        translate: -50% 0;
         border: 5px solid var(--ink);
-        border-radius: 18px 18px 10px 10px;
-        background: var(--teal);
+        border-radius: 48% 52% 46% 54% / 62% 58% 42% 38%;
+        background: radial-gradient(
+          circle at 30% 28%,
+          #5f9a58 0 24%,
+          #437a4a 25% 58%,
+          #35633f 59%
+        );
+      }
+
+      .tw-tree-a { left: 6px; bottom: 118px; scale: 1.12; }
+      .tw-tree-b { right: 176px; bottom: 236px; scale: 0.78; z-index: 0; }
+
+      .tw-garden {
+        position: absolute;
+        right: 26px;
+        bottom: 152px;
+        width: 178px;
+        height: 102px;
+        border: 6px solid var(--ink);
+        border-radius: 14px;
+        background: repeating-linear-gradient(180deg, #6f4f36 0 24px, #8a674a 24px 29px);
+        transform: rotate(2deg);
+        z-index: 1;
+      }
+
+      .tw-garden::before {
+        content: "";
+        position: absolute;
+        inset: 5px;
+        background: radial-gradient(circle, #91b85d 0 6px, transparent 7px) 10px 6px / 33px 27px;
+      }
+
+      .tw-bench {
+        position: absolute;
+        left: 138px;
+        bottom: 128px;
+        width: 76px;
+        height: 13px;
+        border: 4px solid var(--ink);
+        border-radius: 4px;
+        background: #9b7653;
+        transform: rotate(-4deg);
+        z-index: 2;
+      }
+
+      .tw-bench::before,
+      .tw-bench::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        width: 9px;
+        height: 16px;
+        border: 3px solid var(--ink);
+        border-top: 0;
+        background: #7c5b3e;
+      }
+
+      .tw-bench::before { left: 6px; }
+      .tw-bench::after { right: 6px; }
+
+      /* The thesis, on screen: an elder and the player, mid-conversation. */
+      .tw-elder,
+      .tw-player {
+        position: absolute;
+        border: 5px solid var(--ink);
+        border-radius: 16px 16px 9px 9px;
         z-index: 3;
       }
 
-      .title-person::before {
+      .tw-elder {
+        left: 46%;
+        bottom: 116px;
+        width: 48px;
+        height: 66px;
+        background: var(--purple);
+      }
+
+      .tw-player {
+        left: calc(46% + 74px);
+        bottom: 110px;
+        width: 44px;
+        height: 58px;
+        background: #2d5f74;
+      }
+
+      .tw-elder::before,
+      .tw-player::before {
         content: "";
         position: absolute;
-        top: -35px;
-        left: 5px;
+        left: 50%;
+        top: -32px;
+        translate: -50% 0;
         width: 32px;
         height: 32px;
         border: 5px solid var(--ink);
         border-radius: 50%;
-        background: #d9a77f;
+      }
+
+      /* Silver hair for the elder; dark hair for the visitor. */
+      .tw-elder::before {
+        background: linear-gradient(#cfc8bd 0 42%, #cf9a6c 42%);
+      }
+
+      .tw-player::before {
+        width: 29px;
+        height: 29px;
+        top: -29px;
+        background: linear-gradient(#2a2523 0 38%, #d39c6d 38%);
+      }
+
+      /* A walking cane, held upright - a tool, not a punchline. */
+      .tw-elder::after {
+        content: "";
+        position: absolute;
+        right: -17px;
+        bottom: -2px;
+        width: 6px;
+        height: 52px;
+        border: 3px solid var(--ink);
+        border-radius: 4px 4px 2px 2px;
+        background: #b08d5a;
       }
 
       .title-sign {
         position: absolute;
-        left: 34px;
-        bottom: 30px;
+        left: 30px;
+        bottom: 26px;
         z-index: 4;
-        padding: 0.55rem 0.75rem;
+        padding: 0.6rem 0.9rem;
         color: var(--cream);
         background: var(--ink);
-        font-size: 0.78rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
         font-weight: 900;
         letter-spacing: 0.08em;
-        transform: rotate(2deg);
+        transform: rotate(-2deg);
+        box-shadow: 4px 4px 0 var(--gold);
+      }
+
+      .control-note kbd {
+        display: inline-block;
+        min-width: 1.55em;
+        margin: 0 0.08em;
+        padding: 0.08em 0.34em;
+        border: 2px solid var(--ink);
+        border-radius: 6px;
+        background: var(--paper);
+        box-shadow: 0 2px 0 var(--ink);
+        font-family: inherit;
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .title-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 1.1rem 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .title-chips li {
+        padding: 0.35rem 0.75rem;
+        border: 2px solid #d8c9a6;
+        border-radius: 999px;
+        background: var(--paper);
+        color: var(--ink-soft);
+        font-size: 0.76rem;
+        font-weight: 800;
       }
 
       /* Sandbox */
@@ -1108,23 +1324,42 @@
           border-radius: 28px 28px 70px 28px;
         }
 
-        .title-hdb {
-          top: 95px;
-          left: 25px;
-          width: 72%;
-          height: 170px;
+        .tw-hdb {
+          top: 86px;
+          left: 22px;
+          width: 70%;
+          height: 176px;
         }
 
-        .title-windows {
-          gap: 10px;
-          padding: 24px 18px;
+        .tw-windows {
+          gap: 9px;
+          padding: 14px 16px 0;
         }
 
-        .title-garden {
-          width: 140px;
-          height: 95px;
-          bottom: 80px;
+        .tw-windows span { border-width: 3px; }
+        .tw-windows span:nth-child(4n + 2)::after { display: none; }
+        .tw-deck { height: 26px; }
+        .tw-deck span { width: 10px; }
+
+        .tw-sun {
+          top: 26px;
+          right: 24px;
+          width: 64px;
+          height: 64px;
         }
+
+        .tw-garden {
+          width: 138px;
+          height: 88px;
+          bottom: 78px;
+        }
+
+        .tw-tree-a { scale: 0.85; bottom: 96px; }
+        .tw-tree-b { display: none; }
+        .tw-bench { display: none; }
+
+        .tw-elder { left: 40%; bottom: 96px; scale: 0.85; }
+        .tw-player { left: calc(40% + 60px); bottom: 92px; scale: 0.85; }
 
         #screen-sandbox {
           padding: 0.4rem;
@@ -1229,21 +1464,36 @@
             <div class="title-actions">
               <button id="btn-start" class="primary-button" type="button">Begin a neighbourhood day</button>
             </div>
-            <p class="control-note">Move with WASD or arrow keys. Interact with E, Space, or touch controls.</p>
+            <p class="control-note">
+              Move <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys &middot;
+              Interact <kbd>E</kbd> &middot; Touch on phones
+            </p>
+            <ul class="title-chips" aria-label="Good to know">
+              <li>Free in any browser</li>
+              <li>No install</li>
+              <li>No account</li>
+            </ul>
           </div>
 
           <div class="title-world" aria-hidden="true">
-            <div class="title-sun"></div>
-            <div class="title-hdb">
-              <div class="title-windows">
+            <div class="tw-sun"></div>
+            <div class="tw-tree tw-tree-b"></div>
+            <div class="tw-hdb">
+              <div class="tw-windows">
                 <span></span><span></span><span></span><span></span><span></span>
                 <span></span><span></span><span></span><span></span><span></span>
                 <span></span><span></span><span></span><span></span><span></span>
               </div>
+              <div class="tw-deck">
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
             </div>
-            <div class="title-path"></div>
-            <div class="title-garden"></div>
-            <div class="title-person"></div>
+            <div class="tw-path"></div>
+            <div class="tw-garden"></div>
+            <div class="tw-bench"></div>
+            <div class="tw-tree tw-tree-a"></div>
+            <div class="tw-elder"></div>
+            <div class="tw-player"></div>
             <div class="title-sign">EVERY SMALL ACT GROWS THE KAMPUNG</div>
           </div>
         </div>
