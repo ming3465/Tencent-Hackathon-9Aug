@@ -1,8 +1,8 @@
 import Phaser from "phaser";
 import type { ActivityId } from "./sandboxState.js";
 
-const WORLD_WIDTH = 1600;
-const WORLD_HEIGHT = 1000;
+const WORLD_WIDTH = 2560;
+const WORLD_HEIGHT = 1600;
 const PLAYER_SPEED = 215;
 const INTERACTION_DISTANCE = 92;
 
@@ -87,6 +87,88 @@ const RESIDENTS: readonly ResidentDefinition[] = [
   },
 ];
 
+interface NeighbourDefinition {
+  name: string;
+  texture: string;
+  x: number;
+  y: number;
+  /** Cycled one per approach, so a neighbour is not a single repeated line. */
+  lines: readonly string[];
+}
+
+interface NeighbourView extends NeighbourDefinition {
+  sprite: Phaser.GameObjects.Sprite;
+  shadow: Phaser.GameObjects.Ellipse;
+  nameplate: Phaser.GameObjects.Text;
+  bubble: Phaser.GameObjects.Text;
+  bobPhase: number;
+  bubbleVisible: boolean;
+  lineIndex: number;
+}
+
+/**
+ * Neighbours who populate the estate without owning an activity. They carry the
+ * worldbuilding — who keeps this place running, and who has just arrived — and
+ * seed the later chapters without adding progression state.
+ */
+const NEIGHBOURS: readonly NeighbourDefinition[] = [
+  {
+    name: "Uncle Seng",
+    texture: "resident-seng",
+    x: 1735,
+    y: 300,
+    lines: [
+      "Kopi-o kosong, half sugar. I know already. Thirty-one years, same order.",
+      "The morning crowd comes at six. Not for the coffee — for the company.",
+      "My son says retire lah. And do what? Sit at home and wait for Sunday?",
+    ],
+  },
+  {
+    name: "Auntie Rosnah",
+    texture: "resident-rosnah",
+    x: 2255,
+    y: 385,
+    lines: [
+      "If Mdm Tan does not come for her milk by ten, I call her. Twice it mattered.",
+      "Everyone thinks this shop sells groceries. Mostly it keeps track of people.",
+      "That new family in Block 12 — nobody has said hello yet. Somebody should.",
+    ],
+  },
+  {
+    name: "Pak Yusof",
+    texture: "resident-yusof",
+    x: 905,
+    y: 620,
+    lines: [
+      "Forty years fixing lifts and water pumps. Now I fix whatever the block brings me.",
+      "That noticeboard hinge? Mine. The bench bolt? Also mine. Nobody asked me to.",
+      "A thing that still works is a thing somebody kept working.",
+    ],
+  },
+  {
+    name: "Coach Meng",
+    texture: "resident-meng",
+    x: 375,
+    y: 1245,
+    lines: [
+      "Seven in the morning, every day. If it rains we move under the shelter.",
+      "Started with two of us. Now eleven. Nobody comes to get fit — they come to show up.",
+      "Anyone can join. That is the entire entry requirement.",
+    ],
+  },
+  {
+    name: "Wei Ling",
+    texture: "resident-weiling",
+    x: 1770,
+    y: 785,
+    lines: [
+      "We only moved in last month. I did not expect people to actually say hello.",
+      "Aunty Mei gave us pandan from the garden. I had to look up what to do with it.",
+      "My own mother is overseas. It helps, having aunties around.",
+    ],
+  },
+];
+
 const RESIDENT_WANDER_RADIUS = 46;
 const RESIDENT_SPEED = 17;
 const BUBBLE_DISTANCE = 190;
@@ -154,6 +236,7 @@ export class SandboxScene extends Phaser.Scene {
   private currentArea = "";
   private residents: ResidentView[] = [];
   private residentByActivity = new Map<ActivityId, ResidentView>();
+  private neighbours: NeighbourView[] = [];
   private playerShadow!: Phaser.GameObjects.Ellipse;
   private eveningLight!: Phaser.GameObjects.Rectangle;
   private ripples: Phaser.GameObjects.Arc[] = [];
@@ -173,6 +256,7 @@ export class SandboxScene extends Phaser.Scene {
     this.drawNeighbourhood();
     this.createAmbientLife();
     this.createResidents();
+    this.createNeighbours();
     this.createInteractionMarkers();
     this.createPlayer();
     this.createEveningLight();
@@ -187,6 +271,7 @@ export class SandboxScene extends Phaser.Scene {
 
   update(time: number, delta: number): void {
     this.updateResidents(time, delta);
+    this.updateNeighbours(delta);
     this.updatePlayerShadow();
 
     if (!this.controlsEnabled) {
@@ -347,6 +432,11 @@ export class SandboxScene extends Phaser.Scene {
     this.createResidentTexture("resident-mei", 0xc85c5c, 0x2a2523);
     this.createResidentTexture("resident-ravi", 0x3d7a80, 0x404040);
     this.createResidentTexture("resident-siti", 0x7b5aa6, 0x4c3b5f);
+    this.createResidentTexture("resident-seng", 0x8a6b3d, 0x35302b);
+    this.createResidentTexture("resident-rosnah", 0x2f7d5f, 0x2a2523);
+    this.createResidentTexture("resident-yusof", 0x4a6fa5, 0x50504a);
+    this.createResidentTexture("resident-meng", 0xd98a3c, 0x3a3a3a);
+    this.createResidentTexture("resident-weiling", 0xc76a9a, 0x241f1c);
   }
 
   private createResidentTexture(key: string, shirtColour: number, hairColour: number): void {
@@ -386,11 +476,14 @@ export class SandboxScene extends Phaser.Scene {
 
     graphics.fillStyle(0xd8cfb7, 1);
     graphics.fillRect(0, 405, WORLD_WIDTH, 150);
-    graphics.fillRect(690, 240, 170, 600);
+    graphics.fillRect(690, 240, 170, 1000);
     graphics.fillRect(240, 695, 900, 125);
+    graphics.fillRect(150, 1140, 2280, 120);
+    graphics.fillRect(1640, 350, 150, 830);
     graphics.lineStyle(3, 0xb8ad96, 1);
     for (let x = 0; x < WORLD_WIDTH; x += 64) {
       graphics.lineBetween(x, 480, x + 30, 480);
+      graphics.lineBetween(x, 1200, x + 30, 1200);
     }
 
     this.drawHdb(graphics);
@@ -399,10 +492,19 @@ export class SandboxScene extends Phaser.Scene {
     this.drawPond(graphics);
     this.drawShelteredRoute(graphics);
     this.drawMemoryTable(graphics);
+    this.drawKopitiam(graphics);
+    this.drawProvisionShop(graphics);
+    this.drawPlayground(graphics);
+    this.drawCommunityCentre(graphics);
+    this.drawFitnessCorner(graphics);
+    this.drawBusStop(graphics);
 
     const trees = [
       [55, 390], [120, 570], [370, 585], [540, 620], [930, 400],
       [1510, 430], [1470, 580], [920, 890], [640, 900], [90, 900],
+      [1560, 470], [1990, 470], [2360, 560], [1560, 960], [2010, 1090],
+      [980, 1080], [560, 1060], [180, 1000], [2450, 900], [1250, 1090],
+      [430, 1470], [820, 1400], [1400, 1430], [1900, 1450], [2350, 1380],
     ];
     for (const [x, y] of trees) this.drawTree(graphics, x, y);
 
@@ -411,6 +513,134 @@ export class SandboxScene extends Phaser.Scene {
     this.addMapLabel(1110, 885, "COMMUNITY GARDEN");
     this.addMapLabel(275, 865, "SHADED WALK");
     this.addMapLabel(705, 590, "VOID DECK");
+    this.addMapLabel(1600, 90, "KOPITIAM");
+    this.addMapLabel(2110, 130, "PROVISION SHOP");
+    this.addMapLabel(1610, 900, "PLAYGROUND");
+    this.addMapLabel(2080, 1010, "COMMUNITY CENTRE");
+    this.addMapLabel(200, 1430, "MORNING EXERCISE");
+    this.addMapLabel(910, 1270, "BUS STOP");
+  }
+
+  private drawKopitiam(graphics: Phaser.GameObjects.Graphics): void {
+    graphics.fillStyle(0x5f5147, 0.18);
+    graphics.fillRect(1585, 145, 370, 220);
+    graphics.fillStyle(0xf1e2c4, 1);
+    graphics.fillRect(1560, 125, 370, 215);
+    graphics.fillStyle(0xd96756, 1);
+    graphics.fillRect(1545, 110, 400, 28);
+
+    // Round tables with stools, the way a coffee shop actually reads from above.
+    for (let table = 0; table < 3; table += 1) {
+      const x = 1625 + table * 120;
+      graphics.fillStyle(0xe9d9bd, 1);
+      graphics.fillCircle(x, 250, 30);
+      graphics.lineStyle(4, 0x8b7666, 1);
+      graphics.strokeCircle(x, 250, 30);
+      graphics.fillStyle(0x9b7653, 1);
+      for (const [dx, dy] of [[-44, 0], [44, 0], [0, -44], [0, 44]]) {
+        graphics.fillCircle(x + dx, 250 + dy, 11);
+      }
+    }
+
+    graphics.fillStyle(0x6f4f36, 1);
+    graphics.fillRect(1575, 150, 120, 34);
+    this.addObstacle(1560, 125, 370, 60);
+  }
+
+  private drawProvisionShop(graphics: Phaser.GameObjects.Graphics): void {
+    graphics.fillStyle(0x5f5147, 0.18);
+    graphics.fillRect(2115, 185, 330, 200);
+    graphics.fillStyle(0xe6dcc0, 1);
+    graphics.fillRect(2090, 165, 330, 195);
+    graphics.fillStyle(0x287271, 1);
+    graphics.fillRect(2075, 150, 360, 26);
+
+    // Stacked crates outside the shopfront.
+    const crateColours = [0xd96756, 0xf2b84b, 0x5b8c5a, 0x775b91];
+    for (let crate = 0; crate < 6; crate += 1) {
+      graphics.fillStyle(crateColours[crate % crateColours.length], 1);
+      graphics.fillRect(2105 + (crate % 3) * 58, 300 + Math.floor(crate / 3) * 34, 46, 28);
+      graphics.lineStyle(3, 0x6f4f36, 1);
+      graphics.strokeRect(2105 + (crate % 3) * 58, 300 + Math.floor(crate / 3) * 34, 46, 28);
+    }
+    this.addObstacle(2090, 165, 330, 130);
+  }
+
+  private drawPlayground(graphics: Phaser.GameObjects.Graphics): void {
+    graphics.fillStyle(0xe0b98d, 1);
+    graphics.fillRoundedRect(1580, 640, 380, 260, 26);
+    graphics.lineStyle(6, 0xb5895f, 1);
+    graphics.strokeRoundedRect(1580, 640, 380, 260, 26);
+
+    // Climbing frame.
+    graphics.fillStyle(0x4a9fb0, 1);
+    graphics.fillRect(1620, 690, 110, 20);
+    graphics.fillRect(1626, 710, 12, 74);
+    graphics.fillRect(1712, 710, 12, 74);
+    graphics.fillStyle(0xf2b84b, 1);
+    graphics.fillRect(1640, 730, 78, 14);
+
+    // Swings.
+    graphics.fillStyle(0x8a674a, 1);
+    graphics.fillRect(1820, 690, 100, 14);
+    graphics.fillRect(1826, 704, 8, 60);
+    graphics.fillRect(1906, 704, 8, 60);
+    graphics.fillStyle(0xd96756, 1);
+    graphics.fillRect(1846, 756, 28, 10);
+  }
+
+  private drawCommunityCentre(graphics: Phaser.GameObjects.Graphics): void {
+    graphics.fillStyle(0x5f5147, 0.2);
+    graphics.fillRect(2075, 660, 400, 300);
+    graphics.fillStyle(0xf3e6cb, 1);
+    graphics.fillRect(2050, 635, 400, 300);
+    graphics.fillStyle(0x775b91, 1);
+    graphics.fillRect(2035, 618, 430, 30);
+
+    for (let window = 0; window < 4; window += 1) {
+      graphics.fillStyle(window % 2 === 0 ? 0x7393a7 : 0xf4b942, 1);
+      graphics.fillRect(2080 + window * 92, 690, 62, 54);
+      graphics.lineStyle(3, 0x705d50, 1);
+      graphics.strokeRect(2080 + window * 92, 690, 62, 54);
+    }
+
+    graphics.fillStyle(0x4d6671, 1);
+    graphics.fillRect(2215, 870, 74, 65);
+    this.addObstacle(2050, 635, 400, 300);
+  }
+
+  private drawFitnessCorner(graphics: Phaser.GameObjects.Graphics): void {
+    graphics.fillStyle(0x9dbf7c, 1);
+    graphics.fillRoundedRect(170, 1170, 400, 270, 22);
+    graphics.lineStyle(6, 0x6f8f56, 1);
+    graphics.strokeRoundedRect(170, 1170, 400, 270, 22);
+
+    // Simple outdoor exercise equipment.
+    graphics.fillStyle(0x4c6c73, 1);
+    graphics.fillRect(215, 1225, 14, 90);
+    graphics.fillRect(305, 1225, 14, 90);
+    graphics.fillRect(215, 1225, 104, 14);
+    graphics.fillStyle(0xf2b84b, 1);
+    graphics.fillRect(380, 1250, 90, 16);
+    graphics.fillRect(388, 1266, 12, 52);
+    graphics.fillRect(452, 1266, 12, 52);
+    graphics.fillStyle(0xd96756, 1);
+    graphics.fillCircle(280, 1370, 22);
+    graphics.fillCircle(420, 1385, 18);
+  }
+
+  private drawBusStop(graphics: Phaser.GameObjects.Graphics): void {
+    graphics.fillStyle(0x4c6c73, 1);
+    graphics.fillRect(880, 1275, 250, 18);
+    graphics.fillRect(892, 1293, 10, 62);
+    graphics.fillRect(1108, 1293, 10, 62);
+    graphics.fillStyle(0x9b7653, 1);
+    graphics.fillRect(930, 1330, 130, 16);
+    graphics.fillRect(938, 1346, 8, 22);
+    graphics.fillRect(1044, 1346, 8, 22);
+    graphics.fillStyle(0xf2b84b, 1);
+    graphics.fillRect(1150, 1270, 10, 90);
+    graphics.fillRect(1140, 1262, 30, 20);
   }
 
   private drawHdb(graphics: Phaser.GameObjects.Graphics): void {
@@ -758,15 +988,20 @@ export class SandboxScene extends Phaser.Scene {
       resident.nameplate.setPosition(x, y - 42).setDepth(resident.position.y + 22);
       resident.bubble.setPosition(x, y - 66).setDepth(resident.position.y + 23);
 
-      // The activity marker travels with its resident and sits at their feet,
-      // so it reads as "this neighbour has something to say" rather than
-      // labelling a patch of ground.
+      // The marker floats above its resident so it reads as "this neighbour has
+      // something to say" instead of labelling a patch of ground. Once they are
+      // close enough to actually speak, the marker fades out as redundant.
       const marker = this.markers.get(resident.activityId);
       if (marker) {
-        const markerY = resident.position.y + 30;
-        marker.ring.setPosition(x, markerY).setDepth(markerY);
-        marker.badge.setPosition(x, markerY).setDepth(markerY + 1);
-        marker.label.setPosition(x, markerY + 16).setDepth(markerY + 2);
+        const markerY = y - 62;
+        marker.ring.setPosition(x, markerY).setDepth(resident.position.y + 24);
+        marker.badge.setPosition(x, markerY).setDepth(resident.position.y + 25);
+        marker.label.setVisible(false);
+
+        const target = resident.bubbleVisible ? 0 : 1;
+        const alpha = Phaser.Math.Linear(marker.ring.alpha, target, 0.1);
+        marker.ring.setAlpha(alpha);
+        marker.badge.setAlpha(alpha);
       }
 
       const near = playerDistance < BUBBLE_DISTANCE;
@@ -779,6 +1014,83 @@ export class SandboxScene extends Phaser.Scene {
           ease: "Sine.easeOut",
         });
       }
+    }
+  }
+
+  private createNeighbours(): void {
+    for (const definition of NEIGHBOURS) {
+      const shadow = this.add
+        .ellipse(definition.x, definition.y + 20, 34, 11, 0x2f3a24, 0.28)
+        .setDepth(definition.y + 18);
+      const sprite = this.add
+        .sprite(definition.x, definition.y, definition.texture)
+        .setDepth(definition.y + 20);
+      const nameplate = this.add
+        .text(definition.x, definition.y - 42, definition.name, {
+          color: "#fff8e8",
+          fontFamily: "system-ui, sans-serif",
+          fontSize: "13px",
+          fontStyle: "bold",
+          backgroundColor: "#173f4fe8",
+          padding: { x: 6, y: 3 },
+        })
+        .setOrigin(0.5, 1)
+        .setDepth(definition.y + 22);
+      const bubble = this.add
+        .text(definition.x, definition.y - 66, definition.lines[0], {
+          color: "#173f4f",
+          fontFamily: "system-ui, sans-serif",
+          fontSize: "13px",
+          backgroundColor: "#fff8e8f2",
+          padding: { x: 9, y: 6 },
+          wordWrap: { width: 210 },
+          align: "center",
+        })
+        .setOrigin(0.5, 1)
+        .setAlpha(0)
+        .setDepth(definition.y + 23);
+
+      this.neighbours.push({
+        ...definition,
+        sprite,
+        shadow,
+        nameplate,
+        bubble,
+        bobPhase: Math.random() * Math.PI * 2,
+        bubbleVisible: false,
+        lineIndex: 0,
+      });
+    }
+  }
+
+  private updateNeighbours(delta: number): void {
+    const step = delta / 1000;
+
+    for (const neighbour of this.neighbours) {
+      neighbour.bobPhase += step * 2.1;
+      const y = neighbour.y + Math.sin(neighbour.bobPhase) * 1.5;
+      neighbour.sprite.setPosition(neighbour.x, y);
+      neighbour.nameplate.setPosition(neighbour.x, y - 42);
+      neighbour.bubble.setPosition(neighbour.x, y - 66);
+
+      const near =
+        Phaser.Math.Distance.Between(this.player.x, this.player.y, neighbour.x, neighbour.y) <
+        BUBBLE_DISTANCE;
+      if (near === neighbour.bubbleVisible) continue;
+
+      neighbour.bubbleVisible = near;
+      if (near) {
+        neighbour.sprite.setFlipX(this.player.x < neighbour.x);
+        // A different remark each time you come back.
+        neighbour.bubble.setText(neighbour.lines[neighbour.lineIndex]);
+        neighbour.lineIndex = (neighbour.lineIndex + 1) % neighbour.lines.length;
+      }
+      this.tweens.add({
+        targets: neighbour.bubble,
+        alpha: near ? 1 : 0,
+        duration: 220,
+        ease: "Sine.easeOut",
+      });
     }
   }
 
@@ -929,8 +1241,15 @@ export class SandboxScene extends Phaser.Scene {
     const { x, y } = this.player;
     let area = "Community Court";
     if (x < 700 && y < 385) area = "HDB Commons";
+    else if (x > 2020 && y < 500) area = "Provision Shop";
+    else if (x > 1500 && y < 500) area = "Kopitiam";
     else if (x > 1000 && y < 460) area = "Hawker Corner";
-    else if (x > 970 && y > 560) area = "Community Garden";
+    else if (x > 2000 && y > 580) area = "Community Centre";
+    else if (x > 1540 && y > 600 && y < 960) area = "Playground";
+    else if (x < 620 && y > 1120) area = "Morning Exercise";
+    else if (x > 820 && x < 1200 && y > 1240) area = "Bus Stop";
+    else if (x > 970 && y > 560 && y < 940) area = "Community Garden";
+    else if (y > 1100) area = "Estate Walk";
     else if (y > 670) area = "Shaded Walk";
     else if (x > 670 && x < 930) area = "Void Deck";
 
