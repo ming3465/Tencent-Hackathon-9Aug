@@ -297,6 +297,7 @@ export class SandboxScene extends Phaser.Scene {
     this.createAmbientLife();
     this.createResidents();
     this.createNeighbours();
+    this.createBus();
     this.createInteractionMarkers();
     this.createPlayer();
     this.createEveningLight();
@@ -475,6 +476,7 @@ export class SandboxScene extends Phaser.Scene {
       graphics.destroy();
     }
 
+    this.createBusTexture();
     this.createResidentTexture("resident-mei", 0xc85c5c, 0x6b6560, 0xe3b58c);
     this.createResidentTexture("resident-ravi", 0x3d7a80, 0x4a4340, 0xb87f52);
     this.createResidentTexture("resident-siti", 0x7b5aa6, 0x4c3b5f, 0xcf9a6c);
@@ -490,6 +492,89 @@ export class SandboxScene extends Phaser.Scene {
    * tone, and everyone gets the same ink outline weight the buildings use, so
    * people stop reading as pasted in from another game.
    */
+  private createBusTexture(): void {
+    if (this.textures.exists("bus")) return;
+    const graphics = this.make.graphics({ x: 0, y: 0 });
+
+    // Body with ink outline, teal service band, and a row of lit windows.
+    graphics.fillStyle(INK, 1);
+    graphics.fillRoundedRect(2, 4, 146, 44, 9);
+    graphics.fillStyle(0xf4e8cf, 1);
+    graphics.fillRoundedRect(5, 7, 140, 38, 7);
+    graphics.fillStyle(TEAL, 1);
+    graphics.fillRect(5, 34, 140, 11);
+
+    graphics.fillStyle(INK, 1);
+    for (let window = 0; window < 5; window += 1) {
+      graphics.fillRect(12 + window * 23, 12, 18, 14);
+    }
+    graphics.fillStyle(0xf4d58d, 1);
+    for (let window = 0; window < 5; window += 1) {
+      graphics.fillRect(14 + window * 23, 14, 14, 10);
+    }
+
+    // Door outline near the front.
+    graphics.fillStyle(INK, 1);
+    graphics.fillRect(126, 12, 3, 30);
+
+    // Wheels and a headlight on the leading edge.
+    graphics.fillStyle(INK, 1);
+    graphics.fillCircle(30, 48, 8);
+    graphics.fillCircle(118, 48, 8);
+    graphics.fillStyle(0x6b6560, 1);
+    graphics.fillCircle(30, 48, 4);
+    graphics.fillCircle(118, 48, 4);
+    graphics.fillStyle(GOLD, 1);
+    graphics.fillRect(142, 26, 5, 8);
+
+    graphics.generateTexture("bus", 152, 58);
+    graphics.destroy();
+  }
+
+  /**
+   * A bus works the lower road: in from the west, eases to a halt at the stop,
+   * waits with the doors open a moment, then pulls away east. Purely ambient -
+   * no physics body, so it can never pin the player. Under reduced motion it
+   * waits at the stop instead of driving.
+   */
+  private createBus(): void {
+    const laneY = 1214;
+    const stopX = 1005;
+    const bus = this.add.sprite(-180, laneY, "bus").setDepth(laneY + 40);
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      bus.setPosition(stopX, laneY);
+      return;
+    }
+
+    const depart = (): void => {
+      this.tweens.add({
+        targets: bus,
+        x: WORLD_WIDTH + 200,
+        duration: 5200,
+        ease: "Sine.easeIn",
+        onComplete: () => {
+          bus.setX(-180);
+          this.time.delayedCall(14000 + Math.random() * 14000, arrive);
+        },
+      });
+    };
+
+    const arrive = (): void => {
+      this.tweens.add({
+        targets: bus,
+        x: stopX,
+        duration: 5600,
+        ease: "Sine.easeOut",
+        onComplete: () => {
+          this.time.delayedCall(3200, depart);
+        },
+      });
+    };
+
+    this.time.delayedCall(5000, arrive);
+  }
+
   private createResidentTexture(
     key: string,
     shirtColour: number,
@@ -688,6 +773,7 @@ export class SandboxScene extends Phaser.Scene {
       for (const [dx, dy] of [[-44, 0], [44, 0], [0, -44], [0, 44]]) {
         graphics.fillCircle(x + dx, 250 + dy, 11);
       }
+      this.addObstacle(x - 26, 226, 52, 48);
     }
 
     graphics.fillStyle(0x6f4f36, 1);
@@ -735,6 +821,9 @@ export class SandboxScene extends Phaser.Scene {
     graphics.fillRect(1906, 704, 8, 60);
     graphics.fillStyle(0xd96756, 1);
     graphics.fillRect(1846, 756, 28, 10);
+
+    this.addObstacle(1620, 692, 112, 88);
+    this.addObstacle(1820, 692, 100, 72);
   }
 
   private drawCommunityCentre(graphics: Phaser.GameObjects.Graphics): void {
@@ -775,6 +864,9 @@ export class SandboxScene extends Phaser.Scene {
     graphics.fillStyle(0xd96756, 1);
     graphics.fillCircle(280, 1370, 22);
     graphics.fillCircle(420, 1385, 18);
+
+    this.addObstacle(213, 1223, 108, 94);
+    this.addObstacle(378, 1248, 88, 70);
   }
 
   private drawBusStop(graphics: Phaser.GameObjects.Graphics): void {
@@ -789,6 +881,13 @@ export class SandboxScene extends Phaser.Scene {
     graphics.fillStyle(0xf2b84b, 1);
     graphics.fillRect(1150, 1270, 10, 90);
     graphics.fillRect(1140, 1262, 30, 20);
+
+    // Posts, bench and flag are solid; the sheltered space stays walkable -
+    // standing under a bus shelter is the entire point of one.
+    this.addObstacle(888, 1293, 14, 60);
+    this.addObstacle(1104, 1293, 14, 60);
+    this.addObstacle(930, 1330, 130, 36);
+    this.addObstacle(1146, 1298, 16, 60);
   }
 
   private drawHdb(graphics: Phaser.GameObjects.Graphics): void {
@@ -898,6 +997,13 @@ export class SandboxScene extends Phaser.Scene {
     }
     graphics.fillStyle(0xd8cfb7, 1);
     graphics.fillRect(1002, 665, 28, 65);
+
+    // The fence is real: enter through the gate off the walkway, not the hedge.
+    this.addObstacle(1010, 586, 460, 8);
+    this.addObstacle(1010, 886, 460, 8);
+    this.addObstacle(1010, 595, 8, 55);
+    this.addObstacle(1010, 745, 8, 145);
+    this.addObstacle(1462, 590, 8, 300);
   }
 
   private drawPond(graphics: Phaser.GameObjects.Graphics): void {
@@ -916,6 +1022,7 @@ export class SandboxScene extends Phaser.Scene {
     graphics.fillRect(255, 680, 560, 18);
     for (let x = 275; x < 815; x += 90) {
       graphics.fillRect(x, 698, 8, 96);
+      this.addObstacle(x, 762, 8, 32);
     }
     graphics.fillStyle(0x9b7653, 1);
     graphics.fillRect(345, 748, 78, 16);
@@ -932,6 +1039,7 @@ export class SandboxScene extends Phaser.Scene {
         graphics.fillRect(807 + column * 20, 496 + row * 20, 14, 14);
       }
     }
+    this.addObstacle(795, 487, 82, 54);
   }
 
   private drawGardenChoice(choiceId: string): void {
@@ -1053,6 +1161,10 @@ export class SandboxScene extends Phaser.Scene {
    * estates - built in three tonal layers with the light coming from upper left.
    */
   private drawTree(graphics: Phaser.GameObjects.Graphics, x: number, y: number): void {
+    // Only the trunk is solid. Blocking the canopy would put an invisible wall
+    // metres from anything visible; walking behind foliage is the depth cue.
+    this.addObstacle(x - 9, y + 6, 18, 22);
+
     graphics.fillStyle(SHADOW, 0.2);
     graphics.fillEllipse(x + 10, y + 24, 78, 22);
 

@@ -489,3 +489,29 @@ browser smoke including the new judge-path check.
 
 **Claim boundary:** demo mode compresses pacing for a timed judging window.
 The full game remains 6-8 minutes by design, and no demo-only content exists.
+
+## 2026-08-02 - Solid World and the Bus
+
+**Tool:** Claude Code (Opus 5), working under human direction.
+
+**Goal:** Two user requests: objects should have physical presence (no walking
+through trees or furniture), and the bus stop should occasionally have a bus.
+
+**Implemented:**
+
+- Collision for previously ghost-through props: tree trunks (canopies stay
+  walk-behind for depth), the memory table, kopitiam tables, playground
+  equipment, fitness-corner equipment, walkway posts, and the bus-stop posts,
+  bench and flag. The garden is now fenced with a real gate on the walkway
+  side. The sheltered space under the bus stop stays walkable on purpose.
+- An ambient bus works the lower road: eases in from the west, halts at the
+  stop for a few seconds, pulls away east, and returns on a randomised 14-28s
+  interval. Drawn procedurally (ink outline, teal band, lit windows). No
+  physics body, so it can never pin the player. Under prefers-reduced-motion it
+  waits at the stop instead of driving.
+
+**Verified results:** typecheck clean; 70/70 tests; 22/22 browser smoke - the
+keyboard-movement checks now pass against the new memory-table collision, with
+the player stopping at the table edge still inside interaction range.
+
+**Claim boundary:** ambient behaviour only; no new progression, no new claims.
