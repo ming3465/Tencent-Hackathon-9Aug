@@ -546,3 +546,26 @@ request so every AI agent working on this repo shares a queryable map of it.
 
 **Claim boundary:** development tooling only. No change to the game, its
 dependencies, or any deliverable.
+
+## 2026-08-02 - Project Memory Ingested into the Knowledge Graph
+
+**Tool:** Graphify 0.9.32 semantic extraction, with Claude Code (Opus 5)
+subagents as the extraction model (no API key; fully local pipeline).
+
+- The 31 project documents - the session logs, constraints, playbook, runbook,
+  design docs, and this log - were extracted into the workspace knowledge
+  graph alongside the code: 759 nodes, 1,121 edges, 44 labelled communities,
+  graph health OK. A .graphifyignore excludes regenerated artifacts
+  (screenshots, deck renders) so future updates never re-extract renders of
+  sources the graph already tracks.
+- The extraction immediately caught a real defect: the deck, deck copy, video
+  script, and AI evidence page still quoted 65 tests / 21 smoke checks while
+  the build had moved to 70 / 22. All six files were corrected and the deck
+  re-exported (PPTX + PDF).
+
+**Verified:** 70/70 tests; deck PDF re-checked (70/70 and 22/22 present, no
+stale figures); graph diagnostics report no dangling, missing, or collapsed
+edges.
+
+**Claim boundary:** development tooling and documentation sync only; no game
+behaviour changed.
