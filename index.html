@@ -810,33 +810,47 @@
       }
 
       .journal-item {
-        display: grid;
-        grid-template-columns: 42px 1fr;
-        gap: 0.65rem;
-        padding: 0.75rem 0.5rem;
+        position: relative;
+        display: block;
+        padding: 0.8rem 0.5rem;
         border-bottom: 2px dashed var(--sand);
       }
 
+      /* Status as a quiet pill in the card's corner, not a stuffed circle. */
       .journal-status {
-        display: grid;
-        place-items: center;
-        width: 42px;
-        height: 42px;
-        color: var(--ink);
-        background: var(--sand);
-        border: 2px solid var(--ink);
-        border-radius: 50%;
-        font-size: 0.82rem;
+        position: absolute;
+        top: 0.85rem;
+        right: 0.5rem;
+        padding: 0.16rem 0.6rem;
+        color: var(--ink-soft);
+        background: var(--paper);
+        border: 2px solid #d8c9a6;
+        border-radius: 999px;
+        font-size: 0.68rem;
         font-weight: 900;
+        letter-spacing: 0.09em;
+      }
+
+      /* The optional activity reads as an invitation, not an obligation. */
+      .journal-item[data-activity="memory-table"]:not(.completed) .journal-status {
+        color: #5a4212;
+        background: #fbe8bc;
+        border-color: #e3c37a;
       }
 
       .journal-item.completed .journal-status {
         color: var(--cream);
         background: var(--green);
+        border-color: var(--green);
+      }
+
+      .journal-item.completed .journal-status::before {
+        content: "\2713 ";
       }
 
       .journal-item h3 {
         margin: 0 0 0.18rem;
+        padding-right: 4.8rem;
         font-size: 0.9rem;
       }
 
@@ -1455,7 +1469,7 @@
             </div>
             <p class="control-note">
               Move <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys &middot;
-              Interact <kbd>E</kbd> &middot; Touch on phones
+              Interact <kbd>E</kbd> &middot; Hold <kbd>Shift</kbd> to hurry &middot; Touch on phones
             </p>
           </div>
 
@@ -1514,7 +1528,7 @@
 
         <div class="game-layout">
           <div class="world-shell">
-            <div id="sandbox-stage" tabindex="0" aria-label="Top-down neighbourhood. Use WASD or arrow keys to move and E or Space to interact."></div>
+            <div id="sandbox-stage" tabindex="0" aria-label="Top-down neighbourhood. Use WASD or arrow keys to move, E or Space to interact, and hold Shift to move faster."></div>
             <p id="area-name" class="area-chip">Community Court</p>
 
             <div id="interaction-prompt" class="interaction-prompt" aria-hidden="true">

@@ -32,6 +32,9 @@ function noise(x: number, y: number): number {
   return value - Math.floor(value);
 }
 const PLAYER_SPEED = 215;
+
+/** Held-Shift hurry. No stamina, no cooldown - just a faster walk on demand. */
+const RUN_SPEED = 260;
 const INTERACTION_DISTANCE = 92;
 
 export interface WorldInteraction {
@@ -265,6 +268,7 @@ export class SandboxScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private movementKeys!: Record<"up" | "down" | "left" | "right", Phaser.Input.Keyboard.Key>;
   private interactKeys!: Phaser.Input.Keyboard.Key[];
+  private runKey!: Phaser.Input.Keyboard.Key;
   private obstacles: Phaser.GameObjects.Rectangle[] = [];
   private markers = new Map<ActivityId, MarkerView>();
   private completedActivities = new Set<ActivityId>();
@@ -331,12 +335,17 @@ export class SandboxScene extends Phaser.Scene {
     );
 
     if (movement.lengthSq() > 0) {
-      movement.normalize().scale(this.playerSpeed);
+      // Demo mode already walks at run pace; Shift never makes anyone slower.
+      const speed = this.runKey.isDown
+        ? Math.max(this.playerSpeed, RUN_SPEED)
+        : this.playerSpeed;
+      movement.normalize().scale(speed);
       this.player.setVelocity(movement.x, movement.y);
       this.player.setFlipX(movement.x < 0);
       this.player.setDepth(this.player.y + 24);
 
-      this.walkPhase += delta / 1000;
+      // Step cadence tracks speed so hurrying reads in the body, not just velocity.
+      this.walkPhase += (delta / 1000) * (speed / PLAYER_SPEED);
       this.player.setScale(1, 1 + Math.sin(this.walkPhase * 13) * 0.035);
       this.callbacks.onStep();
     } else {
@@ -449,6 +458,9 @@ export class SandboxScene extends Phaser.Scene {
       this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
       this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
     ];
+    // No capture: Shift is only read, never swallowed, so Shift+Tab keyboard
+    // navigation through the page keeps working.
+    this.runKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT, false);
   }
 
   private createTextures(): void {

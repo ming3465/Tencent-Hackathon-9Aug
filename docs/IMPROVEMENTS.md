@@ -53,6 +53,8 @@ plus a second playthrough, and writes fresh screenshots to `docs/screenshots/`.
 | **Judge path** — `?demo=1` compresses the session (2-of-3 evening, faster walk) for timed judging; documented in `docs/DEMO_MODE.md`; 5 unit tests + 1 smoke check | 2026-08-01 |
 | Solid world — collision for tree trunks, tables, playground/fitness equipment, walkway posts, garden fence with gate, bus-stop furniture | 2026-08-02 |
 | Ambient bus serves the bus stop on a randomised interval; parked variant under reduced motion | 2026-08-02 |
+| Hold-Shift hurry (215 -> 260 px/s, no stamina); hints updated on title + canvas label | 2026-08-02 |
+| Journal status circles replaced with slim colour-coded pills (OPEN / OPTION / done-check) | 2026-08-02 |
 
 **Biggest remaining item: P0-1**, the character rebuild (silhouette variety, age
 signalling, build/height variation). Outlines, faces and skin tones are done;

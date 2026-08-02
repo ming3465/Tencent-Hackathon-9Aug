@@ -515,3 +515,18 @@ keyboard-movement checks now pass against the new memory-table collision, with
 the player stopping at the table edge still inside interaction range.
 
 **Claim boundary:** ambient behaviour only; no new progression, no new claims.
+
+## 2026-08-02 - Shift-to-Hurry and Journal Badge Restyle
+
+**Tool:** Claude Code (Opus 5), working under human direction.
+
+- Hold Shift to walk faster: 215 -> 260 px/s, the demo-mode pace. No stamina,
+  no cooldown, and demo mode is never made slower (max of the two speeds).
+  Shift is read without capture so Shift+Tab keyboard navigation keeps working.
+  Step cadence scales with speed so hurrying reads in the body. Control hints
+  on the title screen and the canvas label were updated.
+- Journal status badges were 42px circles with OPTION crammed inside. Now slim
+  pills anchored top-right of each card: neutral for OPEN, gold-tinted for the
+  optional memory table, green with a check when completed.
+
+**Verified:** typecheck clean, 70/70 tests, 22/22 browser smoke.
