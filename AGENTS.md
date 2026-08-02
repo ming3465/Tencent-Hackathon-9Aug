@@ -15,6 +15,19 @@ the experts, not the patients.
 - **Stack:** Vite + TypeScript + Phaser 3. No backend, no runtime LLM, zero
   image assets shipped (all in-game art is drawn in code).
 
+## Codebase knowledge graph (Graphify)
+
+This workspace has a [Graphify](https://github.com/Graphify-Labs/graphify)
+knowledge graph of the whole codebase at `graphify-out/` (gitignored - rebuild
+locally, nothing ships). Use it to orient before grepping:
+
+- In an assistant: `/graphify <question>` - or query directly:
+- `graphify explain "SandboxScene"` - plain-language node + neighbours
+- `graphify path "KampungAudio" "main.ts"` - shortest relationship path
+- `graphify update .` - re-extract after code changes (local, no LLM, ~seconds)
+
+Registered for Claude Code and CodeBuddy via `graphify install`.
+
 ## Read in this order
 
 1. `docs/IMPROVEMENTS.md` — prioritised backlog, **the non-negotiable
@@ -62,7 +75,9 @@ numbers are treated as defects.
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
-- **2026-08-02** — Shift-to-hurry (215→260 px/s), journal badge pills, world
+- **2026-08-02** — Graphify knowledge graph set up for the workspace (703
+  nodes, 943 edges, 51 communities; registered for Claude Code + CodeBuddy).
+  Shift-to-hurry (215→260 px/s), journal badge pills, world
   collision (tree trunks, furniture, garden fence with gate), ambient bus at
   the bus stop. Title screen rebuilt (CSS scene: laundry poles, void deck,
   elder + player). AI key art integrated as deck hero (`docs/art/`).

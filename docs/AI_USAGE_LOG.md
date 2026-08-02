@@ -530,3 +530,19 @@ the player stopping at the table edge still inside interaction range.
   optional memory table, green with a check when completed.
 
 **Verified:** typecheck clean, 70/70 tests, 22/22 browser smoke.
+
+## 2026-08-02 - Graphify Workspace Knowledge Graph (dev tooling)
+
+**Tool:** Graphify 0.9.32 (Graphify-Labs), installed via uv at the user's
+request so every AI agent working on this repo shares a queryable map of it.
+
+- `graphify update .` built a local graph: 703 nodes, 943 edges, 51
+  communities. Extraction is tree-sitter based, fully local, no LLM calls, and
+  parses without executing code. Output lives in `graphify-out/` (gitignored -
+  developer tooling, not part of the judged build; nothing ships).
+- Registered the `/graphify` skill for Claude Code and CodeBuddy.
+- Verified with live queries: node disambiguation and a shortest-path query
+  (`KampungAudio <-imports- main.ts`).
+
+**Claim boundary:** development tooling only. No change to the game, its
+dependencies, or any deliverable.
