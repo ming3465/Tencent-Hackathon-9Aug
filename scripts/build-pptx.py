@@ -50,13 +50,13 @@ NOTES = [
     # 6 - Engineering
     "The title screen ships 24 kilobytes of JavaScript; the game engine only downloads when you "
     "press Begin, which matters on an older phone. Fifty-nine deterministic tests cover the domain "
-    "logic, and a twenty-one-check Chrome DevTools smoke test drives the real production bundle at "
+    "logic, and a twenty-two-check Chrome DevTools smoke test drives the real production bundle at "
     "a 360-pixel viewport. There is no backend, no account, no analytics and no personal data, "
     "because nothing is ever collected. All sound is synthesised at runtime, so there are no audio "
     "files to fail to load.",
     # 7 - Integrity
     "We want to be precise about the difference between what we built and what we have proven. "
-    "The software is verified: type checking, sixty-five tests, a clean audit, and a browser smoke "
+    "The software is verified: type checking, seventy tests, a clean audit, and a browser smoke "
     "test on the real production bundle. The social impact is a design hypothesis. And we wrote "
     "our claim guardrails before we wrote the game: Kampung SG does not diagnose, measure, "
     "prevent, delay, or treat anything. On a health-adjacent topic, that restraint is the design, "

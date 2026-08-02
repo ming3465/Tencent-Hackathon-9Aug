@@ -29,12 +29,12 @@ Measured on the repo at `2026-08-01`, immediately before this copy was written:
 
 | Fact | Value | How to re-verify |
 | --- | --- | --- |
-| Test suite | **65 tests passing**, 3 files (`sandboxState` 11, `audio` 17, `matchEngine` 31) — up from 42 before 2026-08-01 | `npm test` |
+| Test suite | **70 tests passing**, 3 files (`sandboxState` 22, `audio` 17, `matchEngine` 31) — up from 42 before 2026-08-01 | `npm test` |
 | Type checking | passes clean, strict TypeScript | `npm run typecheck` |
 | Dependency audit | **0 vulnerabilities** | `npm audit` |
 | Initial JS | **24.35 kB** (8.85 kB gzip) | `npm run build` |
 | Lazy Phaser chunk | 1,498 kB (345.64 kB gzip), loads only after "Begin" | `npm run build` |
-| Browser smoke | **21 checks, 21 passing, 0 failing**, run 2026-08-01 against the **production** bundle | `npm run smoke` (`scripts/browser-smoke.mjs`, Node + Chrome DevTools Protocol, macOS/Linux) |
+| Browser smoke | **22 checks, 22 passing, 0 failing**, run 2026-08-01 against the **production** bundle | `npm run smoke` (`scripts/browser-smoke.mjs`, Node + Chrome DevTools Protocol, macOS/Linux) |
 | Audio | Web Audio API synthesis, **zero audio files shipped**, mute + music/effects sliders | `src/game/audio.ts` |
 | Live link | `https://ming3465.github.io/Tencent-Hackathon-9Aug/` — HTTP 200, HTTPS enforced | `curl -I` |
 | Repo | **public**: `https://github.com/ming3465/Tencent-Hackathon-9Aug` | open it in a signed-out browser |
@@ -187,7 +187,7 @@ estate now grows them."*
 
 | AI produced | What our gate caught | What we did | Verification after |
 | --- | --- | --- | --- |
-| 10 files incl. the match engine that still ships today | 2 TypeScript errors · 3 failing tests · 1 unused dependency · 4 audit findings · 1 stale-timer race | Rewrote tests off an invalid constant-RNG shuffle assumption; added session-aware timer cancellation | `tsc --noEmit` clean · 65/65 tests · `npm audit` 0 · 21/21 production-bundle browser smoke |
+| 10 files incl. the match engine that still ships today | 2 TypeScript errors · 3 failing tests · 1 unused dependency · 4 audit findings · 1 stale-timer race | Rewrote tests off an invalid constant-RNG shuffle assumption; added session-aware timer cancellation | `tsc --noEmit` clean · 70/70 tests · `npm audit` 0 · 22/22 production-bundle browser smoke |
 
 ### Which agent wrote which part — say it this precisely, never fuse it into one line
 
@@ -203,7 +203,7 @@ estate now grows them."*
 | Human decided | AI produced |
 | --- | --- |
 | That older residents are experts, not quest problems | The Phaser world, movement, collision, camera, HUD |
-| The no-medical-claims policy, written **before** any code | The deterministic domain logic and its 65 tests |
+| The no-medical-claims policy, written **before** any code | The deterministic domain logic and its 70 tests |
 | Non-punitive choices; no timer, no failure state | Web Audio synthesis layer — zero audio files shipped |
 | Art direction, palette, and representation rules | Every visual in the build as procedural Phaser geometry — no image assets generated, none shipped |
 
@@ -235,7 +235,7 @@ and if they ever are, list their exact filenames here first.
 ### Visual
 Three-column evidence strip, left to right: (1) a screenshot of the real preserved prompt file
 `docs/prompts/codebuddy-phase1.txt`, (2) the defect table above, (3) a terminal screenshot of the green
-gate — `65 passed`, `found 0 vulnerabilities`. Put the "429 Credits exhausted" error text in as a small,
+gate — `70 passed`, `found 0 vulnerabilities`. Put the "429 Credits exhausted" error text in as a small,
 unretouched screenshot. It is the most credible pixel in the entire deck.
 
 ---
@@ -248,15 +248,15 @@ unretouched screenshot. It is the most credible pixel in the entire deck.
 ### Bullets
 - Vite + TypeScript + Phaser 3, strict mode
 - 24.35 kB initial JS; engine loads only on play
-- 65 tests, 0 vulnerabilities, 21/21 production browser checks
+- 70 tests, 0 vulnerabilities, 22/22 production browser checks
 - Keyboard, touch, or Journal — all finish the game
 - Zero accounts, zero analytics, zero data collected
 
 ### Speaker note (~20s)
 > The title screen ships 24.35 kilobytes of JavaScript; the game engine only downloads when you press
 > Begin, which matters on an older phone. Fifty-nine deterministic tests cover the domain logic, and an
-> twenty-one-check Chrome DevTools smoke run drives the real production bundle, ending at a 360-pixel
-> viewport — all twenty-one passing on the first of August. There is no
+> twenty-two-check Chrome DevTools smoke run drives the real production bundle, ending at a 360-pixel
+> viewport — all twenty-two passing on the first of August. There is no
 > backend, no account, no analytics, and no personal data — nothing about you leaves your device,
 > because nothing is ever collected. All sound is synthesised at runtime, so there are no audio files
 > to fail to load.
@@ -265,7 +265,7 @@ unretouched screenshot. It is the most credible pixel in the entire deck.
 Left: a four-box architecture diagram — Browser → Vite static bundle → `sandboxState` (pure, tested) /
 `sandboxScene` (Phaser render) — with a red X through a "Server / Database / Account" box to make the
 zero-backend point visually.
-Right: a stat row of four hard numbers — **65 tests · 0 vulnerabilities · 24.35 kB initial JS · 0 bytes
+Right: a stat row of four hard numbers — **70 tests · 0 vulnerabilities · 24.35 kB initial JS · 0 bytes
 collected** — plus both URLs as clickable hyperlinks (the PDF export keeps links live).
 Play: `https://ming3465.github.io/Tencent-Hackathon-9Aug/`
 Code: `https://github.com/ming3465/Tencent-Hackathon-9Aug` (public)
@@ -280,19 +280,19 @@ otherwise delete this line rather than promising a mirror]
 **What We Tested, What We Won't Claim**
 
 ### Bullets
-- Automated: typecheck, 65 tests, 0-vulnerability audit
-- Automated: 21/21 browser checks on the production bundle
+- Automated: typecheck, 70 tests, 0-vulnerability audit
+- Automated: 22/22 browser checks on the production bundle
 - Automated: no overflow at 360px, touch targets ≥ 44px
 - We never claim to prevent, delay, or treat dementia
 - No human playtest yet — the social claim stays a hypothesis
 
-### What the 21 automated browser checks actually assert — do not overstate this list
+### What the 22 automated browser checks actually assert — do not overstate this list
 
-Run: `npm run smoke` (`scripts/browser-smoke.mjs`), 2026-08-01, **21 checks, 21 passing, 0 failing**,
+Run: `npm run smoke` (`scripts/browser-smoke.mjs`), 2026-08-01, **22 checks, 22 passing, 0 failing**,
 against the production build. The two numbers people get wrong:
 
 - The touch-target assertion is **≥ 44px**, not 48px. Never print 48.
-- **Focus restoration is NOT one of the 21 checks.** It belongs on the manual list below, or nowhere.
+- **Focus restoration is NOT one of the 22 checks.** It belongs on the manual list below, or nowhere.
 
 Verified automatically: title renders · start button present · exactly one Phaser canvas · world reports
 ready (`aria-busy` cleared) · sound controls present · spawn offers the first resident · keyboard movement
@@ -315,7 +315,7 @@ deck means the harness asserted it.)*
 
 ### Speaker note (~20s)
 > We want to be precise about the difference between what we built and what we've proven. The software
-> is verified: type checking, sixty-five tests, a clean audit, and twenty-one out of twenty-one browser
+> is verified: type checking, seventy tests, a clean audit, and twenty-two out of twenty-two browser
 > checks on the real production bundle — including no horizontal overflow at three-sixty pixels and
 > every touch target at forty-four pixels or larger. The social impact is a design hypothesis: we have
 > run zero human playtests, so we are not going to stand here and tell you it works on people. The
@@ -328,8 +328,8 @@ deck means the harness asserted it.)*
 
 | What we can support | What we deliberately do not claim |
 | --- | --- |
-| Strict TypeScript, 65 passing tests, 0 vulnerabilities | Any cognitive, memory, or dementia benefit |
-| 21/21 browser checks on the production bundle, incl. 360px layout and ≥ 44px touch targets | Any clinical or health outcome |
+| Strict TypeScript, 70 passing tests, 0 vulnerabilities | Any cognitive, memory, or dementia benefit |
+| 22/22 browser checks on the production bundle, incl. 360px layout and ≥ 44px touch targets | Any clinical or health outcome |
 | Completable by keyboard, touch, or Journal shortcuts alone | Any measured user or population result |
 | No data collection, no account, no network dependency | Any playtest finding — **zero human playtests have been run** |
 | Choice-driven evening reflection built from real player choices | Any accessibility outcome the harness does not assert (e.g. focus restoration, screen-reader wording) |
@@ -404,7 +404,7 @@ as text under the QR in case the code scans badly on a projector.
 - [ ] Numbers re-verified against `npm test` / `npm run build` / `npm audit` / `npm run smoke` on the
       final commit.
 - [ ] No slide says **48px** — the harness asserts **≥ 44px**.
-- [ ] No slide lists **focus restoration** as verified — it is not one of the 21 automated checks.
+- [ ] No slide lists **focus restoration** as verified — it is not one of the 22 automated checks.
 - [ ] No slide cites `scripts/browser-smoke.ps1` — superseded, pre-pivot, tested a deleted game.
 - [ ] No slide says "Built with CodeBuddy, Phaser 3, Vite, TypeScript" or any other fused tool+stack line.
 - [ ] The "1 in 4 by 2030" slide carries the page reference (brief, 2026, **p.5**).

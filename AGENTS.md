@@ -75,8 +75,10 @@ numbers are treated as defects.
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
-- **2026-08-02** — Graphify knowledge graph set up for the workspace (703
-  nodes, 943 edges, 51 communities; registered for Claude Code + CodeBuddy).
+- **2026-08-02** — Graphify knowledge graph set up and the project's memory
+  ingested into it: all 31 docs extracted alongside code (759 nodes, 1,121
+  edges, 44 labelled communities). The extraction caught stale 65/21 figures
+  in the deck sources; synced to 70 tests / 22 checks and re-exported.
   Shift-to-hurry (215→260 px/s), journal badge pills, world
   collision (tree trunks, furniture, garden fence with gate), ambient bus at
   the bus stop. Title screen rebuilt (CSS scene: laundry poles, void deck,

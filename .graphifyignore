@@ -1,0 +1,9 @@
+# Regenerated artifacts - renders of sources the graph already tracks.
+# Screenshots are rewritten by every `npm run smoke`; deck slides/PDF are
+# exports of docs/deck/index.html + docs/submission/DECK_COPY.md.
+docs/screenshots/
+docs/deck/slides/
+docs/deck/*.pdf
+docs/deck/*.pptx
+docs/deck/qr.png
+docs/art/
