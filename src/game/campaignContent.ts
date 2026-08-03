@@ -12,6 +12,10 @@ import type {
   QuestDefinition,
   QuestId,
 } from "./campaignTypes.js";
+import {
+  BLOCK_12_BICYCLE_RACK,
+  BLOCK_9_BICYCLE_RACK,
+} from "./estateLayout.js";
 
 export const ESTATE_FLAVOUR_INTERACTIONS:
 readonly FlavourInteractionDefinition[] = [
@@ -22,8 +26,8 @@ readonly FlavourInteractionDefinition[] = [
     lines: [
       "Two baskets carry hand-painted unit numbers. A tyre pump hangs between them with a note: “Return after your errand.”",
     ],
-    x: 760,
-    y: 320,
+    x: BLOCK_9_BICYCLE_RACK.x,
+    y: BLOCK_9_BICYCLE_RACK.y,
   },
   {
     id: "estate-void-deck-bench",
@@ -122,8 +126,8 @@ readonly FlavourInteractionDefinition[] = [
     lines: [
       "A child-sized helmet hangs beside a silver bell. Different errands share the same rack.",
     ],
-    x: 1510,
-    y: 1420,
+    x: BLOCK_12_BICYCLE_RACK.x,
+    y: BLOCK_12_BICYCLE_RACK.y,
   },
   {
     id: "estate-prayer-hall-garden",

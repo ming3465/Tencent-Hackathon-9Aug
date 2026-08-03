@@ -56,7 +56,12 @@ hallucination path.
   landscaping with contact and sheared cast shadows; named Hawker, Kopitiam,
   Minah, Community, Prayer Hall, Workshop, and Block 12 façades use distinct
   code-drawn signs, roofs, awnings, windows, counters, and threshold details,
-  with solid building shells and deliberate doorway gaps;
+  with solid building shells and deliberate doorway gaps; three bicycle racks
+  sit on marked, solid outdoor verge bays guarded against building and
+  pedestrian-route overlap; the roadless estate intentionally has no moving
+  motor vehicles; eight localized façade overlays soften while covering the
+  player and return fully opaque after they step away, with instant changes
+  under reduced motion;
   residents follow short authored routes and stop to face a nearby player;
   baked flower clusters, fluttering HDB laundry, and deterministic community
   cats keep the exterior alive; four two-frame activity vignettes show
@@ -85,7 +90,7 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
 | `npm test` | 75 tests across campaign, audio, and optional matching |
-| `npm run build` | 80.99 kB initial JS (25.23 kB gzip); 1,580.13 kB lazy scene (369.96 kB gzip) |
+| `npm run build` | 83.33 kB initial JS (26.08 kB gzip); 1,581.58 kB lazy scene (370.58 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
 | `npm run smoke` | 60/60 production-browser checks |
 
@@ -102,9 +107,12 @@ transitions, and 41 placed landscape objects across four forms and 44 sampled
 foliage colours. The same snapshot found 88 exterior props across 22 texture
 forms, including 12 story clusters across six forms, plus 54 baked drain/leaf
 accents. A generated-façade sample found 55 colours, 218 edge transitions, and
-26.1% dark pixels; the scene exposed 90 obstacle bodies, and a real northward
+26.1% dark pixels; the scene exposed 93 obstacle bodies, and a real northward
 movement sample stopped at the solid Minah storefront
-(about `y=396` to `y=253`) while the east/south travel routes remained open. It also
+(about `y=396` to `y=253`) while the east/south travel routes remained open.
+The same snapshot proved three bicycle bays, zero motor-vehicle routes, and
+zero semantic layout issues. It also proved eight localized building-occlusion
+layers fade at a solid façade and restore after the player steps away. It also
 proves 1.32× wide-desktop and 1× mobile exterior framing, three animated pond
 rings, pooled walking feedback, all eight two-frame butterflies/dragonflies,
 and reduced-motion stillness for those systems.

@@ -15,6 +15,19 @@ import {
   LOCATION_BY_ID,
   NPC_BY_ID,
 } from "./campaignContent.js";
+import {
+  auditEstateLayout,
+  BICYCLE_BAY_DEPTH,
+  BICYCLE_BAY_WIDTH,
+  BICYCLE_COLLISION_DEPTH,
+  BICYCLE_COLLISION_WIDTH,
+  BUILDING_OCCLUSION_FADE_ALPHA,
+  ESTATE_BICYCLE_RACKS,
+  ESTATE_BUILDING_VISUAL_ZONES,
+  ESTATE_VEHICLE_ROUTES,
+  getOccludingBuildingIds,
+  type EstateRect,
+} from "./estateLayout.js";
 import type {
   CampaignStateV1,
   LocationId,
@@ -297,6 +310,16 @@ export interface CampaignTerrainDetailSnapshot {
   facadeColourCount: number;
   facadeEdgeTransitions: number;
   facadeDarkPixelRatio: number;
+  bicycleRackCount: number;
+  motorVehicleCount: number;
+  layoutIssueCount: number;
+  buildingOcclusionLayerCount: number;
+}
+
+export interface CampaignBuildingOcclusionSnapshot {
+  id: string;
+  alpha: number;
+  faded: boolean;
 }
 
 export interface CampaignMotionSnapshot {
@@ -332,6 +355,14 @@ export interface CampaignMotionSnapshot {
   puddleRipplePhase: number | null;
   shelterDry: boolean;
   terrainDetail: CampaignTerrainDetailSnapshot | null;
+  buildingOcclusion: CampaignBuildingOcclusionSnapshot[];
+  buildingOcclusionMotion: "smooth" | "instant" | null;
+}
+
+interface BuildingOcclusionView {
+  zone: EstateRect;
+  overlay: Phaser.GameObjects.Image;
+  faded: boolean;
 }
 
 abstract class WalkableScene extends Phaser.Scene {
@@ -564,6 +595,8 @@ abstract class WalkableScene extends Phaser.Scene {
       puddleRipplePhase: null,
       shelterDry: false,
       terrainDetail: null,
+      buildingOcclusion: [],
+      buildingOcclusionMotion: null,
       npcs: [...this.npcViews].map(([npcId, view]) => {
         const interaction = this.interactions.find(
           (candidate) => candidate.kind === "npc" && candidate.npcId === npcId,
@@ -905,10 +938,11 @@ abstract class WalkableScene extends Phaser.Scene {
     width: number,
     height: number,
     unit: string,
+    depth = depthFor(y, 1),
   ): void {
     const left = Math.round(x - width / 2);
     const top = y - height;
-    const graphics = this.add.graphics().setDepth(depthFor(y, 1));
+    const graphics = this.add.graphics().setDepth(depth);
     graphics
       .fillStyle(NIGHT, 0.28)
       .fillRect(left + 9, top + 10, width + 8, height + 10);
@@ -934,7 +968,7 @@ abstract class WalkableScene extends Phaser.Scene {
         padding: { x: 5, y: 2 },
       })
       .setOrigin(0.5, 1)
-      .setDepth(depthFor(y, 2));
+      .setDepth(depth + 1);
   }
 
   protected addRoomPlant(x: number, y: number): void {
@@ -1487,6 +1521,16 @@ const ESTATE_POND_COLLISIONS: readonly [
   [88, 730, 164, 24],
 ];
 
+const BUILDING_ID_BY_DOOR_LOCATION: Partial<Record<LocationId, string>> = {
+  "hdb-corridor": "block-9",
+  "hawker-centre": "hawker-centre",
+  kopitiam: "kopitiam",
+  "provision-shop": "provision-shop",
+  "community-centre": "community-centre",
+  "prayer-hall": "prayer-hall",
+  "craftsman-workshop": "craftsman-workshop",
+};
+
 export class EstateScene extends WalkableScene {
   private eveningLight?: Phaser.GameObjects.Rectangle;
   private ambientCats: AmbientCatView[] = [];
@@ -1522,6 +1566,7 @@ export class EstateScene extends WalkableScene {
   private rainPhase = 0;
   private puddleRipplePhase = 0;
   private residentArrangement: "routes" | "monsoon" | "gathering" = "routes";
+  private buildingOcclusionViews: BuildingOcclusionView[] = [];
 
   constructor(
     callbacks: CampaignSceneCallbacks,
@@ -1542,6 +1587,7 @@ export class EstateScene extends WalkableScene {
     this.cameras.main.setBackgroundColor("#9fc079");
     ensureCampaignArtTextures(this);
     this.createBakedExteriorTiles();
+    this.createBuildingOcclusionLayers();
     for (const [x, y, width, height] of ESTATE_BUILDING_COLLISIONS) {
       this.addObstacle(x, y, width, height);
     }
@@ -1560,7 +1606,18 @@ export class EstateScene extends WalkableScene {
       );
     }
     for (const [id, label, targetLocationId, x, y] of ESTATE_DOORS) {
-      this.addDoorVisual(x, y, 56, 78, targetLocationId === "hdb-corridor" ? "BLK 9" : "OPEN");
+      const building = this.buildingForDoor(targetLocationId);
+      const doorDepth = building
+        ? depthFor(building.y + building.height, 2)
+        : depthFor(y, 1);
+      this.addDoorVisual(
+        x,
+        y,
+        56,
+        78,
+        targetLocationId === "hdb-corridor" ? "BLK 9" : "OPEN",
+        doorDepth,
+      );
       this.interactions.push({
         kind: "door",
         id,
@@ -1577,17 +1634,18 @@ export class EstateScene extends WalkableScene {
         ...detail,
       });
     }
-    this.createBus();
     this.setupWorld(
       ESTATE_WIDTH,
       ESTATE_HEIGHT,
       data.spawn ?? { x: 700, y: 400 },
     );
+    this.updateBuildingOcclusion();
     this.drawConsequences();
   }
 
   update(time: number, delta: number): void {
     super.update(time, delta);
+    this.updateBuildingOcclusion();
     this.updateAmbientLife(time, delta);
   }
 
@@ -1644,6 +1702,12 @@ export class EstateScene extends WalkableScene {
       puddleRipplePhase: this.puddleRipplePhase,
       shelterDry: this.monsoonShelterRestored,
       terrainDetail: this.measureTerrainDetail(),
+      buildingOcclusion: this.buildingOcclusionViews.map((view) => ({
+        id: view.zone.id,
+        alpha: view.overlay.alpha,
+        faded: view.faded,
+      })),
+      buildingOcclusionMotion: this.reducedMotion ? "instant" : "smooth",
     };
   }
 
@@ -1669,6 +1733,10 @@ export class EstateScene extends WalkableScene {
         facadeColourCount: 0,
         facadeEdgeTransitions: 0,
         facadeDarkPixelRatio: 0,
+        bicycleRackCount: 0,
+        motorVehicleCount: 0,
+        layoutIssueCount: 0,
+        buildingOcclusionLayerCount: 0,
       };
     }
     const countColours = (
@@ -1794,6 +1862,10 @@ export class EstateScene extends WalkableScene {
       facadeEdgeTransitions,
       facadeDarkPixelRatio:
         facadeOpaquePixels === 0 ? 0 : facadeDarkPixels / facadeOpaquePixels,
+      bicycleRackCount: ESTATE_BICYCLE_RACKS.length,
+      motorVehicleCount: ESTATE_VEHICLE_ROUTES.length,
+      layoutIssueCount: auditEstateLayout().length,
+      buildingOcclusionLayerCount: this.buildingOcclusionViews.length,
     };
     this.terrainDetailSnapshot = detail;
     return detail;
@@ -1813,10 +1885,10 @@ export class EstateScene extends WalkableScene {
       objects.push(
         this.add
           .rectangle(x, 141, 38, 35, GOLD)
-          .setDepth(44),
+          .setDepth(depthFor(300, 5)),
         this.add
           .rectangle(x - 8, 137, 11, 27, CREAM, 0.68)
-          .setDepth(45),
+          .setDepth(depthFor(300, 6)),
       );
     }
 
@@ -1932,7 +2004,7 @@ export class EstateScene extends WalkableScene {
           this.add
             .circle(x, 225 + ((x / 43) % 2) * 7, 6, x % 3 === 0 ? CORAL : GOLD)
             .setStrokeStyle(2, INK)
-            .setDepth(46),
+            .setDepth(depthFor(300, 7)),
         );
       }
     }
@@ -2017,6 +2089,63 @@ export class EstateScene extends WalkableScene {
         graphics.destroy();
       }
       this.add.image(originX, originY, key).setOrigin(0).setDepth(0);
+    }
+  }
+
+  private createBuildingOcclusionLayers(): void {
+    this.buildingOcclusionViews = ESTATE_BUILDING_VISUAL_ZONES.map((zone) => {
+      const tileX = zone.x >= 1280 ? 1280 : 0;
+      const tileY = zone.y >= 800 ? 800 : 0;
+      const tileKey =
+        tileY === 0
+          ? tileX === 0 ? "estate-nw" : "estate-ne"
+          : tileX === 0 ? "estate-sw" : "estate-se";
+      const overlay = this.add
+        .image(tileX, tileY, tileKey)
+        .setOrigin(0)
+        .setCrop(
+          zone.x - tileX,
+          zone.y - tileY,
+          zone.width,
+          zone.height,
+        )
+        .setDepth(depthFor(zone.y + zone.height));
+      return {
+        zone,
+        overlay,
+        faded: false,
+      };
+    });
+  }
+
+  private buildingForDoor(locationId: LocationId): EstateRect | undefined {
+    const buildingId = BUILDING_ID_BY_DOOR_LOCATION[locationId];
+    return ESTATE_BUILDING_VISUAL_ZONES.find(
+      (building) => building.id === buildingId,
+    );
+  }
+
+  private updateBuildingOcclusion(): void {
+    if (!this.player) return;
+    const occludingIds = new Set(
+      getOccludingBuildingIds({ x: this.player.x, y: this.player.y }),
+    );
+    for (const view of this.buildingOcclusionViews) {
+      const faded = occludingIds.has(view.zone.id);
+      if (view.faded === faded) continue;
+      view.faded = faded;
+      const alpha = faded ? BUILDING_OCCLUSION_FADE_ALPHA : 1;
+      this.tweens.killTweensOf(view.overlay);
+      if (this.reducedMotion) {
+        view.overlay.setAlpha(alpha);
+        continue;
+      }
+      this.tweens.add({
+        targets: view.overlay,
+        alpha,
+        duration: 180,
+        ease: "Sine.easeOut",
+      });
     }
   }
 
@@ -2502,6 +2631,47 @@ export class EstateScene extends WalkableScene {
     originX: number,
     originY: number,
   ): void {
+    for (const rack of ESTATE_BICYCLE_RACKS) {
+      const x = rack.x - originX;
+      const y = rack.y - originY;
+      const left = x - BICYCLE_BAY_WIDTH / 2;
+      const top = y - BICYCLE_BAY_DEPTH + 8;
+      if (
+        left < 2
+        || left + BICYCLE_BAY_WIDTH > 1278
+        || top < 2
+        || top + BICYCLE_BAY_DEPTH > 798
+      ) {
+        continue;
+      }
+      graphics
+        .fillStyle(NIGHT, 0.16)
+        .fillRect(
+          left + 5,
+          top + 6,
+          BICYCLE_BAY_WIDTH,
+          BICYCLE_BAY_DEPTH,
+        )
+        .fillStyle(CONCRETE_EDGE)
+        .fillRect(left, top, BICYCLE_BAY_WIDTH, BICYCLE_BAY_DEPTH)
+        .fillStyle(lightenColour(SAND, 0.05))
+        .fillRect(
+          left + 5,
+          top + 5,
+          BICYCLE_BAY_WIDTH - 10,
+          BICYCLE_BAY_DEPTH - 10,
+        )
+        .lineStyle(3, TEAL, 0.72)
+        .strokeRect(
+          left + 11,
+          top + 10,
+          BICYCLE_BAY_WIDTH - 22,
+          BICYCLE_BAY_DEPTH - 20,
+        )
+        .fillStyle(TEAL, 0.72)
+        .fillRect(x - 3, top + 10, 6, BICYCLE_BAY_DEPTH - 20);
+    }
+
     const clusters: readonly [number, number, number][] = [
       [920, 246, GOLD],
       [1010, 286, CORAL],
@@ -2673,7 +2843,6 @@ export class EstateScene extends WalkableScene {
       ["prop-bench", 470, 485, true],
       ["prop-bin", 550, 482, false],
       ["prop-lamp", 770, 520, false],
-      ["prop-bike-rack", 760, 320, false],
       ["prop-planter", 875, 320, true],
       ["prop-bench", 1110, 720, true],
       ["prop-lamp", 1280, 545, false],
@@ -2681,7 +2850,6 @@ export class EstateScene extends WalkableScene {
       ["prop-bench", 1650, 510, true],
       ["prop-lamp", 1860, 560, false],
       ["prop-planter", 2150, 330, true],
-      ["prop-bike-rack", 2320, 450, false],
       ["prop-bench", 650, 1050, true],
       ["prop-lamp", 520, 1100, false],
       ["prop-bin", 1030, 1090, false],
@@ -2689,7 +2857,6 @@ export class EstateScene extends WalkableScene {
       ["prop-bench", 1720, 1110, true],
       ["prop-lamp", 2050, 1130, false],
       ["prop-planter", 2210, 1010, true],
-      ["prop-bike-rack", 1510, 1420, false],
     ];
     for (const [texture, x, y, collides] of props) {
       if (collides) this.addObstacle(x - 35, y - 18, 70, 18);
@@ -2697,6 +2864,20 @@ export class EstateScene extends WalkableScene {
         .sprite(x, y, texture)
         .setOrigin(0.5, 1)
         .setDepth(depthFor(y, 4));
+      this.exteriorPropSprites.push(sprite);
+    }
+
+    for (const rack of ESTATE_BICYCLE_RACKS) {
+      this.addObstacle(
+        rack.x - BICYCLE_COLLISION_WIDTH / 2,
+        rack.y - BICYCLE_COLLISION_DEPTH,
+        BICYCLE_COLLISION_WIDTH,
+        BICYCLE_COLLISION_DEPTH,
+      );
+      const sprite = this.add
+        .sprite(rack.x, rack.y, "prop-bike-rack")
+        .setOrigin(0.5, 1)
+        .setDepth(depthFor(rack.y, 4));
       this.exteriorPropSprites.push(sprite);
     }
 
@@ -3030,11 +3211,23 @@ export class EstateScene extends WalkableScene {
     this.createPondRipples();
     this.createMonsoonWeather();
     for (const [x, y, phase] of ESTATE_LAUNDRY) {
+      const building = ESTATE_BUILDING_VISUAL_ZONES.find(
+        (zone) => (
+          x >= zone.x
+          && x <= zone.x + zone.width
+          && y >= zone.y
+          && y <= zone.y + zone.height
+        ),
+      );
       this.laundrySprites.push(
         this.add
           .sprite(x, y, `ambient-laundry-${phase}`)
           .setOrigin(0.5, 1)
-          .setDepth(46),
+          .setDepth(
+            building
+              ? depthFor(building.y + building.height, 8)
+              : depthFor(y, 8),
+          ),
       );
     }
     if (!this.reducedMotion) {
@@ -3238,23 +3431,6 @@ export class EstateScene extends WalkableScene {
       .setDepth(depthFor(y, 3));
   }
 
-  private createBus(): void {
-    const bus = this.add
-      .sprite(-120, 1420, "estate-bus")
-      .setDepth(depthFor(1420, 4));
-    if (this.reducedMotion) {
-      bus.setX(920);
-      return;
-    }
-    this.tweens.add({
-      targets: bus,
-      x: ESTATE_WIDTH + 180,
-      duration: 18_000,
-      repeat: -1,
-      repeatDelay: 9_000,
-      ease: "Sine.easeInOut",
-    });
-  }
 }
 
 const CORRIDOR_DOORS: readonly [

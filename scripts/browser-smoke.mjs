@@ -744,12 +744,16 @@ try {
           `facades=${terrainDetailEvidence.facadeColourCount} colours/` +
           `${terrainDetailEvidence.facadeEdgeTransitions} edges/` +
           `${(terrainDetailEvidence.facadeDarkPixelRatio * 100).toFixed(1)}% dark; ` +
+          `bicycle-bays=${terrainDetailEvidence.bicycleRackCount}; ` +
+          `motor-vehicles=${terrainDetailEvidence.motorVehicleCount}; ` +
+          `layout-issues=${terrainDetailEvidence.layoutIssueCount}; ` +
+          `occlusion-layers=${terrainDetailEvidence.buildingOcclusionLayerCount}; ` +
           `obstacles=${initial.obstacleCount}`
         : "  TILE  terrain detail evidence missing"
     );
 
-    await walkToAxis("x", 760);
-    await walkToAxis("y", 260);
+    await walkToAxis("x", 810);
+    await walkToAxis("y", 540);
     const detailPrompt = await page.eval(`
       (() => ({
         text: document.getElementById("nearby-text").textContent,
@@ -1201,6 +1205,10 @@ try {
       stepPuffsStill:
         before.visibleStepPuffs === 0
         && after.visibleStepPuffs === 0,
+      buildingOcclusionInstant:
+        before.buildingOcclusionMotion === "instant"
+        && after.buildingOcclusionMotion === "instant"
+        && after.buildingOcclusion.length === 8,
     };
     diagnostics.push(
       `  MOTION  reduced residents=${reducedMotionEvidence.residentsStill}; ` +
@@ -1209,7 +1217,8 @@ try {
         `flutter=${reducedMotionEvidence.ambientFlutterStill}; ` +
         `laundry=${reducedMotionEvidence.laundryStill}; ` +
         `pond=${reducedMotionEvidence.pondStill}; ` +
-        `step-puffs=${reducedMotionEvidence.stepPuffsStill}`
+        `step-puffs=${reducedMotionEvidence.stepPuffsStill}; ` +
+        `occlusion-instant=${reducedMotionEvidence.buildingOcclusionInstant}`
     );
   };
 
@@ -1281,9 +1290,9 @@ try {
         laundryStored: after.visibleLaundryCount === 0,
         mobile: false,
       };
-      // Approach from the open east path so the evidence capture remains a
-      // genuine keyboard walk without clipping the shelter-side landscaping.
-      await walkToAxis("x", 820);
+      // Approach through the open gap east of the bicycle verge so the
+      // evidence capture remains a genuine keyboard walk around solid props.
+      await walkToAxis("x", 1005);
       await walkToAxis("y", 755);
       await walkToAxis("x", 650);
       await page.shot(`${SHOT_DIR}/22-monsoon-shelter.png`);
@@ -1708,6 +1717,18 @@ try {
   const afterFacadeCollision = await page.eval(
     `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
   );
+  const activeFacadeOcclusion = afterFacadeCollision?.buildingOcclusion?.find(
+    (building) => building.id === "provision-shop"
+  );
+  await page.shot(`${SHOT_DIR}/29-building-occlusion.png`);
+  await walkToAxis("y", 400);
+  const restoredFacadeSnapshot = await page.eval(
+    `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
+  );
+  const restoredFacadeOcclusion =
+    restoredFacadeSnapshot?.buildingOcclusion?.find(
+      (building) => building.id === "provision-shop"
+    );
   facadeCollisionEvidence = {
     blocked:
       beforeFacadeCollision?.locationId === "estate"
@@ -1718,14 +1739,21 @@ try {
     start: beforeFacadeCollision?.player ?? null,
     end: afterFacadeCollision?.player ?? null,
     obstacleCount: afterFacadeCollision?.obstacleCount ?? 0,
+    faded:
+      activeFacadeOcclusion?.faded === true
+      && activeFacadeOcclusion.alpha <= 0.35,
+    restored:
+      restoredFacadeOcclusion?.faded === false
+      && restoredFacadeOcclusion.alpha >= 0.98,
   };
   diagnostics.push(
     `  FACADE  collision=${facadeCollisionEvidence.blocked}; ` +
+      `faded=${facadeCollisionEvidence.faded}; ` +
+      `restored=${facadeCollisionEvidence.restored}; ` +
       `start=${JSON.stringify(facadeCollisionEvidence.start)}; ` +
       `end=${JSON.stringify(facadeCollisionEvidence.end)}; ` +
       `obstacles=${facadeCollisionEvidence.obstacleCount}`
   );
-  await walkToAxis("y", 400);
   await walkToAxis("x", 1800);
   await page.shot(`${SHOT_DIR}/16-landmark-facades.png`);
   await walkToAxis("x", 1880);
@@ -1751,6 +1779,8 @@ try {
   await walkToAxis("y", 1140);
   await walkToAxis("x", 1320);
   await page.shot(`${SHOT_DIR}/17-workshop-facade.png`);
+  await walkToAxis("y", 1490, 30);
+  await page.shot(`${SHOT_DIR}/28-block-twelve-bicycle-verge.png`);
 
   await page.eval(`document.getElementById("btn-return-title").click()`);
   await sleep(650);
@@ -2004,6 +2034,7 @@ try {
       && reducedMotionEvidence.laundryStill
       && reducedMotionEvidence.pondStill
       && reducedMotionEvidence.stepPuffsStill
+      && reducedMotionEvidence.buildingOcclusionInstant
       && monsoonWeatherEvidence
       && monsoonWeatherEvidence.active
       && monsoonWeatherEvidence.rainPool
@@ -2046,8 +2077,14 @@ try {
       && terrainDetailEvidence.facadeColourCount >= 20
       && terrainDetailEvidence.facadeEdgeTransitions >= 180
       && terrainDetailEvidence.facadeDarkPixelRatio >= 0.08
+      && terrainDetailEvidence.bicycleRackCount === 3
+      && terrainDetailEvidence.motorVehicleCount === 0
+      && terrainDetailEvidence.layoutIssueCount === 0
+      && terrainDetailEvidence.buildingOcclusionLayerCount === 8
       && facadeCollisionEvidence
       && facadeCollisionEvidence.blocked
+      && facadeCollisionEvidence.faded
+      && facadeCollisionEvidence.restored
       && facadeCollisionEvidence.obstacleCount >= 90
       && worldFeelEvidence
       && worldFeelEvidence.cameraZoom >= 1.3
@@ -2143,7 +2180,11 @@ try {
           `ground-accents=${terrainDetailEvidence.groundAccentCount}, ` +
           `facade-colours=${terrainDetailEvidence.facadeColourCount}, ` +
           `facade-edges=${terrainDetailEvidence.facadeEdgeTransitions}, ` +
-          `facade-dark=${(terrainDetailEvidence.facadeDarkPixelRatio * 100).toFixed(1)}%`
+          `facade-dark=${(terrainDetailEvidence.facadeDarkPixelRatio * 100).toFixed(1)}%, ` +
+          `bicycle-bays=${terrainDetailEvidence.bicycleRackCount}, ` +
+          `motor-vehicles=${terrainDetailEvidence.motorVehicleCount}, ` +
+          `layout-issues=${terrainDetailEvidence.layoutIssueCount}, ` +
+          `occlusion-layers=${terrainDetailEvidence.buildingOcclusionLayerCount}`
         : "terrain detail evidence missing",
       facadeCollisionEvidence
         ? `facade-collision=${facadeCollisionEvidence.blocked}, ` +

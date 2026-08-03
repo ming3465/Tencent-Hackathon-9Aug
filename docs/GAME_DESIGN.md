@@ -175,7 +175,19 @@ the Hawker Centre, Kopitiam, Minah's shop, Community Centre, Prayer Hall,
 Workshop, and Block 12 have distinct roofs, awnings, glazing, counters, lattice,
 tools, thresholds, and code-drawn pixel signs. Twelve building collision shells
 make the architecture physically solid while leaving intentional gaps aligned
-with usable doors. The visual-novel layer is a distinct close-up mode: every
+with usable doors. Three bicycle racks use centralized outdoor-verge
+placements, marked concrete bays, and solid collision. Their ground footprints
+are checked against the larger visual bounds of all eight exterior buildings
+and both pedestrian crossings/spines. Because this campaign estate contains no
+vehicular road, its motor-vehicle route registry is intentionally empty; the
+old bus actor and texture were removed instead of letting traffic cross a
+garden. Each of the eight building crops is also repeated as a y-sorted
+foreground occlusion layer. It is pixel-identical at rest, softens to 28%
+opacity only while covering the player, and returns fully opaque after they
+step away. Normal motion uses a 180 ms ease; reduced motion applies the state
+instantly. Runtime doors, laundry, lit windows, and string lights remain above
+the crop so interaction cues stay crisp. The visual-novel layer is a distinct
+close-up mode: every
 named NPC, including the Voice, has a unique 220×300 code-drawn SVG bust with
 authored build, hair, skin tone, age lines, accessory, palette, and a small
 community-role motif. Mr. Long's portrait, for example, carries his side-part,
@@ -217,7 +229,9 @@ palette, samples the generated grass/path texture for material and edge
 variation, counts the four generated landscape forms and their sampled colours,
 counts 88 exterior props, 12 story-cluster placements across six forms, and 54
 baked ground accents, samples a generated landmark façade for colour, edge,
-and dark-value structure, counts 90 live obstacle bodies, physically pushes
+and dark-value structure, counts 93 live obstacle bodies, proves three
+building/path-safe bicycle bays and zero roadless motor routes, proves all
+eight façade layers fade and restore at a physical building stop, physically pushes
 the player into a solid storefront, physically walks to a pond capture, and
 walks the player to east and south captures. It also samples
 pixels at the room and estate edges, exercises the Journal's complete

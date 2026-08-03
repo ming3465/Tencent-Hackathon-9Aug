@@ -113,8 +113,14 @@ The code-drawn landmark names, awnings, glazing, and structural details are
 decorative reinforcement rather than the only route to meaning. Visible
 runtime door prompts, location announcements, and equivalent Journal actions
 remain the semantic path. The harness samples façade value/edge structure,
-counts 90 live obstacle bodies, and physically proves the Minah storefront is
+counts 93 live obstacle bodies, confirms all three solid bicycle bays remain
+outside pedestrian spines and building footprints, and physically proves the
+Minah storefront is
 solid while deliberate doorway gaps and both far-district routes remain open.
+All eight façade-occlusion layers restore automatically after the player steps
+away. Their 180 ms visual ease becomes an instant alpha change under reduced
+motion; doors, labels, and equivalent Journal actions do not depend on the
+effect.
 It also verifies a 238×325 px desktop portrait in a 940 px card, checks a named
 NPC's deterministic portrait traits, and proves the responsive 88×120 px
 portrait, complete text, and controls remain inside the 360 px viewport. The

@@ -1520,33 +1520,6 @@ function createPropTextures(scene: Phaser.Scene): void {
     }
   });
 
-  makeTexture(scene, "estate-bus", 194, 82, (graphics) => {
-    graphics
-      .fillStyle(PALETTE.night, 0.2)
-      .fillEllipse(98, 72, 170, 13);
-    drawPixelBlock(graphics, 5, 8, 182, 58, PALETTE.cream, 4, false);
-    graphics
-      .fillStyle(PALETTE.teal)
-      .fillRect(9, 47, 174, 15)
-      .fillStyle(PALETTE.ink)
-      .fillRect(18, 16, 31, 24)
-      .fillRect(55, 16, 31, 24)
-      .fillRect(92, 16, 31, 24)
-      .fillRect(129, 16, 31, 24)
-      .fillStyle(0x79a7b3)
-      .fillRect(21, 19, 25, 18)
-      .fillRect(58, 19, 25, 18)
-      .fillRect(95, 19, 25, 18)
-      .fillRect(132, 19, 25, 18)
-      .fillStyle(PALETTE.ink)
-      .fillEllipse(43, 67, 24, 24)
-      .fillEllipse(150, 67, 24, 24)
-      .fillStyle(PALETTE.concreteEdge)
-      .fillEllipse(43, 67, 10, 10)
-      .fillEllipse(150, 67, 10, 10)
-      .fillStyle(PALETTE.gold)
-      .fillRect(168, 27, 10, 8);
-  });
 }
 
 function drawAmbientSweeper(

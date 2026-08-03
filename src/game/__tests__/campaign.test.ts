@@ -31,6 +31,14 @@ import {
   renderCampaignPortrait,
 } from "../campaignPortrait.js";
 import { selectNpcIntent } from "../kampungMind.js";
+import {
+  auditEstateLayout,
+  ESTATE_BICYCLE_RACKS,
+  ESTATE_BUILDING_VISUAL_ZONES,
+  ESTATE_VEHICLE_LANES,
+  ESTATE_VEHICLE_ROUTES,
+  getOccludingBuildingIds,
+} from "../estateLayout.js";
 import type {
   CampaignEvent,
   CampaignStateV1,
@@ -373,6 +381,23 @@ describe("campaign registries", () => {
       expect(detail.x).toBeLessThanOrEqual(2560);
       expect(detail.y).toBeGreaterThanOrEqual(0);
       expect(detail.y).toBeLessThanOrEqual(1600);
+    }
+    expect(auditEstateLayout()).toEqual([]);
+    expect(ESTATE_VEHICLE_LANES).toHaveLength(0);
+    expect(ESTATE_VEHICLE_ROUTES).toHaveLength(0);
+    expect(ESTATE_BUILDING_VISUAL_ZONES).toHaveLength(8);
+    expect(getOccludingBuildingIds({ x: 2100, y: 253 })).toContain(
+      "provision-shop",
+    );
+    expect(getOccludingBuildingIds({ x: 2100, y: 400 })).toEqual([]);
+    for (const rack of ESTATE_BICYCLE_RACKS) {
+      if (!rack.interactionId) continue;
+      const detail = ESTATE_FLAVOUR_INTERACTIONS.find(
+        (candidate) => candidate.id === rack.interactionId,
+      );
+      expect(detail, rack.interactionId).toBeDefined();
+      expect(detail?.x).toBe(rack.x);
+      expect(detail?.y).toBe(rack.y);
     }
     for (const quest of QUESTS) {
       if (quest.npcId) {

@@ -1692,3 +1692,119 @@ the Codex built-in OpenAI image-generation tool.
   call during play, analytics, data collection, human playtest, real-device
   test, same-hardware cross-game benchmark, deck refresh, push, or deployment
   was used in this pass.
+
+## 2026-08-03 - Exterior Spatial-Logic Correction
+
+**AI-assisted audit:**
+
+- The user reported a bicycle appearing inside a building and a bus crossing a
+  garden. Codex inspected the current scene geometry, prop registries, generated
+  texture code, and production smoke captures for the Block 9, east, south,
+  workshop, pond, and ambient-life districts.
+- The audit confirmed two concrete world-logic errors: the Block 9 bicycle
+  overlapped its lobby composition, and the Block 12 rack was anchored inside
+  the Block 12 visual footprint. It also confirmed that the campaign estate has
+  pedestrian paving and garden verges but no vehicular road, while an inherited
+  bus actor still travelled across world `y=1420`.
+- The in-app browser was unavailable in this session. Visual review therefore
+  used the repository's real production-browser captures and newly rendered
+  smoke screenshots. No image-generation run was needed: the correction was
+  spatial and remained in the project's code-drawn visual language.
+
+**Curated implementation:**
+
+- Added `src/game/estateLayout.ts` as the single source for exterior building
+  visual bounds, pedestrian spines, three bicycle locations, bicycle-bay and
+  collision dimensions, and the road/vehicle registries.
+- Moved the Block 9, provision-shop, and Block 12 bicycles onto three marked
+  outdoor verge bays and synchronized both bicycle narration markers with the
+  same registry coordinates.
+- Made every bicycle rack physically solid. The estate now exposes 93 obstacle
+  bodies while preserving the complete east, south, shelter, and chapter paths.
+- Removed the old bus spawn logic and its unused generated texture. The
+  roadless map now explicitly has zero motor-vehicle lanes and zero motor
+  routes.
+- Folded the pure spatial audit into the existing campaign registry test
+  without inflating the 75-test headline. It rejects bicycle bays outside the
+  world, across any building footprint, or across either pedestrian crossing
+  or spine; it also rejects a vehicle route whose points lack a road lane.
+- Extended the existing 60-check browser assertion and diagnostics to require
+  three bicycle bays, zero motor vehicles, and zero layout issues. Added a
+  dedicated Block 12 bicycle-verge capture to the production journey.
+- During the same session, the user asked for buildings to soften when the
+  player walks behind them. Added eight cropped foreground copies of the baked
+  façades, y-sorted at each building's base. The duplicate is pixel-identical
+  at rest; while it covers the player it eases to 28% alpha over 180 ms, then
+  restores to full opacity after departure.
+- Kept doors, laundry, lit windows, and string lights above those crops so
+  labels and interaction cues stay crisp. Reduced motion skips the tween and
+  applies the same visibility state instantly.
+- Extended the existing spatial registry assertions with all eight occlusion
+  zones. Browser evidence now requires all eight runtime layers, a real fade at
+  the provision-shop collision, full restoration after stepping away, and the
+  instant reduced-motion mode.
+
+**Verification and corrections found:**
+
+- Strict TypeScript and all 75 unit tests passed. The production build completed
+  at 83.33 kB initial JavaScript (26.08 kB gzip) and 1,581.58 kB lazy
+  campaign/Phaser code (370.58 kB gzip). `npm audit` reported 0
+  vulnerabilities.
+- The first production-browser run passed its first 19 checks, then correctly
+  stopped when the harness tried to walk through the newly solid Block 9
+  bicycle bay. The harness route was changed to walk around the bay rather than
+  weakening collision.
+- The next complete production-browser journey passed 60/60 across the full
+  and demo campaigns. Its semantic snapshot reported three bicycle bays, zero
+  motor vehicles, zero layout issues, 93 obstacles, open east/south travel, and
+  an intact physical storefront stop.
+- The first occlusion-enabled journey passed fade and restoration evidence,
+  then stopped only because the new south-verge camera requested `y=1510`
+  beyond the character's natural world-bound stop at `y=1486`. The capture
+  target was corrected to accept that physical boundary; no collision was
+  weakened.
+- The next complete journey passed 60/60. It reported eight occlusion layers,
+  `faded=true`, `restored=true`, and `occlusion-instant=true` under reduced
+  motion while retaining all campaign, mobile, weather, travel, and pacing
+  checks.
+- Human inspection of refreshed `10-living-estate.png`,
+  `11-estate-east.png`, `12-estate-south.png`, and
+  `17-workshop-facade.png` confirmed that the Block 9 and provision-shop racks
+  read as outdoor parking and that no bicycle remains embedded in the Block 12
+  façade. Inspection of `28-block-twelve-bicycle-verge.png` confirmed the
+  relocated south bay, and `29-building-occlusion.png` confirmed that the
+  player remains readable through Minah's softened storefront while its sign
+  and door stay crisp.
+
+**Claim boundary:**
+
+- This was a code and rendered-layout review, not a human playtest or
+  real-device session. No new dependency, generated runtime image, copied art,
+  backend, runtime model, analytics, data collection, push, or deployment had
+  occurred at the time of this log entry.
+
+**Judge-artifact synchronization:**
+
+- Codex refreshed the HTML deck captures after the verified build-size change,
+  then used the repository's existing PowerPoint as the required visual
+  template. The source audit found eight blank-layout slides, each containing
+  one inherited full-slide raster and preserved speaker notes.
+- The first template-plan validation rejected ambiguous bare PowerPoint shape
+  numbers. Codex corrected the frame map to the inspected inherited image IDs;
+  the validated plan then passed with zero issues.
+- The first artifact-tool preview exposed a 4x retina/native-size mismatch that
+  zoomed the replacement rasters. Codex normalized the captures to 1280x720 in
+  external scratch space, re-exported through the inherited image frames, and
+  preserved their placement, crop, fit, geometry, rotation, and notes.
+- Template fidelity passed with zero issues, the PowerPoint overflow test
+  passed, and all eight final slide renders were visually inspected. Slide 6
+  now shows the current rounded 83 kB initial-JavaScript figure; the other
+  slides retain the established composition.
+- Codex regenerated the matching eight-page PDF from the verified slide
+  renders. Poppler reported eight 1280x720 pages with no encryption or
+  JavaScript, and a rendered montage was visually checked for clipping,
+  overlap, broken glyphs, page-order, footer, and slide-number defects.
+- This artifact pass used the presentation/PDF tooling already available to
+  Codex plus temporary `uv` environments for validation dependencies. It added
+  no project dependency and did not add a runtime image, backend, network call,
+  analytics, data collection, or generated in-game art.

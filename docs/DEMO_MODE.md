@@ -54,6 +54,8 @@ unchanged. The same run instantiates every location and applies the same normal
 and 4×-CPU-throttled frame-pacing budgets. The resident routes, directional
 frames, nearby attention, baked terrain details, community cats, and HDB
 laundry are the same in both modes; demo mode receives no lighter visual path.
+The same eight building-occlusion layers soften when covering the player;
+reduced-motion users receive that state change instantly.
 Chapter 2 also uses the same deterministic monsoon, wet surfaces, puddles,
 shelter masking, resident/cat responses, and reduced-motion fallback. Only the
 helper and invitee thresholds change.

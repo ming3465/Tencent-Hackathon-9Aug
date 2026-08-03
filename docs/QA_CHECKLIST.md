@@ -75,9 +75,15 @@
 - [x] All 88 exterior props instantiate across 22 generated forms, including
       12 collision-aware story clusters across six forms; 54 baked drain/leaf
       accents add surface detail without adding per-frame objects
+- [x] All three bicycle racks occupy marked outdoor verge bays, with zero
+      overlap against building footprints or pedestrian spines; the roadless
+      estate reports zero motor-vehicle routes
+- [x] All eight exterior building crops remain opaque at rest, soften while
+      covering the player at a physical façade stop, restore after departure,
+      and switch instantly under reduced motion
 - [x] Generated landmark façade exposes at least 20 colours, 180 edge
       transitions, and 8% dark pixels (documented pass: 55 / 218 / 26.1%)
-- [x] All 90 obstacle bodies instantiate; a real northward movement sample
+- [x] All 93 obstacle bodies instantiate; a real northward movement sample
       stops at the Minah storefront (about `y=396` to `y=253`) while east/south
       travel remains reachable
 - [x] Mr. Long's runtime portrait exposes his stable ID, cane, side-part, and

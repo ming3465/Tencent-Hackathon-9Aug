@@ -78,6 +78,20 @@ numbers are treated as defects.
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-03** — Exterior spatial-logic correction after visual review:
+  removed the roadless bus that crossed the south garden; moved the Block 9,
+  provision-shop, and Block 12 bicycles onto marked outdoor verge bays; made
+  all three racks physically solid; and centralized building, pedestrian,
+  bicycle, and vehicle-route geometry in `estateLayout.ts`. Existing campaign
+  registry and 60-check smoke assertions now fail on building/path bicycle
+  overlap or any motor route without a road. Added eight cropped, y-sorted
+  façade overlays that ease to 28% only while covering the player, restore on
+  departure, and change instantly under reduced motion. Browser journeys
+  correctly caught routes walking into a new rack and beyond the south world
+  bound; only the evidence routes were corrected. The judge HTML, PPTX, and PDF
+  decks were synchronized to the current 83 kB rounded bundle figure through a
+  template-preserving render/overflow/fidelity check. Final verification
+  details are recorded in `docs/AI_USAGE_LOG.md`.
 - **2026-08-03** — Estate story-cluster/density continuation: one genuine
   OpenAI image-generation run used three current exterior captures to explore
   six reusable prop clusters, ground accents, clear routes, and subtle ambient
