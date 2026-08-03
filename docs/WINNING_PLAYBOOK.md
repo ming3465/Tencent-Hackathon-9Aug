@@ -25,9 +25,14 @@ Why: Timeline claims are soft, the form will drop on short notice, and the mainl
 Must not break: nothing — pure insurance against the only catastrophic failure mode: missing the window.
 
 **2. Build the judge path: demo spawn + 2-of-3 ending, behind `?demo=1`. (3–5 h)**
-What: Spawn one screen from the first activity resident (interaction inside ~5 s, intro text ≤8 words); golden-hour ending offered diegetically at the Bus Stop after any 2 of 3 activities. Judge reaches the emotional close in ~3 min.
+What: Start beside the Voice in Y’s flat, use the first usable door, and keep
+every chapter in `?demo=1`; only the helper/invitation thresholds compress from
+3/5 to 2/2 and walking speed increases. The judge sees the same story and
+consequences as the full campaign.
 Why: Judges' engagement window is 3–10 min and the hook must land in 30–60 s (Defold, StraySpark); the 6–8 min walking-heavy arc is our documented killer (Craft memo Tier 1).
-Must not break: the public build (query-param gated), all 65 unit tests, the 21-check smoke suite. Run `npm test && npm run smoke` after.
+Must not break: the public build (query-param gated), all 75 unit tests, the
+60-check production-browser smoke suite. Run the repository's complete
+verification gate after any change.
 
 **3. Record the 90-second video (beat sheet in §4). (1 day, after #2 and #5)**
 What: Shoot deliberately, shot by shot, on the improved build; upload to YouTube early ("Not for Kids"), keep a local MP4, add an unlisted Bilibili mirror for Shenzhen reachability.
@@ -39,10 +44,18 @@ What: Use CodeBuddy for a real task from this list (the `?demo=1` work or the ag
 Why: CodeBuddy chat history is a required submission artifact in the mainland rules, and a *failure log as our only artifact* is actively risky before Tencent Cloud judges whose event exists to showcase CodeBuddy — May's PR was wall-to-wall CodeBuddy praise (Ecosystem memo §B2, Critic §B8).
 Must not break: the honesty story. Keep the documented failure; the narrative becomes "what worked, what didn't, both documented" — verification-minded judges reward exactly this (Devfolio, Money Forward).
 
+Current progress: two genuine OpenAI image-generation passes now provide an
+auditable neighbourhood style key and targeted estate-density study, exact
+prompts, human review, and curated code-drawn translations spanning four
+activity vignettes, six story-cluster forms, ground accents, and ambient life.
+This strengthens cross-tool visual evidence but is not Miora; the
+Miora-specific action remains open.
+
 **5. Age-signal the cast. (half day)**
 What: Procedural silver hair, slight stoop (2 px head offset), cane/hand fan/flat cap accessories, slower gait for elders, turn-to-face on player approach. At least one clearly female elder.
 Why: In a 120-second judging window the cast must visibly BE older adults or Impact-30 doesn't land (Memo 1 §5); shared silhouettes violate the Gerontoludic "Heterogeneity" principle we cite; 94% of older game characters are male — one female elder is a citable differentiator (Prior-art memo §5.2).
-Must not break: dignity — props, never punchlines; smoke suite; the "all art procedural, zero assets" claim (draw it in code).
+Must not break: dignity — props, never punchlines; smoke suite; consistent art
+direction and truthful provenance for any generated asset.
 
 **6. Playtest with 3–5 real older adults before Aug 5. (half day + scheduling)**
 What: A grandparent counts. Capture short quotes, one photo (with consent), and one design change made because of feedback. One slide, one 3-second video insert.
@@ -60,7 +73,7 @@ Why: Tencent ecosystem alignment, Singapore edge node for Singapore judges, and 
 Must not break: keep GitHub Pages live as fallback; print both URLs everywhere.
 
 **9. Rubric-map the deck with the rules' exact words. (2–3 h)**
-What: AI slide quotes the official requirement verbatim and checks off worldbuilding + artwork + sound; one line: "Elderly care (适老化关怀) is a named sub-theme of the official Social Good track"; Impact slide opens with 1-in-4 Singaporeans 65+ by 2030 and 122,000 living alone, cites Gerontoludic Manifesto + Chua et al. (NTU, Singapore); Quality slide: 11 KB shell / 358 KB total / 65 tests + 21 CDP checks.
+What: AI slide quotes the official requirement verbatim and checks off worldbuilding + artwork + sound; one line: "Elderly care (适老化关怀) is a named sub-theme of the official Social Good track"; Impact slide opens with 1-in-4 Singaporeans 65+ by 2030 and cites the official brief; Quality slide: 80.99 kB initial JS / 75 tests / 60 CDP checks / 0 vulnerabilities.
 Why: Winners visibly game the rubric and balance all criteria (Square, Klaviyo method); the verbatim-compliance line pre-empts the "no runtime LLM = no AI" misread, which is our single biggest scoring risk on a 40-point criterion (Critic §A4).
 Must not break: citation honesty — every number sourced, "aligned with," never "partnered with" Age Well SG.
 
@@ -82,7 +95,7 @@ Format assumption: stage roadshow, 3 min pitch + Q&A, seated judges, press prese
 - **0:00–0:20 — A, cold open, no thank-yous.** "By 2030, one in four Singaporeans will be over 65, and 122,000 will live alone. Every product built for them treats them as patients. We built the opposite." Screen: golden-hour wide shot, live build already running.
 - **0:20–0:50 — A, problem + thesis.** Why "seniors as patients" products fail (deficit framing, the 7%-representation stat); Kampung SG's inversion: the elders are the community's problem-solvers. Screen: B walks toward the first resident.
 - **0:50–2:00 — B drives, A narrates.** Scripted 60–70 s golden path on `?demo=1`: meet resident → dialogue choice → *visible world consequence* → the scam-awareness beat (elder solves what the player can't) → Bus Stop → golden-hour close. B drives from beside the screen; judges never fumble controls mid-pitch.
-- **2:00–2:35 — B, AI story, numbers first.** "The rules require AI creation in worldbuilding, art, security, or sound — we used it in all four. 65 tests in half a second; a zero-dependency CDP harness plays the deployed game and makes 21 assertions before any judge does. Here's what CodeBuddy did well — and the failure we documented, because our whole submission is auditable." Screen: receipts slide (chat history, test run, commit graph).
+- **2:00–2:35 — B, AI story, numbers first.** “KampungMind turns reviewed AI-authored personalities into an offline deterministic NPC system. Seventy-five tests and a zero-dependency CDP harness make sixty assertions across the full and demo campaigns. Here is the CodeBuddy run that failed, because our submission is auditable.” Screen: KampungMind content/reducer, test run, and AI log.
 - **2:35–3:00 — A, power-of-three close.** "Elders as experts. Choices that reshape the estate. An AI process you can audit. Kampung SG — play it right now at [URL]." Screen: QR + both URLs.
 
 **Fallback ladder:** (1) EdgeOne live build (Singapore edge node); (2) GitHub Pages; (3) local `npm run preview` on our laptop, pre-warmed; (4) the MP4 video, loaded locally, cued. Bring a second device with the game open for judges to grab during Q&A.
@@ -98,11 +111,11 @@ Keep 90 s total. Burn open captions on every shot (most judges watch muted); mix
 - **0–5 s — Cold open:** golden-hour wide shot, estate alive. Caption: "Kampung SG — a cozy Singapore sandbox where seniors are the experts, not the patients."
 - **5–15 s — Genre → hook:** walk into a resident conversation (genre), immediately a dialogue choice and the world visibly responding (hook). Caption the thesis.
 - **15–48 s — Three resident beats:** title card → 6–8 s interaction → visible consequence, per resident. Jump-cut ALL traversal. Vary locations and framing hard (silhouette-repetition defense). Include the scam beat as one of the three. No memory-match.
-- **48–60 s — Payoff:** transformed estate → golden-hour ending. Card: "No timer. No failure state. No medical claims."
-- **60–82 s — AI receipts montage, dense:** 5–6 inserts at 2–4 s — prompt→procedural-art side-by-side; dialogue-tree authoring captioned "AI-built worldbuilding and intelligent NPCs" (the criterion's exact words); terminal shot of 65 tests + 21 CDP checks; honest card: "What worked, what didn't — CodeBuddy, documented in our repo."
+- **48–60 s — Payoff:** calm weaving → Last Door → gathered residents and free exploration. Card: “No timer. No failure state. No medical claims.”
+- **60–82 s — AI receipts montage, dense:** KampungMind personality/intents → pure reducer/save → terminal shot of 75 tests + 60 CDP checks → honest card: “What worked, what did not — every run documented.”
 - **82–90 s — End slate, 8–10 s (not 4):** title, play-now URL + QR, team, event hashtags, one-line vision.
 
-**Deviation from the old 64/22/4 script:** restructure gameplay from "a playthrough" to Genre→Hook→Beats→Payoff; extend the close to 8–10 s; do NOT lengthen the AI segment — instead caption AI evidence *during* gameplay beats ("every sprite drawn in code — zero image assets") so effective AI coverage reaches ~35–40 s while Impact+Quality footage still dominates.
+**Deviation from the old 64/22/4 script:** restructure gameplay from "a playthrough" to Genre→Hook→Beats→Payoff; extend the close to 8–10 s; do NOT lengthen the AI segment — instead caption AI evidence *during* gameplay beats ("AI-generated visual target → human-curated code-drawn activity scenes") so effective AI coverage reaches ~35–40 s while Impact+Quality footage still dominates.
 
 ---
 

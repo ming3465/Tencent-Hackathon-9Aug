@@ -214,6 +214,18 @@
       .card .role { font-size: 13px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal); margin-bottom: 10px; }
       .card p { font-size: 17px; line-height: 1.42; color: var(--ink-soft); }
 
+      .residents { padding-top: 44px; }
+      .residents h1 { margin: 12px 0 6px; font-size: 54px; }
+      .residents .cards { margin-top: 14px; }
+      .residents .card { padding: 16px; }
+      .residents .card h3 { margin-bottom: 5px; font-size: 23px; }
+      .residents .card .role { margin-bottom: 6px; font-size: 11px; }
+      .residents .card p { font-size: 14px; line-height: 1.32; }
+      .residents-detail { height: 210px; margin-top: 14px; gap: 30px; align-items: stretch; }
+      .residents-detail .shot { height: 210px; object-fit: cover; object-position: center 34%; }
+      .residents-detail li { margin-bottom: 7px; font-size: 17px; line-height: 1.3; }
+      .residents-detail .callout { margin-top: 9px; padding: 10px 14px; font-size: 14px; }
+
       .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 22px; }
 
       .step {
@@ -278,6 +290,11 @@
       .stat b { display: block; font-family: var(--font-display); font-size: 40px; color: var(--teal); line-height: 1; }
       .stat span { display: block; margin-top: 8px; font-size: 13px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-soft); }
 
+      .engineering-body { height: 260px; margin-top: 18px; }
+      .engineering-body li { margin-bottom: 6px; font-size: 17px; line-height: 1.3; }
+      .engineering-body .shot { height: 260px; object-fit: cover; object-position: top; }
+      .engineering-callout { margin-top: 10px; padding: 11px 16px; font-size: 15px; }
+
       /* ---- integrity columns ---- */
       .integrity { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; margin-top: 24px; }
 
@@ -297,7 +314,7 @@
       .qr img { width: 220px; height: 220px; display: block; margin: 0 auto 12px; }
       .qr span { font-size: 14px; font-weight: 800; color: var(--ink-soft); word-break: break-all; line-height: 1.4; }
 
-      .credits { margin-top: 22px; font-size: 13.5px; line-height: 1.62; color: var(--ink-soft); }
+      .credits { margin-top: 16px; font-size: 12.5px; line-height: 1.48; color: var(--ink-soft); }
       .credits b { color: var(--ink); }
 
       .fillme { color: var(--coral); font-weight: 900; }
@@ -319,13 +336,13 @@
         <span class="kicker">Kampung SG &middot; Game Track</span>
         <h1>Every Small Act<br />Grows the Kampung.</h1>
         <p class="lede">
-          A cozy Singapore neighbourhood sandbox where older residents are the
-          experts &mdash; not the errands.
+          A cozy five-part campaign where older residents are the experts
+          shaping an enterable Singapore estate.
         </p>
         <div class="hero-tags">
-          <span class="tag">Walk one HDB estate</span>
-          <span class="tag">Join small invitations</span>
-          <span class="tag">The estate visibly changes</span>
+          <span class="tag">Prologue + 3 chapters + ending</span>
+          <span class="tag">Enter homes and landmarks</span>
+          <span class="tag">NPCs remember your choices</span>
         </div>
       </div>
       <p class="hero-url">Play free in any browser &mdash; <span>ming3465.github.io/Tencent-Hackathon-9Aug</span></p>
@@ -357,32 +374,32 @@
 
     <!-- ================= SLIDE 3 ================= -->
     <section class="slide">
-      <span class="kicker">The Loop</span>
-      <h1>A place, not a menu.</h1>
+      <span class="kicker">The Campaign</span>
+      <h1>Five doors tell one connected story.</h1>
       <div class="split-wide" style="height: 400px">
-        <img class="shot" src="../screenshots/02-neighbourhood.png" alt="The 1600x1000 neighbourhood map" />
+        <img class="shot" src="../screenshots/02-neighbourhood.png" alt="Y's enterable flat and the campaign Journal" />
         <ul>
-          <li>1600&times;1000 estate: HDB block, void deck, hawker corner, garden</li>
+          <li>Prologue, three sequential chapters, one ending, then free exploration</li>
+          <li>2560&times;1600 estate plus homes, corridor, workshop, shops and halls</li>
           <li>Move with WASD, arrow keys, or the on-screen touch pad</li>
-          <li>Approach a resident, press E, choose together</li>
-          <li>Three meters rise: Connection, Purpose, Comfort</li>
-          <li>Any three activities unlock the evening reflection</li>
+          <li>Recruit 3 helpers, invite 5 residents, reconnect Ben with a craftsman</li>
+          <li>Every meaningful interaction has an equivalent Journal action</li>
           <li><b>No timer. No energy bar. No failure state.</b></li>
         </ul>
       </div>
       <div class="steps">
-        <div class="step"><strong>1. Walk</strong><span>Discover activities in any order you like</span></div>
-        <div class="step"><strong>2. Choose</strong><span>Both options are valid preferences</span></div>
-        <div class="step"><strong>3. The world changes</strong><span>Your choice appears in the estate</span></div>
+        <div class="step"><strong>1. Enter</strong><span>Homes and landmarks carry resident-specific details</span></div>
+        <div class="step"><strong>2. Listen</strong><span>KampungMind selects authored intent from context</span></div>
+        <div class="step"><strong>3. Remember</strong><span>Choices persist in people, places and the estate</span></div>
       </div>
       <p class="brandmark">KAMPUNG SG &middot; THETWOGUYS</p>
       <p class="slide-num">03</p>
     </section>
 
     <!-- ================= SLIDE 4 ================= -->
-    <section class="slide">
+    <section class="slide residents">
       <span class="kicker">The Residents</span>
-      <h1>Three neighbours with real expertise.</h1>
+      <h1>Eight routes. One private KampungMind.</h1>
       <div class="cards">
         <div class="card">
           <p class="role">Community Garden</p>
@@ -400,22 +417,21 @@
           <p>Route expert. She maps sun and rain exposure from walking it daily, and her knowledge drives the shelter plan.</p>
         </div>
       </div>
-      <div class="split" style="height: 248px; margin-top: 22px">
+      <div class="split residents-detail">
         <img
           class="shot"
-          style="height: 248px; object-fit: cover; object-position: center 34%"
           src="../screenshots/hero-evening.png"
           alt="Uncle Ravi's chess invitation on the noticeboard at golden hour"
         />
         <div>
           <ul style="margin-bottom: 0">
-            <li>Two choices each &mdash; preferences, never right answers</li>
-            <li>Six choices, six visible changes in the estate</li>
-            <li>Residents greet you; their lines change after you act</li>
+            <li>Personality, role, expertise, knowledge and memory rules per NPC</li>
+            <li>Authored greetings, clues, requests, reminders and reflections</li>
+            <li>Deterministic scoring; stable IDs break ties; no runtime generation</li>
           </ul>
-          <div class="callout" style="margin-top: 12px; font-size: 16px; padding: 12px 16px">
-            &ldquo;Two neighbours signed up while you were walking around.&rdquo;
-            <br /><b style="font-size: 14px">&mdash; Uncle Ravi, after your choice. In-game, verbatim.</b>
+          <div class="callout">
+            &ldquo;A full table begins with one invitation that does not test anybody.&rdquo;
+            <br /><b style="font-size: 14px">&mdash; Uncle Ravi, remembered reflection. In-game, verbatim.</b>
           </div>
         </div>
       </div>
@@ -442,26 +458,37 @@
           <td><strong>CodeBuddy CLI 2.127.0</strong> authored the first 10 files, including the match engine that still ships today</td>
           <td>Overran its 50-turn limit. <strong>2 TypeScript errors &middot; 3 failing tests &middot; 1 unused dependency &middot; 4 audit findings &middot; 1 stale-timer race</strong></td>
           <td>Rewrote tests off an invalid constant-RNG shuffle assumption; added session-aware timer cancellation</td>
-          <td><strong>tsc clean &middot; 70/70 tests &middot; 0 vulnerabilities &middot; 22/22 browser smoke</strong></td>
+          <td><strong>tsc clean &middot; 75/75 tests &middot; 0 vulnerabilities &middot; 60/60 browser smoke</strong></td>
         </tr>
       </table>
       <div class="callout">
-        When we asked CodeBuddy to fix its own output, the account returned
-        <b>429 Credits exhausted</b>. We did not buy credits, and we did not invent extra runs to
-        make this slide look better. <b>We treat AI output as a pull request, not a deliverable.</b>
+        CodeBuddy's retry returned <b>429 Credits exhausted</b>; we preserved
+        the failure. A later <b>OpenAI image-generation pass</b> produced one
+        style key. Humans rejected direct runtime use and translated its best
+        idea into four verified code-drawn activity vignettes.
       </div>
-      <div class="split" style="height: 150px; margin-top: 18px">
+      <div class="split" style="height: 160px; margin-top: 14px; gap: 18px">
         <div>
-          <p style="font-size: 17px; line-height: 1.5; color: var(--ink-soft)">
-            <b style="color: var(--ink)">Human decided:</b> that residents are experts not quest problems;
-            the no-medical-claims policy, written before any code; non-punitive choices.
+          <p style="font-size: 14px; margin: 0 0 5px; color: var(--ink-soft)">
+            <b style="color: var(--ink)">AI visual target</b> &middot; exact prompt + output preserved
           </p>
+          <img
+            class="shot"
+            style="height: 126px; object-fit: cover; object-position: center"
+            src="../art/openai-neighbourhood-style-key.png"
+            alt="OpenAI-generated Kampung SG neighbourhood style key"
+          />
         </div>
         <div>
-          <p style="font-size: 17px; line-height: 1.5; color: var(--ink-soft)">
-            <b style="color: var(--ink)">AI produced:</b> the Phaser world, movement, collision, camera and HUD;
-            the deterministic domain logic and its 70 tests; the Web Audio synthesis layer.
+          <p style="font-size: 14px; margin: 0 0 5px; color: var(--ink-soft)">
+            <b style="color: var(--ink)">Human-curated playable result</b> &middot; swept, tended, talked
           </p>
+          <img
+            class="shot"
+            style="height: 126px; object-fit: cover; object-position: center"
+            src="../screenshots/27-ambient-micro-scenes.png"
+            alt="Verified code-drawn garden and kopitiam activity vignettes"
+          />
         </div>
       </div>
       <p class="brandmark">KAMPUNG SG &middot; THETWOGUYS</p>
@@ -473,25 +500,25 @@
       <span class="kicker">Engineering</span>
       <h1>Fast, private, tested, no backend.</h1>
       <div class="stats">
-        <div class="stat"><b>65</b><span>Passing tests</span></div>
+        <div class="stat"><b>75</b><span>Passing tests</span></div>
         <div class="stat"><b>0</b><span>Vulnerabilities</span></div>
-        <div class="stat"><b>24 kB</b><span>Initial JavaScript</span></div>
+        <div class="stat"><b>81 kB</b><span>Initial JavaScript</span></div>
         <div class="stat"><b>0</b><span>Bytes collected</span></div>
       </div>
-      <div class="split" style="height: 330px; margin-top: 26px">
+      <div class="split engineering-body">
         <ul>
           <li>Vite + TypeScript + Phaser 3, strict mode throughout</li>
           <li>Engine lazy-loads only after &ldquo;Begin&rdquo; &mdash; matters on an older phone</li>
-          <li>22-check Chrome DevTools smoke test drives the real production bundle</li>
+          <li>60-check Chrome DevTools smoke test drives full and demo campaigns</li>
           <li>Keyboard, touch, or Journal shortcuts &mdash; each alone completes the game</li>
           <li>No account, no analytics, no backend, no personal data</li>
           <li><b>All audio synthesised at runtime &mdash; zero audio files shipped</b></li>
         </ul>
         <img class="shot" src="../screenshots/09-mobile-360.png" alt="Kampung SG at a 360px mobile viewport" />
       </div>
-      <div class="callout" style="margin-top: 14px">
-        <b>No runtime LLM.</b> Dialogue is authored ahead of time and selected by deterministic,
-        unit-tested code &mdash; zero network calls, zero API cost, zero hallucination on stage.
+      <div class="callout engineering-callout">
+        <b>KampungMind stays private and offline.</b> Dialogue is authored ahead of time and selected
+        by deterministic, unit-tested code &mdash; zero network calls, API cost or runtime hallucination.
       </div>
       <p class="brandmark">KAMPUNG SG &middot; THETWOGUYS</p>
       <p class="slide-num">06</p>
@@ -505,11 +532,11 @@
         <div class="col support">
           <h3>What we can support</h3>
           <ul>
-            <li>Strict TypeScript, 70 passing tests, 0 vulnerabilities</li>
-            <li>22/22 production-browser checks, including a second playthrough</li>
-            <li>Completable by keyboard, touch, or Journal shortcuts alone</li>
+            <li>Strict TypeScript, 75 passing tests, 0 vulnerabilities</li>
+            <li>60/60 production-browser checks across full and demo campaigns</li>
+            <li>Keyboard and touch entry, focus return and correct return doors</li>
             <li>No data collection, no account, no network dependency</li>
-            <li>Evening reflection built from the player's real choices</li>
+            <li>Versioned autosave, Continue, confirmed Start Over and demo isolation</li>
           </ul>
         </div>
         <div class="col decline">
@@ -557,7 +584,7 @@
         <p><b>Contact:</b> sutolimin.45@gmail.com &middot; <b>Source:</b> github.com/ming3465/Tencent-Hackathon-9Aug</p>
         <p><b>Engine:</b> Phaser 3 (MIT). <b>Build:</b> Vite, TypeScript, Vitest (MIT).</p>
         <p><b>Audio:</b> synthesised at runtime with the Web Audio API. No third-party audio files, no licence obligations.</p>
-        <p><b>Art:</b> in-game — procedural Phaser geometry; zero image assets ship in the build. Deck key illustration — AI-generated from our documented prompt (<b>docs/prompts/miora-key-art.txt</b>); generation record in <b>docs/AI_USAGE_LOG.md</b>.</p>
+        <p><b>Art:</b> in-game — procedural Phaser geometry, including four human-curated activity vignettes informed by a real OpenAI image-generation pass. Style-key prompt, output and review: <b>docs/prompts/openai-neighbourhood-style-key.txt</b>. This is not claimed as Miora.</p>
         <p><b>Ageing statistic:</b> official &ldquo;AI CAN DO IT&rdquo; &mdash; &ldquo;Age Well&rdquo; Social Good Challenge Singapore hackathon brief.</p>
         <p><b>AI assistance:</b> CodeBuddy CLI 2.127.0 and AI coding agents under human direction. Full record, including the failed run, in <b>docs/AI_USAGE_LOG.md</b>.</p>
         <p>Kampung SG is an original work. It does not copy any existing game's art, characters, maps, or branding.</p>

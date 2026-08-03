@@ -1,0 +1,31 @@
+OPENAI NEIGHBOURHOOD STYLE-KEY PROMPT — KAMPUNG SG
+==================================================
+
+Date: 2026-08-03
+Tool path: Codex built-in image generation
+Output: docs/art/openai-neighbourhood-style-key.png
+
+Use case: stylized-concept
+Asset type: game environment visual style key and developer paint-over reference
+Input images: Image 1 is the current playable Kampung SG estate screenshot and is a composition/game-scale reference only; Image 2 is the project's existing storybook key art and is a mood, Singapore-HDB-detail, and palette reference only. Create a new original image; do not edit, trace, or merely upscale either input.
+Primary request: create a polished 16:9 visual target for a cozy top-down 2D neighbourhood adventure set in a contemporary Singapore HDB estate, showing how the current playable scene could gain richer environmental storytelling while remaining readable at gameplay scale.
+Scene/backdrop: a cream HDB block with open void deck and corridor windows along the upper edge; a central paved crossroads; shared bicycles and a sheltered walkway; a small community garden; a layered rain tree; a bench, drain grates, shoe rack, potted plants, laundry poles, noticeboard, and a glimpse of a kopitiam corner. Include a few active neighbours of different ages using the shared space as equals, including an older resident organizing the garden and another chatting at the noticeboard.
+Style/medium: original hand-authored-looking 2D game concept art with crisp pixel-inspired edges, simplified readable silhouettes, restrained tactile texture, and slightly chunky proportions suitable for a Phaser top-down game. Contemporary Singapore, not fantasy farming.
+Composition/framing: wide 16:9, three-quarter top-down camera near 35 degrees; preserve clear walkable paths and interaction readability; use prop clusters at the edges and breathing room around the playable crossroads; no UI overlay.
+Lighting/mood: warm late-afternoon light from the upper left, gentle contact shadows, welcoming and lived-in; subtle cool shade under the void deck and sheltered path.
+Color palette: deep teal outlines, warm cream concrete, coral accents, golden highlights, community teal, garden green, soft purple, concrete sand.
+Representation: older adults are confident organizers, mentors, fixers, and neighbours; contemporary lightweight Singapore clothing; natural variety in age, build, skin tone, posture, and mobility; any cane is practical and incidental, never the person's identity.
+Constraints: no text, letters, numbers, signage copy, logo, watermark, interface, medical imagery, hospital cues, frailty stereotype, tourist-poster cliché, fantasy farm, crops as the main subject, photorealism, isometric 3D, or copied visual identity from any existing game. Keep entrances, paths, residents, and interactable props legible at reduced scale.
+
+Human review:
+
+- Accepted the single generated output as a visual-direction reference.
+- Accepted: clear HDB/void-deck identity, sheltered links, clustered shared
+  props, readable circulation, and residents visibly tending, sweeping,
+  talking, and gathering.
+- Rejected as direct runtime art: the richer painterly texture and generated
+  pseudo-marks on noticeboard paper would not match the existing code-drawn
+  scene or its deterministic accessibility contract.
+- Curated implementation decision: retain the code-drawn renderer and add
+  deterministic ambient task vignettes inspired by the output's visible
+  community activity.

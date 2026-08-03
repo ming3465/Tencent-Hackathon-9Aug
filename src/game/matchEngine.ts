@@ -5,7 +5,7 @@
  * All functions are deterministic and fully unit-testable.
  */
 
-import type { CardDefinition } from "./chapter1.js";
+import type { CardDefinition } from "./keepsakes.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

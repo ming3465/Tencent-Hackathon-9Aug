@@ -11,7 +11,7 @@ import {
   replayGame,
   isComplete,
 } from "../matchEngine.js";
-import { CHAPTER_1_PAIRS } from "../chapter1.js";
+import { KEEPSAKE_PAIRS as CHAPTER_1_PAIRS } from "../keepsakes.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -5,9 +5,10 @@ Where: miora.design (1,000 free credits on new signup - each of you sign up).
 What these are FOR: the deck hero image, the video end slate, the YouTube
 thumbnail, and the +5 social posts.
 
-What they are NOT for: the game itself. The build ships zero image assets and
-the deck says so - it is a selling point and an IP-cleanliness claim. Save
-outputs to docs/art/ (NOT public/), so nothing enters the shipped bundle.
+Save marketing outputs to docs/art/. If a later Miora run produces a component
+that improves the playable game, review it against docs/MIORA_ASSET_BIBLE.md at
+actual scale before copying it into public/assets/miora/. Generated assets are
+allowed; traceability and human curation are the selling points.
 
 Log every generation in docs/AI_USAGE_LOG.md: prompt, date, selected vs
 rejected variants, and why. Rejections are evidence too.

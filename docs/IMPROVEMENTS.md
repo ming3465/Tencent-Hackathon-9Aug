@@ -29,7 +29,15 @@ npm run smoke        # self-contained headless-Chrome run of the built bundle
 ```
 
 `npm run smoke` builds, starts its own preview server, drives a full playthrough
-plus a second playthrough, and writes fresh screenshots to `docs/screenshots/`.
+plus an isolated demo playthrough, and writes fresh screenshots to
+`docs/screenshots/`.
+
+**Current verified architecture (2026-08-03):** the sandbox loop described by
+the original audit has been superseded by a prologue, three chapters, an
+ending, KampungMind, versioned persistence, and enterable estate/interior
+scenes. Historical findings below remain useful as an audit record; line
+numbers and `sandboxState`/`SandboxScene` references describe the earlier
+baseline rather than current code.
 
 ## Already done (do not redo)
 
@@ -55,10 +63,36 @@ plus a second playthrough, and writes fresh screenshots to `docs/screenshots/`.
 | Ambient bus serves the bus stop on a randomised interval; parked variant under reduced motion | 2026-08-02 |
 | Hold-Shift hurry (215 -> 260 px/s, no stamina); hints updated on title + canvas label | 2026-08-02 |
 | Journal status circles replaced with slim colour-coded pills (OPEN / OPTION / done-check) | 2026-08-02 |
+| **Campaign upgrade** — versioned pure reducer; prologue, three chapters and ending; 8 optional resident routes; dynamic Main Story/Requests/People/Places Journal; Continue and confirmed Start Over; isolated demo state | 2026-08-03 |
+| **KampungMind** — authored NPC profiles, memories and intent scoring with stable deterministic ties; no runtime generation or network | 2026-08-03 |
+| **Enterable estate** — exterior plus corridor, four flats, workshop, community centre, kopitiam, provision shop, hawker centre and prayer hall; shared controls, collision, transition latch and correct return doors | 2026-08-03 |
+| **Character and world consequences** — varied code-drawn resident details plus ramp, route, kitchen, workshop, gathering and lighting progression | 2026-08-03 |
+| **Original pixel-art/runtime pass** — six directional player frames, larger varied residents, shared light/shade/outline rules, three tree silhouettes, HDB/estate dressing, room-specific patterned floors and landmark furniture; all 12 locations visually inspected from production captures | 2026-08-03 |
+| **Automated performance budget** — no per-frame movement-vector allocation, squared/throttled proximity scans, baked exterior layers, reusable room backdrop, and 120-frame active-movement profiling folded into the existing 60-check smoke gate | 2026-08-03 |
+| **Living-estate payoff** — deterministic resident blinks and facing, progressive HDB window lights, quieter world markers, reduced evening wash, and an actual post-ending void-deck gathering around a shared table and string lights | 2026-08-03 |
+| **Low-end regression signal** — the active movement profile now repeats under a 4× CDP CPU throttle with a separate p95 budget, still inside the existing 60-check headline | 2026-08-03 |
+| **Resident life pass** — all named residents gained directional walk/blink frames and short deterministic estate routes; proximity pauses movement and faces the player while sprite, shadow, NPC hit point and marker remain synchronized; smoke snapshots and profiles the behavior without adding a production debug hook | 2026-08-03 |
+| **Living-environment pass** — 23 hand-placed flower clusters baked into the exterior tiles, seven two-frame HDB laundry lines, and two deterministic community cats; the full/demo smoke proves normal animation and reduced-motion stillness while keeping the same 60-check headline | 2026-08-03 |
+| **East/south district pass** — code-drawn tray return, provision crates, mosaic dragon playground and exercise corner with collision/depth; production smoke physically walks to and captures both districts, caught and fixed a black-camera/stale-label exterior wake bug, and now guards rendered colour diversity | 2026-08-03 |
+| **Scheduler-calibrated performance evidence** — preserves fixed 28/34 ms cadence budgets on normal hosts; if Chrome's title screen is already capped slower, requires game cadence within +3 ms plus independent 8/20 ms main-thread budgets | 2026-08-03 |
+| **Baked terrain grammar** — deterministic 32 px grass variation, running-bond concrete/sheltered-walk pavers, kerbs, drains and utility covers across all four quadrants; smoke measures generated-texture colours/edges while retaining the same frame budgets | 2026-08-03 |
+| **World-first Journal/HUD pass** — replaces the permanent desktop column with an accessible modal drawer at every width; estate fills the wide shell, rooms use centred framing, Phaser scale/cameras resize explicitly, and smoke proves focus/Escape/backdrop plus real 360 px game/drawer states | 2026-08-03 |
+| **Tropical landscape/depth pass** — richer grass, baked path-edge growth and leaf litter, rebuilt rain-tree/palm/frangipani silhouettes with directional shadows, and 41 collision-aware shrubs/flower beds/pandan/hedges; smoke proves all four forms, 44 foliage colours, open district travel and unchanged frame budgets | 2026-08-03 |
+| **Architectural identity/solidity pass** — code-drawn pixel signs and distinct Hawker/Kopitiam/Minah/Community/Prayer/Workshop/Block 12 façades baked into exterior tiles; aligned usable doors; 12 building collision shells with doorway gaps; smoke measures 55 façade colours, 218 edges, 26.1% dark pixels and a physical storefront stop | 2026-08-03 |
+| **Visual-novel portrait pass** — 13 unique code-drawn resident/Voice busts plus an estate narration panel; authored hair, build, skin, age lines, accessories and role motifs; 940 px desktop staging and compact 360 px layout; smoke verifies dimensions, detail count, named traits and mobile fit | 2026-08-03 |
+| **World-scale and movement-feedback pass** — responsive exterior framing at 1.32× wide / 1.22× tablet / 1× mobile while interiors retain their intimate framing; resize-latched scale/camera updates; rebuilt collision-aware layered pond with three deterministic rings; six-object walking-puff pool; smoke physically captures the pond and proves normal/reduced motion plus 78 obstacle bodies | 2026-08-03 |
+| **Chapter 2 monsoon pass** — deterministic 64-object screen-space rain pool, wet paths, ten puddles, cool haze, warm dry-shelter masks, helped residents and cats under cover, and stored laundry; mobile keeps a lighter but legible density, reduced motion retains the wet story state without falling rain, and smoke profiles/captures all three presentations | 2026-08-03 |
+| **Four-frame interaction-density pass** — player and every named resident now use four distinct walk phases; 14 zero-consequence estate details reveal one marker only on approach and open through keyboard/touch; four two-frame community vignettes show sweeping, noticeboard discussion, gardening and kopitiam conversation; smoke proves normal, reduced-motion and monsoon states | 2026-08-03 |
+| **OpenAI visual-direction pass** — one generated neighbourhood style key, exact prompt, source references, accepted/rejected details and human translation decision are preserved; the generated image informed the four deterministic activity vignettes but was not mislabeled as Miora or dropped unreviewed into runtime | 2026-08-03 |
+| **Estate story-cluster density pass** — a second, targeted OpenAI reference used three current gameplay captures; human review translated its cluster grammar into six original code-drawn prop forms placed 12 times, 26 baked drain grates, 28 baked leaf patches, and eight deterministic two-frame butterflies/dragonflies. Smoke proves 88 exterior props across 22 forms, 54 ground accents, 90 colliders, open full-campaign/district routes, reduced-motion stillness, monsoon storage, and unchanged frame budgets. This is a strong first P2-5 pass, not the original 4–5× raw-density target | 2026-08-03 |
 
-**Biggest remaining item: P0-1**, the character rebuild (silhouette variety, age
-signalling, build/height variation). Outlines, faces and skin tones are done;
-everyone still shares one silhouette and nothing signals age.
+**Biggest remaining items:** human accessibility inspection at 200% zoom,
+reduced motion, screen reader and a real touch device; consented playtesting;
+Miora-specific visual evidence; and performance verification on older
+hardware. Repeated headless-Chrome runs
+have stayed inside either the fixed cadence budgets or the same-run scheduler
+baseline margin and independent CPU-work budgets. That does not substitute for
+those human and real-device checks.
 
 ---
 
@@ -71,6 +105,11 @@ everyone still shares one silhouette and nothing signals age.
 **Judging weights this backlog optimises for:** Impact & Relevance 30 · Use of AI Tools 40 · Project Quality 30 · +5 social.
 
 Items are deduplicated across all four audits — where three auditors found the same defect it appears once, with all evidence merged. Effort is one developer-hour, honestly estimated including verification.
+
+> Historical snapshot: paths, line counts, and test totals in the unified
+> backlog below describe the 2026-08-01 audit baseline. The completed-work table
+> above and the verification section at the end are the current source of
+> truth.
 
 ---
 
@@ -95,7 +134,7 @@ Things that make the game look broken, contradict a published claim, or exclude 
 | # | Item | Why it matters | Est | Risk |
 |---|---|---|---|---|
 | **P0-1** | **Rebuild character textures.** `createResidentTexture` (`sandboxScene.ts:469`) takes two params and produces eight identical faceless bodies. Add: eyes + mouth, 4 skin tones, 3 heights/builds, varied hair silhouettes, 2px ink outline, arms connected to torso (they currently float as yellow bars), age signalling on Mei/Ravi/Siti. Delete the baked clipped shadow at `:473` (centred x=4, width 34 → chopped at the texture's left edge) **and** the second runtime shadow at `:1054`; ship one correctly-offset shadow. | Impact & Relevance: the entire pitch is elder visibility, and nobody in the estate has a face or a discernible age. Accessibility: Mei's shirt measures 2.39:1 on grass, Ravi 2.87:1, against `ACCESSIBILITY.md:36`'s own legibility requirement — the outline fixes both the a11y failure and the "programmer art" read. | 6h | Med — one function feeds all 9 sprites. Regenerate screenshots; smoke only asserts canvas presence, so visual check is manual. |
-| **P0-2** | **Release arrow-key capture and gate movement on focus.** `createCursorKeys()` (`sandboxScene.ts:399`) captures arrows on `window` for the scene's whole life with no `event.target` check. `setControlsEnabled` manages SPACE only. | Excludes keyboard users: tabbing to a volume slider and pressing Right does not move the slider (preventDefault) **and** walks the player east. Any arrow press anywhere in the document moves the character. Also a Space race — a focused journal button fires `tryInteract()` then a different `openInteraction()`. | 1.5h | Med — input regression risk. Re-run the 21 browser-smoke checks. |
+| **P0-2** | **Release arrow-key capture and gate movement on focus.** `createCursorKeys()` (`sandboxScene.ts:399`) captures arrows on `window` for the scene's whole life with no `event.target` check. `setControlsEnabled` manages SPACE only. | Excludes keyboard users: tabbing to a volume slider and pressing Right does not move the slider (preventDefault) **and** walks the player east. Any arrow press anywhere in the document moves the character. Also a Space race — a focused journal button fires `tryInteract()` then a different `openInteraction()`. | 1.5h | Med — input regression risk. Re-run the current browser-smoke gate. |
 | **P0-3** | **Fix the dialogue focus trap.** `trapModalFocus` (`main.ts:661`) filters `.hidden` and `:disabled` but not `display:none`, so `.dialog-advance` (`index.html:860`) stays in the focusable list. Filter on `el.getClientRects().length > 0`. | Tab dies on the choice screen — the single decision moment of the game — and Shift+Tab escapes the modal into the page behind it. | 0.5h | Low |
 | **P0-4** | **Give dialogue a live region.** `#dialog-text` is `aria-hidden="true"` yet is the dialog's `aria-describedby` target (`index.html:1359, 1373`). `#dialog-text-a11y` holds the real line but has no `aria-live`. Add `aria-live="polite"`; repoint `aria-describedby`. | A blind player hears "Continue, button" four times through Aunty Mei's introduction. The narrative — the product — is silent. | 0.5h | Low |
 | **P0-5** | **Restore and fix focus visibility.** Global ring is gold on cream = **1.66:1** (needs 3.0). And `index.html:77-80` sets `outline: none` on `#sandbox-stage:focus-visible` — the `tabindex="0"` element that *is* the game's keyboard control surface. Use `outline: 3px solid var(--ink)` (10.46:1) + `box-shadow: 0 0 0 6px var(--gold)`; inset ring on the stage. | Direct WCAG 2.4.7 AA failure on the primary control, against `ACCESSIBILITY.md:22`'s "clear visible focus". | 0.5h | Low |
@@ -138,8 +177,8 @@ The items that most move Impact (30), Use of AI Tools (40) and Project Quality (
 | **P1-14** | **Camera: responsive zoom, faster lerp, kill the shimmer.** `setZoom(1)` makes the 32×42 player **2.7% of desktop screen width**; `startFollow(…, 0.09, 0.09)` leaves the camera ~40px behind while walking and sliding 0.4s after stopping; `roundPixels: true` then quantises every frame so 1px grass detail and 13px text shimmer in motion. Target ~1.75–2 desktop, 1.25–1.5 phone; lerp ~0.15 with a small deadzone. | The pixel art reads as noise rather than art at current scale, and it is the first thing a judge sees in a screenshot. Once P0-1 lands, the character work is invisible without this. | 1.5h | Med — pairs with P1-11. |
 | **P1-15** | **Cover the memory table with tests and fix its focus behaviour.** `grep -c memory scripts/browser-smoke.mjs` = 1, and that hit is a prompt-string assertion — the overlay is never opened. Zero unit tests. Also: on a mismatch all 8 cards become `disabled`, focus falls to `<body>` for the full 1000ms delay, and the 1s timer then **steals focus back to a card** even if the player has tabbed to "New shuffle". And `renderMemoryBoard` does `innerHTML = ""` on every flip, destroying and rebuilding 8 buttons four times per pair. | This is the only place in the codebase with an async timer racing user input — the single most likely spot for a live-demo bug — and it is the least tested at both levels. The focus steal is a WCAG 3.2.5 failure; the rebuild resets NVDA/VoiceOver virtual cursors on every click. | 3h | Low |
 | **P1-16** | **Modal hygiene: inert background + focus restore.** The three overlays are siblings of `<main>`, which is never `aria-hidden`/`inert` while a modal is open. And `closeDialog`/`closeMemory`/`closeEvening` all call `focusWorld()` — open an activity from a journal button and you are dumped on the canvas with your place lost, every time. Store and restore the trigger element. | Screen-reader users wander into the HUD behind the dialogue; keyboard users lose their place after every single activity. Both are basic modal contract failures a judge testing accessibility will find immediately. | 1.5h | Low |
-| **P1-17** | **Fix the keepsakes.** `CHAPTER_1_PAIRS` are **emoji** (🪁🏮🌸⛵) that `chapter1.ts:4` calls placeholders "to be supplied in a later phase". Replace with drawn glyphs. Add Malay, Indian and Eurasian keepsakes. Use all six pairs, not `slice(0, 4)`. | (a) Emoji render as Apple/Google/Microsoft vendor artwork, which quietly undercuts the "all art is procedural, zero image assets" claim that is a **pillar of the deck** — see `docs/submission/DECK_COPY.md:380`. (b) The cast is deliberately multi-ethnic (Ravi, Siti, Rosnah, Yusof); the shared memories are entirely Chinese. In a 30-point Impact category that is a visible miss with a two-line fix. (c) Four pairs makes the game trivially short. | 3h | Low — `matchEngine` tests assume the pair list; update. |
-| **P1-18** | **Refresh the AI evidence for the art pass.** `docs/submission/AI_EVIDENCE.md:46` currently states *"Art: Nothing. Zero Miora assets have been generated, and we claim none."* Since then a full bespoke procedural art pass has landed (commit `70768d6`). Log the tooling, prompts and human decisions behind it in `docs/AI_USAGE_LOG.md` and update the evidence row — **still claiming zero Miora assets if that is still true**. | **Use of AI Tools is the single largest bucket at 40 points** and none of the four audits covered it. The log is currently strong and honest; letting it go stale on the largest piece of recent work is the cheapest available points loss in the project. | 2h | Low — accuracy matters more than volume here. Do not inflate. |
+| **P1-17 (done)** | **Fix the keepsakes.** `keepsakes.ts` now defines six inclusive code-native line glyphs rather than platform emoji, and the optional table uses all six pairs. | Keeps the optional activity visually consistent without treating either code-drawn or reviewed AI-generated assets as forbidden. | Done | Verified by the match-engine suite. |
+| **P1-18 (done)** | **Refresh the AI evidence for the art pass.** The evidence now distinguishes the procedural runtime, the real OpenAI neighbourhood style-key run, the human curation decision, and the still-unmet Miora-specific evidence item. | **Use of AI Tools is the single largest bucket at 40 points**; exact prompts, outputs, failures, accepted ideas and rejected ideas are stronger than inflated tool claims. | Done | OpenAI usage is genuine; no Miora output is claimed. |
 | **P1-19** | **Decide the chapter structure before writing chapter content: three times of day on one map, not three maps.** Ch1 Morning (existing, north-west). Ch2 Afternoon — Rosnah's *"That new family in Block 12 — nobody has said hello yet. Somebody should"* becomes the inciting line, Wei Ling is the destination, activities live in the **east** (kopitiam, provision shop, playground). Ch3 Evening — the gathering; activities in the **south** (community centre unlocked, exercise corner, bus stop), with Ch1–2 choices determining who turns up. | Reuses 100% of the procedural art, needs no save file to feel different, and fixes the two biggest structural problems at once: it distributes activities across the whole map instead of 6.5% of it, and it pays off five hooks that are already written and currently dead ends (*"one very memorable Chinese New Year"*, *"Twice it mattered"*, *"My son says retire lah"*, Yusof's uninvited repairs, Block 12). Depends on P1-1 landing first. | 2h | Low — this is a decision + a written plan, not code. |
 
 **P1 total: ~59 hours.**
@@ -154,7 +193,7 @@ The items that most move Impact (30), Use of AI Tools (40) and Project Quality (
 | P2-2 | **Dragon playground with mosaic tiles + sand pit** | The strongest emotionally-loaded image available to put in front of a Singaporean judge on an "Age Well" brief; highest-ROI hero prop after the linkway | 4h | Low |
 | P2-3 | **Real exercise-corner machines** — air-walker, waist twister, shoulder wheel, on a green rubber mat with a yellow border | Every Singaporean over 50 recognises the air-walker instantly; currently two abstract bars and two circles | 2h | Low |
 | P2-4 | **Monsoon drains along path edges; delete the road centre-lines** (there are no vehicles, and at y=1200 the dashes run 0→2560 while the path is 150→2430, painting dashes onto bare grass) | Instantly tropical-Asia for ~1 strip per path; gives the huge empty plazas an edge condition; removes a visible bug | 2h | Low |
-| P2-5 | **Fill the dead plazas.** ~130 props over 4.1M px = one per 177×177 square; the two through-roads alone are ~16% of the world containing nothing but dashed lines. Target 4–5× density: benches, bins, lamp posts, bollards, planters, bicycles, painted markings | The lower-left 40% of the frame is empty beige in shipped screenshots | 4h | Low |
+| P2-5 (partial) | **Fill the dead plazas.** The 2026-08-03 story-cluster pass added 12 composite placements, 54 baked ground accents, and eight ambient insects while preserving clear routes. The original 4–5× raw-density target remains intentionally unmet; continue with a few district-specific clusters only if real-device performance and route clarity stay green | The lower-left 40% of the old frame was empty beige; the new clusters materially improve it without uniform clutter | 2h remaining | Low |
 | P2-6 | **Tree variation** — 3 species, flat wide rain-tree crown (currently a broccoli lollipop), scale/tint/rotation jitter | 25 trees from one identical call is the literal definition of procedural art to a viewer | 2h | Low |
 | P2-7 | **Corridor potted plants, painted block number, town-council livery, community cat, bicycle racks** | High recognisability per pixel; makes the estate look *administered* rather than invented | 3h | Low |
 | P2-8 | **Hawker / kopitiam / provision-shop dressing** — numbered stall plates, roller shutters, tray-return station, kopi cups, a tissue packet choping a seat, red awning valance, gas cylinders | The kopitiam's marble tables with fixed swing-out stools are the best-observed prop in the game; extend that quality outward | 3h | Low |
@@ -215,11 +254,16 @@ The items that most move Impact (30), Use of AI Tools (40) and Project Quality (
 
 Run this before every push, and in full before submission.
 
-**Automated gates — all four must be green:**
-- `npx tsc --noEmit` — clean
-- `npx vitest run` — currently **65/65 (sandboxState 17 · audio 17 · matchEngine 31)**. If P2-15 removes the unreachable Together Mode / `replayGame` tests, the number **drops to ~59 and every deck reference must drop with it in the same commit.**
+**Automated gates — all five must be green:**
+- `npm run typecheck` — clean
+- `npm test` — currently **75/75** (campaign 27 · audio 17 · match engine 31)
+- `npm run build` — production bundle succeeds
 - `npm audit` — 0 vulnerabilities
-- Headless-Chrome browser smoke — currently **21/21** against a production build. Note it asserts prompt strings; P0-11 (label purge) and P0-14 (onboarding copy) can break it silently. It does **not** open the memory overlay at all until P1-15 lands.
+- `npm run smoke` — currently **60/60** against the production build,
+  including full/demo campaigns, save isolation, all 12 locations, living and
+  reduced-motion environment evidence, adaptive exterior zoom, physical
+  pond/district travel, 360 px layout, and active/4×-throttled performance
+  budgets
 
 **Manual gates that no test covers:**
 - **Renderer**: after P1-2, confirm the world still draws under both `Phaser.AUTO` and the Canvas fallback, and check frame rate on a real mid-range Android — not a desktop throttle profile.

@@ -1,5 +1,10 @@
 # Kampung SG Hackathon Execution Blueprint
 
+> **2026-08-03 campaign note:** the original activity/evening scope below is
+> retained as planning history. The current shipping contract is the five-part
+> campaign in `docs/GAME_DESIGN.md`; verification and submission status live in
+> `docs/QA_CHECKLIST.md` and `docs/submission/SUBMIT_NOW.md`.
+
 Owner responsibilities, approvals, account actions, deliverables, and final
 definition of done are consolidated in `docs/MASTER_CHECKLIST.md`.
 
@@ -33,11 +38,11 @@ definition of done are consolidated in `docs/MASTER_CHECKLIST.md`.
 
 - [x] One explorable Phaser neighbourhood larger than the camera viewport.
 - [x] Keyboard and touch movement.
-- [x] Three older residents with contribution-focused activities.
+- [x] Eight resident-led optional routes plus main-story contributors.
 - [x] Choices that update Connection, Purpose, and Comfort.
 - [x] Journal and non-spatial activity shortcuts.
 - [x] Optional memory-table mini-game.
-- [x] Evening reflection after any three activities.
+- [x] Prologue, three sequential chapters, Last Door ending, and free exploration.
 - [x] Visible world changes for each completed resident choice.
 - [ ] Final Miora title, residents, portraits, environment, props, and cards.
 - [ ] Audio feedback and mute controls.

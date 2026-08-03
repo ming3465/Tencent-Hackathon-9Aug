@@ -1,0 +1,56 @@
+You are helping draft a dialogue matrix for Kampung SG, a cozy top-down
+Singapore HDB-estate game for an Age Well social-good challenge.
+
+The design thesis is that older adults are experts and contributors, never
+patients. The campaign has three chapters:
+
+1. Open the Way: Mr. Long cannot comfortably cross a broken doorstep. The
+   player recruits any three neighbours, each contributing practical knowledge,
+   and the block builds a ramp together.
+2. A Place at the Table: the player gathers clues about Grandma Ros, enters her
+   kitchen, and invites residents to a community cooking lesson she leads.
+3. Hands Remember: the player reconnects Ben with a craftsman and completes a
+   calm, no-failure weaving interaction.
+
+Draft one compact personality-and-dialogue row for each resident below:
+
+- Aunty Mei: community mentor; restores the garden; herbs or seating flowers.
+- Uncle Ravi: social organiser; makes a welcoming noticeboard event.
+- Mdm Siti: access expert; improves a sheltered daily route.
+- Pak Yusof: practical fixer; inspects Mr. Long's doorstep.
+- Coach Meng: volunteer organiser; arranges accessible community-centre seating.
+- Uncle Seng: routine-driven connector; prepares a welcoming kopitiam table.
+- Auntie Minah: provision-shop neighbour; organises an ingredient shelf and
+  knows two clues about Grandma Ros.
+- Wei Ling: newer resident; completes a keepsake table and invites younger
+  neighbours.
+
+For each row provide:
+
+- three qualitative personality traits;
+- community role and one specific area of expertise;
+- one concise first greeting;
+- one line offering the optional request;
+- one reminder after "Maybe later" that keeps the route open;
+- one memory reaction after the player helped them;
+- one Chapter 2 invitation response;
+- one reflection after their relevant chapter.
+
+Constraints:
+
+- Warm, concise spoken English natural to a multi-ethnic Singapore estate.
+- Light local cadence is welcome, but avoid caricature, phonetic accents, and
+  overusing "lah".
+- Show expertise through concrete details.
+- No medical, cognitive, dementia, diagnostic, prevention, or treatment claims.
+- No helpless-elder framing, pity, infantilisation, scoring, failure, timer,
+  pressure, punishment, or dark patterns.
+- Do not imply that the player fixes people. Residents organise and contribute.
+- "Maybe later" must never sound like rejection or close a route.
+- Do not invent statistics, research findings, playtests, or outcomes.
+- All lines must be suitable for deterministic offline selection; do not refer
+  to a chatbot, model, or generated response.
+- Use original wording and do not quote existing games, films, books, or songs.
+
+Return a Markdown table only. This is a drafting pass: a human will review and
+curate every line before any content ships.

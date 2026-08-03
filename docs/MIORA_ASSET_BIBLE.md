@@ -2,9 +2,18 @@
 
 ## Purpose
 
-Miora is the final visual-asset tool for Kampung SG. The current Phaser shapes
-are a functional fallback used to validate movement, layout, interactions, and
-game feel before spending generation credits.
+Miora is the planned official visual-asset tool for Kampung SG. The current
+Phaser art is a production-capable procedural layer used to validate movement,
+layout, interactions, accessibility, and game feel before spending generation
+credits.
+
+Two OpenAI-generated visual studies now exist at
+`docs/art/openai-neighbourhood-style-key.png` and
+`docs/art/openai-estate-density-reference.png`. They are cross-tool
+visual-direction evidence, not Miora outputs. Their strongest reviewed ideas
+were translated into deterministic code-drawn activity vignettes, prop
+clusters, ground accents, and ambient insects; do not relabel either study as
+Miora.
 
 Generate components, not complete screenshots. Interface layout, text,
 accessibility, animation timing, collision, and responsive behavior remain in

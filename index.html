@@ -40,6 +40,7 @@
       body {
         margin: 0;
         min-height: 100dvh;
+        overflow-x: hidden;
         color: var(--ink);
         background:
           radial-gradient(circle at 85% 5%, rgba(242, 184, 75, 0.2), transparent 26rem),
@@ -67,17 +68,10 @@
         outline-offset: 4px;
       }
 
-      /*
-       * The world canvas takes focus programmatically so keyboard movement
-       * works, but it is a viewport rather than a control - a ring around it
-       * reads as chrome sitting on top of the artwork. Buttons and links keep
-       * their focus ring above, which is what keyboard navigation actually
-       * needs.
-       */
-      #sandbox-stage,
-      #sandbox-stage:focus,
       #sandbox-stage:focus-visible {
-        outline: none;
+        outline: 4px solid var(--ink);
+        outline-offset: -9px;
+        box-shadow: inset 0 0 0 8px var(--gold);
       }
 
       .skip-link {
@@ -109,8 +103,8 @@
       .primary-button {
         padding: 0.9rem 1.25rem;
         color: var(--white);
-        background: var(--coral);
-        box-shadow: 0 5px 0 var(--coral-dark);
+        background: var(--coral-dark);
+        box-shadow: 0 5px 0 var(--coral);
         transition: transform 140ms ease, box-shadow 140ms ease;
       }
 
@@ -123,7 +117,7 @@
 
       .primary-button:hover:not(:disabled) {
         transform: translateY(-2px);
-        box-shadow: 0 7px 0 var(--coral-dark);
+        box-shadow: 0 7px 0 var(--coral);
       }
 
       .secondary-button {
@@ -538,7 +532,7 @@
       }
 
       .topbar {
-        width: min(1500px, 100%);
+        width: min(1720px, 100%);
         margin: 0 auto 0.75rem;
         display: grid;
         grid-template-columns: auto minmax(340px, 1fr) auto;
@@ -625,12 +619,9 @@
       }
 
       .game-layout {
-        width: min(1500px, 100%);
+        width: min(1720px, 100%);
         margin: 0 auto;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 310px;
-        gap: 0.75rem;
-        align-items: stretch;
+        display: block;
       }
 
       .world-shell {
@@ -642,6 +633,11 @@
         border-radius: var(--radius-lg);
         background: #b7cf8a;
         box-shadow: var(--shadow);
+      }
+
+      .world-shell.interior-framing {
+        width: min(1085px, 100%);
+        margin-inline: auto;
       }
 
       #sandbox-stage {
@@ -761,6 +757,12 @@
       }
 
       .journal-panel {
+        position: fixed;
+        top: 0.75rem;
+        right: 0.75rem;
+        bottom: 0.75rem;
+        z-index: 80;
+        width: min(520px, calc(100% - 1.5rem));
         display: flex;
         min-height: 0;
         flex-direction: column;
@@ -769,6 +771,49 @@
         border-radius: var(--radius-lg);
         background: var(--paper);
         box-shadow: var(--shadow);
+        transform: translateX(calc(100% + 2rem));
+        visibility: hidden;
+        pointer-events: none;
+        transition:
+          transform 200ms ease,
+          visibility 0s linear 200ms;
+      }
+
+      .journal-panel.open {
+        transform: translateX(0);
+        visibility: visible;
+        pointer-events: auto;
+        transition-delay: 0s;
+      }
+
+      .journal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 79;
+        background: rgba(10, 33, 43, 0.58);
+        backdrop-filter: blur(2px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition:
+          opacity 180ms ease,
+          visibility 0s linear 180ms;
+      }
+
+      .journal-backdrop.open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transition-delay: 0s;
+      }
+
+      body.journal-open {
+        overflow: hidden;
+      }
+
+      #btn-journal[aria-expanded="true"] {
+        color: var(--night);
+        background: var(--gold);
       }
 
       .journal-header {
@@ -793,7 +838,7 @@
       }
 
       .journal-close {
-        display: none;
+        display: block;
         position: absolute;
         top: 0.6rem;
         right: 0.6rem;
@@ -996,27 +1041,61 @@
 
       /* ---- Visual-novel dialogue ---- */
 
+      #dialog-overlay .dialog-card {
+        width: min(940px, 100%);
+      }
+
+      .dialog-stage {
+        display: grid;
+        grid-template-columns: minmax(210px, 238px) minmax(0, 1fr);
+        gap: clamp(1rem, 3vw, 1.6rem);
+        align-items: stretch;
+      }
+
+      .dialog-script {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+      }
+
       .dialog-head {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 0.9rem;
-        margin-bottom: 0.9rem;
+        min-height: 76px;
+        margin-bottom: 0.75rem;
       }
 
       .dialog-portrait {
-        flex: 0 0 auto;
-        width: 74px;
-        height: 74px;
-        border: 3px solid var(--ink);
-        border-radius: 16px;
+        width: 100%;
+        aspect-ratio: 11 / 15;
+        align-self: start;
+        border: 4px solid var(--ink);
+        border-radius: 18px 18px 34px 18px;
         background: var(--cream);
         overflow: hidden;
-        box-shadow: 4px 4px 0 var(--ink);
+        box-shadow: 8px 8px 0 var(--ink);
+        image-rendering: pixelated;
       }
 
       .dialog-portrait svg { display: block; width: 100%; height: 100%; }
 
       .dialog-ident { min-width: 0; }
+
+      #dialog-overlay.active .dialog-portrait {
+        animation: portrait-enter 180ms ease-out both;
+      }
+
+      @keyframes portrait-enter {
+        from {
+          opacity: 0;
+          transform: translate(-10px, 5px);
+        }
+        to {
+          opacity: 1;
+          transform: translate(0, 0);
+        }
+      }
 
       .dialog-progress {
         margin: 0.25rem 0 0;
@@ -1032,7 +1111,7 @@
       .dialog-scroll {
         display: flex;
         align-items: flex-start;
-        min-height: 7.2rem;
+        min-height: 10.25rem;
         padding: 1rem 1.1rem;
         border: 3px solid var(--ink);
         border-radius: 16px;
@@ -1104,12 +1183,18 @@
       @media (prefers-reduced-motion: reduce) {
         .dialog-text.typing::after { animation: none; opacity: 1; }
         .dialog-advance:hover { transform: none; }
+        #dialog-overlay.active .dialog-portrait { animation: none; }
       }
 
       .dialog-choices {
         display: grid;
         gap: 0.7rem;
         margin-top: 1.2rem;
+      }
+
+      .dialog-choices:empty {
+        display: none;
+        margin-top: 0;
       }
 
       .choice-button {
@@ -1283,27 +1368,15 @@
         }
 
         .game-layout {
-          grid-template-columns: minmax(0, 1fr);
+          width: 100%;
         }
 
         .journal-panel {
-          position: fixed;
           top: 0;
           right: 0;
           bottom: 0;
-          z-index: 80;
           width: min(350px, calc(100% - 2rem));
           border-radius: 24px 0 0 24px;
-          transform: translateX(calc(100% + 20px));
-          transition: transform 200ms ease;
-        }
-
-        .journal-panel.open {
-          transform: translateX(0);
-        }
-
-        .journal-close {
-          display: block;
         }
       }
 
@@ -1378,7 +1451,13 @@
 
         .brand-lockup span { display: none; }
         .brand-lockup strong { font-size: 1.15rem; }
-        .icon-button { padding: 0.45rem 0.55rem; }
+        .topbar-actions { gap: 0.3rem; }
+        .icon-button {
+          min-height: 48px;
+          padding: 0.4rem 0.38rem;
+          font-size: 0.7rem;
+          line-height: 1.05;
+        }
         .meter-label { font-size: 0.74rem; }
 
         .world-shell {
@@ -1416,6 +1495,74 @@
           box-shadow: 7px 7px 0 var(--gold);
         }
 
+        #dialog-overlay {
+          padding: 0.45rem;
+        }
+
+        #dialog-overlay .dialog-card {
+          width: 100%;
+          max-height: calc(100dvh - 0.9rem);
+        }
+
+        #dialog-overlay .dialog-content {
+          padding: 0.85rem;
+        }
+
+        .dialog-stage {
+          grid-template-columns: 88px minmax(0, 1fr);
+          column-gap: 0.7rem;
+          row-gap: 0;
+          align-items: start;
+        }
+
+        .dialog-script {
+          display: contents;
+        }
+
+        .dialog-portrait {
+          grid-column: 1;
+          grid-row: 1;
+          width: 88px;
+          border-width: 3px;
+          border-radius: 12px 12px 22px 12px;
+          box-shadow: 4px 4px 0 var(--ink);
+        }
+
+        .dialog-head {
+          grid-column: 2;
+          grid-row: 1;
+          min-height: 120px;
+          margin: 0;
+          align-items: center;
+        }
+
+        .dialog-content h2 {
+          margin-bottom: 0.45rem;
+          font-size: clamp(1.45rem, 8vw, 2rem);
+        }
+
+        .dialog-scroll,
+        .dialog-advance,
+        .dialog-choices,
+        .dialog-footer {
+          grid-column: 1 / -1;
+        }
+
+        .dialog-scroll {
+          min-height: 6.5rem;
+          margin-top: 0.7rem;
+          padding: 0.75rem 0.85rem;
+        }
+
+        .dialog-text {
+          font-size: 1rem;
+          line-height: 1.5;
+        }
+
+        .dialog-footer {
+          margin-top: 0.8rem;
+        }
+
         .evening-summary {
           grid-template-columns: 1fr;
         }
@@ -1448,6 +1595,103 @@
           animation-iteration-count: 1 !important;
         }
       }
+
+      .mind-card {
+        max-width: 39rem;
+        margin: 1.3rem 0 0;
+        padding: 0.85rem 1rem;
+        border-left: 6px solid var(--gold);
+        color: var(--ink);
+        background: rgba(255, 255, 255, 0.62);
+        font-weight: 800;
+        line-height: 1.45;
+      }
+
+      .mind-card strong {
+        color: var(--coral-dark);
+      }
+
+      .journal-sections {
+        min-height: 0;
+        overflow: auto;
+        padding: 0 0.9rem 1rem;
+      }
+
+      .journal-section {
+        margin: 0 0 1.2rem;
+      }
+
+      .journal-section > h3 {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        margin: 0;
+        padding: 0.75rem 0.2rem 0.45rem;
+        color: var(--coral-dark);
+        background: var(--paper);
+        font-size: 0.82rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .journal-section .journal-list {
+        overflow: visible;
+        padding: 0;
+      }
+
+      .journal-item.locked {
+        opacity: 0.72;
+        border-style: dashed;
+      }
+
+      .journal-item.current {
+        border-color: var(--coral-dark);
+        box-shadow: 4px 4px 0 var(--coral);
+      }
+
+      .journal-item .journal-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin-top: 0.65rem;
+      }
+
+      .journal-item .journal-action {
+        margin-top: 0;
+      }
+
+      .campaign-card {
+        position: sticky;
+        bottom: 0;
+        z-index: 3;
+        margin-top: auto;
+        padding: 0.9rem;
+        border-top: 4px solid var(--ink);
+        background: #fff0c8;
+      }
+
+      .campaign-card p {
+        margin: 0;
+        font-weight: 800;
+        line-height: 1.45;
+      }
+
+      .campaign-kampungmind {
+        margin-top: 0.45rem !important;
+        color: var(--ink-soft);
+        font-size: 0.78rem;
+        font-weight: 700 !important;
+      }
+
+      @media (max-width: 680px) {
+        .title-actions {
+          align-items: stretch;
+        }
+
+        .title-actions button {
+          width: 100%;
+        }
+      }
     </style>
   </head>
   <body>
@@ -1461,12 +1705,18 @@
             <p class="eyebrow">A cozy Singapore neighbourhood sandbox</p>
             <h1 id="game-title"><span>Tencent Cloud Hackathon</span>Kampung SG</h1>
             <p class="title-lede">
-              Wander one HDB estate, meet the neighbours, and choose the small acts
-              that turn shared spaces into a community.
+              Step through a prologue, three connected chapters, and one last
+              door in a Singapore estate shaped by the people who know it best.
             </p>
             <div class="title-actions">
-              <button id="btn-start" class="primary-button" type="button">Begin a neighbourhood day</button>
+              <button id="btn-start" class="primary-button" type="button">Start the story</button>
+              <button id="btn-continue" class="primary-button" type="button" hidden>Continue</button>
+              <button id="btn-start-over" class="secondary-button" type="button" hidden>Start over</button>
             </div>
+            <p class="mind-card">
+              <strong>KampungMind</strong> — AI-authored personalities powered by
+              a private, offline NPC memory-and-decision engine.
+            </p>
             <p class="control-note">
               Move <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys &middot;
               Interact <kbd>E</kbd> &middot; Hold <kbd>Shift</kbd> to hurry &middot; Touch on phones
@@ -1501,7 +1751,7 @@
         <header class="topbar">
           <div class="brand-lockup">
             <strong>Kampung SG</strong>
-            <span>Day 1</span>
+            <span id="chapter-label">Prologue</span>
           </div>
 
           <div class="meters" aria-label="Kampung Spirit">
@@ -1522,12 +1772,12 @@
           <div class="topbar-actions">
             <button id="btn-sound" class="icon-button" type="button" aria-pressed="false">Sound on</button>
             <button id="btn-journal" class="icon-button" type="button" aria-expanded="false" aria-controls="journal-panel">Journal</button>
-            <button id="btn-return-title" class="icon-button" type="button">Exit</button>
+            <button id="btn-return-title" class="icon-button" type="button">Back to title</button>
           </div>
         </header>
 
         <div class="game-layout">
-          <div class="world-shell">
+          <div id="world-shell" class="world-shell">
             <div id="sandbox-stage" tabindex="0" aria-label="Top-down neighbourhood. Use WASD or arrow keys to move, E or Space to interact, and hold Shift to move faster."></div>
             <p id="area-name" class="area-chip">Community Court</p>
 
@@ -1547,49 +1797,18 @@
             </div>
           </div>
 
-          <aside id="journal-panel" class="journal-panel" aria-labelledby="journal-title" tabindex="-1">
+          <div id="journal-backdrop" class="journal-backdrop" aria-hidden="true"></div>
+
+          <aside id="journal-panel" class="journal-panel" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="journal-title" tabindex="-1" inert>
             <button id="btn-journal-close" class="journal-close" type="button" aria-label="Close journal">Close</button>
             <div class="journal-header">
-              <p>Neighbourhood notes</p>
-              <h2 id="journal-title">Open Invitations</h2>
+              <p>Campaign journal</p>
+              <h2 id="journal-title">Kampung SG</h2>
             </div>
-            <ul class="journal-list">
-              <li id="journal-garden" class="journal-item" data-activity="garden">
-                <span class="journal-status">OPEN</span>
-                <div>
-                  <h3>Community Garden</h3>
-                  <p>Find Aunty Mei near the garden beds.</p>
-                  <button class="journal-action" type="button" data-journal-activity="garden">Open invitation</button>
-                </div>
-              </li>
-              <li id="journal-noticeboard" class="journal-item" data-activity="noticeboard">
-                <span class="journal-status">OPEN</span>
-                <div>
-                  <h3>Void-Deck Noticeboard</h3>
-                  <p>Uncle Ravi has space for a new invitation.</p>
-                  <button class="journal-action" type="button" data-journal-activity="noticeboard">Open invitation</button>
-                </div>
-              </li>
-              <li id="journal-safe-route" class="journal-item" data-activity="safe-route">
-                <span class="journal-status">OPEN</span>
-                <div>
-                  <h3>Shaded Route</h3>
-                  <p>Mdm Siti knows where the daily route needs care.</p>
-                  <button class="journal-action" type="button" data-journal-activity="safe-route">Open invitation</button>
-                </div>
-              </li>
-              <li id="journal-memory-table" class="journal-item" data-activity="memory-table">
-                <span class="journal-status">OPTION</span>
-                <div>
-                  <h3>Memory Table</h3>
-                  <p>A quiet matching activity waits at the void deck.</p>
-                  <button class="journal-action" type="button" data-journal-activity="memory-table">Open invitation</button>
-                </div>
-              </li>
-            </ul>
-            <div class="evening-card">
-              <p id="day-progress">Complete any 3 activities to gather at the void deck. 0 of 3 ready.</p>
-              <button id="btn-evening" class="primary-button" type="button" disabled>Gather for the evening</button>
+            <div id="journal-content" class="journal-sections"></div>
+            <div class="campaign-card">
+              <p id="campaign-progress">Listen to the Voice.</p>
+              <p class="campaign-kampungmind">KampungMind selects only authored lines from chapter facts, expertise, help, and remembered choices.</p>
             </div>
 
             <section class="sound-card" aria-labelledby="sound-title">
@@ -1613,27 +1832,31 @@
       <div class="dialog-card">
         <div class="dialog-stripe"></div>
         <div class="dialog-content">
-          <div class="dialog-head">
+          <div class="dialog-stage">
             <div id="dialog-portrait" class="dialog-portrait" aria-hidden="true"></div>
-            <div class="dialog-ident">
-              <p id="dialog-kicker" class="dialog-kicker">Neighbourhood invitation</p>
-              <h2 id="dialog-speaker">Neighbour</h2>
-              <p id="dialog-progress" class="dialog-progress"></p>
+            <div class="dialog-script">
+              <div class="dialog-head">
+                <div class="dialog-ident">
+                  <p id="dialog-kicker" class="dialog-kicker">Neighbourhood invitation</p>
+                  <h2 id="dialog-speaker">Neighbour</h2>
+                  <p id="dialog-progress" class="dialog-progress"></p>
+                </div>
+              </div>
+
+              <div class="dialog-scroll">
+                <p id="dialog-text" class="dialog-text" aria-hidden="true"></p>
+                <p id="dialog-text-a11y" class="visually-hidden" aria-live="polite"></p>
+              </div>
+
+              <button id="btn-dialog-advance" class="dialog-advance" type="button">
+                Continue <span aria-hidden="true">▸</span>
+              </button>
+
+              <div id="dialog-choices" class="dialog-choices"></div>
+              <div class="dialog-footer">
+                <button id="btn-dialog-close" class="secondary-button" type="button">Maybe later</button>
+              </div>
             </div>
-          </div>
-
-          <div class="dialog-scroll">
-            <p id="dialog-text" class="dialog-text" aria-hidden="true"></p>
-            <p id="dialog-text-a11y" class="visually-hidden" aria-live="polite"></p>
-          </div>
-
-          <button id="btn-dialog-advance" class="dialog-advance" type="button">
-            Continue <span aria-hidden="true">▸</span>
-          </button>
-
-          <div id="dialog-choices" class="dialog-choices"></div>
-          <div class="dialog-footer">
-            <button id="btn-dialog-close" class="secondary-button" type="button">Maybe later</button>
           </div>
         </div>
       </div>

@@ -57,13 +57,13 @@ record your name or health information. Is that okay?
 - Record whether the participant understands that both dialogue choices are
   valid preferences rather than right and wrong answers.
 
-### 3. Complete Two Activities - 4 Minutes
+### 3. Complete Chapter 1 Routes - 5 Minutes
 
-- Ask the participant to complete one resident activity and the optional memory
-  table or another resident activity.
+- Ask the participant to visit Mr. Long and complete two resident requests in
+  demo mode (or three in the full campaign).
 - Observe whether meters and Journal changes are noticed.
-- Ask what changed in the world after the choice.
-- Record whether the memory table feels optional or compulsory.
+- Ask what changed in the world and whether the ramp felt connected to the
+  residents’ contributions.
 
 ### 4. Accessibility Alternative - 2 Minutes
 
@@ -72,9 +72,10 @@ record your name or health information. Is that okay?
 - Observe focus, labels, drawer behavior, and whether the shortcut is
   understandable.
 
-### 5. Evening and Debrief - 3 Minutes
+### 5. Chapter Progress and Debrief - 4 Minutes
 
-- Complete a third activity and open the evening reflection.
+- Enter Grandma Ros’s kitchen or, if time permits, continue through The Last
+  Door.
 - Ask what each resident contributed.
 - Ask what the game seems to say about ageing well.
 - Ask what felt enjoyable, confusing, slow, patronizing, or unrealistic.
@@ -93,7 +94,7 @@ record your name or health information. Is that okay?
 | Noticed visible world consequence | Yes / No |
 | Understood resident contribution | Yes / No / Partial |
 | Found Journal shortcut | Yes / No / With help |
-| Reached evening | Yes / No |
+| Reached the next chapter | Yes / No |
 | Critical blocker | |
 | Confusing copy or control | |
 | Positive reaction | |

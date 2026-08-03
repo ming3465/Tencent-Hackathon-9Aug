@@ -1,0 +1,73 @@
+# OpenAI estate-density reference
+
+Date: 2026-08-03
+
+Tool: Codex built-in OpenAI image generation
+
+Generation directory:
+`019fc528-83b8-7b32-82b1-b1953071e6b8`
+
+Call artifact:
+`call_ThYraMEFppLfA4EGJiQuUtGf.png`
+
+Reviewed repository copy:
+`docs/art/openai-estate-density-reference.png`
+
+## Input references
+
+1. `docs/screenshots/10-living-estate.png` — current central-estate scale and
+   projection.
+2. `docs/screenshots/11-estate-east.png` — current eastern shop district.
+3. `docs/screenshots/12-estate-south.png` — current southern community
+   district.
+
+All three images were supplied as scale, palette, projection, and
+project-identity references. The request was a new concept, not an edit.
+
+## Exact prompt
+
+```text
+Use case: stylized-concept
+Asset type: game environment density and prop-cluster reference for a playable top-down pixel RPG
+Primary request: Create a new, original Singapore HDB-estate pixel-art environment concept that demonstrates how to make the open lawns and plazas in the three reference screenshots feel intentionally dense, lived-in, layered, and cozy while preserving generous clear movement routes.
+Input images: Image 1 is the current central estate gameplay; Image 2 is the current east district; Image 3 is the current south district. Use all three only as scale, palette, projection, and project-identity references. Do not edit or reproduce their exact composition.
+Scene/backdrop: tropical Singapore HDB estate with a void deck, sheltered linkway, kopitiam edge, provision-shop edge, community-centre edge, grass pockets, concrete paths, drains, and mature planting.
+Subject: show six reusable environmental story clusters integrated naturally: a stone chess table with fixed stools; a bicycle rack beside planters; a compact maintenance trolley with broom and bucket; a utility box with hose reel and drain; a tidy stack of community chairs beside a noticeboard; and a shaded seating planter with fallen leaves. Include a few tiny butterflies or dragonflies as subtle ambient life. Older residents should be visibly contributing through ordinary community routines, never framed as patients.
+Style/medium: crisp original pixel art designed to be translated into deterministic Phaser canvas shapes; coherent 32-pixel tile logic; limited warm cream, teal, coral, gold, grass green, purple, and deep navy palette; hard pixel edges; strong readable silhouettes; consistent 3/4 top-down projection; 3-to-5-pixel dark outlines; layered cast shadows and lit upper-left edges.
+Composition/framing: wide playable-scene concept at the same apparent object scale as the references; distribute density in clusters at path edges and building thresholds; maintain two unmistakably clear primary travel lanes and all door approaches.
+Lighting/mood: humid tropical morning, friendly and active, directional shade under trees and shelters.
+Constraints: no UI, no dialogue box, no labels, no readable text, no logos, no watermark, no copied game characters or copyrighted map designs, no direct imitation of Stardew Valley; code-drawable geometry and restrained detail; every entrance and movement lane remains clear.
+Avoid: painterly rendering, smooth anti-aliased illustration, fantasy-farm motifs, pseudo-writing, oversized props, crowded sidewalks, medical imagery, stereotypes, empty featureless lawns.
+```
+
+## Human review
+
+Accepted as visual-direction evidence:
+
+- density grouped into readable story clusters instead of uniform clutter;
+- stone chess seating that signals ordinary community expertise;
+- bicycles framed by planters rather than floating on open paving;
+- maintenance trolley, utility box, hose reel, and drain as one service cluster;
+- stacked community chairs beside a noticeboard;
+- shaded seating integrated with planting;
+- drain grates, leaf scatter, and tiny insects as low-cost environmental motion;
+- clear central routes and door approaches despite higher density.
+
+Rejected for direct runtime use:
+
+- its sprite and foliage detail is substantially richer than the current
+  deterministic canvas language;
+- some noticeboard marks could read as generated pseudo-writing;
+- generated residents do not match the authored resident silhouettes;
+- the full raster would replace collision-aware, chapter-persistent scene
+  state with a flat image.
+
+Curated implementation decision:
+
+- translate only the accepted cluster grammar into original code-drawn Phaser
+  textures, placements, collisions, and deterministic ambient motion;
+- keep entrances and the two main estate travel axes clear;
+- freeze or hide new ambient motion under reduced motion and monsoon states;
+- extend production smoke evidence for prop density, insect motion, collision,
+  and frame budgets;
+- do not label this run as Miora.

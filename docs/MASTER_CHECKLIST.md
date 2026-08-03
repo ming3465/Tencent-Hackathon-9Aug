@@ -1,5 +1,9 @@
 # Kampung SG Master Requirements and Owner Checklist
 
+> **2026-08-03 campaign note:** older rows below record the original sandbox
+> delivery. For current architecture and counts, use `docs/GAME_DESIGN.md`,
+> `docs/QA_CHECKLIST.md`, and `docs/submission/SUBMIT_NOW.md`.
+
 This is the single operational checklist for the project. Detailed design,
 testing, art, and schedule documents remain authoritative for their specialist
 areas, but every required responsibility must appear here with an owner.
@@ -33,11 +37,11 @@ areas, but every required responsibility must appear here with an owner.
 | Top-down neighbourhood sandbox direction | SHARED | DONE | `docs/GAME_DESIGN.md` |
 | Local playable vertical slice | OPENCODE | DONE | `http://127.0.0.1:5173/` while server runs |
 | Keyboard and touch movement | OPENCODE | DONE | Production-browser smoke check |
-| Three residents and four activities | OPENCODE | DONE | Current game build |
-| Visible choice consequences | OPENCODE | DONE | Current build and screenshots |
+| Five-part campaign and enterable estate | OPENCODE | DONE | Current game build and campaign smoke |
+| Eight resident routes and visible consequences | OPENCODE | DONE | Current build and screenshots |
 | Optional memory-table activity | OPENCODE | DONE | Current build and matching tests |
-| Choice-specific evening reflection | OPENCODE | DONE | Domain tests and browser flow |
-| Automated tests | OPENCODE | DONE | 42 tests passing |
+| KampungMind authored memory/intent engine | OPENCODE | DONE | `campaignContent.ts`, `kampungMind.ts`, campaign tests |
+| Automated tests | OPENCODE | DONE | 75 tests passing |
 | Production build | OPENCODE | DONE | Vite build passes |
 | Dependency security audit | OPENCODE | DONE | Zero known vulnerabilities |
 | CodeBuddy initial implementation evidence | CODEBUDDY | DONE | `docs/AI_USAGE_LOG.md` |

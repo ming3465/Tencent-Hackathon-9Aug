@@ -23,6 +23,9 @@ reproducible test.
   community garden, and shared noticeboard.
 - [x] Connects activities to practical Singapore conditions such as shade,
   rain, social space, and intergenerational neighbourhood life.
+- [x] Human-reviewed OpenAI neighbourhood and estate-density studies are
+  contemporary and grounded; their community-activity, clustered-prop,
+  ground-detail, and ambient-life ideas have verified in-game results.
 - [ ] Final Miora assets look contemporary and grounded rather than like a
   tourist poster.
 - [ ] Singapore ageing context and one-in-four-by-2030 source are cited in the
@@ -31,9 +34,10 @@ reproducible test.
 ### Depth and Public Engagement
 
 - [x] Supports one-avatar shared discussion around non-punitive choices.
-- [x] Provides four activities in a player-selected order.
-- [x] Gives every resident choice an immediate visible world consequence.
-- [x] Builds an evening reflection from the player's actual choices.
+- [x] Provides a prologue, three sequential chapters, an ending, and revisitable
+  optional resident routes.
+- [x] Gives resident choices persistent memories and visible world consequences.
+- [x] Keeps free exploration available after The Last Door.
 - [ ] Human playtesting shows whether players understand resident contribution.
 - [ ] At least one consented older-adult perspective is included if feasible.
 - [ ] Impact limitations are stated honestly in the deck.
@@ -69,6 +73,19 @@ evidence.
   cleanup, filename, and game use recorded.
 - [ ] Deck shows procedural-before and Miora-after comparisons.
 
+### Cross-tool Visual Evidence
+
+- [x] Two real OpenAI image-generation runs have exact prompts, labelled
+  project references, saved outputs, generation artifacts, and
+  acceptance/rejection notes.
+- [x] Human review rejected direct runtime use and translated selected ideas
+  into four deterministic activity vignettes, six story-cluster forms, 54
+  baked ground accents, and eight ambient insects.
+- [x] Production smoke proves all four vignettes and eight insects animate,
+  respect reduced motion, store during the monsoon, and coexist with 12
+  collision-aware cluster placements on open campaign routes.
+- [x] Both OpenAI results are explicitly not relabelled as Miora.
+
 ### AI Attention to Detail
 
 - [x] AI instructions include accessibility, privacy, medical-claim, testing,
@@ -82,27 +99,29 @@ evidence.
 
 ### Current Risk
 
-This is the largest scoring risk. CodeBuddy credits are exhausted and no Miora
-asset has been generated yet. Existing evidence is truthful but not visually
-strong enough for a top AI-tools score without the planned second CodeBuddy
-task and Miora before-and-after pipeline.
+This remains the largest scoring risk. CodeBuddy credits are exhausted and no
+Miora asset has been generated yet. The two OpenAI studies → human review →
+verified activity/density translations provide strong visual AI evidence, but
+they do not replace the planned second CodeBuddy task or Miora-specific
+before-and-after pipeline.
 
 ## Project Quality - 30 Points
 
 ### Completeness and Interactivity
 
-- [x] Title-to-sandbox-to-evening-to-title loop works.
-- [x] Phaser world, camera, collision, keyboard, touch, residents, Journal,
-  choices, meters, memory activity, and evening state are implemented.
-- [x] Three activities unlock the ending in any order.
+- [x] Title-to-prologue-to-three-chapters-to-ending loop works.
+- [x] Phaser world, camera, collision, keyboard, touch, enterable locations,
+  residents, Journal, choices, meters, autosave, and free exploration are
+  implemented.
+- [x] Any 3 distinct helper routes and any 5 invitees advance the full campaign.
 - [x] Journal shortcuts allow non-spatial completion.
 - [x] Resident choices visibly alter the procedural world.
 
 ### Technical Execution
 
 - [x] Strict TypeScript passes.
-- [x] Forty-two domain tests pass.
-- [x] Production browser smoke checks the primary interaction path.
+- [x] Seventy-five domain tests pass.
+- [x] Sixty production-browser checks drive complete full and demo campaigns.
 - [x] Dependency audit has zero known vulnerabilities.
 - [x] Phaser is lazy-loaded after the title screen.
 - [x] No backend or network dependency is required to play.
@@ -119,13 +138,13 @@ task and Miora before-and-after pipeline.
 - [ ] Real phone and tablet playthroughs pass.
 - [ ] Screen-reader and 200 percent zoom checks pass.
 - [ ] Final Miora art is integrated and reviewed at actual scale.
-- [ ] Audio feedback, mute, and volume controls are complete.
+- [x] Audio feedback, mute, and volume controls are complete.
 
 ### Current Risk
 
-The system is complete enough for a demo, but final visual appeal, audio, and
-human accessibility checks remain. These should take priority over adding more
-game systems.
+The complete campaign is demo-ready and has a human-reviewed AI visual-
+direction pass. Miora-specific production art, real-device performance, and
+human accessibility checks remain higher priority than adding more systems.
 
 ## Social Media Bonus - Up to 5 Points
 
