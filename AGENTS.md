@@ -78,6 +78,21 @@ numbers are treated as defects.
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-03** — Added a circular code-drawn estate map with seven real
+  landmark anchors, live exterior player movement, indoor building state, and
+  a direct Places shortcut. Rebuilt the Journal as a four-tab quest book with
+  selected-entry detail, objectives, threshold-aware progress, tracking,
+  equivalent campaign actions, arrow-key tabs, and responsive two-pane/stacked
+  layouts. Interiors now use the full shell and a balanced fit-to-viewport
+  camera (1.04× in the desktop evidence, 0.56× at 360 px) instead of cropping
+  rooms against an edge. The 60-check journey now verifies the map, physical
+  marker travel, room fit, quest tabs/tracking, focus, and mobile composition;
+  all 75 tests, 60/60 browser checks, and the 0-vulnerability audit pass. The
+  HTML/PPTX/PDF judge deck was refreshed to the current 95 kB rounded initial
+  bundle figure and passed template-fidelity, overflow, eight-slide, and
+  eight-page visual review. Graphify rebuilt to 1,036 nodes / 1,850 edges / 59
+  communities; it retained the existing one fail-closed node and stale-label
+  warning. Full evidence and claim boundaries are in `docs/AI_USAGE_LOG.md`.
 - **2026-08-03** — Exterior spatial-logic correction after visual review:
   removed the roadless bus that crossed the south garden; moved the Block 9,
   provision-shop, and Block 12 bicycles onto marked outdoor verge bays; made

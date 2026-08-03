@@ -9,6 +9,10 @@
 - [x] Idempotent events and bounded meters
 - [x] KampungMind intent eligibility, scoring, stable ties, and memory reactions
 - [x] Campaign content references and location graph integrity
+- [x] Journal view grouping, threshold-aware objective progress, spoiler-free
+      future entries, and default active selection
+- [x] All map anchors project inside the circular overview and Block 9 homes
+      share their correct building anchor
 - [x] Fourteen estate flavour details have unique IDs, useful authored
       narration, and in-bounds coordinates
 - [x] All 13 NPC profiles have unique, detailed code-drawn portrait definitions
@@ -59,11 +63,15 @@
       rain is hidden and puddle phase remains static
 - [x] A slept exterior wakes with its location label, controls, camera image,
       and consequence state restored
-- [x] The Journal opens from its visible control as a modal drawer, makes the
-      world inert, focuses Close, wraps focus, closes via Escape and backdrop,
-      and restores world focus
-- [x] Wide estate and centred-interior shells render real canvas pixels to
-      their intended right edges after location-driven scale/camera resizing
+- [x] The Journal opens from its visible control as a modal quest book, makes
+      the world inert, focuses Close, exposes four keyboard-switchable tabs,
+      selected objectives/progress and tracked state, wraps focus, closes via
+      Escape and backdrop, and restores world focus
+- [x] Wide estate and full-width interiors resize the active camera; the
+      desktop 960×640 room fits and unused margins remain centred
+- [x] The circular map exposes seven anchors, highlights one current indoor
+      landmark, opens Places, remains in bounds at 360px, and follows physical
+      east/south player movement
 - [x] Exterior camera reports 1.32× at wide desktop and 1× at 360px mobile
 - [x] Player movement physically reaches and captures the layered pond before
       continuing through the open east/south travel spine
@@ -96,8 +104,8 @@
       and within 8/20 ms per-frame main-thread budgets
 - [x] Desktop and 360px overflow, 48px targets, and console errors
 - [x] The 360px path enters gameplay with touch controls and verifies/captures
-      the world, an in-bounds 88×120 px visual-novel portrait, and the 328px
-      Journal drawer
+      the world and circular map, an in-bounds 88×120 px visual-novel portrait,
+      and the full-width stacked Journal
 
 ## Manual — not yet claimed
 

@@ -101,21 +101,32 @@ Visual consequences and lighting persist across chapter progress.
 ## World-first interface
 
 The game world is the primary desktop and mobile surface. The Journal is not a
-permanent dashboard column: it opens on request as a right-side modal drawer
-over a dimmed backdrop. Its Main Story, Optional Requests, People, and Places
-sections remain scrollable at every viewport size. Opening it makes the world
-inert, moves focus to the visible Close button, and traps focus inside; Escape,
-the Close button, or the backdrop closes it and restores focus to the world.
+permanent dashboard column: it opens on request as a wide quest book over a
+dimmed backdrop. Story, Requests, People, and Places are real tabs with
+arrow-key navigation. Each selected entry has a dedicated detail page,
+objective checklist, proportional progress, status, context actions, and
+optional tracked-quest state. Future chapters remain spoiler-free. Opening the
+Journal makes the world inert, moves focus to the visible Close button, and
+traps focus inside; Escape, the Close button, or the backdrop closes it and
+restores focus to the world.
 
-The exterior uses the full available wide shell. The more intimate 960 px
-interiors use a centred 1085 px shell so room composition does not stretch into
-empty space. Each location switch explicitly resizes the Phaser scale and
-active camera viewport after the shell changes; this prevents stale camera
-letterboxing when returning to the wider estate. The exterior camera uses
-1.32× zoom at 1180 px and wider, 1.22× from 760–1179 px, and 1× below 760 px;
-interiors retain their existing 1.12× desktop and 1× mobile framing. A
+The exterior and interiors use the full available shell. Each 960×640 interior
+computes a room-fit zoom from both viewport dimensions, caps desktop at 1.08×,
+and centres any remaining horizontal or vertical margin around the room.
+Portrait phones retain a 0.56× readability floor instead of shrinking the
+player to an unusable size. Each location switch explicitly resizes the Phaser
+scale and active camera viewport after the shell changes; this prevents stale
+camera framing when returning to the estate. The exterior camera uses 1.32×
+zoom at 1180 px and wider, 1.22× from 760–1179 px, and 1× below 760 px. A
 request-animation-frame resize latch keeps the renderer and active camera in
 sync after responsive viewport changes.
+
+A circular, code-drawn estate map sits inside the world HUD. Seven landmark
+anchors follow the same doorway coordinates as the playable exterior. Outdoors,
+the player marker projects the live 2560×1600 position into the map; indoors,
+the corresponding landmark is highlighted and Block 9 homes share their real
+building anchor. Activating the map opens that place in the Journal. The SVG is
+decorative; its button label and the Places tab carry the semantic location.
 
 ## Art and runtime direction
 
@@ -233,11 +244,12 @@ and dark-value structure, counts 93 live obstacle bodies, proves three
 building/path-safe bicycle bays and zero roadless motor routes, proves all
 eight façade layers fade and restore at a physical building stop, physically pushes
 the player into a solid storefront, physically walks to a pond capture, and
-walks the player to east and south captures. It also samples
-pixels at the room and estate edges, exercises the Journal's complete
-modal/focus contract, verifies the desktop portrait/card geometry and a named
-NPC's profile traits, and captures the actual game, visual-novel card, and open
-Journal at 360 px. Motion snapshots prove 1.32× wide-desktop and 1× mobile
+walks the player to east and south captures. It also proves the desktop
+room-fit relationship, exercises the Journal's complete
+modal/focus/tab/tracking contract, verifies live minimap movement, verifies the
+desktop portrait/card geometry and a named NPC's profile traits, and captures
+the actual game, visual-novel card, circular map, and stacked Journal at 360
+px. Motion snapshots prove 1.32× wide-desktop and 1× mobile
 exterior framing, three pond rings with changing phase in normal motion, static
 pond phase and zero walking puffs under reduced motion, and pooled puffs during
 normal walking. Chapter 2 snapshots also prove the fixed 64-streak rain pool,
@@ -286,9 +298,11 @@ game.
   announced in the live region.
 - Chapter 2 weather remains deterministic and non-punitive; reduced motion
   preserves its story and visual state without falling-rain or puddle motion.
-- The Journal opens only on request, behaves as a modal drawer, and shows Main
-  Story, Optional Requests, People, and Places; future chapters are locked
-  without spoilers.
+- The Journal opens only on request, behaves as a modal quest book, and shows
+  Story, Requests, People, and Places with selection, objectives, progress,
+  tracking, and context actions; future chapters are locked without spoilers.
+- The circular map uses the playable estate coordinates, follows outdoor
+  movement, identifies the correct indoor landmark, and opens Places.
 - The full gate—typecheck, tests, build, audit, and production smoke—passes.
 
 ## Explicitly out of scope

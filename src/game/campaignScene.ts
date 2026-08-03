@@ -359,6 +359,13 @@ export interface CampaignMotionSnapshot {
   buildingOcclusionMotion: "smooth" | "instant" | null;
 }
 
+export interface CampaignNavigationSnapshot {
+  locationId: LocationId;
+  player: SpawnPoint;
+  worldWidth: number;
+  worldHeight: number;
+}
+
 interface BuildingOcclusionView {
   zone: EstateRect;
   overlay: Phaser.GameObjects.Image;
@@ -377,6 +384,8 @@ abstract class WalkableScene extends Phaser.Scene {
   protected interactions: WorldInteraction[] = [];
   protected consequences?: Phaser.GameObjects.Container;
   protected npcViews = new Map<NpcId, NpcView>();
+  private worldWidth = 1;
+  private worldHeight = 1;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private movementKeys!: Record<"up" | "down" | "left" | "right", Phaser.Input.Keyboard.Key>;
   private interactKeys!: Phaser.Input.Keyboard.Key[];
@@ -418,6 +427,8 @@ abstract class WalkableScene extends Phaser.Scene {
     height: number,
     spawn: SpawnPoint,
   ): void {
+    this.worldWidth = width;
+    this.worldHeight = height;
     this.physics.world.setBounds(0, 0, width, height);
     this.cameras.main.setBounds(0, 0, width, height);
     this.createSharedTextures();
@@ -558,6 +569,15 @@ abstract class WalkableScene extends Phaser.Scene {
     return { x: this.player.x, y: this.player.y };
   }
 
+  getNavigationSnapshot(): CampaignNavigationSnapshot {
+    return {
+      locationId: this.locationId,
+      player: this.getPlayerPosition(),
+      worldWidth: this.worldWidth,
+      worldHeight: this.worldHeight,
+    };
+  }
+
   getMotionSnapshot(): CampaignMotionSnapshot {
     return {
       locationId: this.locationId,
@@ -647,9 +667,24 @@ abstract class WalkableScene extends Phaser.Scene {
   }
 
   refreshCameraLayout(width = this.scale.width, height = this.scale.height): void {
+    const zoom = this.cameraZoomForViewport(width, height);
+    const horizontalMargin = Math.max(
+      0,
+      (width / zoom - this.worldWidth) / 2,
+    );
+    const verticalMargin = Math.max(
+      0,
+      (height / zoom - this.worldHeight) / 2,
+    );
     this.cameras.main
       .setViewport(0, 0, width, height)
-      .setZoom(this.cameraZoomForViewport(width));
+      .setZoom(zoom)
+      .setBounds(
+        -horizontalMargin,
+        -verticalMargin,
+        this.worldWidth + horizontalMargin * 2,
+        this.worldHeight + verticalMargin * 2,
+      );
   }
 
   protected resetWorldCollections(): void {
@@ -663,7 +698,7 @@ abstract class WalkableScene extends Phaser.Scene {
 
   protected abstract drawConsequences(): void;
 
-  protected cameraZoomForViewport(width: number): number {
+  protected cameraZoomForViewport(width: number, _height: number): number {
     return width >= 760 ? 1.12 : 1;
   }
 
@@ -3466,6 +3501,15 @@ export class InteriorScene extends WalkableScene {
     super("interior", options.initialLocation, callbacks, getState, options);
   }
 
+  protected cameraZoomForViewport(width: number, height: number): number {
+    const fittedZoom = Math.min(
+      (width - 24) / ROOM_WIDTH,
+      (height - 24) / ROOM_HEIGHT,
+    );
+    const readableFloor = width < 520 ? 0.56 : width < 700 ? 0.7 : 0;
+    return Math.min(1.08, Math.max(readableFloor, fittedZoom));
+  }
+
   init(data: SceneStartData = {}): void {
     this.locationId = data.locationId ?? this.getState().currentLocation;
     this.fromLocationId = data.fromLocationId ?? roomReturnLocation(this.locationId);
@@ -4306,6 +4350,7 @@ export interface CampaignGameHandle {
   transitionTo(locationId: LocationId): void;
   setCampaignState(state: CampaignStateV1): void;
   getCurrentLocation(): LocationId;
+  getNavigationSnapshot(): CampaignNavigationSnapshot | null;
   getMotionSnapshot(): CampaignMotionSnapshot | null;
 }
 
@@ -4430,6 +4475,9 @@ export function createCampaignGame(
     },
     getCurrentLocation(): LocationId {
       return currentLocation;
+    },
+    getNavigationSnapshot(): CampaignNavigationSnapshot | null {
+      return activeScene()?.getNavigationSnapshot() ?? null;
     },
     getMotionSnapshot(): CampaignMotionSnapshot | null {
       return activeScene()?.getMotionSnapshot() ?? null;

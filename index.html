@@ -636,8 +636,8 @@
       }
 
       .world-shell.interior-framing {
-        width: min(1085px, 100%);
-        margin-inline: auto;
+        width: 100%;
+        margin-inline: 0;
       }
 
       #sandbox-stage {
@@ -816,6 +816,18 @@
         background: var(--gold);
       }
 
+      #btn-journal[data-tracked="true"]::after {
+        content: "";
+        display: inline-block;
+        width: 0.55rem;
+        height: 0.55rem;
+        margin-left: 0.38rem;
+        background: var(--gold);
+        border: 2px solid var(--cream);
+        border-radius: 50%;
+        vertical-align: -0.04rem;
+      }
+
       .journal-header {
         padding: 1rem 1rem 0.8rem;
         color: var(--cream);
@@ -842,6 +854,7 @@
         position: absolute;
         top: 0.6rem;
         right: 0.6rem;
+        z-index: 3;
         color: var(--ink);
         background: var(--gold);
       }
@@ -1683,6 +1696,850 @@
         font-weight: 700 !important;
       }
 
+      /* Circular estate map */
+      .estate-minimap {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        z-index: 5;
+        width: 168px;
+        min-width: 0;
+        min-height: 0;
+        padding: 0.45rem;
+        overflow: visible;
+        color: var(--cream);
+        background: rgba(16, 46, 59, 0.92);
+        border: 3px solid var(--gold);
+        border-radius: 999px 999px 16px 16px;
+        box-shadow: 0 8px 22px rgba(16, 46, 59, 0.34);
+        text-align: center;
+        transition: transform 160ms ease, background 160ms ease;
+      }
+
+      .estate-minimap:hover {
+        transform: translateY(-2px);
+        background: rgba(16, 46, 59, 0.98);
+      }
+
+      .minimap-disc {
+        position: relative;
+        display: block;
+        width: 100%;
+        aspect-ratio: 1;
+        overflow: hidden;
+        border: 3px solid var(--cream);
+        border-radius: 50%;
+        background: #8fb975;
+        box-shadow:
+          inset 0 0 0 4px rgba(23, 63, 79, 0.25),
+          0 3px 0 var(--ink);
+      }
+
+      .minimap-svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .minimap-ground { fill: #9fc57d; }
+      .minimap-district { fill: #b6cf91; }
+      .minimap-water {
+        fill: #70afbd;
+        stroke: var(--ink);
+        stroke-width: 1.5;
+      }
+      .minimap-garden {
+        fill: #5b8c5a;
+        stroke: var(--cream);
+        stroke-width: 1.2;
+        stroke-dasharray: 2 2;
+      }
+      .minimap-road-shadow,
+      .minimap-road {
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .minimap-road-shadow {
+        stroke: var(--ink);
+        stroke-width: 9;
+        opacity: 0.65;
+      }
+      .minimap-road {
+        stroke: #f5dfb2;
+        stroke-width: 6;
+      }
+      .minimap-path {
+        fill: none;
+        stroke: var(--paper);
+        stroke-width: 2.3;
+        stroke-dasharray: 2.5 2.2;
+        opacity: 0.9;
+      }
+      .minimap-landmark rect {
+        fill: var(--paper);
+        stroke: var(--ink);
+        stroke-width: 1.3;
+        rx: 2;
+      }
+      .minimap-landmark text {
+        fill: var(--ink);
+        font-family: var(--font-ui);
+        font-size: 4.4px;
+        font-weight: 900;
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+      .minimap-landmark.current rect {
+        fill: var(--gold);
+        stroke: var(--cream);
+        stroke-width: 2;
+      }
+      .minimap-player-ring {
+        fill: rgba(255, 246, 220, 0.62);
+        stroke: var(--ink);
+        stroke-width: 1.4;
+      }
+      .minimap-player-pin {
+        fill: var(--coral);
+        stroke: var(--cream);
+        stroke-width: 1.5;
+      }
+      .minimap-north {
+        fill: var(--night);
+        font-family: var(--font-ui);
+        font-size: 7px;
+        font-weight: 900;
+        text-anchor: middle;
+      }
+
+      .minimap-location {
+        display: block;
+        padding: 0.42rem 0.2rem 0.12rem;
+        line-height: 1.15;
+      }
+
+      .minimap-location strong,
+      .minimap-location small {
+        display: block;
+      }
+
+      .minimap-location strong {
+        overflow: hidden;
+        font-size: 0.72rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .minimap-location small {
+        margin-top: 0.16rem;
+        color: var(--gold);
+        font-size: 0.58rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      /* Quest-book Journal */
+      .journal-panel {
+        width: min(980px, calc(100% - 1.5rem));
+      }
+
+      .journal-header {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+        gap: 1rem;
+        padding: 1.05rem 5.5rem 1rem 1.25rem;
+        background:
+          linear-gradient(135deg, rgba(242, 184, 75, 0.12), transparent 46%),
+          var(--ink);
+      }
+
+      .journal-header h2 {
+        font-size: clamp(1.55rem, 2.8vw, 2rem);
+      }
+
+      .journal-chapter-banner {
+        min-width: 250px;
+        padding: 0.58rem 0.75rem;
+        color: var(--ink);
+        background: var(--gold);
+        border: 2px solid var(--cream);
+        border-radius: 10px;
+        box-shadow: 3px 3px 0 var(--night);
+      }
+
+      .journal-chapter-banner span,
+      .journal-chapter-banner strong {
+        display: block;
+      }
+
+      .journal-chapter-banner span {
+        font-size: 0.62rem;
+        font-weight: 900;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .journal-chapter-banner strong {
+        margin-top: 0.08rem;
+        font-family: var(--font-display);
+        font-size: 1rem;
+      }
+
+      .journal-tabs {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        border-bottom: 4px solid var(--ink);
+        background: var(--cream);
+      }
+
+      .journal-tab {
+        min-width: 0;
+        min-height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.42rem;
+        padding: 0.55rem 0.4rem;
+        color: var(--ink-soft);
+        background: transparent;
+        border-right: 2px solid var(--sand);
+        border-radius: 0;
+        font-size: 0.8rem;
+      }
+
+      .journal-tab:last-child {
+        border-right: 0;
+      }
+
+      .journal-tab[aria-selected="true"] {
+        color: var(--cream);
+        background: var(--coral-dark);
+        box-shadow: inset 0 -5px 0 var(--gold);
+      }
+
+      .journal-tab-count {
+        min-width: 1.6rem;
+        padding: 0.1rem 0.35rem;
+        color: var(--ink);
+        background: var(--paper);
+        border: 2px solid currentColor;
+        border-radius: 999px;
+        font-size: 0.65rem;
+        line-height: 1.15;
+      }
+
+      .journal-workspace {
+        min-height: 0;
+        flex: 1;
+        display: grid;
+        grid-template-columns: minmax(290px, 0.43fr) minmax(0, 0.57fr);
+        overflow: hidden;
+        background: var(--paper);
+      }
+
+      .journal-sections {
+        min-height: 0;
+        overflow-y: auto;
+        padding: 0.85rem;
+        background:
+          linear-gradient(rgba(234, 217, 183, 0.85), rgba(234, 217, 183, 0.85)),
+          repeating-linear-gradient(0deg, transparent 0 31px, rgba(23, 63, 79, 0.06) 32px);
+        border-right: 4px solid var(--ink);
+      }
+
+      .journal-section {
+        margin: 0;
+      }
+
+      .journal-section[hidden] {
+        display: none;
+      }
+
+      .journal-section > h3 {
+        position: static;
+        margin: 0 0 0.65rem;
+        padding: 0.2rem 0.15rem 0.55rem;
+        color: var(--ink);
+        background: transparent;
+        border-bottom: 2px solid rgba(23, 63, 79, 0.24);
+        font-size: 0.78rem;
+      }
+
+      .journal-section .journal-list {
+        margin: 0;
+        padding: 0;
+        overflow: visible;
+      }
+
+      .journal-item {
+        margin: 0 0 0.62rem;
+        padding: 0;
+        border: 0;
+      }
+
+      .journal-entry-select {
+        width: 100%;
+        min-width: 0;
+        min-height: 0;
+        display: block;
+        padding: 0.78rem;
+        color: var(--ink);
+        background: rgba(255, 251, 239, 0.94);
+        border: 3px solid rgba(23, 63, 79, 0.34);
+        border-radius: 12px;
+        box-shadow: 0 3px 0 rgba(23, 63, 79, 0.24);
+        text-align: left;
+      }
+
+      .journal-entry-select:hover {
+        border-color: var(--teal);
+      }
+
+      .journal-item.selected .journal-entry-select {
+        background: var(--paper);
+        border-color: var(--coral-dark);
+        box-shadow: 5px 5px 0 var(--gold);
+      }
+
+      .journal-item.locked .journal-entry-select {
+        color: var(--ink-soft);
+        background: rgba(255, 251, 239, 0.58);
+        border-style: dashed;
+      }
+
+      .journal-entry-topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.55rem;
+        margin-bottom: 0.38rem;
+      }
+
+      .journal-status {
+        position: static;
+        flex: 0 0 auto;
+        padding: 0.13rem 0.45rem;
+        color: var(--ink-soft);
+        background: var(--cream);
+        border: 2px solid #c8b88e;
+        font-size: 0.58rem;
+        line-height: 1.2;
+      }
+
+      .journal-item.current .journal-status {
+        color: var(--cream);
+        background: var(--coral-dark);
+        border-color: var(--coral-dark);
+      }
+
+      .journal-item.completed .journal-status {
+        color: var(--cream);
+        background: var(--green);
+        border-color: var(--green);
+      }
+
+      .journal-item.completed .journal-status::before {
+        content: "\2713 ";
+      }
+
+      .journal-entry-kind {
+        overflow: hidden;
+        color: var(--ink-soft);
+        font-size: 0.62rem;
+        font-weight: 900;
+        letter-spacing: 0.07em;
+        text-overflow: ellipsis;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      .journal-entry-select h3 {
+        margin: 0 0 0.25rem;
+        padding: 0;
+        font-family: var(--font-display);
+        font-size: 1.02rem;
+        line-height: 1.18;
+      }
+
+      .journal-entry-select p {
+        display: -webkit-box;
+        margin: 0;
+        overflow: hidden;
+        color: var(--ink-soft);
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.35;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+
+      .journal-entry-progress {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.58rem;
+      }
+
+      .journal-entry-progress span:first-child,
+      .quest-progress-track {
+        display: block;
+        height: 8px;
+        overflow: hidden;
+        background: #d8c9a6;
+        border: 1px solid var(--ink);
+        border-radius: 999px;
+      }
+
+      .journal-entry-progress i,
+      .quest-progress-fill {
+        display: block;
+        width: 0;
+        height: 100%;
+        background: var(--coral);
+        border-radius: inherit;
+      }
+
+      .journal-entry-progress b {
+        color: var(--ink-soft);
+        font-size: 0.62rem;
+      }
+
+      .journal-detail {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+        overflow-y: auto;
+        padding: clamp(1.1rem, 3vw, 1.7rem);
+        background:
+          radial-gradient(circle at 100% 0, rgba(242, 184, 75, 0.22), transparent 13rem),
+          var(--paper);
+      }
+
+      .journal-detail::after {
+        content: "";
+        position: absolute;
+        top: 1.2rem;
+        right: 1.2rem;
+        width: 62px;
+        height: 62px;
+        border: 3px double rgba(23, 63, 79, 0.18);
+        border-radius: 50%;
+        box-shadow:
+          0 0 0 7px rgba(23, 63, 79, 0.05),
+          inset 0 0 0 8px var(--paper);
+        pointer-events: none;
+      }
+
+      .journal-detail-type {
+        margin: 0 0 0.45rem;
+        padding-right: 5rem;
+        color: var(--coral-dark);
+        font-size: 0.7rem;
+        font-weight: 900;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      .journal-detail h3 {
+        max-width: 15ch;
+        margin: 0;
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-size: clamp(1.7rem, 4vw, 2.45rem);
+        line-height: 1;
+      }
+
+      .journal-detail-meta {
+        margin: 0.6rem 0 0;
+        color: var(--teal);
+        font-size: 0.74rem;
+        font-weight: 900;
+      }
+
+      .journal-detail-summary {
+        max-width: 42rem;
+        margin: 1rem 0 1.1rem;
+        color: var(--ink-soft);
+        font-family: var(--font-display);
+        font-size: 1rem;
+        line-height: 1.55;
+      }
+
+      .quest-progress {
+        margin: 0 0 1.2rem;
+        padding: 0.72rem 0.8rem;
+        background: var(--cream);
+        border: 2px solid var(--ink);
+        border-radius: 10px;
+      }
+
+      .quest-progress-label {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.38rem;
+        color: var(--ink-soft);
+        font-size: 0.68rem;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .quest-progress-track {
+        height: 11px;
+        border-width: 2px;
+      }
+
+      .journal-objectives-title {
+        margin: 0 0 0.5rem;
+        color: var(--ink);
+        font-size: 0.78rem;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .journal-objectives {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .journal-objective {
+        position: relative;
+        min-height: 34px;
+        display: grid;
+        grid-template-columns: 24px minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 0.55rem;
+        margin: 0 0 0.45rem;
+        color: var(--ink);
+        font-size: 0.82rem;
+        font-weight: 800;
+        line-height: 1.35;
+      }
+
+      .journal-objective::before {
+        content: "";
+        width: 22px;
+        height: 22px;
+        margin-top: -1px;
+        border: 3px solid var(--ink);
+        border-radius: 50%;
+        background: var(--paper);
+      }
+
+      .journal-objective.complete::before {
+        content: "\2713";
+        display: grid;
+        place-items: center;
+        color: var(--cream);
+        background: var(--green);
+        border-color: var(--green);
+        font-size: 0.72rem;
+      }
+
+      .journal-objective.complete span {
+        color: var(--ink-soft);
+        text-decoration: line-through;
+        text-decoration-thickness: 1px;
+      }
+
+      .journal-objective b {
+        color: var(--coral-dark);
+        font-size: 0.7rem;
+      }
+
+      .journal-empty-note {
+        margin: 1rem 0;
+        padding: 0.75rem;
+        color: var(--ink-soft);
+        background: var(--cream);
+        border-left: 5px solid var(--gold);
+        font-size: 0.8rem;
+        font-weight: 800;
+        line-height: 1.45;
+      }
+
+      .journal-detail-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        margin-top: 1.2rem;
+        padding-top: 1rem;
+        border-top: 2px dashed var(--sand);
+      }
+
+      .journal-detail .journal-action,
+      .journal-track-button {
+        min-height: 48px;
+        margin: 0;
+        padding: 0.55rem 0.8rem;
+        border: 2px solid var(--ink);
+        font-size: 0.78rem;
+      }
+
+      .journal-track-button {
+        color: var(--ink);
+        background: var(--gold);
+      }
+
+      .journal-track-button[aria-pressed="true"] {
+        color: var(--cream);
+        background: var(--green);
+      }
+
+      .journal-footer {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(240px, 0.42fr);
+        border-top: 4px solid var(--ink);
+        background: #fff0c8;
+      }
+
+      .journal-footer .campaign-card {
+        position: static;
+        margin: 0;
+        padding: 0.72rem 0.9rem;
+        border: 0;
+        border-right: 3px solid var(--ink);
+        background: transparent;
+      }
+
+      .journal-footer .campaign-card p {
+        font-size: 0.76rem;
+      }
+
+      .journal-footer .campaign-kampungmind {
+        display: none;
+      }
+
+      .journal-footer .sound-card {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: var(--paper);
+      }
+
+      .sound-card summary {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        padding: 0.6rem 0.8rem;
+        color: var(--ink);
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-weight: 900;
+        list-style: none;
+      }
+
+      .sound-card summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .sound-card summary::after {
+        content: "+";
+        margin-left: auto;
+        color: var(--coral-dark);
+        font-size: 1.2rem;
+      }
+
+      .sound-card[open] summary::after {
+        content: "\2212";
+      }
+
+      .sound-card-body {
+        padding: 0 0.8rem 0.7rem;
+      }
+
+      @media (max-width: 1000px) {
+        .journal-panel {
+          width: min(780px, 100%);
+        }
+
+        .journal-workspace {
+          grid-template-columns: minmax(270px, 0.44fr) minmax(0, 0.56fr);
+        }
+      }
+
+      @media (max-width: 680px) {
+        .estate-minimap {
+          top: 0.5rem;
+          right: 0.5rem;
+          width: 104px;
+          padding: 0.3rem;
+          border-width: 2px;
+          border-radius: 999px 999px 12px 12px;
+        }
+
+        .minimap-disc {
+          border-width: 2px;
+        }
+
+        .minimap-location {
+          padding-top: 0.25rem;
+        }
+
+        .minimap-location strong {
+          font-size: 0.61rem;
+        }
+
+        .minimap-location small {
+          display: none;
+        }
+
+        .journal-panel {
+          inset: 0;
+          width: 100%;
+          border: 0;
+          border-radius: 0;
+        }
+
+        .journal-header {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 0.45rem;
+          padding: 0.72rem 4.8rem 0.68rem 0.8rem;
+        }
+
+        .journal-header p {
+          font-size: 0.63rem;
+        }
+
+        .journal-header h2 {
+          font-size: 1.3rem;
+        }
+
+        .journal-chapter-banner {
+          min-width: 0;
+          padding: 0.38rem 0.55rem;
+        }
+
+        .journal-chapter-banner span {
+          font-size: 0.55rem;
+        }
+
+        .journal-chapter-banner strong {
+          font-size: 0.82rem;
+        }
+
+        .journal-close {
+          top: 0.48rem;
+          right: 0.48rem;
+        }
+
+        .journal-tab {
+          min-height: 50px;
+          gap: 0.2rem;
+          padding-inline: 0.2rem;
+          font-size: 0.67rem;
+        }
+
+        .journal-tab-count {
+          min-width: 1.35rem;
+          padding-inline: 0.2rem;
+          font-size: 0.56rem;
+        }
+
+        .journal-workspace {
+          grid-template-columns: 1fr;
+          grid-template-rows: minmax(170px, 38%) minmax(0, 1fr);
+        }
+
+        .journal-sections {
+          padding: 0.55rem;
+          border-right: 0;
+          border-bottom: 3px solid var(--ink);
+        }
+
+        .journal-section > h3 {
+          margin-bottom: 0.4rem;
+          padding-bottom: 0.35rem;
+          font-size: 0.68rem;
+        }
+
+        .journal-item {
+          margin-bottom: 0.42rem;
+        }
+
+        .journal-entry-select {
+          padding: 0.58rem;
+          border-width: 2px;
+        }
+
+        .journal-entry-select h3 {
+          font-size: 0.9rem;
+        }
+
+        .journal-entry-select p {
+          font-size: 0.65rem;
+          -webkit-line-clamp: 1;
+        }
+
+        .journal-detail {
+          padding: 0.9rem;
+        }
+
+        .journal-detail::after {
+          top: 0.75rem;
+          right: 0.75rem;
+          width: 46px;
+          height: 46px;
+        }
+
+        .journal-detail h3 {
+          max-width: 13ch;
+          font-size: 1.55rem;
+        }
+
+        .journal-detail-summary {
+          margin: 0.65rem 0;
+          font-size: 0.88rem;
+        }
+
+        .quest-progress {
+          margin-bottom: 0.75rem;
+          padding: 0.55rem;
+        }
+
+        .journal-objective {
+          font-size: 0.75rem;
+        }
+
+        .journal-detail-actions {
+          margin-top: 0.75rem;
+          padding-top: 0.7rem;
+        }
+
+        .journal-footer {
+          grid-template-columns: minmax(0, 1fr) auto;
+        }
+
+        .journal-footer .campaign-card {
+          padding: 0.5rem 0.6rem;
+        }
+
+        .journal-footer .campaign-card p {
+          font-size: 0.66rem;
+          line-height: 1.3;
+        }
+
+        .journal-footer .sound-card {
+          width: 124px;
+        }
+
+        .sound-card summary {
+          padding-inline: 0.55rem;
+          font-size: 0.67rem;
+        }
+
+        .sound-card[open] {
+          width: min(255px, 70vw);
+        }
+      }
+
       @media (max-width: 680px) {
         .title-actions {
           align-items: stretch;
@@ -1781,6 +2638,50 @@
             <div id="sandbox-stage" tabindex="0" aria-label="Top-down neighbourhood. Use WASD or arrow keys to move, E or Space to interact, and hold Shift to move faster."></div>
             <p id="area-name" class="area-chip">Community Court</p>
 
+            <button id="estate-minimap" class="estate-minimap" type="button" aria-label="Circular estate map. You are at Y's Flat. Open Places in the Journal.">
+              <span class="minimap-disc" aria-hidden="true">
+                <svg class="minimap-svg" viewBox="0 0 100 100" focusable="false">
+                  <circle class="minimap-ground" cx="50" cy="50" r="50"></circle>
+                  <path class="minimap-district" d="M4 52 Q25 42 45 49 T96 46 V96 H4Z"></path>
+                  <path class="minimap-water" d="M5 38 Q13 31 24 36 Q29 42 24 49 Q14 54 7 48Z"></path>
+                  <path class="minimap-garden" d="M31 40 L43 35 L50 44 L40 51 L30 47Z"></path>
+                  <path class="minimap-road-shadow" d="M8 25 H92 M50 16 V91 M10 68 Q31 57 50 68 T91 66"></path>
+                  <path class="minimap-road" d="M8 25 H92 M50 16 V91 M10 68 Q31 57 50 68 T91 66"></path>
+                  <path class="minimap-path" d="M24 25 Q28 42 40 44 M50 68 Q65 52 82 62 M50 68 Q38 78 43 88"></path>
+                  <g class="minimap-landmark" data-map-location="hdb-corridor" transform="translate(28.8 21)">
+                    <rect x="-5.5" y="-4" width="11" height="8"></rect><text y="0.3">9</text>
+                  </g>
+                  <g class="minimap-landmark" data-map-location="hawker-centre" transform="translate(49.3 21.5)">
+                    <rect x="-5.5" y="-4" width="11" height="8"></rect><text y="0.3">H</text>
+                  </g>
+                  <g class="minimap-landmark" data-map-location="kopitiam" transform="translate(64.4 21.5)">
+                    <rect x="-5.5" y="-4" width="11" height="8"></rect><text y="0.3">K</text>
+                  </g>
+                  <g class="minimap-landmark" data-map-location="provision-shop" transform="translate(82.9 23.1)">
+                    <rect x="-5.5" y="-4" width="11" height="8"></rect><text y="0.3">S</text>
+                  </g>
+                  <g class="minimap-landmark" data-map-location="community-centre" transform="translate(80.9 62.4)">
+                    <rect x="-7" y="-4" width="14" height="8"></rect><text y="0.3">CC</text>
+                  </g>
+                  <g class="minimap-landmark" data-map-location="prayer-hall" transform="translate(75.9 79.6)">
+                    <rect x="-5.5" y="-4" width="11" height="8"></rect><text y="0.3">P</text>
+                  </g>
+                  <g class="minimap-landmark" data-map-location="craftsman-workshop" transform="translate(44.6 80.6)">
+                    <rect x="-5.5" y="-4" width="11" height="8"></rect><text y="0.3">W</text>
+                  </g>
+                  <text class="minimap-north" x="50" y="8">N</text>
+                  <g id="minimap-player" transform="translate(28.8 21)">
+                    <circle class="minimap-player-ring" r="5.4"></circle>
+                    <path class="minimap-player-pin" d="M0 -5 L4 4 L0 2.5 L-4 4Z"></path>
+                  </g>
+                </svg>
+              </span>
+              <span class="minimap-location">
+                <strong id="minimap-place">Y's Flat</strong>
+                <small>Open place notes</small>
+              </span>
+            </button>
+
             <div id="interaction-prompt" class="interaction-prompt" aria-hidden="true">
               <p id="nearby-text">Move closer to a neighbour or activity.</p>
               <button id="btn-interact" class="interact-button" type="button">Interact</button>
@@ -1802,27 +2703,45 @@
           <aside id="journal-panel" class="journal-panel" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="journal-title" tabindex="-1" inert>
             <button id="btn-journal-close" class="journal-close" type="button" aria-label="Close journal">Close</button>
             <div class="journal-header">
-              <p>Campaign journal</p>
-              <h2 id="journal-title">Kampung SG</h2>
-            </div>
-            <div id="journal-content" class="journal-sections"></div>
-            <div class="campaign-card">
-              <p id="campaign-progress">Listen to the Voice.</p>
-              <p class="campaign-kampungmind">KampungMind selects only authored lines from chapter facts, expertise, help, and remembered choices.</p>
-            </div>
-
-            <section class="sound-card" aria-labelledby="sound-title">
-              <h3 id="sound-title">Sound</h3>
-              <div class="sound-row">
-                <label for="volume-music">Music</label>
-                <input id="volume-music" type="range" min="0" max="100" step="5" value="45" />
+              <div>
+                <p>Quest Journal</p>
+                <h2 id="journal-title">Kampung SG</h2>
               </div>
-              <div class="sound-row">
-                <label for="volume-sfx">Effects</label>
-                <input id="volume-sfx" type="range" min="0" max="100" step="5" value="70" />
+              <div class="journal-chapter-banner" aria-live="polite">
+                <span id="journal-chapter-label">Prologue</span>
+                <strong id="journal-chapter-title">Y's Flat</strong>
               </div>
-              <p class="sound-note">All sound is generated in your browser. No audio files are downloaded.</p>
-            </section>
+            </div>
+            <div id="journal-tabs" class="journal-tabs" role="tablist" aria-label="Journal categories">
+              <button id="journal-tab-story" class="journal-tab" type="button" role="tab" aria-selected="true" aria-controls="journal-section-story" data-journal-category="story">Story <span class="journal-tab-count">0</span></button>
+              <button id="journal-tab-requests" class="journal-tab" type="button" role="tab" aria-selected="false" aria-controls="journal-section-requests" data-journal-category="requests" tabindex="-1">Requests <span class="journal-tab-count">0</span></button>
+              <button id="journal-tab-people" class="journal-tab" type="button" role="tab" aria-selected="false" aria-controls="journal-section-people" data-journal-category="people" tabindex="-1">People <span class="journal-tab-count">0</span></button>
+              <button id="journal-tab-places" class="journal-tab" type="button" role="tab" aria-selected="false" aria-controls="journal-section-places" data-journal-category="places" tabindex="-1">Places <span class="journal-tab-count">0</span></button>
+            </div>
+            <div class="journal-workspace">
+              <div id="journal-content" class="journal-sections"></div>
+              <section id="journal-detail" class="journal-detail" aria-live="polite" aria-label="Selected journal entry"></section>
+            </div>
+            <div class="journal-footer">
+              <div class="campaign-card">
+                <p id="campaign-progress">Listen to the Voice.</p>
+                <p class="campaign-kampungmind">KampungMind selects only authored lines from chapter facts, expertise, help, and remembered choices.</p>
+              </div>
+              <details class="sound-card">
+                <summary id="journal-sound-summary" tabindex="0">Sound levels</summary>
+                <div class="sound-card-body">
+                  <div class="sound-row">
+                    <label for="volume-music">Music</label>
+                    <input id="volume-music" type="range" min="0" max="100" step="5" value="45" />
+                  </div>
+                  <div class="sound-row">
+                    <label for="volume-sfx">Effects</label>
+                    <input id="volume-sfx" type="range" min="0" max="100" step="5" value="70" />
+                  </div>
+                  <p class="sound-note">Generated locally; no audio files are downloaded.</p>
+                </div>
+              </details>
+            </div>
           </aside>
         </div>
       </section>

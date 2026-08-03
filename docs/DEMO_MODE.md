@@ -59,6 +59,9 @@ reduced-motion users receive that state change instantly.
 Chapter 2 also uses the same deterministic monsoon, wet surfaces, puddles,
 shelter masking, resident/cat responses, and reduced-motion fallback. Only the
 helper and invitee thresholds change.
+The circular map, room-fit interior camera, and four-tab quest Journal are also
+identical in full and demo modes; threshold-aware Journal progress simply reads
+the active campaign state's 3/5 or 2/2 requirements.
 
 ## Change log
 
@@ -68,3 +71,4 @@ helper and invitee thresholds change.
 | 2026-08-03 | Replaced with isolated full-campaign pacing: 2 helpers, 2 attendees, every chapter retained. |
 | 2026-08-03 | Confirmed the visual/runtime pass is shared unchanged by full and demo modes. |
 | 2026-08-03 | Confirmed Chapter 2 monsoon content and accessibility behavior are shared unchanged. |
+| 2026-08-03 | Confirmed the circular map, room-fit interiors, and quest-book Journal are shared unchanged. |

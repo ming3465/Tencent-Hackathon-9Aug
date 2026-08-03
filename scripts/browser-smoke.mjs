@@ -392,15 +392,37 @@ try {
     await sleep(220);
   };
 
+  const journalCategoryForSection = {
+    "Main Story": "story",
+    "Optional Requests": "requests",
+    People: "people",
+    Places: "places",
+  };
+
+  const activateJournalSection = async (section) => {
+    const category = journalCategoryForSection[section];
+    if (!category) return;
+    await page.eval(`
+      document.querySelector(
+        '[data-journal-category="${category}"]'
+      )?.click()
+    `);
+    await sleep(70);
+  };
+
   const clickButton = async (label, section = "") => {
     await ensureJournalOpen();
+    if (section) await activateJournalSection(section);
     const clicked = await page.eval(`
       (() => {
-        const sections = ${JSON.stringify(section)}
+        const section = ${JSON.stringify(section)}
           ? Array.from(document.querySelectorAll(".journal-section"))
-              .filter((s) => s.querySelector(":scope > h3")?.textContent.trim() === ${JSON.stringify(section)})
-          : [document];
-        const buttons = sections.flatMap((s) => Array.from(s.querySelectorAll("button")));
+              .find((candidate) => candidate.querySelector(":scope > h3")?.textContent.trim() === ${JSON.stringify(section)})
+          : document;
+        const buttons = [
+          ...Array.from(section?.querySelectorAll("button") ?? []),
+          ...Array.from(document.querySelectorAll("#journal-detail button")),
+        ];
         const button = buttons.find((candidate) =>
           candidate.textContent.trim().includes(${JSON.stringify(label)})
         );
@@ -415,20 +437,37 @@ try {
 
   const clickJournalItem = async (section, title) => {
     await ensureJournalOpen();
-    const clicked = await page.eval(`
+    await activateJournalSection(section);
+    const selected = await page.eval(`
       (() => {
         const section = Array.from(document.querySelectorAll(".journal-section"))
           .find((candidate) => candidate.querySelector(":scope > h3")?.textContent.trim() === ${JSON.stringify(section)});
         const item = Array.from(section?.querySelectorAll(".journal-item") ?? [])
           .find((candidate) => candidate.querySelector(".journal-item h3")?.textContent.trim() === ${JSON.stringify(title)});
-        const button = item?.querySelector("button:not(:disabled)");
+        const button = item?.querySelector(".journal-entry-select");
         if (!button) return false;
         button.click();
         return true;
       })()
     `);
-    if (!clicked) throw new Error(`Could not open journal item "${section}" / "${title}"`);
-    await sleep(520);
+    if (!selected) {
+      throw new Error(`Could not select journal item "${section}" / "${title}"`);
+    }
+    await sleep(80);
+    const acted = await page.eval(`
+      (() => {
+        const button = document.querySelector(
+          "#journal-detail .journal-action:not(:disabled)"
+        );
+        if (!button) return false;
+        button.click();
+        return true;
+      })()
+    `);
+    if (!acted) {
+      throw new Error(`Could not open journal item "${section}" / "${title}"`);
+    }
+    await sleep(440);
   };
 
   const readThroughDialogue = async (limit = 60) => {
@@ -676,7 +715,7 @@ try {
       "Two authored clues unlock Ben's flat",
       /Visit Ben/i.test(
         await page.eval(`
-          Array.from(document.querySelectorAll(".journal-section button"))
+          Array.from(document.querySelectorAll("#journal-detail button"))
             .map((button) => button.textContent).join(" | ")
         `)
       )
@@ -1481,6 +1520,48 @@ try {
       return colours.size;
     })()
   `);
+  const minimapEvidence = await page.eval(`
+    (() => {
+      const map = document.getElementById("estate-minimap");
+      const disc = map.querySelector(".minimap-disc");
+      const mapRect = map.getBoundingClientRect();
+      const discRect = disc.getBoundingClientRect();
+      const shellRect = document.getElementById("world-shell").getBoundingClientRect();
+      const radius = getComputedStyle(disc).borderTopLeftRadius;
+      return {
+        visible: getComputedStyle(map).display !== "none",
+        circular:
+          Math.abs(discRect.width - discRect.height) <= 1
+          && (
+            radius.includes("%")
+              ? parseFloat(radius) >= 49
+              : parseFloat(radius) >= discRect.width * 0.45
+          ),
+        insideWorld:
+          mapRect.top >= shellRect.top
+          && mapRect.right <= shellRect.right
+          && mapRect.bottom <= shellRect.bottom,
+        landmarks: map.querySelectorAll("[data-map-location]").length,
+        currentLandmarks: map.querySelectorAll(".minimap-landmark.current").length,
+        place: document.getElementById("minimap-place").textContent.trim(),
+        playerTransform: document.getElementById("minimap-player").getAttribute("transform"),
+      };
+    })()
+  `);
+  const interiorCameraEvidence = await page.eval(`
+    (() => {
+      const stage = document.getElementById("sandbox-stage");
+      const zoom = window.__kampungSmoke?.getMotionSnapshot?.()?.cameraZoom ?? 0;
+      return {
+        zoom,
+        width: stage.clientWidth,
+        height: stage.clientHeight,
+        roomFits:
+          960 * zoom <= stage.clientWidth
+          && 640 * zoom <= stage.clientHeight,
+      };
+    })()
+  `);
   await page.eval(`document.getElementById("btn-journal").click()`);
   await sleep(240);
   const openedJournal = await page.eval(`
@@ -1493,11 +1574,51 @@ try {
         inert: panel.hasAttribute("inert"),
         focus: document.activeElement?.id,
         backdrop: document.getElementById("journal-backdrop").classList.contains("open"),
+        tabs: panel.querySelectorAll('[role="tab"]').length,
+        selectedTab:
+          panel.querySelector('[role="tab"][aria-selected="true"]')
+            ?.dataset.journalCategory ?? null,
+        sections: panel.querySelectorAll(".journal-section").length,
+        detailTitle:
+          document.querySelector("#journal-detail h3")?.textContent.trim() ?? null,
+        objectives: document.querySelectorAll(
+          "#journal-detail .journal-objective"
+        ).length,
+        progress:
+          document.querySelector(".quest-progress-fill")?.style.width ?? null,
       };
     })()
   `);
   await page.shot(`${SHOT_DIR}/13-journal-drawer.png`);
-  await page.eval(`document.getElementById("volume-sfx").focus()`);
+  await page.eval(`document.getElementById("journal-tab-story").focus()`);
+  await page.key("keyDown", "ArrowRight", "ArrowRight", 39);
+  await page.key("keyUp", "ArrowRight", "ArrowRight", 39);
+  const journalTabKeyboard = await page.eval(`
+    document.activeElement?.id === "journal-tab-requests"
+      && document.getElementById("journal-tab-requests")
+        .getAttribute("aria-selected") === "true"
+  `);
+  await page.key("keyDown", "ArrowLeft", "ArrowLeft", 37);
+  await page.key("keyUp", "ArrowLeft", "ArrowLeft", 37);
+  await page.eval(
+    `document.querySelector("#journal-detail .journal-track-button")?.click()`
+  );
+  await sleep(80);
+  const journalTracking = await page.eval(`
+    document.getElementById("btn-journal").dataset.tracked === "true"
+      && document.querySelector("#journal-detail .journal-track-button")
+        ?.getAttribute("aria-pressed") === "true"
+      && /Tracking The First Door/.test(
+        document.getElementById("estate-minimap").getAttribute("aria-label")
+      )
+  `);
+  await page.eval(
+    `document.querySelector("#journal-detail .journal-track-button")?.click()`
+  );
+  await sleep(80);
+  await page.eval(`
+    document.getElementById("journal-sound-summary").focus()
+  `);
   await page.key("keyDown", "Tab", "Tab", 9);
   await page.key("keyUp", "Tab", "Tab", 9);
   const journalFocusWrapped = await page.eval(
@@ -1527,17 +1648,33 @@ try {
   );
   const journalDrawerEvidence = {
     worldFirstLayout: gameLayoutWidth >= browserWidth * 0.9,
-    interiorFramed:
-      closedWorldWidth >= browserWidth * 0.65
-      && closedWorldWidth <= browserWidth * 0.82,
-    interiorEdgeRendered: interiorRightEdgeColours >= 4,
+    spaciousInterior:
+      closedWorldWidth >= browserWidth * 0.9
+      && closedWorldWidth <= browserWidth,
+    interiorRoomFits: interiorCameraEvidence.roomFits,
+    circularMap:
+      minimapEvidence.visible
+      && minimapEvidence.circular
+      && minimapEvidence.insideWorld
+      && minimapEvidence.landmarks === 7
+      && minimapEvidence.currentLandmarks === 1
+      && minimapEvidence.place === "Y's Flat"
+      && /^translate\(/.test(minimapEvidence.playerTransform ?? ""),
+    keyboardTabs: journalTabKeyboard,
+    tracking: journalTracking,
     opened:
       openedJournal.open
       && openedJournal.expanded === "true"
       && openedJournal.hidden === "false"
       && openedJournal.inert === false
       && openedJournal.focus === "btn-journal-close"
-      && openedJournal.backdrop,
+      && openedJournal.backdrop
+      && openedJournal.tabs === 4
+      && openedJournal.selectedTab === "story"
+      && openedJournal.sections === 4
+      && openedJournal.detailTitle === "The First Door"
+      && openedJournal.objectives === 2
+      && openedJournal.progress === "0%",
     focusWrapped: journalFocusWrapped,
     escaped:
       escapedJournal.open === false
@@ -1551,6 +1688,11 @@ try {
     `  UI  room=${closedWorldWidth.toFixed(0)}px; ` +
       `layout=${gameLayoutWidth.toFixed(0)}/${browserWidth}px; ` +
       `room-edge-colours=${interiorRightEdgeColours}; ` +
+      `room-fit=${journalDrawerEvidence.interiorRoomFits}@` +
+      `${interiorCameraEvidence.zoom.toFixed(2)}x; ` +
+      `minimap=${JSON.stringify(minimapEvidence)}; ` +
+      `tabs=${journalDrawerEvidence.keyboardTabs}; ` +
+      `tracking=${journalDrawerEvidence.tracking}; ` +
       `journal-open=${journalDrawerEvidence.opened}; ` +
       `focus-wrap=${journalDrawerEvidence.focusWrapped}; ` +
       `escape=${journalDrawerEvidence.escaped}; ` +
@@ -1708,6 +1850,9 @@ try {
   await page.shot(`${SHOT_DIR}/21-pond-life.png`);
   await walkToAxis("y", 400);
   const eastSnapshot = await walkToAxis("x", 2240);
+  const eastMapTransform = await page.eval(
+    `document.getElementById("minimap-player").getAttribute("transform")`
+  );
   await page.shot(`${SHOT_DIR}/11-estate-east.png`);
   await walkToAxis("x", 2100);
   const beforeFacadeCollision = await page.eval(
@@ -1759,6 +1904,9 @@ try {
   await walkToAxis("x", 1880);
   await walkToAxis("y", 1180);
   const southSnapshot = await walkToAxis("x", 1720);
+  const southMapTransform = await page.eval(
+    `document.getElementById("minimap-player").getAttribute("transform")`
+  );
   districtTravelEvidence = {
     east:
       eastSnapshot?.locationId === "estate"
@@ -1768,12 +1916,20 @@ try {
       && southSnapshot.player.x >= 1450
       && southSnapshot.player.x <= 1900
       && southSnapshot.player.y >= 1000,
+    minimapMoved:
+      /^translate\(/.test(eastMapTransform ?? "")
+      && /^translate\(/.test(southMapTransform ?? "")
+      && eastMapTransform !== southMapTransform,
     eastPosition: eastSnapshot?.player ?? null,
     southPosition: southSnapshot?.player ?? null,
+    eastMapTransform,
+    southMapTransform,
   };
   diagnostics.push(
     `  TRAVEL  east=${JSON.stringify(districtTravelEvidence.eastPosition)}; ` +
-      `south=${JSON.stringify(districtTravelEvidence.southPosition)}`
+      `south=${JSON.stringify(districtTravelEvidence.southPosition)}; ` +
+      `map=${districtTravelEvidence.eastMapTransform} -> ` +
+      `${districtTravelEvidence.southMapTransform}`
   );
   await page.shot(`${SHOT_DIR}/12-estate-south.png`);
   await walkToAxis("y", 1140);
@@ -1891,6 +2047,15 @@ try {
           getComputedStyle(document.querySelector(".touch-controls")).display === "flex",
         cameraZoom:
           window.__kampungSmoke?.getMotionSnapshot?.()?.cameraZoom ?? null,
+        minimap: (() => {
+          const map = document.getElementById("estate-minimap").getBoundingClientRect();
+          const disc = document.querySelector(".minimap-disc").getBoundingClientRect();
+          return {
+            visible: map.width >= 98 && map.width <= 112,
+            circular: Math.abs(disc.width - disc.height) <= 1,
+            inside: map.left >= shell.left && map.right <= shell.right,
+          };
+        })(),
       };
     })()
   `);
@@ -1927,6 +2092,8 @@ try {
     (() => {
       const panel = document.getElementById("journal-panel");
       const rect = panel.getBoundingClientRect();
+      const listRect = document.getElementById("journal-content").getBoundingClientRect();
+      const detailRect = document.getElementById("journal-detail").getBoundingClientRect();
       const smallTargets = Array.from(panel.querySelectorAll("button:not([disabled])"))
         .filter((button) => button.offsetParent !== null)
         .filter((button) => {
@@ -1941,6 +2108,10 @@ try {
         focus: document.activeElement?.id,
         smallTargets,
         noOverflow: document.documentElement.scrollWidth <= 361,
+        tabs: panel.querySelectorAll('[role="tab"]').length,
+        detailBelowList:
+          detailRect.top >= listRect.bottom - 1
+          && detailRect.bottom <= rect.bottom,
       };
     })()
   `);
@@ -1955,8 +2126,11 @@ try {
       && mobileWorldState.shellLeft >= 0
       && mobileWorldState.shellRight <= 361
       && mobileWorldState.touchControls
-      && mobileWorldState.cameraZoom >= 0.99
-      && mobileWorldState.cameraZoom <= 1.01,
+      && mobileWorldState.cameraZoom >= 0.54
+      && mobileWorldState.cameraZoom <= 0.72
+      && mobileWorldState.minimap.visible
+      && mobileWorldState.minimap.circular
+      && mobileWorldState.minimap.inside,
     journal:
       mobileJournalState.open
       && mobileJournalState.left >= 0
@@ -1964,7 +2138,9 @@ try {
       && mobileJournalState.width >= 300
       && mobileJournalState.focus === "btn-journal-close"
       && mobileJournalState.smallTargets === 0
-      && mobileJournalState.noOverflow,
+      && mobileJournalState.noOverflow
+      && mobileJournalState.tabs === 4
+      && mobileJournalState.detailBelowList,
     dialogue:
       portraitEvidence.mobile.open
       && portraitEvidence.mobile.id === "voice"
@@ -2062,6 +2238,7 @@ try {
       && districtTravelEvidence
       && districtTravelEvidence.east
       && districtTravelEvidence.south
+      && districtTravelEvidence.minimapMoved
       && terrainDetailEvidence
       && terrainDetailEvidence.grassColourCount >= 3
       && terrainDetailEvidence.pathColourCount >= 6

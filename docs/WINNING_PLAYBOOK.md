@@ -73,7 +73,7 @@ Why: Tencent ecosystem alignment, Singapore edge node for Singapore judges, and 
 Must not break: keep GitHub Pages live as fallback; print both URLs everywhere.
 
 **9. Rubric-map the deck with the rules' exact words. (2–3 h)**
-What: AI slide quotes the official requirement verbatim and checks off worldbuilding + artwork + sound; one line: "Elderly care (适老化关怀) is a named sub-theme of the official Social Good track"; Impact slide opens with 1-in-4 Singaporeans 65+ by 2030 and cites the official brief; Quality slide: 83.33 kB initial JS / 75 tests / 60 CDP checks / 0 vulnerabilities.
+What: AI slide quotes the official requirement verbatim and checks off worldbuilding + artwork + sound; one line: "Elderly care (适老化关怀) is a named sub-theme of the official Social Good track"; Impact slide opens with 1-in-4 Singaporeans 65+ by 2030 and cites the official brief; Quality slide: 94.75 kB initial JS / 75 tests / 60 CDP checks / 0 vulnerabilities.
 Why: Winners visibly game the rubric and balance all criteria (Square, Klaviyo method); the verbatim-compliance line pre-empts the "no runtime LLM = no AI" misread, which is our single biggest scoring risk on a 40-point criterion (Critic §A4).
 Must not break: citation honesty — every number sourced, "aligned with," never "partnered with" Age Well SG.
 
@@ -134,7 +134,9 @@ Delivery note: say it once, warmly, in the close or Q&A — never as an attack o
 - **The MLH 4-minute booth model.** This station is a stage roadshow. Plan for one pitch to seated judges, not science-fair circulation.
 - **Preparing for a 48-hour Shenzhen rebuild.** The Grand Final is a pitch of existing work. Light CodeBuddy fluency is contingency; deep fluency is wasted hours.
 - **Retrofitting a runtime LLM.** Creation-time AI qualifies verbatim under the published rules; mainland winners had our exact shape. The fix is captioning, not architecture.
-- **A minimap.** Environment wayfinding (signposts, paths, district colours) only if time remains; every source treats minimaps as the fallback when environments fail — and it breaks the handcrafted look.
+- **More navigation chrome.** The shipped circular map is code-drawn, small,
+  and directly connected to Places; do not add objective arrows, waypoint
+  trails, notification pings, or another map layer.
 - **Cutting the memory-match.** Rehoming beats deleting: as an opt-in void-deck table game it becomes a cozy-design asset for zero new code.
 - **Shortening the full game.** 6–8 min is on-target for the actual audience ("one cup of kopi long"). Only the *judge path* needs compression.
 - **Sprint buttons, objective arrows, timers, notification pings.** Horseshoe cozy anti-patterns; our no-timer/no-failure design is the pitch — don't let judging pressure corrupt it.

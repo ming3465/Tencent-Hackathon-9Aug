@@ -1808,3 +1808,88 @@ the Codex built-in OpenAI image-generation tool.
   Codex plus temporary `uv` environments for validation dependencies. It added
   no project dependency and did not add a runtime image, backend, network call,
   analytics, data collection, or generated in-game art.
+
+## 2026-08-03 - Circular Map, Quest Journal, and Room-Fit Camera
+
+**AI-assisted implementation:**
+
+- The user asked Codex to add a circular map, reshape the Journal into a
+  Genshin-inspired quest presentation, and make interiors feel more spacious
+  because the camera cropped the rooms.
+- Added `src/game/estateMap.ts`, a pure projection layer for the 2560×1600
+  estate. Seven authored landmark anchors correspond to the real exterior
+  doorways; all four Block 9 homes resolve to the corridor building; the
+  outdoor player marker follows the live scene position.
+- Added a code-drawn circular SVG map to the world HUD. It highlights the
+  current indoor landmark, labels the current place, includes tracked-quest
+  context in its accessible button name, and opens that place in the Journal.
+  No raster, generated image, network request, or location data is used.
+- Added `src/game/journal.ts`, a pure campaign-to-Journal view model. Story,
+  Requests, People, and Places now render as four keyboard-operable tabs with a
+  selected entry, status, objective checklist, threshold-aware progress,
+  optional tracking, and existing equivalent completion actions. Locked future
+  chapters remain spoiler-free.
+- Rebuilt the modal as a wide two-pane quest book on desktop and a stacked
+  full-screen view at 360 px. The existing inert background, focus trap,
+  Escape/backdrop dismissal, focus restoration, visible Close action, 48 px
+  controls, and Journal-only campaign route were preserved.
+- Reworked the shared camera layout to use both viewport dimensions and
+  balanced world margins. Every 960×640 room now fits the available desktop
+  canvas at up to 1.08×; narrow phones retain a 0.56× readability floor while
+  exposing substantially more of the room. The exterior retains its existing
+  1.32×/1.22×/1× framing.
+- Folded map and Journal registry assertions into the existing campaign test
+  count. Extended the existing 60-check production journey with seven-anchor
+  map evidence, physical east-to-south marker movement, current-place
+  highlighting, room-fit geometry, four-tab keyboard movement, selected quest
+  objectives/progress, tracking state, focus wrapping, and 360 px stacked
+  layout evidence.
+
+**Verification and visual review:**
+
+- The complete repository gate passed: strict TypeScript, 75/75 unit tests,
+  production build, 0 dependency vulnerabilities, and 60/60
+  production-browser checks across full and demo campaigns.
+- Build output is 94.75 kB initial JavaScript (29.37 kB gzip) and 1,582.14 kB
+  lazy campaign/Phaser code (370.77 kB gzip).
+- The browser reported a 1413 px full-width room shell, a fitting 1.04×
+  desktop room camera, a 0.56× mobile room camera, seven map landmarks, one
+  current indoor landmark, and live marker movement from
+  `translate(81.00 28.27)` east to `translate(65.72 70.21)` south.
+- The same journey verified four Journal tabs, arrow-key category switching,
+  two visible prologue objectives, quest tracking, focus wrapping, no
+  horizontal overflow, and a 360 px map/Journal/dialogue composition with no
+  sub-48 px visible buttons.
+- Human inspection of `02-neighbourhood.png`, `11-estate-east.png`,
+  `13-journal-drawer.png`, `14-mobile-game.png`, and
+  `15-mobile-journal.png` confirmed that the map stays clear of play controls,
+  the desktop quest book has a readable list/detail hierarchy, the mobile
+  Journal stacks cleanly, and rooms are centred rather than cut against a
+  canvas edge.
+- Graphify rebuilt locally to 1,036 nodes, 1,850 edges, and 59 communities. It
+  retained the existing one fail-closed node and warned that 54 saved labels
+  trail the changed topology; no semantic relabel was claimed.
+
+**Judge-artifact synchronization:**
+
+- Updated the HTML deck and mirrored deck copy with the circular-map/quest
+  Journal evidence and the current rounded 95 kB initial-JavaScript figure.
+- Refreshed all eight 1280×720 slide captures from the verified production
+  screenshots, normalized the 2× browser captures to the deck's native frame,
+  and used the existing PPTX as the required visual template.
+- Artifact-tool replacement preserved the inherited full-slide frames and
+  speaker notes. Template fidelity passed with zero issues, the PowerPoint
+  overflow check passed, and all eight rendered slides were visually inspected.
+- Regenerated the matching eight-page PDF from those verified renders.
+  Poppler was not installed in this environment, so PyMuPDF confirmed eight
+  unencrypted 1280×720 pages and rendered the montage used for visual review.
+  No project dependency was added.
+
+**Claim boundary:**
+
+- This was AI-assisted code authoring, automated production-browser evidence,
+  and human inspection of rendered captures. It was not a human playtest,
+  screen-reader session, 200% zoom pass, or real-device touch test.
+- No runtime model, backend, account, analytics, data collection, timer,
+  failure state, energy system, copied art, or new shipped image asset was
+  introduced. No deployment had occurred at the time of this log entry.

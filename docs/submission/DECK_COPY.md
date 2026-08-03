@@ -30,7 +30,7 @@ brief (2026), p.5.
 - 2560×1600 estate plus homes, corridor, workshop, shops, and halls
 - WASD, arrow-key, and touch movement
 - Recruit 3 helpers, invite 5 residents, reconnect Ben with a craftsman
-- Every meaningful interaction has an equivalent Journal action
+- Circular map opens Places; quest Journal tracks every objective
 - No timer, energy bar, or failure state
 
 Enter → Listen → Remember.
@@ -68,13 +68,13 @@ production-browser checks.
 
 ## Slide 6 — Fast, private, tested, no backend
 
-**75 tests · 0 vulnerabilities · 83.33 kB initial JavaScript · 0 bytes
+**75 tests · 0 vulnerabilities · 94.75 kB initial JavaScript · 0 bytes
 collected**
 
 - Vite + strict TypeScript + Phaser 3
 - Lazy-loaded game scene
 - 60-check full/demo production-browser campaign
-- Keyboard, touch, and Journal completion routes
+- Keyboard, touch, and Journal completion routes; circular map opens Places
 - No account, analytics, backend, or personal data
 - Runtime-synthesized audio; zero audio files
 - KampungMind uses authored text and deterministic code offline

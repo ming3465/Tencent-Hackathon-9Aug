@@ -39,8 +39,11 @@ hallucination path.
   under cover; reduced motion keeps the overcast scene but removes falling rain
   and ripple animation
 - Versioned autosave, Continue, confirmed Start Over, and corrupt-save fallback
-- A world-first Journal drawer, opened only on request, with dynamic Main
-  Story, Optional Requests, People, and Places sections
+- A quest-book Journal, opened only on request, with Story, Requests, People,
+  and Places tabs; selected-quest detail, objective checklists, proportional
+  progress, tracking, and context actions remain available without a timer
+- A circular code-drawn estate minimap with seven landmark anchors, the current
+  indoor building, live outdoor player movement, and a direct Places shortcut
 - WASD, arrow-key, `E`, Space, visible buttons, and touch controls
 - Equivalent Journal actions for every meaningful world interaction
 - Runtime Web Audio synthesis; no audio files ship
@@ -73,8 +76,9 @@ hallucination path.
   dragonflies move between those clusters; a layered, solid-edged pond adds
   lily pads and three deterministic ripple rings, while a six-object pool
   provides subtle walking puffs without per-step allocation; adaptive exterior
-  framing uses 1.32× on wide desktop, 1.22× on tablet, and 1× on mobile while
-  keeping rooms intimate; district dressing includes a tray-return station,
+  framing uses 1.32× on wide desktop, 1.22× on tablet, and 1× on mobile;
+  interiors use the full shell, a room-fit zoom, and balanced camera margins
+  instead of cutting the room against one edge; district dressing includes a tray-return station,
   provision crates, mosaic dragon playground, and exercise corner. The current
   runtime remains code-drawn after two generated visual-direction studies were
   reviewed and selectively translated rather than copied into the scene
@@ -90,7 +94,7 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
 | `npm test` | 75 tests across campaign, audio, and optional matching |
-| `npm run build` | 83.33 kB initial JS (26.08 kB gzip); 1,581.58 kB lazy scene (370.58 kB gzip) |
+| `npm run build` | 94.75 kB initial JS (29.37 kB gzip); 1,582.14 kB lazy scene (370.77 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
 | `npm run smoke` | 60/60 production-browser checks |
 
@@ -122,16 +126,19 @@ three helped residents and both cats under cover, and stored activity tools
 and laundry in the 360 px composition.
 Its reduced-motion repeat keeps the wet surfaces and gathered estate state
 while hiding falling rain and holding the puddle phase still.
-It also proves that the estate fills the wide play area, interiors are centred
-without an unrendered canvas strip, and the Journal opens as a modal drawer
-with inert background, wrapped focus, Escape/backdrop close, and world-focus
-restoration.
+It also proves that the estate fills the wide play area, a desktop interior
+fits inside a full-width centred camera composition, and the quest-book Journal
+opens with four keyboard-switchable tabs, tracked-quest state, objective
+progress, inert background, wrapped focus, Escape/backdrop close, and
+world-focus restoration. The circular map exposes seven landmark anchors,
+highlights one current indoor anchor, and moves its player marker between
+physical east/south travel samples.
 The visual-novel check measures a 238×325 px code-drawn desktop bust inside a
 940 px card, verifies 41 drawn primitives and Mr. Long's distinct profile
 traits, and proves the responsive 88×120 px portrait remains inside a 360 px
-viewport. The 360px path enters the game, exposes touch controls, opens both
-dialogue and the 328px Journal, checks 48px targets and overflow, and captures
-all three states. The harness profiles
+viewport. The 360px path enters the game, exposes touch controls and the
+room-aware map, opens both dialogue and the full-width stacked Journal, checks
+48px targets and overflow, and captures all three states. The harness profiles
 120 frames during resident and player movement and repeats the player sample
 under a 4× CDP CPU throttle. Fixed cadence budgets remain 28 ms normal and
 34 ms throttled. If the same-run title screen is itself capped slower, game p95
@@ -160,6 +167,7 @@ npm run dev
 
 - Move: `WASD`, arrow keys, or the on-screen direction pad
 - Interact: `E`, Space, nearby `Interact`, or the touch action button
+- Map: activate the circular map to open the current place in the Journal
 - Accessible alternative: use the Journal for any meaningful interaction
 - Close an overlay: `Escape` or its visible return button
 
@@ -174,8 +182,9 @@ Chrome through keyboard and touch doors, unique interiors, locked chapter
 ordering, alternate resident routes, saved Continue/Start Over state, demo
 isolation, all-location rendering, resident/ambient movement, reduced-motion
 stillness, Chapter 2 monsoon behavior and pacing, full-width exterior and
-centred-interior framing, adaptive exterior zoom, pond/step feedback, in-game
-mobile layout, touch targets, Journal modal/focus behavior, and console-error
+centred room-fit interior framing, adaptive exterior zoom, live circular-map
+movement, pond/step feedback, in-game mobile layout, touch targets, quest-tab
+keyboard navigation/tracking, Journal modal/focus behavior, and console-error
 checks.
 It refreshes the evidence images in `docs/screenshots/`.
 

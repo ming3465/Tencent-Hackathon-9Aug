@@ -1,17 +1,12 @@
 import { KampungAudio, readStoredAudioSettings } from "./game/audio.js";
 import {
-  CHAPTERS,
   CHAPTER_BY_ID,
   LOCATIONS,
   NPC_BY_ID,
-  QUESTS,
-  SIDE_QUEST_IDS,
 } from "./game/campaignContent.js";
 import {
   KAMPUNG_METER_MAX,
   canEnterLocation,
-  chapterIsComplete,
-  chapterIsUnlocked,
   createCampaignState,
   getChapterProgress,
   reduceCampaign,
@@ -23,6 +18,18 @@ import {
   saveCampaign,
 } from "./game/campaignSave.js";
 import { renderCampaignPortrait } from "./game/campaignPortrait.js";
+import {
+  estateMapAnchorLocation,
+  getEstateMapPosition,
+} from "./game/estateMap.js";
+import {
+  JOURNAL_CATEGORIES,
+  buildJournalView,
+  defaultJournalEntryId,
+  type JournalCategory,
+  type JournalEntryView,
+  type JournalViewModel,
+} from "./game/journal.js";
 import { selectNpcIntent } from "./game/kampungMind.js";
 import type {
   CampaignEvent,
@@ -56,6 +63,9 @@ const sandboxStage = byId<HTMLElement>("sandbox-stage");
 const areaName = byId<HTMLElement>("area-name");
 const chapterLabel = byId<HTMLElement>("chapter-label");
 const liveRegion = byId<HTMLElement>("live-region");
+const estateMinimap = byId<HTMLButtonElement>("estate-minimap");
+const minimapPlace = byId<HTMLElement>("minimap-place");
+const minimapPlayer = byId<HTMLElement>("minimap-player");
 
 const interactionPrompt = byId<HTMLElement>("interaction-prompt");
 const nearbyText = byId<HTMLElement>("nearby-text");
@@ -71,7 +81,13 @@ const btnJournalClose = byId<HTMLButtonElement>("btn-journal-close");
 const journalBackdrop = byId<HTMLElement>("journal-backdrop");
 const journalPanel = byId<HTMLElement>("journal-panel");
 const journalContent = byId<HTMLElement>("journal-content");
+const journalDetail = byId<HTMLElement>("journal-detail");
+const journalChapterLabel = byId<HTMLElement>("journal-chapter-label");
+const journalChapterTitle = byId<HTMLElement>("journal-chapter-title");
 const campaignProgress = byId<HTMLElement>("campaign-progress");
+const journalTabs = Array.from(
+  document.querySelectorAll<HTMLButtonElement>("[data-journal-category]"),
+);
 
 const dialogOverlay = byId<HTMLElement>("dialog-overlay");
 const dialogKicker = byId<HTMLElement>("dialog-kicker");
@@ -108,6 +124,11 @@ let savedCampaign = loadCampaign(window.localStorage, DEMO_MODE);
 let campaignHandle: CampaignGameHandle | null = null;
 let nearbyInteraction: WorldInteraction | null = null;
 let journalOpen = false;
+let journalCategory: JournalCategory = "story";
+let journalRenderedRevision = -1;
+let trackedQuestId: string | null = null;
+let trackedQuestTitle: string | null = null;
+const selectedJournalEntries: Partial<Record<JournalCategory, string>> = {};
 let announceTimer: ReturnType<typeof setTimeout> | null = null;
 let typeTimer: ReturnType<typeof setInterval> | null = null;
 let dialogueLines: readonly string[] = [];
@@ -208,7 +229,10 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
           dispatchCampaign({ type: "visit-location", locationId });
           announce(`${name}. Location changed.`);
         },
-        onStep: () => audio.play("step"),
+        onStep: () => {
+          audio.play("step");
+          renderMinimap();
+        },
       },
       {
         initialLocation: state.currentLocation,
@@ -222,6 +246,7 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
         getMotionSnapshot: () => campaignHandle?.getMotionSnapshot() ?? null,
       };
     }
+    renderMinimap();
     queueCampaignViewportResize();
   } catch (error) {
     console.error(error);
@@ -545,9 +570,43 @@ function closeDialogue(restoreFocus = true): void {
   if (restoreFocus) focusWorld();
 }
 
+function renderMinimap(): void {
+  const navigation = campaignHandle?.getNavigationSnapshot();
+  const locationId =
+    navigation?.locationId ?? campaignState.currentLocation;
+  const position = getEstateMapPosition(
+    locationId,
+    locationId === "estate" ? navigation?.player : undefined,
+  );
+  minimapPlayer.setAttribute(
+    "transform",
+    `translate(${position.xPercent.toFixed(2)} ${position.yPercent.toFixed(2)})`,
+  );
+  const anchorLocation = estateMapAnchorLocation(locationId);
+  for (const landmark of estateMinimap.querySelectorAll<SVGElement>(
+    "[data-map-location]",
+  )) {
+    landmark.classList.toggle(
+      "current",
+      landmark.dataset.mapLocation === anchorLocation,
+    );
+  }
+  const locationName =
+    LOCATIONS.find((location) => location.id === locationId)?.name
+    ?? locationId;
+  minimapPlace.textContent = locationName;
+  estateMinimap.setAttribute(
+    "aria-label",
+    `Circular estate map. You are at ${locationName}.${
+      trackedQuestTitle ? ` Tracking ${trackedQuestTitle}.` : ""
+    } Open Places in the Journal.`,
+  );
+}
+
 function renderCampaign(): void {
   renderMeters();
   renderJournal();
+  renderMinimap();
   const chapter = campaignState.currentChapter === "free-explore"
     ? null
     : CHAPTER_BY_ID.get(campaignState.currentChapter);
@@ -580,178 +639,326 @@ interface JournalAction {
   disabled?: boolean;
 }
 
-function createJournalSection(title: string): HTMLElement {
-  const section = document.createElement("section");
-  section.className = "journal-section";
-  const heading = document.createElement("h3");
-  heading.textContent = title;
-  const list = document.createElement("ul");
-  list.className = "journal-list";
-  section.append(heading, list);
-  return section;
+const JOURNAL_SECTION_TITLES: Readonly<Record<JournalCategory, string>> = {
+  story: "Main Story",
+  requests: "Optional Requests",
+  people: "People",
+  places: "Places",
+};
+
+function journalActionsForEntry(
+  entry: JournalEntryView,
+): readonly JournalAction[] {
+  if (entry.locked) return [];
+  if (entry.category === "story") {
+    return entry.current ? mainStoryActions() : [];
+  }
+  if (entry.category === "requests" && entry.npcId && entry.questId) {
+    const complete = campaignState.completedQuests.includes(entry.questId);
+    const offered = campaignState.objectives.includes(
+      `offered:${entry.questId}`,
+    );
+    const npcName = NPC_BY_ID.get(entry.npcId)?.name ?? "Neighbour";
+    return [{
+      label: complete ? `Talk with ${npcName}` : `Open ${npcName}'s request`,
+      run: () =>
+        openNpc(entry.npcId!, {
+          preferredKind: complete
+            ? "memory-reaction"
+            : offered
+              ? "reminder"
+              : "offer-request",
+        }),
+    }];
+  }
+  if (entry.category === "people" && entry.npcId) {
+    return [{ label: "Talk", run: () => openNpc(entry.npcId!) }];
+  }
+  if (entry.category === "places" && entry.locationId) {
+    return [{
+      label: entry.current ? "You are here" : "Visit",
+      run: () => visitLocation(entry.locationId!),
+      disabled: entry.current,
+    }];
+  }
+  return [];
 }
 
-function appendJournalItem(
-  section: HTMLElement,
-  statusText: string,
-  title: string,
-  description: string,
-  actions: readonly JournalAction[],
-  classes: readonly string[] = [],
+function appendJournalProgress(
+  parent: HTMLElement,
+  entry: JournalEntryView,
 ): void {
-  const list = section.querySelector("ul");
-  if (!list) return;
-  const item = document.createElement("li");
-  item.className = ["journal-item", ...classes].join(" ");
-  const status = document.createElement("span");
-  status.className = "journal-status";
-  status.textContent = statusText;
-  const body = document.createElement("div");
-  const heading = document.createElement("h3");
-  heading.textContent = title;
-  const copy = document.createElement("p");
-  copy.textContent = description;
-  body.append(heading, copy);
-  if (actions.length) {
-    const actionRow = document.createElement("div");
-    actionRow.className = "journal-actions";
-    for (const action of actions) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "journal-action";
-      button.textContent = action.label;
-      button.disabled = action.disabled === true;
-      button.addEventListener("click", action.run);
-      actionRow.appendChild(button);
-    }
-    body.appendChild(actionRow);
+  if (entry.progressTotal <= 0) return;
+  const progress = document.createElement("span");
+  progress.className = "journal-entry-progress";
+  const track = document.createElement("span");
+  const fill = document.createElement("i");
+  fill.style.width = `${
+    (entry.progressCurrent / entry.progressTotal) * 100
+  }%`;
+  track.appendChild(fill);
+  const count = document.createElement("b");
+  count.textContent = `${entry.progressCurrent}/${entry.progressTotal}`;
+  progress.append(track, count);
+  parent.appendChild(progress);
+}
+
+function selectJournalEntry(
+  category: JournalCategory,
+  entryId: string,
+  restoreEntryFocus = true,
+): void {
+  journalCategory = category;
+  selectedJournalEntries[category] = entryId;
+  renderJournal();
+  if (restoreEntryFocus) {
+    journalContent
+      .querySelector<HTMLButtonElement>(
+        `[data-journal-entry="${entryId}"]`,
+      )
+      ?.focus();
   }
-  item.append(status, body);
-  list.appendChild(item);
+}
+
+function renderJournalDetail(
+  view: JournalViewModel,
+  entry: JournalEntryView | null,
+): void {
+  journalDetail.innerHTML = "";
+  if (!entry) {
+    const empty = document.createElement("p");
+    empty.className = "journal-empty-note";
+    empty.textContent =
+      "There are no notes in this section yet. The Journal will grow as you explore.";
+    journalDetail.appendChild(empty);
+    return;
+  }
+
+  const type = document.createElement("p");
+  type.className = "journal-detail-type";
+  type.textContent = entry.typeLabel;
+  const title = document.createElement("h3");
+  title.textContent = entry.title;
+  const meta = document.createElement("p");
+  meta.className = "journal-detail-meta";
+  meta.textContent = entry.meta;
+  const summary = document.createElement("p");
+  summary.className = "journal-detail-summary";
+  summary.textContent = entry.summary;
+  journalDetail.append(type, title, meta, summary);
+
+  if (entry.progressTotal > 0) {
+    const progress = document.createElement("div");
+    progress.className = "quest-progress";
+    const label = document.createElement("div");
+    label.className = "quest-progress-label";
+    const labelText = document.createElement("span");
+    labelText.textContent = entry.complete ? "Quest complete" : "Quest progress";
+    const count = document.createElement("span");
+    count.textContent = `${entry.progressCurrent} of ${entry.progressTotal}`;
+    label.append(labelText, count);
+    const track = document.createElement("span");
+    track.className = "quest-progress-track";
+    const fill = document.createElement("span");
+    fill.className = "quest-progress-fill";
+    fill.style.width = `${
+      (entry.progressCurrent / entry.progressTotal) * 100
+    }%`;
+    track.appendChild(fill);
+    progress.append(label, track);
+    journalDetail.appendChild(progress);
+  }
+
+  if (entry.objectives.length) {
+    const objectivesTitle = document.createElement("h4");
+    objectivesTitle.className = "journal-objectives-title";
+    objectivesTitle.textContent = "Objectives";
+    const objectives = document.createElement("ul");
+    objectives.className = "journal-objectives";
+    for (const objective of entry.objectives) {
+      const item = document.createElement("li");
+      item.className = [
+        "journal-objective",
+        objective.complete ? "complete" : "",
+      ].filter(Boolean).join(" ");
+      const label = document.createElement("span");
+      label.textContent = objective.label;
+      item.appendChild(label);
+      if (objective.progressText) {
+        const progressText = document.createElement("b");
+        progressText.textContent = objective.progressText;
+        item.appendChild(progressText);
+      }
+      objectives.appendChild(item);
+    }
+    journalDetail.append(objectivesTitle, objectives);
+  } else {
+    const note = document.createElement("p");
+    note.className = "journal-empty-note";
+    note.textContent = entry.locked
+      ? "This chapter stays spoiler-free until the current story is complete."
+      : entry.category === "people"
+        ? "People are the estate's experts. Their conversations and remembered choices remain available."
+        : "This note is here for reference; nothing needs to be completed.";
+    journalDetail.appendChild(note);
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "journal-detail-actions";
+  const trackable =
+    (entry.category === "story" || entry.category === "requests")
+    && !entry.locked
+    && !entry.complete;
+  if (trackable) {
+    const track = document.createElement("button");
+    const tracked = trackedQuestId === entry.id;
+    track.type = "button";
+    track.className = "journal-track-button";
+    track.setAttribute("aria-pressed", String(tracked));
+    track.textContent = tracked ? "Tracking quest" : "Track quest";
+    track.addEventListener("click", () => {
+      trackedQuestId = tracked ? null : entry.id;
+      renderJournal();
+      renderMinimap();
+      journalDetail
+        .querySelector<HTMLButtonElement>(".journal-track-button")
+        ?.focus();
+      announce(
+        tracked
+          ? `${entry.title} is no longer tracked.`
+          : `${entry.title} is now tracked.`,
+      );
+    });
+    actions.appendChild(track);
+  }
+  for (const action of journalActionsForEntry(entry)) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "journal-action";
+    button.textContent = action.label;
+    button.disabled = action.disabled === true;
+    button.addEventListener("click", action.run);
+    actions.appendChild(button);
+  }
+  if (actions.childElementCount) journalDetail.appendChild(actions);
+
+  const trackedEntry = JOURNAL_CATEGORIES
+    .flatMap((category) => view.entries[category])
+    .find((candidate) => candidate.id === trackedQuestId);
+  if (trackedEntry?.complete || trackedEntry?.locked) trackedQuestId = null;
 }
 
 function renderJournal(): void {
+  const currentLocation =
+    campaignHandle?.getCurrentLocation() ?? campaignState.currentLocation;
+  const view = buildJournalView(campaignState, currentLocation);
+  const stateChanged = journalRenderedRevision !== campaignState.revision;
+  journalRenderedRevision = campaignState.revision;
+
+  journalChapterLabel.textContent = view.chapterLabel;
+  journalChapterTitle.textContent = view.chapterTitle;
   journalContent.innerHTML = "";
-  const mainStory = createJournalSection("Main Story");
-  for (const chapter of CHAPTERS) {
-    const unlocked = chapterIsUnlocked(campaignState, chapter.id);
-    const complete = chapterIsComplete(campaignState, chapter.id);
-    const current = campaignState.currentChapter === chapter.id;
-    if (!unlocked) {
-      appendJournalItem(
-        mainStory,
-        "LOCKED",
-        "A future chapter",
-        "Complete the current chapter to reveal this story.",
-        [],
-        ["locked"],
-      );
-      continue;
+
+  for (const category of JOURNAL_CATEGORIES) {
+    const entries = view.entries[category];
+    const currentSelection = selectedJournalEntries[category];
+    const selectionExists = entries.some(
+      (entry) => entry.id === currentSelection,
+    );
+    if (
+      !selectionExists
+      || (stateChanged && category === "story")
+    ) {
+      selectedJournalEntries[category] =
+        defaultJournalEntryId(view, category) ?? undefined;
     }
-    appendJournalItem(
-      mainStory,
-      complete ? "DONE" : current ? "NOW" : "OPEN",
-      `${chapter.numberLabel} — ${chapter.title}`,
-      current ? getChapterProgress(campaignState) : chapter.summary,
-      current ? mainStoryActions() : [],
-      [complete ? "completed" : "", current ? "current" : ""].filter(Boolean),
-    );
-  }
-  journalContent.appendChild(mainStory);
+    const selectedId = selectedJournalEntries[category];
 
-  const optional = createJournalSection("Optional Requests");
-  const optionalUnlocked = campaignState.currentChapter !== "prologue";
-  for (const questId of SIDE_QUEST_IDS) {
-    const quest = QUESTS.find((candidate) => candidate.id === questId);
-    if (!quest?.npcId) continue;
-    const complete = campaignState.completedQuests.includes(quest.id);
-    const offered = campaignState.objectives.includes(`offered:${quest.id}`);
-    const npcName = NPC_BY_ID.get(quest.npcId)?.name ?? "Neighbour";
-    appendJournalItem(
-      optional,
-      complete ? "DONE" : optionalUnlocked ? "OPTION" : "LOCKED",
-      optionalUnlocked ? quest.title : "Neighbour request",
-      optionalUnlocked
-        ? complete
-          ? `${npcName} remembers how you helped. This route remains revisitable.`
-          : quest.summary
-        : "Leave Y's flat to meet the estate's contributors.",
-      optionalUnlocked
-        ? [
-            {
-              label: complete ? `Talk with ${npcName}` : `Open ${npcName}'s request`,
-              run: () =>
-                openNpc(quest.npcId!, {
-                  preferredKind: complete
-                    ? "memory-reaction"
-                    : offered
-                      ? "reminder"
-                      : "offer-request",
-                }),
-            },
-          ]
-        : [],
-      [complete ? "completed" : "", optionalUnlocked ? "" : "locked"].filter(Boolean),
-    );
-  }
-  journalContent.appendChild(optional);
+    const section = document.createElement("section");
+    section.id = `journal-section-${category}`;
+    section.className = "journal-section";
+    section.setAttribute("role", "tabpanel");
+    section.setAttribute("aria-labelledby", `journal-tab-${category}`);
+    section.hidden = category !== journalCategory;
+    const heading = document.createElement("h3");
+    heading.textContent = JOURNAL_SECTION_TITLES[category];
+    const list = document.createElement("ul");
+    list.className = "journal-list";
 
-  const people = createJournalSection("People");
-  for (const npc of NPC_BY_ID.values()) {
-    if (npc.id === "voice") continue;
-    const storyNpc = ["mr-long", "grandma-ros", "craftsman-tan", "ben"].includes(npc.id);
-    const known = !storyNpc
-      ? campaignState.completedChapters.includes("prologue")
-      : campaignState.visitedLocations.some((location) =>
-          (
-            (npc.id === "mr-long" && location === "mr-long-flat")
-            || (npc.id === "grandma-ros" && location === "grandma-ros-kitchen")
-            || (npc.id === "craftsman-tan" && location === "craftsman-workshop")
-            || (npc.id === "ben" && location === "ben-flat")
-          )
-        );
-    if (!known) continue;
-    const helped = (campaignState.npcMemories[npc.id] ?? []).some((memory) =>
-      memory.startsWith("helped:")
-    );
-    appendJournalItem(
-      people,
-      helped ? "REMEMBERS" : "KNOWN",
-      npc.name,
-      `${npc.communityRole}. Expertise: ${npc.expertise.join(", ")}.`,
-      [{ label: "Talk", run: () => openNpc(npc.id) }],
-      [],
-    );
+    for (const entry of entries) {
+      const item = document.createElement("li");
+      item.className = [
+        "journal-item",
+        entry.complete ? "completed" : "",
+        entry.current ? "current" : "",
+        entry.locked ? "locked" : "",
+        entry.id === selectedId ? "selected" : "",
+      ].filter(Boolean).join(" ");
+      const select = document.createElement("button");
+      select.type = "button";
+      select.className = "journal-entry-select";
+      select.dataset.journalEntry = entry.id;
+      select.setAttribute("aria-pressed", String(entry.id === selectedId));
+      select.setAttribute(
+        "aria-label",
+        `${entry.statusLabel}. ${entry.title}. ${entry.summary}`,
+      );
+      const topline = document.createElement("span");
+      topline.className = "journal-entry-topline";
+      const status = document.createElement("span");
+      status.className = "journal-status";
+      status.textContent = entry.statusLabel;
+      const kind = document.createElement("span");
+      kind.className = "journal-entry-kind";
+      kind.textContent = entry.typeLabel;
+      topline.append(status, kind);
+      const title = document.createElement("h3");
+      title.textContent = entry.title;
+      const summary = document.createElement("p");
+      summary.textContent = entry.summary;
+      select.append(topline, title, summary);
+      appendJournalProgress(select, entry);
+      select.addEventListener("click", () =>
+        selectJournalEntry(category, entry.id)
+      );
+      item.appendChild(select);
+      list.appendChild(item);
+    }
+    if (!entries.length) {
+      const empty = document.createElement("li");
+      empty.className = "journal-empty-note";
+      empty.textContent = "Keep exploring. New notes will appear here.";
+      list.appendChild(empty);
+    }
+    section.append(heading, list);
+    journalContent.appendChild(section);
   }
-  journalContent.appendChild(people);
 
-  const places = createJournalSection("Places");
-  for (const location of LOCATIONS) {
-    const visited = campaignState.visitedLocations.includes(location.id);
-    const unlocked = canEnterLocation(campaignState, location.id);
-    const current = campaignHandle?.getCurrentLocation() === location.id
-      || campaignState.currentLocation === location.id;
-    const revealCurrentLocked =
-      (campaignState.currentChapter === "chapter-2" && location.id === "grandma-ros-kitchen")
-      || (campaignState.currentChapter === "chapter-3"
-        && ["ben-flat", "craftsman-workshop"].includes(location.id));
-    if (!visited && !unlocked && !revealCurrentLocked) continue;
-    appendJournalItem(
-      places,
-      current ? "HERE" : visited ? "VISITED" : unlocked ? "OPEN" : "LOCKED",
-      location.name,
-      unlocked ? location.description : location.unlockHint ?? "Continue the current chapter.",
-      [
-        {
-          label: current ? "You are here" : unlocked ? "Visit" : "Locked",
-          run: () => visitLocation(location.id),
-          disabled: current || !unlocked,
-        },
-      ],
-      [current ? "current" : "", unlocked ? "" : "locked"].filter(Boolean),
-    );
+  for (const tab of journalTabs) {
+    const category = tab.dataset.journalCategory as JournalCategory;
+    const selected = category === journalCategory;
+    tab.setAttribute("aria-selected", String(selected));
+    tab.tabIndex = selected ? 0 : -1;
+    const count = tab.querySelector<HTMLElement>(".journal-tab-count");
+    if (count) count.textContent = String(view.entries[category].length);
   }
-  journalContent.appendChild(places);
+
+  const selectedEntry =
+    view.entries[journalCategory].find(
+      (entry) => entry.id === selectedJournalEntries[journalCategory],
+    ) ?? null;
+  renderJournalDetail(view, selectedEntry);
+  const trackedEntry = JOURNAL_CATEGORIES
+    .flatMap((category) => view.entries[category])
+    .find((entry) => entry.id === trackedQuestId);
+  trackedQuestTitle = trackedEntry?.title ?? null;
+  btnJournal.dataset.tracked = String(Boolean(trackedEntry));
+  btnJournal.setAttribute(
+    "aria-label",
+    trackedEntry
+      ? `Open Quest Journal. Tracking ${trackedEntry.title}.`
+      : "Open Quest Journal.",
+  );
 }
 
 function mainStoryActions(): readonly JournalAction[] {
@@ -815,7 +1022,13 @@ function mainStoryActions(): readonly JournalAction[] {
   }
 }
 
+function setJournalCategory(category: JournalCategory): void {
+  journalCategory = category;
+  renderJournal();
+}
+
 function openJournal(): void {
+  renderJournal();
   journalOpen = true;
   journalPanel.classList.add("open");
   journalBackdrop.classList.add("open");
@@ -825,7 +1038,9 @@ function openJournal(): void {
   document.body.classList.add("journal-open");
   setWorldControls(false);
   btnJournalClose.focus();
-  announce("Campaign Journal open. Main Story, Optional Requests, People, and Places.");
+  announce(
+    "Quest Journal open. Choose Story, Requests, People, or Places, then select an entry for its objectives.",
+  );
 }
 
 function closeJournal(restoreFocus = true): void {
@@ -861,16 +1076,25 @@ function trapFocusWithin(
   if (event.key !== "Tab") return;
   const focusable = Array.from(
     container.querySelectorAll<HTMLElement>(
-      'button:not(:disabled):not([hidden]), input:not(:disabled):not([hidden]), [href], [tabindex]:not([tabindex="-1"])',
+      'button:not(:disabled):not([hidden]), input:not(:disabled):not([hidden]), summary, [href], [tabindex]:not([tabindex="-1"])',
     ),
   ).filter((element) => element.getClientRects().length > 0);
   if (!focusable.length) return;
   const first = focusable[0];
   const last = focusable[focusable.length - 1];
+  const activeElement =
+    document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+  const closedSoundSummary =
+    activeElement?.matches("details:not([open]) > summary") === true;
   if (event.shiftKey && document.activeElement === first) {
     event.preventDefault();
     last.focus();
-  } else if (!event.shiftKey && document.activeElement === last) {
+  } else if (
+    !event.shiftKey
+    && (document.activeElement === last || closedSoundSummary)
+  ) {
     event.preventDefault();
     first.focus();
   }
@@ -920,6 +1144,32 @@ btnJournal.addEventListener("click", () => {
   if (journalOpen) closeJournal();
   else openJournal();
 });
+estateMinimap.addEventListener("click", () => {
+  const locationId =
+    campaignHandle?.getCurrentLocation() ?? campaignState.currentLocation;
+  journalCategory = "places";
+  selectedJournalEntries.places = `place:${locationId}`;
+  openJournal();
+});
+for (const [index, tab] of journalTabs.entries()) {
+  const category = tab.dataset.journalCategory as JournalCategory;
+  tab.addEventListener("click", () => setJournalCategory(category));
+  tab.addEventListener("keydown", (event) => {
+    let nextIndex = index;
+    if (event.key === "ArrowRight") nextIndex = (index + 1) % journalTabs.length;
+    else if (event.key === "ArrowLeft") {
+      nextIndex = (index - 1 + journalTabs.length) % journalTabs.length;
+    } else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = journalTabs.length - 1;
+    else return;
+    event.preventDefault();
+    const nextTab = journalTabs[nextIndex];
+    const nextCategory =
+      nextTab.dataset.journalCategory as JournalCategory;
+    setJournalCategory(nextCategory);
+    nextTab.focus();
+  });
+}
 btnJournalClose.addEventListener("click", () => closeJournal());
 journalBackdrop.addEventListener("click", () => closeJournal());
 journalPanel.addEventListener("keydown", trapJournalFocus);

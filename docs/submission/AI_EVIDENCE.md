@@ -21,7 +21,7 @@ to declare its own work complete; the repository gate is the acceptance test.
 | CodeBuddy CLI 2.127.0 | Authored the first 10 Phase 1 files, including `matchEngine.ts`, which remains as the optional keepsake table | Exceeded its 50-turn limit. The gate found 2 TypeScript errors, 3 failing tests, 1 unused dependency, 4 audit findings, and a stale-timer race. A focused retry returned `429 Credits exhausted`. |
 | OpenCode | Corrected the Phase 1 defects and implemented the original top-down sandbox pivot | That sandbox state/scene architecture was superseded by the 2026-08-03 campaign upgrade. |
 | Claude Code (Opus 5) | Audio, reactive residents, lighting, procedural-art pass, Node CDP smoke harness, Pages workflow, and original deck | No human usability or accessibility outcome was inferred from automated checks. |
-| Codex (GPT-5) | `CampaignStateV1`, pure reducer, KampungMind, content registries, versioned save, accessible Journal/UI, Estate/Interior scene architecture, original resident/environment art including tropical landscaping, landmark façades, 13 visual-novel portraits, four-frame locomotion, 14 approach-only details, responsive world scale, pond/movement feedback, the deterministic Chapter 2 monsoon, 12 story clusters, 54 baked ground accents, eight ambient insects, building solidity, campaign tests, full/demo browser campaigns, and refreshed artifacts/docs | Authored deterministic content and code-drawn visuals ahead of time; no runtime model or network path was added. |
+| Codex (GPT-5) | `CampaignStateV1`, pure reducer, KampungMind, content registries, versioned save, four-tab quest Journal, circular estate map, room-fit interior camera, Estate/Interior scene architecture, original resident/environment art including tropical landscaping, landmark façades, 13 visual-novel portraits, four-frame locomotion, 14 approach-only details, responsive world scale, pond/movement feedback, the deterministic Chapter 2 monsoon, 12 story clusters, 54 baked ground accents, eight ambient insects, building solidity, campaign tests, full/demo browser campaigns, and refreshed artifacts/docs | Authored deterministic content and code-drawn visuals ahead of time; no runtime model or network path was added. |
 | OpenAI image generation | Generated two original visual-direction studies: a neighbourhood style key from gameplay plus key art, and a targeted estate-density study from three current district captures, using exact preserved prompts | Human review accepted selected circulation, activity, story-cluster, ground-detail, and ambient-life ideas; rejected both rasters for direct runtime use because richer texture, pseudo-writing, mismatched residents, and flat collision/state did not fit the deterministic scene. The curated translations remain original code-drawn systems. Neither run was Miora. |
 | Gemini CLI 0.53.1 | One real authoring invocation was attempted with `docs/prompts/gemini-kampungmind-authoring.txt` | Google authentication opened and the run was cancelled while blocked. It produced no draft; no Gemini text was reviewed or committed. We do not claim a completed Gemini pass. |
 
@@ -46,14 +46,15 @@ later” never closes a route. No line is generated at runtime.
 | --- | --- |
 | Strict TypeScript | `npm run typecheck` passes |
 | Unit tests | 75/75: 27 campaign, 31 optional matching, 17 audio |
-| Production build | 83.33 kB initial JS (26.08 kB gzip); 1,581.58 kB lazy campaign scene (370.58 kB gzip) |
+| Production build | 94.75 kB initial JS (29.37 kB gzip); 1,582.14 kB lazy campaign scene (370.77 kB gzip) |
 | Dependency audit | 0 known vulnerabilities |
 | Production browser | 60/60 checks; complete full and demo campaigns in headless Chrome |
 
 The browser harness covers keyboard and touch doors, return positions,
 interiors, locked ordering, alternative resident routes, every chapter,
 autosave/Continue, confirmed Start Over, demo isolation, visible modals, 360px
-layout, 48px targets, generated terrain/landscape/façade evidence, code-drawn
+layout, 48px targets, circular-map movement, room-fit camera evidence,
+four-tab Journal selection/tracking, generated terrain/landscape/façade evidence, code-drawn
 portrait dimensions/detail/named traits, desktop and mobile visual-novel fit,
 four-frame player/resident locomotion, one physical keyboard/touch path through
 the 14 approach-only estate details, all four two-frame community task

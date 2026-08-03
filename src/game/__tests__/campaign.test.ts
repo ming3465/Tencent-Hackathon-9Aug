@@ -39,6 +39,15 @@ import {
   ESTATE_VEHICLE_ROUTES,
   getOccludingBuildingIds,
 } from "../estateLayout.js";
+import {
+  ESTATE_MAP_LANDMARKS,
+  estateMapAnchorLocation,
+  getEstateMapPosition,
+} from "../estateMap.js";
+import {
+  buildJournalView,
+  defaultJournalEntryId,
+} from "../journal.js";
 import type {
   CampaignEvent,
   CampaignStateV1,
@@ -386,6 +395,41 @@ describe("campaign registries", () => {
     expect(ESTATE_VEHICLE_LANES).toHaveLength(0);
     expect(ESTATE_VEHICLE_ROUTES).toHaveLength(0);
     expect(ESTATE_BUILDING_VISUAL_ZONES).toHaveLength(8);
+    expect(ESTATE_MAP_LANDMARKS).toHaveLength(7);
+    for (const location of LOCATIONS) {
+      const point = getEstateMapPosition(location.id);
+      expect(point.xPercent).toBeGreaterThanOrEqual(7);
+      expect(point.xPercent).toBeLessThanOrEqual(93);
+      expect(point.yPercent).toBeGreaterThanOrEqual(7);
+      expect(point.yPercent).toBeLessThanOrEqual(93);
+    }
+    expect(estateMapAnchorLocation("y-flat")).toBe("hdb-corridor");
+    expect(estateMapAnchorLocation("community-centre")).toBe(
+      "community-centre",
+    );
+    const openingJournal = buildJournalView(createCampaignState());
+    expect(openingJournal.entries.story).toHaveLength(5);
+    expect(openingJournal.entries.requests).toHaveLength(8);
+    expect(openingJournal.entries.requests.every((entry) => entry.locked)).toBe(
+      true,
+    );
+    expect(openingJournal.entries.places.map((entry) => entry.locationId)).toEqual(
+      ["y-flat"],
+    );
+    expect(defaultJournalEntryId(openingJournal, "story")).toBe(
+      "quest:prologue-voice",
+    );
+    const chapterOneJournal = buildJournalView(inspectMrLong());
+    const openWay = chapterOneJournal.entries.story.find(
+      (entry) => entry.questId === "open-the-way",
+    );
+    expect(openWay?.current).toBe(true);
+    expect(openWay?.objectives.find(
+      (objective) => objective.id === "distinct-ramp-helpers",
+    )?.progressText).toBe(`0 / ${FULL_HELPER_THRESHOLD}`);
+    expect(
+      chapterOneJournal.entries.requests.every((entry) => !entry.locked),
+    ).toBe(true);
     expect(getOccludingBuildingIds({ x: 2100, y: 253 })).toContain(
       "provision-shop",
     );

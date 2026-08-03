@@ -20,8 +20,11 @@ product requirements, not optional polish.
 
 - Use semantic headings, buttons, lists, progress bars, status text, and modal
   dialogue outside the Canvas world.
-- Structure the Journal as a labelled modal drawer with Main Story, Optional
-  Requests, People, and Places.
+- Structure the Journal as a labelled modal quest book with Story, Requests,
+  People, and Places tabs, an explicit selected entry, objective checklist,
+  progress text, and context actions.
+- Give Journal tabs `role="tab"`, `aria-selected`, labelled tab panels, and
+  Left/Right/Home/End keyboard navigation.
 - While the Journal is open, mark the background inert, expose
   `aria-modal="true"`, keep focus inside, and provide visible Close plus Escape
   and backdrop dismissal. Restore focus to the world after dismissal.
@@ -55,6 +58,9 @@ product requirements, not optional polish.
 - Preserve responsive world legibility: the exterior uses 1.32× wide-desktop,
   1.22× tablet, and 1× mobile framing; responsive resize updates both Phaser
   scale and the active camera rather than relying on CSS stretching.
+- Fit desktop interiors from both viewport dimensions and centre unused camera
+  margins. Preserve a 0.56× phone readability floor while exposing more of the
+  room than the former 1× crop.
 - Keep characters and interaction markers legible on grass, paths, and rooms.
 - Keep inactive story, NPC, and door interaction markers visible as a
   non-colour `!`/door cue, and reveal the plain-language target label when it
@@ -68,10 +74,12 @@ product requirements, not optional polish.
 
 ## Canvas limitation and equivalent access
 
-The estate is not exposed as a semantic spatial map. Decorative geometry and
-collision boundaries are not announced. The nearby prompt, location label,
-live region, and Journal provide semantic equivalents for every interaction
-required to complete the story.
+The circular estate overview is decorative and hidden from assistive
+technology; it is not a semantic rendering of geometry or collision
+boundaries. Its enclosing button announces the current place and opens that
+place in the Journal. The nearby prompt, location label, live region, and
+Journal provide semantic equivalents for every interaction required to
+complete the story.
 
 ## Automated evidence
 
@@ -94,12 +102,16 @@ It also verifies the Chapter 2 monsoon's fixed rain pool, dry shelter masks,
 ten puddles, sheltered residents and cats, stored activity tools and laundry,
 stored ambient insects, mobile density, and an equivalent static
 no-falling-rain state under emulated reduced motion.
-It opens the Journal through its visible control, checks
-`aria-hidden`/`inert` state and Close-button focus, wraps focus from the final
-control, dismisses with both Escape and backdrop, and confirms world-focus
-restoration. Its 360px run enters gameplay, verifies visible touch controls,
-opens an in-bounds dialogue card and the 328px drawer, and captures all three
-states. The grass/paver micro-texture
+It opens the Journal through its visible control, checks four tabs and their
+selected state, uses arrow keys to switch categories, verifies selected-quest
+objectives/progress and tracked state, checks `aria-hidden`/`inert` state and
+Close-button focus, wraps focus from the final control, dismisses with both
+Escape and backdrop, and confirms world-focus restoration. It also proves a
+desktop room fits the full-width camera and the circular map has seven
+landmarks, one current indoor anchor, and a marker that changes between
+physical east/south positions. Its 360px run enters gameplay, verifies visible
+touch controls and the circular map, opens an in-bounds dialogue card and the
+full-width stacked Journal, and captures all three states. The grass/paver micro-texture
 and tropical planting are decorative: walkable routes retain outlined kerbs
 and geometry, plant bases have collision, and the new path-edge growth leaves
 the complete physical travel route open. The nearby prompt, location label,
