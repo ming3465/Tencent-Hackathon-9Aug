@@ -1,7 +1,7 @@
 {
   "fps": 20,
-  "frames": 1262,
-  "seconds": 63.1,
+  "frames": 1254,
+  "seconds": 62.7,
   "beats": [
     {
       "label": "title screen (0-5s cold open)",
@@ -10,43 +10,43 @@
     },
     {
       "label": "prologue - Y's flat",
-      "frame": 177,
-      "second": "8.8"
+      "frame": 117,
+      "second": "5.8"
     },
     {
       "label": "first conversation - the Voice",
-      "frame": 249,
-      "second": "12.4"
+      "frame": 212,
+      "second": "10.6"
     },
     {
       "label": "player choice",
-      "frame": 507,
-      "second": "25.4"
+      "frame": 488,
+      "second": "24.4"
     },
     {
       "label": "leaving the flat",
-      "frame": 637,
-      "second": "31.9"
+      "frame": 652,
+      "second": "32.6"
     },
     {
       "label": "Block 9 corridor",
-      "frame": 709,
-      "second": "35.5"
+      "frame": 721,
+      "second": "36.0"
     },
     {
       "label": "estate wide - living neighbourhood",
-      "frame": 833,
-      "second": "41.6"
+      "frame": 844,
+      "second": "42.2"
     },
     {
       "label": "journal / quest book",
-      "frame": 1080,
-      "second": "54.0"
+      "frame": 1128,
+      "second": "56.4"
     },
     {
       "label": "free exploration tail",
-      "frame": 1148,
-      "second": "57.4"
+      "frame": 1190,
+      "second": "59.5"
     }
   ]
 }
