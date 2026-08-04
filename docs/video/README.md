@@ -45,7 +45,9 @@ stereo AAC guide track for editor compatibility, probes the result, and writes
 the provenance manifest. It never invents footage for story moments absent from
 the B-roll: those beats use identified, verified production screenshots.
 
-Optional flags: `--source`, `--out`, `--manifest`, `--chrome`.
+Optional flags: `--source`, `--beats`, `--out`, `--manifest`, `--chrome`.
+The clip boundaries are derived from `broll-beats.json`, so a fresh capture can
+run at a different effective screencast rate without silently shifting the edit.
 
 ## B-roll beats captured
 

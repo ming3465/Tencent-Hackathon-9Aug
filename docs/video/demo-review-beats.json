@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "status": "Narration-ready review cut; not the final human-approved submission video.",
+  "outputFile": "docs/video/kampung-sg-demo-review.mp4",
+  "sourceBeatIndex": "docs/video/broll-beats.json",
+  "width": 1280,
+  "height": 720,
+  "framesPerSecond": 30,
+  "durationSeconds": 90,
+  "videoCodec": "h264",
+  "pixelFormat": "yuvj420p",
+  "audio": "Silent stereo AAC guide track. Human voice-over and final sound mix remain required.",
+  "segments": [
+    {
+      "id": "cold-open",
+      "startSecond": 0,
+      "durationSeconds": 5,
+      "section": "KAMPUNG SG · COZY SINGAPORE SANDBOX",
+      "openCaption": "Older adults are the experts—not the patients.",
+      "sourceType": "scripted machine-captured gameplay",
+      "sourceFile": "docs/video/kampung-sg-gameplay-broll.mp4",
+      "sourceStartSecond": 0,
+      "sourceBeat": "title screen"
+    },
+    {
+      "id": "voice-conversation",
+      "startSecond": 5,
+      "durationSeconds": 3.5,
+      "section": "THE FIRST DOOR",
+      "openCaption": "A visual-novel conversation begins at home—with choice, not urgency.",
+      "sourceType": "scripted machine-captured gameplay",
+      "sourceFile": "docs/video/kampung-sg-gameplay-broll.mp4",
+      "sourceStartSecond": 12,
+      "sourceBeat": "first conversation"
+    },
+    {
+      "id": "opening-choice",
+      "startSecond": 8.5,
+      "durationSeconds": 4,
+      "section": "YOUR PACE, YOUR CHOICE",
+      "openCaption": "One calm choice opens the door. The world responds without a timer or punishment.",
+      "sourceType": "scripted machine-captured gameplay",
+      "sourceFile": "docs/video/kampung-sg-gameplay-broll.mp4",
+      "sourceStartSecond": 25.4,
+      "sourceBeat": "player choice - 3 seconds"
+    },
+    {
+      "id": "mr-long",
+      "startSecond": 12.5,
+      "durationSeconds": 7,
+      "section": "CHAPTER 1 · OPEN THE WAY",
+      "openCaption": "Mr. Long names the real obstacle. You listen, then help make access easier.",
+      "sourceType": "verified production screenshot",
+      "sourceFile": "docs/screenshots/19-mr-long-portrait.png"
+    },
+    {
+      "id": "shared-corridor",
+      "startSecond": 19.5,
+      "durationSeconds": 10.5,
+      "section": "A LIVED-IN BLOCK",
+      "openCaption": "Move freely through four flats and a shared corridor. No timer. No failure state.",
+      "sourceType": "scripted machine-captured gameplay",
+      "sourceFile": "docs/video/kampung-sg-gameplay-broll.mp4",
+      "sourceStartSecond": 43,
+      "sourceBeat": "Block 9 corridor"
+    },
+    {
+      "id": "grandma-ros",
+      "startSecond": 30,
+      "durationSeconds": 7,
+      "section": "CHAPTER 2 · A PLACE AT THE TABLE",
+      "openCaption": "Grandma Ros leads the lesson; neighbours bring ingredients, memory, and company.",
+      "sourceType": "verified production screenshot",
+      "sourceFile": "docs/screenshots/06-evening-light.png"
+    },
+    {
+      "id": "ben-and-mr-tan",
+      "startSecond": 37,
+      "durationSeconds": 7,
+      "section": "CHAPTER 3 · HANDS REMEMBER",
+      "openCaption": "Ben sets the pace while the player and Mr. Tan weave together—without pressure.",
+      "sourceType": "verified production screenshot",
+      "sourceFile": "docs/screenshots/07-evening-reflection.png"
+    },
+    {
+      "id": "living-estate",
+      "startSecond": 44,
+      "durationSeconds": 10.7,
+      "section": "A WORLD WORTH WANDERING",
+      "openCaption": "A dense, living HDB estate rewards wandering, noticing, and talking to neighbours.",
+      "sourceType": "scripted machine-captured gameplay",
+      "sourceFile": "docs/video/kampung-sg-gameplay-broll.mp4",
+      "sourceStartSecond": 54.9,
+      "sourceBeat": "estate wide"
+    },
+    {
+      "id": "projection-depth",
+      "startSecond": 54.7,
+      "durationSeconds": 5,
+      "section": "ORIGINAL THREE-QUARTER DEPTH",
+      "openCaption": "Roof planes, side faces, grounded shadows, and recessed doors make landmarks easier to read.",
+      "sourceType": "verified production screenshot",
+      "sourceFile": "docs/screenshots/12-estate-south.png"
+    },
+    {
+      "id": "story-complete",
+      "startSecond": 59.7,
+      "durationSeconds": 6,
+      "section": "THE LAST DOOR",
+      "openCaption": "The story gathers the kampung—then opens into calm free exploration.",
+      "sourceType": "verified production screenshot",
+      "sourceFile": "docs/screenshots/08-day-complete.png"
+    },
+    {
+      "id": "ai-receipts",
+      "startSecond": 65.7,
+      "durationSeconds": 7,
+      "section": "AI—WITH RECEIPTS",
+      "openCaption": "CodeBuddy and three reviewed OpenAI visual workflows are logged. Rejected outputs stay rejected.",
+      "sourceType": "verified judge-deck slide",
+      "sourceFile": "docs/deck/slides/slide-05.png"
+    },
+    {
+      "id": "engineering",
+      "startSecond": 72.7,
+      "durationSeconds": 6,
+      "section": "ENGINEERING THAT SHIPS",
+      "openCaption": "Strict TypeScript, deterministic state, accessibility routes, and no backend.",
+      "sourceType": "verified judge-deck slide",
+      "sourceFile": "docs/deck/slides/slide-06.png"
+    },
+    {
+      "id": "claim-boundaries",
+      "startSecond": 78.7,
+      "durationSeconds": 5,
+      "section": "CLAIMS WITH BOUNDARIES",
+      "openCaption": "We publish what was tested—and clearly name the human evidence still missing.",
+      "sourceType": "verified judge-deck slide",
+      "sourceFile": "docs/deck/slides/slide-07.png"
+    },
+    {
+      "id": "end-slate",
+      "startSecond": 83.7,
+      "durationSeconds": 6.3,
+      "section": "PLAY KAMPUNG SG",
+      "openCaption": "TheTwoGuys · Built in public · Scan the QR code for the live judge path.",
+      "sourceType": "verified judge-deck slide",
+      "sourceFile": "docs/deck/slides/slide-08.png"
+    }
+  ],
+  "claimBoundaries": [
+    "Gameplay clips are scripted machine captures, not a human play session.",
+    "Screenshots and deck slides are verified repository evidence, not live footage.",
+    "This cut is not evidence of a human playtest, real-device test, or screen-reader audit.",
+    "Final voice-over, sound mix, human approval, and submission upload remain external tasks."
+  ]
+}

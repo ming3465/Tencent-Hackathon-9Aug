@@ -2442,3 +2442,78 @@ inspected at 1:1.
 - No copied or generated runtime raster, new dependency, backend, account,
   analytics, personal-data collection, runtime model, network request, timer,
   failure state, energy system, medical claim, or Miora claim was introduced.
+
+## 2026-08-04 — Reproducible 90-Second Demo Review Cut
+
+**Tool:** Codex (GPT-5), working in the video/evidence lane after the exterior
+projection lane stabilized.
+
+**Current-build capture:**
+
+- Regenerated the scripted `?demo=1` gameplay B-roll from the deployed
+  three-quarter-depth source state instead of reusing the earlier flat-façade
+  recording. The result is 1,728 frames / 86.4 s at 20 fps, 1280×720 H.264,
+  6,402,471 bytes, with SHA-256
+  `2e879e8a86108bb46e33a1ee7390bfee55bd9b5b6f40a3ab28cd9377e9fb4317`.
+- `broll-beats.json` records the nine actual screencast beats. Its timings
+  shifted from the first capture because `Page.startScreencast` is
+  acknowledgement-paced, so the final compositor derives every moving clip
+  from named beat labels rather than hard-coded seconds.
+
+**Review-cut compositor and honest edit:**
+
+- Added `scripts/build-demo-video.mjs` and `npm run compose:video`. It validates
+  all source files and source-duration bounds, renders high-contrast open
+  caption cards through one isolated Chrome/CDP session, cuts named B-roll
+  beats with ffmpeg, and probes the result before replacing the target.
+- The first implementation used Chrome's one-shot `--screenshot` mode. That
+  process remained on its first caption for nine minutes on the installed
+  Chrome build; it was stopped by exact PID, the renderer was replaced with
+  the repository's proven remote-debugging path, and the next run completed.
+  The failed path is not presented as successful tooling.
+- The exact 14-beat, 90.0 s edit covers title thesis, Voice dialogue, player
+  choice, Mr. Long, the shared corridor, Grandma Ros, Ben and Mr. Tan, living
+  estate movement, the new roof/side-face/recessed-door projection evidence,
+  free exploration, AI receipts, engineering, claim boundaries, and QR end
+  slate. Missing moving story footage is never fabricated: named verified
+  production screenshots or judge-deck slides are used and identified.
+- `docs/video/demo-review-beats.json` records every start, duration, open
+  caption, source type, source file, named B-roll beat, media property, and
+  claim boundary. `docs/video/README.md`, the rubric scorecard, and submission
+  runbook distinguish the review cut from the final submission.
+
+**Rendered evidence and verification:**
+
+- `kampung-sg-demo-review.mp4` is 4,527,979 bytes, 1280×720 at 30 fps, exactly
+  90.000 s, H.264 with a stereo 48 kHz AAC guide track. `volumedetect`
+  measured both mean and peak at -91.0 dB, consistent with the intentionally
+  silent source. SHA-256 is
+  `bd4558062ca195c6f86c4956c62759b8973b473e77aad3a23909aa2985a1a057`.
+- One midpoint from every beat was extracted into a 14-frame contact sheet and
+  inspected at original resolution. All captions were legible; the dialogue,
+  three chapter frames, current estate, dedicated three-quarter-depth frame,
+  AI/engineering/integrity slides, and QR end slate remained readable with no
+  black frames or harmful crops.
+- The complete repository gate then passed strict TypeScript, 75/75 unit
+  tests, the production build, `npm audit` with 0 vulnerabilities, and 60/60
+  production-browser checks. The gate measured eight façade-depth profiles,
+  seven recesses, two roof styles, 95 obstacles, zero layout issues, and
+  retained keyboard, touch, 360 px, reduced-motion, monsoon, focus, and
+  campaign coverage.
+- `graphify update .` rebuilt the local knowledge graph to 1,135 nodes, 2,044
+  edges, and 60 communities. It retained the known fail-closed node, reported
+  the local settings and two video-timeline JSON files as zero-node inputs,
+  and warned that saved semantic labels trail the changed topology; no LLM
+  relabel was claimed.
+
+**Claim boundary:**
+
+- This is Codex-assisted capture/compositor authoring, a scripted machine
+  recording, deterministic media inspection, and production-browser evidence.
+  It is not a human play session, human narration, human approval, older-adult
+  playtest, real-device test, screen-reader session, 200% zoom pass, Miora run,
+  social post, upload, or completed submission.
+- The checked-in review cut has burned-in open captions and a silent guide
+  track. A human still must record the voice-over, add and verify the sound mix
+  by ear, approve the final export, use the required filename, upload it, and
+  verify the public link while logged out.

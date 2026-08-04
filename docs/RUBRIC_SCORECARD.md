@@ -152,6 +152,8 @@ higher priority than adding more systems.
 
 ## Social Media Bonus - Up to 5 Points
 
+- [x] Reproducible 90-second captioned review cut, indexed current-build
+  gameplay B-roll, AI/engineering/integrity cards, and QR end slate are ready.
 - [ ] Final game link, short video, and approved screenshots are ready.
 - [ ] Post copy accurately describes CodeBuddy and Miora use.
 - [ ] Organizer-required hashtags are included.
@@ -167,5 +169,6 @@ higher priority than adding more systems.
 - [ ] Complete at least one documented human playtest round.
 - [x] Deploy the public build and verify the live title/game assets.
 - [x] Finish and validate the eight-slide PPTX and eight-page PDF.
-- [ ] Record the demo video, publish the social post, and save timestamps.
+- [ ] Add human narration and an ear-checked sound mix to the review cut,
+      approve and publish it, then save the social-post timestamps.
 - [ ] Assemble the correctly named submission backup package.

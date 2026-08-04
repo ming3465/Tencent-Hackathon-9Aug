@@ -103,6 +103,25 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-04 (Codex, video/evidence lane)** — Regenerated the scripted judge
+  B-roll from the new three-quarter-depth build (1,728 frames / 86.4 s /
+  1280×720) and added a deterministic compositor whose moving clips resolve
+  from named `broll-beats.json` entries rather than fragile fixed timestamps.
+  The resulting narration-ready review cut contains 14 open-captioned beats:
+  title, visual-novel dialogue/choice, all three resident chapters, corridor,
+  living estate, dedicated roof/side-face/recessed-door evidence, free
+  exploration, AI receipts, engineering, integrity, and QR end slate. It is
+  exactly 90.000 s at 1280×720/30 fps, H.264 with an intentionally silent
+  stereo AAC guide track (-91.0 dB peak), and has a complete provenance
+  manifest. All 14 midpoint frames were inspected; captions, crops, current
+  façade art, deck evidence, and QR remained readable. The full gate passed
+  strict TypeScript, 75 tests, the 81.69/106.23/1,591.09 kB build, 0
+  vulnerabilities, and 60/60 browser checks. Graphify rebuilt to 1,135 nodes /
+  2,044 edges / 60 communities with the known fail-closed, zero-node-JSON, and
+  stale-label warnings. The review cut is not the final submission video:
+  human voice-over, an ear-checked mix, team approval, required filename,
+  upload, and logged-out link verification remain open, as do playtests, real
+  devices, screen reader, 200% zoom, Miora, and social publishing.
 - **2026-08-04 (Codex, exterior projection lane)** — Replaced the remaining
   flat-card treatment on all eight major exterior structures with one audited
   shallow three-quarter contract: hipped or sawtooth roof planes and seams,
