@@ -103,6 +103,19 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-04 (Codex, release and Todo Tencent handoff)** — Pushed the
+  cast-current game, review media, fail-closed submission tooling, and evidence
+  to `main` at `f565521`. GitHub Pages run `30894019126` completed successfully;
+  direct public probes returned HTTP 200 for full and `?demo=1`, loaded
+  `index-Cyrkh2Rs.js` / `campaignScene-BEnMC8vi.js`, retained the sole visual
+  `>` dialogue cue, and exposed the six resident-art audit fields. Reconciled
+  Todo Tencent to 31 Done / 3 In progress / 5 Not started: added three
+  evidence-backed Done cards for the OpenAI cast study, deployed cast
+  silhouettes, and fail-closed submission/media work; refreshed the final-video
+  card to the current 63.1 s B-roll and 90.000 s review cut while deliberately
+  keeping it In progress. Human narration/mix/approval, CodeBuddy export,
+  public video/social publication, link checks, and organiser submission remain
+  external.
 - **2026-08-04 (Codex packaging + Claude Code media integration)** — Codex
   added the fail-closed review/final submission builder in `f67759d`, including
   the ignored human-approval record, exact filename/media/deck/link/hash checks,

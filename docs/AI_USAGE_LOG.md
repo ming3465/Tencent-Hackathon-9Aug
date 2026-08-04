@@ -2689,3 +2689,42 @@ AI-workflow caption that Codex caught during review.
 - A conflicting uncommitted edit attempted to restore a visible `Continue`
   label. It was rejected because the user explicitly requested the sole `>`
   visual-novel cue; the existing accessible name and 52×52 target remain.
+
+## 2026-08-04 — Cast Release Deployment and Todo Tencent Reconciliation
+
+**Tools:** Codex, GitHub CLI, direct Node `fetch`, and the Notion connector.
+
+**Deployment verification:**
+
+- Pushed the cast-current runtime, media, submission tooling, and evidence to
+  public `main` at commit `f565521`. GitHub Pages run `30894019126` passed its
+  build and deploy jobs.
+- Direct no-cache probes returned HTTP 200 for both the full URL and
+  `?demo=1`. Both resolved `index-Cyrkh2Rs.js` and
+  `campaignScene-BEnMC8vi.js`; the lazy bundle exposed all six resident-art
+  audit fields (`residentCount`, `hairStyleCount`, `outfitCount`,
+  `buildCount`, `accessoryCount`, and `carryingResidentCount`).
+- The served HTML retained a visually sole `>` dialogue cue, its
+  `Continue dialogue` accessible name, and no restored visible Continue label.
+
+**Todo Tencent reconciliation:**
+
+- Read the live database schema and all 36 pre-existing rows before mutating
+  the board. Updated the existing final-video task from its stale 86.4-second
+  note to the current 63.1-second cast B-roll and 90.000-second review cut.
+  The card remains **In progress** because narration, audible mix and ear-check,
+  approvals, CodeBuddy export, public publication, logged-out link checks, and
+  organiser submission are not complete.
+- Added three dated **Done** cards with commit, deployment, verification, and
+  claim-boundary evidence: the curated OpenAI cast-silhouette study; the
+  code-drawn cast refinement/deployment; and the fail-closed submission backup
+  plus review-media refresh.
+- Re-fetched every changed page and queried the final board totals:
+  **31 Done / 3 In progress / 5 Not started**, 39 cards overall.
+
+**Claim boundary:**
+
+- The public game release is complete, but the review MP4 and review ZIP are
+  not submission-ready. No human narration/mix approval, CodeBuddy success or
+  export, Miora run, human playtest, real-device/emulator/accessibility pass,
+  public video/social post, or organiser submission is claimed.
