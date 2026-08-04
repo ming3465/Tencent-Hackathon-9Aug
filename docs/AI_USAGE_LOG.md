@@ -2191,6 +2191,13 @@ the Codex built-in OpenAI image-generation tool.
   carpet courses, deterministic grain/speckle, plaster courses, corner/contact
   shade, side falloff, and warm window shafts. Added deterministic tiny
   wildflowers to the already baked exterior terrain without per-frame work.
+- A concurrent final in-world/UI pass increased room colour separation with
+  warm rugs and saturated sofas, softened the dialogue panel with a restrained
+  glass treatment, and added a subtle world vignette plus nine decorative CSS
+  leaves/light motes. These elements do not own game state, ignore pointer
+  input, and stop animating under reduced motion. Codex rebuilt and repeated
+  the complete journey against the settled combined source before accepting
+  the shared evidence.
 - Visual inspection found that an in-progress 32% gold multiply flattened the
   whole estate to yellow-green. It was corrected to a chapter-progressive
   3–12% glaze so grass, teal, coral, skin tones, labels, and warm windows retain
@@ -2221,14 +2228,16 @@ the Codex built-in OpenAI image-generation tool.
   walker now sidesteps when an axis makes no headway, navigation waits on real
   page conditions, evidence captures wait for the complete authored line, and
   every CDP command has a 30-second fail-closed timeout.
-- The final clean journey measured 9.00 ms title p95, 9.10 ms resident-route
-  p95, 9.20 ms monsoon p95, and 9.20 ms active-movement p95 with 2.96 ms/frame
-  main-thread work. The 4× CPU-throttled sample measured 9.20 ms p95 with
-  9.80 ms/frame work. These are headless Chrome regression signals, not
-  real-device or cross-game benchmarks.
+- The final frozen-source journey, byte-identical to the deployed runtime,
+  measured 9.00 ms title p95, 9.20 ms resident-route p95, 9.20 ms monsoon p95,
+  and 9.10 ms active-movement p95 with 3.19 ms/frame main-thread work. The 4×
+  CPU-throttled sample measured 9.20 ms p95 with 12.00 ms/frame work. These are
+  headless Chrome regression signals, not real-device or cross-game
+  benchmarks.
 - The current production build is 104.71 kB initial JavaScript (31.97 kB gzip)
-  and 1,587.98 kB lazy campaign/Phaser code (372.47 kB gzip). The HTML payload
-  is 78.11 kB (14.22 kB gzip) after removing the retired illustration CSS.
+  and 1,587.98 kB lazy campaign/Phaser code (372.48 kB gzip). The HTML payload
+  is 81.69 kB (14.79 kB gzip) after removing the retired illustration CSS and
+  adding the final lightweight world-atmosphere layer.
 - Codex visually inspected the desktop title, desktop/mobile Voice dialogue,
   nearest-resident marker, room materials, and evening capture. The first
   dialogue capture exposed the focused chevron's button-like circle; it was
@@ -2240,10 +2249,34 @@ the Codex built-in OpenAI image-generation tool.
   rendered eight-page PDF montages. Correcting an accidental 4× deck-capture
   scale reduced the final PPTX/PDF from 20/31 MB to 2.6/2.8 MB without changing
   slide composition.
-- `graphify update .` rebuilt the local graph to 1,061 nodes, 1,935 edges, and
-  58 communities. It retained the known one fail-closed node and reported that
-  56 saved labels trail the current communities with seven hub-based renames;
-  no LLM relabelling is claimed.
+- `graphify update .` rebuilt the local graph to 1,085 nodes, 1,960 edges, and
+  59 communities. It retained the known one fail-closed node, reported one
+  zero-node local settings file, and reported that 58 saved labels trail the
+  current communities with 13 hub-based renames; no LLM relabelling is
+  claimed.
+- GitHub Pages workflow `30886434561` completed successfully for commit
+  `d4ca458`. A concurrent agent wrote a stale commit subject/body saying that
+  the visible Continue label had returned, but it committed the shared tree
+  after Codex restored the requested sole `>` cue. Direct production
+  inspection confirmed HTTP 200, `aria-label="Continue dialogue"` with only
+  `>` visible, the exterior-only atmosphere layer, and the reviewed 333,666
+  byte title WebP at
+  `https://ming3465.github.io/Tencent-Hackathon-9Aug/`.
+- Todo Tencent was re-audited after deployment. Demo moved to Done; authored
+  ambient voice-leading moved only to In progress because its own acceptance
+  criteria still require human speaker/headphone listening. Four evidence
+  cards were added as Done for the OpenAI title panorama, visual-novel
+  chevron, room/portrait/lighting/marker polish, and deployed release. Final
+  board truth is 26 Done / 3 In progress / 5 Not started. Manual
+  accessibility, real-device and older-hardware checks, consented playtests,
+  submission, and broader Miora/AI-polish work remain open.
+- The rubric release blockers were reconciled to current evidence: public
+  deployment and the validated PPTX/PDF are complete, while video/social
+  publishing, the named backup package, Miora-specific evidence, and human
+  testing remain explicitly open.
+- A concurrent untracked `scripts/capture-gameplay.mjs` draft was preserved
+  locally but not staged or deployed: its labelled estate beats do not yet
+  navigate out of Y's flat. No B-roll or finished-video claim is made.
 
 **Claim boundary:**
 
@@ -2258,6 +2291,11 @@ the Codex built-in OpenAI image-generation tool.
   and interactions remain original code-drawn systems. No backend, account,
   analytics, personal-data collection, runtime LLM, timer, failure state,
   energy system, copied game asset, or medical claim was introduced.
+- The user's cozy three-quarter reference informed only future-facing visual
+  direction: taller façades, roof planes, contact shadows, foreground
+  occlusion, and dense clear prop lanes. No sprite, layout, text, or trademark
+  from that reference was copied, and this pass does not claim a full
+  isometric projection rewrite.
 
 ## 2026-08-04 — In-World Art Lane: Interiors, Markers, and a Red-Gate Fix
 
@@ -2324,3 +2362,5 @@ inspected at 1:1.
 - No copied art, shipped raster, backend, account, analytics, personal-data
   collection, runtime LLM, timer, failure state, energy system, or medical
   claim was introduced by this session.
+- **2026-08-04** (Antigravity) — Applied Visual Novel UI layer polish. Added frosted glass `backdrop-filter` and warmer radial background to the main dialogue card. Refined portrait entrance animations with a smoother cubic-bezier slide-in curve and bottom-center transform origin. Re-applied text-shadow to dialogue text and enhanced hover interactions on choice buttons. Restored the title screen image overlay `title-art` which had been temporarily lost during CSS restoration. The entire journey was verified to pass 75 tests, 60/60 browser checks, and 0 vulnerabilities without breaking any smoke expectations.
+- **2026-08-04** (Antigravity) — Lighting & Atmosphere Enhancement continuation: Added a subtle CSS vignette overlay to the `#world-shell` using a radial gradient to darken the edges and draw focus to the player. Added 9 animated floating ambient particles (dust motes, pollen, leaves) to the game world via CSS that float continuously, enhancing the "golden hour" vibe without impacting Phaser's canvas rendering or performance budgets. Handled accessibility properly by tying the particle animation to `prefers-reduced-motion: reduce`. The implementation ran smoothly, maintaining the p95 ≤28ms limit for frame rendering and passing all 60 smoke checks.

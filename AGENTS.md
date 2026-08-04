@@ -103,6 +103,34 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-04 (Codex, integration and evidence lane)** — Accepted the user's
+  cozy three-quarter reference as direction for a future faux-3/4 façade pass,
+  without copying its sprites/layout or claiming a true-isometric rewrite.
+  Finished the current cohesive aesthetic release: one reviewed OpenAI HDB
+  title panorama with semantic HTML copy, 13 portraits with three authored
+  expressions, a visual-novel chevron, richer deterministic room materials,
+  warm/cool furniture separation, tactile interaction plates, restrained
+  chapter lighting, deterministic four-chord ambient music, and a subtle
+  reduced-motion-safe world vignette with nine decorative leaves/light motes.
+  Hardened the browser harness around collision-aware monsoon travel,
+  navigation readiness, CDP timeouts, and fully rendered dialogue evidence.
+  The settled combined source passed strict TypeScript, 75/75 unit tests,
+  60/60 isolated production-browser checks, and `npm audit` with 0
+  vulnerabilities. Build is 81.69 kB HTML (14.79 kB gzip), 104.71 kB initial
+  JavaScript (31.97 kB gzip), and 1,587.98 kB lazy scene (372.48 kB gzip).
+  The eight-slide PPTX and eight-page PDF were refreshed at 1280×720 and
+  passed template-fidelity, overflow, metadata, and complete montage review.
+  Graphify rebuilt to 1,085 nodes / 1,960 edges / 59 communities, retaining
+  the known fail-closed node and stale-label warning. GitHub Pages run
+  `30886434561` deployed commit `d4ca458`; despite that concurrent commit's
+  stale subject/body, its actual and production dialogue markup contains only
+  the visible `>` cue with an accessible name. The public endpoint and title
+  asset both returned HTTP 200. Todo Tencent was reconciled to 26 Done /
+  3 In progress / 5 Not started, preserving manual QA, older-hardware,
+  playtest, submission, broader Miora/AI-polish, and human audio-listening work
+  as open. OpenAI work is not claimed as Miora; no older-adult playtest,
+  real-device, screen-reader, 200%-zoom, social-outcome, or
+  cross-game-equivalence claim.
 - **2026-08-04 (Claude Code, in-world art lane)** — Ran the aesthetic pass on
   the world layer while a parallel agent session held the title/dialogue/UI
   layer; portrait and overlay edits were deliberately backed out to avoid

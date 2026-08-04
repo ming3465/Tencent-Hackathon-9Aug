@@ -31,7 +31,7 @@ const chrome = spawn(
     "--disable-gpu",
     "--hide-scrollbars",
     "--window-size=1280,720",
-    "--force-device-scale-factor=2",
+    "--force-device-scale-factor=1",
     "--user-data-dir=/tmp/kampung-deck-profile",
     "about:blank",
   ],
@@ -85,7 +85,7 @@ try {
   await page("Emulation.setDeviceMetricsOverride", {
     width: 1280,
     height: 720,
-    deviceScaleFactor: 2,
+    deviceScaleFactor: 1,
     mobile: false,
   });
   await page("Page.navigate", { url: URL_ });
@@ -108,7 +108,7 @@ try {
     const { data } = await page("Page.captureScreenshot", {
       format: "png",
       captureBeyondViewport: true,
-      clip: { ...box, scale: 2 },
+      clip: { ...box, scale: 1 },
     });
     const name = `${OUT}/slide-${String(index + 1).padStart(2, "0")}.png`;
     await writeFile(name, Buffer.from(data, "base64"));

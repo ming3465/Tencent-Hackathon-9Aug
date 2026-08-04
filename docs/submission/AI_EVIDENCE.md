@@ -46,7 +46,7 @@ later” never closes a route. No line is generated at runtime.
 | --- | --- |
 | Strict TypeScript | `npm run typecheck` passes |
 | Unit tests | 75/75: 27 campaign, 31 optional matching, 17 audio |
-| Production build | 104.71 kB initial JS (31.97 kB gzip); 1,587.65 kB lazy campaign scene (372.36 kB gzip) |
+| Production build | 104.71 kB initial JS (31.97 kB gzip); 1,587.98 kB lazy campaign scene (372.48 kB gzip) |
 | Dependency audit | 0 known vulnerabilities |
 | Production browser | 60/60 checks; complete full and demo campaigns in headless Chrome |
 

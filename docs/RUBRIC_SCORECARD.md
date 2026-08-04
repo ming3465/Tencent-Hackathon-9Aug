@@ -165,5 +165,7 @@ higher priority than adding more systems.
 - [ ] Complete the Miora style key and asset integration.
 - [ ] Complete real-device and human accessibility checks.
 - [ ] Complete at least one documented human playtest round.
-- [ ] Deploy the public build after explicit cloud approval.
-- [ ] Finish the deck, video, filenames, social post, and backup package.
+- [x] Deploy the public build and verify the live title/game assets.
+- [x] Finish and validate the eight-slide PPTX and eight-page PDF.
+- [ ] Record the demo video, publish the social post, and save timestamps.
+- [ ] Assemble the correctly named submission backup package.
