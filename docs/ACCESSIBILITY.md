@@ -38,9 +38,18 @@ product requirements, not optional polish.
   region.
 - Expose complete dialogue lines to assistive technology while the visual
   typewriter effect runs.
+- Use a sole visible `>` chevron to advance authored lines rather than a
+  labelled Continue bar. Its transparent 52×52 button retains the accessible
+  name “Continue dialogue,” a short high-contrast keyboard-focus underline,
+  and the existing touch/Space activation path.
 - Keep code-drawn dialogue portraits decorative with `aria-hidden`; the
   speaker heading, complete live-region line, progress text, choices, and
-  controls carry all conversational meaning.
+  controls carry all conversational meaning. Neutral, thoughtful, and warm
+  portrait expressions may reinforce tone, but never carry dialogue state by
+  themselves.
+- Keep the generated title panorama's HDB, gardening, and noticeboard scene
+  described by concise alternative text. Keep the title, tagline, controls,
+  and caption as semantic HTML rather than text baked into the image.
 - Use respectful non-medical language; never rank performance.
 - Keep place names, prompts, status pills, and meter changes understandable
   without colour or animation.
@@ -60,7 +69,9 @@ product requirements, not optional polish.
   disabled. During the Chapter 2 monsoon, falling rain and ambient
   insects are hidden and puddle rings hold still while wet surfaces, overcast
   colour, shelter light, gathered residents, sheltered cats, and stored
-  activity tools/laundry preserve the story state.
+  activity tools/laundry preserve the story state. Title-image drift,
+  decorative particles, screen fades, and portrait-expression transitions
+  also stop.
 - Preserve responsive world legibility: the exterior uses 1.32× wide-desktop,
   1.22× tablet, and 1× mobile framing; responsive resize updates both Phaser
   scale and the active camera rather than relying on CSS stretching.
@@ -80,7 +91,8 @@ product requirements, not optional polish.
 - Preserve code-drawn entrances with text/unit-number cues rather than relying
   on colour.
 - Keep the visual-novel card within the viewport at desktop and 360 px, with a
-  large portrait that never displaces the readable script or 48 px controls.
+  large portrait that never displaces the readable script, the chevron, or
+  48 px controls.
 
 ## Canvas limitation and equivalent access
 
@@ -151,7 +163,11 @@ It also verifies a 238×325 px desktop portrait in a 940 px card, checks a named
 NPC's deterministic portrait traits, and proves the responsive 88×120 px
 portrait, complete text, and controls remain inside the 360 px viewport. The
 portrait itself remains hidden from assistive technology; no dialogue
-information depends on its colours, motif, age lines, or accessory.
+information depends on its colours, motif, age lines, accessory, or expression.
+The same dialogue journey verifies a neutral-to-thoughtful expression change
+without increasing the 60-check headline. The title check confirms the
+reviewed 1668×943 WebP loads and that the page has no desktop overflow; the
+existing 360 px capture and overflow assertion remain the mobile evidence.
 The same run toggles Sound, confirms focus returns to the world, and proves
 movement resumes. It verifies the main-character triangle follows the player
 above the sprite, then exercises full-screen entry, full-viewport geometry,

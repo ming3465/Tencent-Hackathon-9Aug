@@ -23,12 +23,12 @@ reproducible test.
   community garden, and shared noticeboard.
 - [x] Connects activities to practical Singapore conditions such as shade,
   rain, social space, and intergenerational neighbourhood life.
-- [x] Human-reviewed OpenAI neighbourhood and estate-density studies are
-  contemporary and grounded; their community-activity, clustered-prop,
-  ground-detail, and ambient-life ideas have verified in-game results.
+- [x] Three human-reviewed OpenAI visual workflows are contemporary and
+  grounded: two studies have verified code-drawn activity/density results, and
+  the reviewed HDB-estate panorama is integrated into the playable title.
 - [ ] Final Miora assets look contemporary and grounded rather than like a
   tourist poster.
-- [ ] Singapore ageing context and one-in-four-by-2030 source are cited in the
+- [x] Singapore ageing context and one-in-four-by-2030 source are cited in the
   final deck.
 
 ### Depth and Public Engagement
@@ -40,7 +40,7 @@ reproducible test.
 - [x] Keeps free exploration available after The Last Door.
 - [ ] Human playtesting shows whether players understand resident contribution.
 - [ ] At least one consented older-adult perspective is included if feasible.
-- [ ] Impact limitations are stated honestly in the deck.
+- [x] Impact limitations are stated honestly in the deck.
 
 ### Current Risk
 
@@ -75,16 +75,19 @@ evidence.
 
 ### Cross-tool Visual Evidence
 
-- [x] Two real OpenAI image-generation runs have exact prompts, labelled
-  project references, saved outputs, generation artifacts, and
+- [x] Three real OpenAI image-generation workflows have exact prompts, labelled
+  project references, preserved accepted outputs and artifact IDs, and
   acceptance/rejection notes.
 - [x] Human review rejected direct runtime use and translated selected ideas
   into four deterministic activity vignettes, six story-cluster forms, 54
   baked ground accents, and eight ambient insects.
+- [x] The title workflow records a rejected pseudo-writing pass, constrained
+  cleanup, source/runtime hashes, actual-scale review, WebP optimization, and
+  verified playable integration with semantic HTML copy.
 - [x] Production smoke proves all four vignettes and eight insects animate,
   respect reduced motion, store during the monsoon, and coexist with 12
   collision-aware cluster placements on open campaign routes.
-- [x] Both OpenAI results are explicitly not relabelled as Miora.
+- [x] All three OpenAI workflows are explicitly not relabelled as Miora.
 
 ### AI Attention to Detail
 
@@ -93,17 +96,17 @@ evidence.
 - [x] Domain logic is deterministic and independently tested.
 - [x] Browser automation verifies keyboard, touch, progression, focus, and end
   flow.
-- [ ] Final deck clearly separates CodeBuddy code work, Miora visual work, and
-  human design decisions.
-- [ ] No WorkBuddy use is claimed for the Game Track build.
+- [x] Final deck separates CodeBuddy code work, OpenAI visual work, the absence
+  of Miora output, and human review decisions.
+- [x] No WorkBuddy use is claimed for the Game Track build.
 
 ### Current Risk
 
 This remains the largest scoring risk. CodeBuddy credits are exhausted and no
-Miora asset has been generated yet. The two OpenAI studies → human review →
-verified activity/density translations provide strong visual AI evidence, but
-they do not replace the planned second CodeBuddy task or Miora-specific
-before-and-after pipeline.
+Miora asset has been generated yet. Two OpenAI studies → human review →
+verified code-drawn translations, plus the third reject/edit/optimize →
+playable-title pipeline, provide strong visual AI evidence. They do not replace
+the planned second CodeBuddy task or Miora-specific before-and-after pipeline.
 
 ## Project Quality - 30 Points
 
@@ -125,7 +128,7 @@ before-and-after pipeline.
 - [x] Dependency audit has zero known vulnerabilities.
 - [x] Phaser is lazy-loaded after the title screen.
 - [x] No backend or network dependency is required to play.
-- [ ] The Phaser bundle-size warning is accepted or reduced with documented
+- [x] The Phaser bundle-size warning is accepted or reduced with documented
   reasoning.
 
 ### Accessibility and Appeal
@@ -142,9 +145,10 @@ before-and-after pipeline.
 
 ### Current Risk
 
-The complete campaign is demo-ready and has a human-reviewed AI visual-
-direction pass. Miora-specific production art, real-device performance, and
-human accessibility checks remain higher priority than adding more systems.
+The complete campaign is demo-ready, has two human-curated visual-direction
+translations, and now ships one reviewed generated title asset. Miora-specific
+production art, real-device performance, and human accessibility checks remain
+higher priority than adding more systems.
 
 ## Social Media Bonus - Up to 5 Points
 

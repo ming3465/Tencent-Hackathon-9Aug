@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   AUDIO_STORAGE_KEY,
+  DAY_AMBIENT_PROGRESSION,
   DEFAULT_AUDIO_SETTINGS,
+  EVENING_AMBIENT_PROGRESSION,
   FOOTSTEP_PROFILES,
   categoryGain,
   clampVolume,
@@ -90,6 +92,24 @@ describe("categoryGain", () => {
     expect(new Set(
       Object.values(FOOTSTEP_PROFILES).map((profile) => profile.frequency),
     ).size).toBe(3);
+    for (const progression of [
+      DAY_AMBIENT_PROGRESSION,
+      EVENING_AMBIENT_PROGRESSION,
+    ]) {
+      expect(progression).toHaveLength(4);
+      progression.forEach((chord, index) => {
+        const next = progression[(index + 1) % progression.length]!;
+        expect(chord.voices).toHaveLength(3);
+        chord.voices.forEach((frequency, voice) => {
+          const semitones = 12 * Math.abs(
+            Math.log2(next.voices[voice]! / frequency),
+          );
+          expect(semitones).toBeLessThanOrEqual(5.01);
+        });
+        const leadSemitones = 12 * Math.abs(Math.log2(next.lead / chord.lead));
+        expect(leadSemitones).toBeLessThanOrEqual(5.01);
+      });
+    }
   });
 
   it("routes interface sounds through the effects volume", () => {

@@ -200,8 +200,10 @@ export interface CampaignGameOptions {
 }
 
 interface MarkerView {
+  glow: Phaser.GameObjects.Arc;
   ring: Phaser.GameObjects.Arc;
   badge: Phaser.GameObjects.Text;
+  plate: Phaser.GameObjects.Graphics;
   label: Phaser.GameObjects.Text;
   approachOnly: boolean;
 }
@@ -353,6 +355,7 @@ export interface CampaignMotionSnapshot {
   interactionCount: number;
   flavourInteractionCount: number;
   visibleFlavourMarkerCount: number;
+  visibleMarkerPlateCount: number;
   visibleStepPuffs: number;
   nearbyInteractionId: string | null;
   nearbyInteractionPoint: SpawnPoint | null;
@@ -485,7 +488,9 @@ abstract class WalkableScene extends Phaser.Scene {
       .fillStyle(GOLD)
       .fillTriangle(-7, -56, 7, -56, 0, -45)
       .setPosition(spawn.x, spawn.y)
-      .setDepth(100_300);
+      // Above every world object, but under interaction markers and nameplates
+      // so the guide never sits on top of the name you are walking towards.
+      .setDepth(100_050);
     this.player.setCollideWorldBounds(true);
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     body.setSize(22, 18).setOffset(9, 35);
@@ -701,6 +706,9 @@ abstract class WalkableScene extends Phaser.Scene {
       ).length,
       visibleFlavourMarkerCount: [...this.markers.values()].filter(
         (marker) => marker.approachOnly && marker.ring.alpha > 0,
+      ).length,
+      visibleMarkerPlateCount: [...this.markers.values()].filter(
+        (marker) => marker.plate.visible,
       ).length,
       visibleStepPuffs: this.stepPuffs.filter(({ dust }) => dust.visible).length,
       nearbyInteractionId: this.nearbyInteraction?.id ?? null,
@@ -1018,9 +1026,11 @@ abstract class WalkableScene extends Phaser.Scene {
     const marker = this.markers.get(interaction.id);
     if (!marker) return;
     const markerY = y - 96;
+    marker.glow.setPosition(x, markerY);
     marker.ring.setPosition(x, markerY);
     marker.badge.setPosition(x, markerY);
-    marker.label.setPosition(x, markerY + 24);
+    marker.plate.setPosition(x, markerY + 21);
+    marker.label.setPosition(x, markerY + 27);
   }
 
   protected restoreNpcHomes(): void {
@@ -1222,6 +1232,10 @@ abstract class WalkableScene extends Phaser.Scene {
     for (const interaction of this.interactions) {
       const approachOnly = interaction.kind === "flavour";
       const markerY = interaction.y - (interaction.kind === "npc" ? 96 : 70);
+      const glow = this.add
+        .circle(interaction.x, markerY, 24, GOLD, 0.2)
+        .setAlpha(0)
+        .setDepth(100_099);
       const ring = this.add
         .circle(interaction.x, markerY, 15, GOLD, 0.96)
         .setStrokeStyle(3, INK)
@@ -1244,20 +1258,50 @@ abstract class WalkableScene extends Phaser.Scene {
         .setAlpha(approachOnly ? 0 : 0.65)
         .setDepth(100_101);
       const label = this.add
-        .text(interaction.x, markerY + 24, interaction.shortLabel, {
+        .text(interaction.x, markerY + 27, interaction.shortLabel, {
           color: "#173f4f",
-          backgroundColor: "#fff6dcee",
           fontFamily: "system-ui, sans-serif",
           fontSize: "15px",
           fontStyle: "bold",
-          padding: { x: 5, y: 3 },
         })
         .setOrigin(0.5, 0)
         .setVisible(false)
         .setDepth(100_102);
+      // Drawn with Graphics rather than a nine-slice: NineSlice is WebGL-only
+      // and this build falls back to Canvas2D on machines without GPU access,
+      // where the plate would silently disappear behind the name.
+      const plateWidth = label.width + 24;
+      const plateHeight = label.height + 12;
+      const plate = this.add
+        .graphics()
+        .fillStyle(NIGHT, 0.28)
+        .fillRoundedRect(-plateWidth / 2 + 2, 4, plateWidth, plateHeight, 9)
+        .fillStyle(INK, 1)
+        .fillRoundedRect(-plateWidth / 2, 0, plateWidth, plateHeight, 9)
+        .fillStyle(GOLD, 1)
+        .fillRoundedRect(
+          -plateWidth / 2 + 3,
+          3,
+          plateWidth - 6,
+          plateHeight - 5,
+          7,
+        )
+        .fillStyle(CREAM, 1)
+        .fillRoundedRect(
+          -plateWidth / 2 + 3,
+          3,
+          plateWidth - 6,
+          plateHeight - 9,
+          7,
+        )
+        .setPosition(interaction.x, markerY + 21)
+        .setVisible(false)
+        .setDepth(100_101);
       this.markers.set(interaction.id, {
+        glow,
         ring,
         badge,
+        plate,
         label,
         approachOnly,
       });
@@ -1286,10 +1330,12 @@ abstract class WalkableScene extends Phaser.Scene {
       const active = id === nearest?.id;
       const inactiveRingAlpha = marker.approachOnly ? 0 : 0.56;
       const inactiveBadgeAlpha = marker.approachOnly ? 0 : 0.65;
+      marker.glow.setAlpha(active ? 1 : 0);
       marker.ring
         .setScale(active ? 1.12 : 0.75)
         .setAlpha(active ? 1 : inactiveRingAlpha);
       marker.badge.setAlpha(active ? 1 : inactiveBadgeAlpha);
+      marker.plate.setVisible(active);
       marker.label.setVisible(active);
     }
   }
@@ -2218,17 +2264,19 @@ export class EstateScene extends WalkableScene {
     this.consequences = this.add.container(0, 0, objects);
     this.applyMonsoonState(state);
     this.arrangeResidentsForState(state);
-    const warmth = this.monsoonActive
+    const warmthAlpha = this.monsoonActive
       ? 0
-      : Math.min(0.18, state.completedChapters.length * 0.036);
+      // A restrained golden-hour glaze grows with the story without turning
+      // teal, coral, skin tones, and grass into one uniform yellow wash.
+      : Math.min(0.12, state.completedChapters.length * 0.03);
     if (!this.eveningLight) {
       this.eveningLight = this.add
-        .rectangle(0, 0, ESTATE_WIDTH, ESTATE_HEIGHT, 0xffa95e, 1)
+        .rectangle(0, 0, ESTATE_WIDTH, ESTATE_HEIGHT, 0xffc878, 1)
         .setOrigin(0)
         .setBlendMode(Phaser.BlendModes.MULTIPLY)
         .setDepth(99_000);
     }
-    this.eveningLight.setAlpha(warmth);
+    this.eveningLight.setAlpha(warmthAlpha);
   }
 
   private arrangeResidentsForState(state: CampaignStateV1): void {
@@ -3799,8 +3847,36 @@ export class InteriorScene extends WalkableScene {
   ): Phaser.GameObjects.Graphics {
     const left = Math.round(x - width / 2);
     const top = Math.round(bottom - height);
+    // Contact shadow on the floor. Without it large furniture reads as a flat
+    // sticker sitting on the room rather than an object standing in it.
+    this.add
+      .graphics()
+      .fillStyle(NIGHT, 0.17)
+      .fillEllipse(
+        x,
+        bottom + 4,
+        width * 0.97,
+        Math.max(11, Math.round(height * 0.17)),
+      )
+      .setDepth(depthFor(bottom, 0));
     const graphics = this.add.graphics().setDepth(depthFor(bottom, 2));
     drawPixelBlock(graphics, left, top, width, height, fill, 4);
+    // Form shading proportional to the object. The fixed 4 px bands inside
+    // drawPixelBlock disappear on anything sofa-sized.
+    const band = Math.max(6, Math.round(height * 0.16));
+    graphics
+      .fillStyle(lightenColour(fill, 0.17), 0.5)
+      .fillRect(left, top, width, band)
+      .fillStyle(darkenColour(fill, 0.2), 0.45)
+      .fillRect(left, bottom - band, width, band)
+      .fillStyle(darkenColour(fill, 0.14), 0.34)
+      .fillRect(left + width - band, top, band, height);
+    if (width >= 190 && height >= 60) {
+      // Panel seam so wide pieces read as cushions or doors, not one slab.
+      graphics
+        .fillStyle(darkenColour(fill, 0.24), 0.5)
+        .fillRect(left + Math.round(width / 2) - 1, top + band, 2, height - band * 2);
+    }
     if (collides) {
       const collisionHeight = Math.max(18, Math.round(height * 0.52));
       this.addObstacle(
@@ -3830,8 +3906,31 @@ export class InteriorScene extends WalkableScene {
       .fillRect(left + 3, top + 3, width - 6, height - 6)
       .fillStyle(lightenColour(fill, 0.22))
       .fillRect(left + 12, top + 12, width - 24, 3)
-      .fillRect(left + 12, top + height - 15, width - 24, 3)
-      .fillStyle(darkenColour(fill, 0.12), 0.55);
+      .fillRect(left + 12, top + height - 15, width - 24, 3);
+    // Woven cross-hatch. A large flat rectangle of one colour is the fastest
+    // way to make a room look unfinished, so the pile gets a weave.
+    for (let warp = left + 8; warp < left + width - 8; warp += 9) {
+      graphics
+        .fillStyle(darkenColour(fill, 0.09), 0.34)
+        .fillRect(warp, top + 6, 3, height - 12);
+    }
+    for (let weft = top + 8; weft < top + height - 8; weft += 9) {
+      graphics
+        .fillStyle(lightenColour(fill, 0.13), 0.28)
+        .fillRect(left + 6, weft, width - 12, 3);
+    }
+    // Diamond motif down the centre, the way a kampung floor mat is banded.
+    const midY = top + Math.round(height / 2);
+    for (let diamond = left + 46; diamond < left + width - 46; diamond += 74) {
+      for (let step = 0; step < 5; step += 1) {
+        const span = 4 + step * 5;
+        graphics
+          .fillStyle(lightenColour(fill, 0.3), 0.5)
+          .fillRect(diamond - span / 2, midY - 12 + step * 3, span, 3)
+          .fillRect(diamond - span / 2, midY + 9 - step * 3, span, 3);
+      }
+    }
+    graphics.fillStyle(darkenColour(fill, 0.12), 0.55);
     for (let stripe = top + 28; stripe < top + height - 24; stripe += 36) {
       graphics.fillRect(left + 18, stripe, width - 36, 2);
     }

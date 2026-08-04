@@ -469,6 +469,20 @@ try {
     if (!acted) {
       throw new Error(`Could not open journal item "${section}" / "${title}"`);
     }
+    if (section === "Places") {
+      const deadline = Date.now() + 1400;
+      let renderedName = "";
+      do {
+        renderedName = await page.eval(
+          `document.getElementById("area-name").textContent.trim()`
+        );
+        if (renderedName.toLowerCase() === title.toLowerCase()) return;
+        await sleep(80);
+      } while (Date.now() < deadline);
+      throw new Error(
+        `Expected ${title} after Journal travel, rendered ${renderedName}`
+      );
+    }
     await sleep(440);
   };
 
@@ -540,6 +554,7 @@ try {
           const portraitRect = portrait?.getBoundingClientRect();
           return {
             id: svg?.dataset.portraitId ?? null,
+            mood: svg?.dataset.mood ?? null,
             cardWidth: cardRect?.width ?? 0,
             width: portraitRect?.width ?? 0,
             height: portraitRect?.height ?? 0,
@@ -558,7 +573,8 @@ try {
           `${portraitEvidence.desktop.height.toFixed(0)}px; ` +
           `card=${portraitEvidence.desktop.cardWidth.toFixed(0)}px; ` +
           `details=${portraitEvidence.desktop.detailCount}; ` +
-          `id=${portraitEvidence.desktop.id}`
+          `id=${portraitEvidence.desktop.id}; ` +
+          `mood=${portraitEvidence.desktop.mood}`
       );
       await page.shot(`${SHOT_DIR}/04-dialogue.png`);
     }
@@ -567,6 +583,15 @@ try {
       "Dialogue exposes a whole accessible line and a code-drawn portrait",
       firstLine.length > 20
         && (await page.eval(`!!document.querySelector("#dialog-portrait svg")`))
+        && (await page.eval(`
+          (() => {
+            const button = document.getElementById("btn-dialog-advance");
+            return button?.textContent.trim() === ">"
+              && button.getAttribute("aria-label") === "Continue dialogue"
+              && button.getBoundingClientRect().width >= 48
+              && button.getBoundingClientRect().height >= 48;
+          })()
+        `))
         && (
           !testPhysicalControls
           || (
@@ -577,7 +602,7 @@ try {
             && portraitEvidence.desktop?.detailCount >= 25
             && portraitEvidence.desktop?.insideViewport
           )
-        ),
+      ),
       firstLine.slice(0, 70)
     );
     check(
@@ -585,7 +610,21 @@ try {
       (await page.eval(`document.querySelectorAll("#dialog-choices .choice-button").length`)) === 0
     );
     const clicks = await readThroughDialogue();
-    check("Story lines advance one at a time", clicks >= 3, `advanced ${clicks} times`);
+    const choiceMood = await page.eval(
+      `document.querySelector("#dialog-portrait svg")?.dataset.mood ?? null`
+    );
+    check(
+      "Story lines advance one at a time with portrait expression changes",
+      clicks >= 3
+        && (
+          !testPhysicalControls
+          || (
+            portraitEvidence.desktop?.mood === "neutral"
+            && choiceMood === "thoughtful"
+          )
+        ),
+      `advanced ${clicks} times; mood=${portraitEvidence.desktop?.mood}->${choiceMood}`
+    );
     check(
       "The prologue reveals one non-punitive choice",
       (await page.eval(`document.querySelectorAll("#dialog-choices .choice-button").length`)) === 1
@@ -811,6 +850,10 @@ try {
         visibleFlavourMarkers:
           window.__kampungSmoke?.getMotionSnapshot?.()
             .visibleFlavourMarkerCount
+          ?? null,
+        visibleMarkerPlates:
+          window.__kampungSmoke?.getMotionSnapshot?.()
+            .visibleMarkerPlateCount
           ?? null,
       }))()
     `);
@@ -1155,6 +1198,7 @@ try {
         detailPrompt.nearbyId === "estate-shared-bicycles"
         && initial.visibleFlavourMarkerCount === 0
         && detailPrompt.visibleFlavourMarkers === 1
+        && detailPrompt.visibleMarkerPlates === 1
         && /shared bicycles/i.test(detailPrompt.text)
         && detailPrompt.touchLabel === "Look"
         && detailDialogue.open
@@ -1526,13 +1570,28 @@ try {
   await page.eval(`localStorage.clear(); location.reload()`);
   await sleep(1500);
 
+  const titleScreenEvidence = await page.eval(`
+    (() => {
+      const art = document.querySelector(".title-art");
+      return {
+        title: document.title.includes("Kampung SG"),
+        noOverflow: document.documentElement.scrollWidth <= window.innerWidth,
+        artLoaded:
+          art instanceof HTMLImageElement
+          && art.complete
+          && art.naturalWidth === 1668
+          && art.naturalHeight === 943,
+        artFormat: art?.currentSrc?.endsWith(".webp") ?? false,
+      };
+    })()
+  `);
   check(
-    "Title screen renders without desktop overflow",
-    await page.eval(`
-      document.title.includes("Kampung SG")
-      && document.documentElement.scrollWidth <= window.innerWidth
-    `),
-    `scrollWidth=${await page.eval(`document.documentElement.scrollWidth`)}`
+    "Title screen renders its reviewed art without desktop overflow",
+    titleScreenEvidence.title
+      && titleScreenEvidence.noOverflow
+      && titleScreenEvidence.artLoaded
+      && titleScreenEvidence.artFormat,
+    JSON.stringify(titleScreenEvidence)
   );
   check(
     "KampungMind is presented as a private offline engine",

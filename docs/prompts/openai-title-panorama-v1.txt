@@ -1,0 +1,69 @@
+# OpenAI Title Panorama — Prompt and Human Review
+
+## Input references
+
+1. `docs/screenshots/10-living-estate.png` — current playable estate, used for
+   deep-teal outline language, simplified geometry, tropical planting,
+   sheltered links, bicycles, void-deck details, and palette.
+2. `docs/art/key-art.jpeg` — existing project key art, used for HDB
+   authenticity, golden-hour atmosphere, intergenerational dignity, and richer
+   hand-painted texture.
+
+Both files were references for a new composition, not edit targets.
+
+## Generation prompt
+
+```text
+Use case: stylized-concept
+Asset type: production title-screen panorama for Kampung SG, shown inside the right-hand hero artwork frame
+Primary request: Create a polished original cozy 2D game illustration of a contemporary Singapore HDB estate that visually bridges the project's top-down pixel-inspired gameplay and its warm storybook key art.
+Input images: Image 1 is the current playable estate and should guide the deep-teal outline language, simplified readable geometry, tropical planting, sheltered links, bicycles, void-deck details, and palette. Image 2 is the project key art and should guide HDB authenticity, golden-hour atmosphere, intergenerational dignity, and richer hand-painted texture. Do not copy either composition verbatim.
+Scene/backdrop: a lived-in HDB estate at golden hour with a void deck, covered walkway, community garden, noticeboard, rain trees, benches, bicycles, laundry, and warm windows.
+Subject: older residents are visibly active contributors—one tending the garden and one organizing the noticeboard—while a younger neighbour approaches as a collaborator. Confident, dignified body language; contemporary Singapore clothing; varied age, build, and skin tone.
+Style/medium: premium 2D storybook game illustration with pixel-inspired stepped edges, simplified shapes readable at small scale, subtle tactile painted texture, and consistent deep-teal outlines; original Kampung SG visual identity, not an imitation of any existing game.
+Composition/framing: wide 4:3-ish establishing composition designed to crop responsively; clear focal cluster in the lower-middle; HDB and rain-tree canopy frame the scene; keep all important faces and actions away from extreme edges.
+Lighting/mood: warm upper-left golden-hour light, long soft directional shadows, welcoming and quietly alive.
+Color palette: deep teal #173F4F, warm cream #FFF6DC, coral #D96756, golden highlight #F2B84B, community teal #287271, garden green #5B8C5A, soft purple #775B91, concrete sand #EAD9B7.
+Constraints: contemporary Singapore, culturally grounded, older adults as experts and organizers; no embedded text, signage lettering, numbers, UI, logo, watermark, medical imagery, frailty stereotype, tourist-poster cliché, fantasy farm elements, copied game assets, photorealism, pseudo-writing, or extra limbs.
+```
+
+## First output — rejected for production
+
+- Built-in OpenAI image-generation artifact:
+  `call_lZ0RYqzisrGEG4wbjBSfspRZ.png`.
+- The composition, architecture, garden activity, noticeboard organization,
+  lighting, silhouettes, and responsive focal cluster were accepted.
+- The noticeboard contained letter-like pseudo-writing, so the output was not
+  copied into the repository or shipped.
+
+## Constrained cleanup prompt
+
+```text
+Use case: precise-object-edit
+Asset type: production title-screen panorama cleanup
+Input images: Image 1 is the edit target.
+Primary request: Change only the contents pinned inside the central noticeboard. Replace every paper containing letter-like or pseudo-written marks with simple clean colored cards and unmistakable non-text pictograms such as a flower, a rain cloud, a bench, and abstract geometric blocks.
+Constraints: absolutely no letters, words, numbers, pseudo-writing, signatures, logos, or watermark anywhere on the noticeboard; preserve the noticeboard frame, roof, people, faces, poses, hands, garden, architecture, bicycles, lighting, palette, framing, and every other pixel-level scene element as closely as possible; do not add or remove people or props.
+```
+
+## Accepted output and runtime preparation
+
+- Built-in OpenAI image-generation artifact:
+  `call_wnOWVi7hlbIWirT1RzxYBLix.png`.
+- Reviewed source:
+  `docs/art/openai-kampung-estate-title-v1.png`
+  (1668×943 RGB PNG; SHA-256
+  `bfd6317f355a1d4cd78355f87f273f1e3365af12a69d2badb5aced1e267743ff`).
+- Runtime export:
+  `public/assets/generated/kampung-estate-title-v1.webp`
+  (1668×943 WebP, quality 82 with sharp YUV and metadata removed; SHA-256
+  `90e273330716845242038f76a458e6bda823cab81b93fde14dcb2268f1c86b0f`;
+  326 kB).
+- Human review accepted the culturally grounded HDB/void-deck/sheltered-link
+  composition, two older residents visibly contributing, younger collaborator,
+  strong silhouettes, upper-left light, palette bridge, clean pictograms, and
+  responsive central focal cluster.
+- No generated text is used. The game title, tagline, controls, and all other
+  interface copy remain semantic HTML.
+- This is genuine OpenAI image-generation evidence. It is not Miora and must
+  never be labelled as Miora.

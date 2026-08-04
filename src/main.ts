@@ -17,7 +17,11 @@ import {
   parseDemoMode,
   saveCampaign,
 } from "./game/campaignSave.js";
-import { renderCampaignPortrait } from "./game/campaignPortrait.js";
+import {
+  CAMPAIGN_PORTRAITS,
+  renderCampaignPortrait,
+  type PortraitMood,
+} from "./game/campaignPortrait.js";
 import {
   estateMapAnchorLocation,
   getEstateMapPosition,
@@ -134,14 +138,25 @@ let announceTimer: ReturnType<typeof setTimeout> | null = null;
 let typeTimer: ReturnType<typeof setInterval> | null = null;
 let dialogueLines: readonly string[] = [];
 let dialogueIndex = 0;
+let dialogueNpcId: NpcId | null = null;
 let dialogueChoicesToShow: readonly IntentChoiceDefinition[] = [];
 let dialogueChoiceHandler:
   | ((choice: IntentChoiceDefinition) => void)
   | null = null;
 
 function showScreen(id: "screen-title" | "screen-sandbox"): void {
+  for (const el of [screenTitle, screenSandbox]) {
+    el.classList.remove("fade-in");
+  }
   screenTitle.classList.toggle("active", id === "screen-title");
   screenSandbox.classList.toggle("active", id === "screen-sandbox");
+  // Two-frame rAF so the browser paints the display:block before opacity animates
+  const target = id === "screen-title" ? screenTitle : screenSandbox;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      target.classList.add("fade-in");
+    });
+  });
 }
 
 function announce(message: string): void {
@@ -523,7 +538,20 @@ function openDialogue(
   audio.play("overlay-open");
   dialogKicker.textContent = title;
   dialogSpeaker.textContent = speaker;
-  dialogPortrait.innerHTML = renderCampaignPortrait(npcId);
+  dialogueNpcId = npcId;
+  // Set per-character accent glow for the visual-novel name plate and portrait frame
+  const accentHex = npcId ? (CAMPAIGN_PORTRAITS[npcId]?.accent ?? null) : null;
+  if (accentHex) {
+    // Convert hex to a semi-transparent rgba glow colour
+    const r = parseInt(accentHex.slice(1, 3), 16);
+    const g = parseInt(accentHex.slice(3, 5), 16);
+    const b = parseInt(accentHex.slice(5, 7), 16);
+    dialogOverlay.style.setProperty("--portrait-glow", `rgba(${r},${g},${b},0.55)`);
+    dialogOverlay.dataset.accent = accentHex;
+  } else {
+    dialogOverlay.style.removeProperty("--portrait-glow");
+    delete dialogOverlay.dataset.accent;
+  }
   dialogueChoiceHandler = onChoice;
   showDialogueScript(lines, choices, onChoice);
   btnDialogAdvance.focus();
@@ -551,9 +579,33 @@ function stopTyping(): void {
   dialogText.classList.remove("typing");
 }
 
+function setDialoguePortraitMood(mood: PortraitMood): void {
+  const effectiveMood = dialogueNpcId ? mood : "neutral";
+  const current = dialogPortrait.querySelector<SVGElement>("svg");
+  if (
+    current?.dataset.portraitId === (dialogueNpcId ?? "estate")
+    && current.dataset.mood === effectiveMood
+  ) {
+    return;
+  }
+  dialogPortrait.innerHTML = renderCampaignPortrait(
+    dialogueNpcId,
+    effectiveMood,
+  );
+  dialogPortrait.dataset.mood = effectiveMood;
+}
+
+function dialogueLineMood(): PortraitMood {
+  if (dialogueLines.length <= 1) return "warm";
+  if (dialogueIndex === 0) return "neutral";
+  if (dialogueIndex >= dialogueLines.length - 1) return "warm";
+  return "thoughtful";
+}
+
 function showDialogueLine(): void {
   const line = dialogueLines[dialogueIndex] ?? "";
   stopTyping();
+  setDialoguePortraitMood(dialogueLineMood());
   dialogTextA11y.textContent = line;
   dialogProgress.textContent =
     dialogueLines.length > 1 ? `${dialogueIndex + 1} of ${dialogueLines.length}` : "";
@@ -591,6 +643,9 @@ function advanceDialogue(): void {
 
 function finishDialogueScript(): void {
   stopTyping();
+  setDialoguePortraitMood(
+    dialogueChoicesToShow.length ? "thoughtful" : "warm",
+  );
   btnDialogAdvance.classList.remove("visible");
   dialogProgress.textContent = "";
   dialogChoices.innerHTML = "";
@@ -617,6 +672,8 @@ function closeDialogue(restoreFocus = true): void {
   stopTyping();
   dialogOverlay.classList.remove("active");
   dialogChoices.innerHTML = "";
+  dialogueNpcId = null;
+  delete dialogPortrait.dataset.mood;
   audio.play("overlay-close");
   if (restoreFocus) focusWorld();
 }
@@ -680,7 +737,18 @@ function renderMeters(): void {
     const valueLabel = element.querySelector<HTMLElement>(".meter-value");
     const fill = element.querySelector<HTMLElement>(".meter-fill");
     if (valueLabel) valueLabel.textContent = `+${value}`;
-    if (fill) fill.style.width = `${(value / KAMPUNG_METER_MAX) * 100}%`;
+    if (fill) {
+      const prevWidth = parseFloat(fill.style.width || "0");
+      const nextWidth = (value / KAMPUNG_METER_MAX) * 100;
+      fill.style.width = `${nextWidth}%`;
+      if (nextWidth > prevWidth) {
+        fill.classList.remove("gain");
+        // Re-trigger the animation even if already had the class
+        void fill.offsetWidth; // eslint-disable-line @typescript-eslint/no-unused-expressions
+        fill.classList.add("gain");
+        fill.addEventListener("animationend", () => fill.classList.remove("gain"), { once: true });
+      }
+    }
   }
 }
 

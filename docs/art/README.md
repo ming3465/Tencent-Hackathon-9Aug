@@ -13,10 +13,17 @@ the playable bundle automatically.
   code-drawable story clusters, clear circulation, ground accents, and subtle
   ambient life. Its exact prompt and review decision are in
   `docs/prompts/openai-estate-density-reference.txt`.
+- `openai-kampung-estate-title-v1.png` is the reviewed 2026-08-04 source for
+  the first OpenAI-generated raster intentionally integrated into the playable
+  build. The first output was rejected for pseudo-writing; a constrained edit
+  replaced only the noticeboard contents with non-text pictograms. Exact
+  prompts, artifacts, hashes, accepted/rejected decisions, and the optimized
+  runtime export are in `docs/prompts/openai-title-panorama-v1.txt`.
 
 Generated art is welcome when it improves the project. Every accepted output
 must retain its real tool provenance, prompt, review decisions, and intended
 use in `docs/AI_USAGE_LOG.md`. Runtime assets may be copied into `public/` only
 after actual-scale, accessibility, cultural, and performance review.
-Neither OpenAI study is a Miora output, and neither raster ships in the
-playable bundle.
+Neither of the first two OpenAI studies is a Miora output, and neither raster
+ships in the playable bundle. The title panorama is also not Miora; its
+reviewed WebP export ships separately under `public/assets/generated/`.

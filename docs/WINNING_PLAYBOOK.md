@@ -44,12 +44,14 @@ What: Use CodeBuddy for a real task from this list (the `?demo=1` work or the ag
 Why: CodeBuddy chat history is a required submission artifact in the mainland rules, and a *failure log as our only artifact* is actively risky before Tencent Cloud judges whose event exists to showcase CodeBuddy — May's PR was wall-to-wall CodeBuddy praise (Ecosystem memo §B2, Critic §B8).
 Must not break: the honesty story. Keep the documented failure; the narrative becomes "what worked, what didn't, both documented" — verification-minded judges reward exactly this (Devfolio, Money Forward).
 
-Current progress: two genuine OpenAI image-generation passes now provide an
-auditable neighbourhood style key and targeted estate-density study, exact
-prompts, human review, and curated code-drawn translations spanning four
-activity vignettes, six story-cluster forms, ground accents, and ambient life.
-This strengthens cross-tool visual evidence but is not Miora; the
-Miora-specific action remains open.
+Current progress: three genuine OpenAI image-generation workflows now provide
+an auditable neighbourhood style key, targeted estate-density study, and
+reviewed production title panorama. Exact prompts, source references,
+artifacts, human review, and curated code-drawn or runtime results are
+preserved. The title workflow includes a rejected pseudo-writing pass,
+constrained cleanup, hashes, optimization, and playable integration. This
+strengthens cross-tool visual evidence but is not Miora; the Miora-specific
+action remains open.
 
 **5. Age-signal the cast. (half day)**
 What: Procedural silver hair, slight stoop (2 px head offset), cane/hand fan/flat cap accessories, slower gait for elders, turn-to-face on player approach. At least one clearly female elder.
@@ -73,7 +75,7 @@ Why: Tencent ecosystem alignment, Singapore edge node for Singapore judges, and 
 Must not break: keep GitHub Pages live as fallback; print both URLs everywhere.
 
 **9. Rubric-map the deck with the rules' exact words. (2–3 h)**
-What: AI slide quotes the official requirement verbatim and checks off worldbuilding + artwork + sound; one line: "Elderly care (适老化关怀) is a named sub-theme of the official Social Good track"; Impact slide opens with 1-in-4 Singaporeans 65+ by 2030 and cites the official brief; Quality slide: 99.63 kB initial JS / 75 tests / 60 CDP checks / 0 vulnerabilities.
+What: AI slide quotes the official requirement verbatim and checks off worldbuilding + artwork + sound; one line: "Elderly care (适老化关怀) is a named sub-theme of the official Social Good track"; Impact slide opens with 1-in-4 Singaporeans 65+ by 2030 and cites the official brief; Quality slide: 104.71 kB initial JS / 75 tests / 60 CDP checks / 0 vulnerabilities.
 Why: Winners visibly game the rubric and balance all criteria (Square, Klaviyo method); the verbatim-compliance line pre-empts the "no runtime LLM = no AI" misread, which is our single biggest scoring risk on a 40-point criterion (Critic §A4).
 Must not break: citation honesty — every number sourced, "aligned with," never "partnered with" Age Well SG.
 

@@ -157,6 +157,9 @@ everyday accessories. Each resident has directional four-frame walks and a
 short deterministic estate route. Residents pause, face the nearby player, and
 blink on authored schedules; their interaction coordinates and non-colour
 markers move with them. Reduced motion keeps them at a static home frame.
+The nearest interaction reveals one shared cream-and-gold code-drawn label
+plate. It replaces square debug-like text backgrounds without creating
+separate textures for every name and stays visible in the Canvas2D fallback.
 After the ending they gather around a void-deck table. HDB windows light
 progressively and the completed estate adds string lights. HDB details, drains,
 path joints, three tree silhouettes, benches, lamps, bins, bicycles, planters,
@@ -182,7 +185,11 @@ responses without creating a new object on each step. Its grass, estate-paving,
 and indoor variants mirror the baked terrain geometry and pair with three
 Web Audio footstep profiles generated from one reusable deterministic noise
 buffer. Reduced motion hides the visual effects and player idle blink. Audio
-remains available because it does not convey quest state by itself.
+remains available because it does not convey quest state by itself. The
+ambient pad follows separate four-chord day and evening progressions. Three
+shared-tone voices and one quiet lead move by no more than a perfect fourth
+between adjacent chords, replacing unrelated random notes with a calm,
+deterministic musical identity.
 Chapter 2 changes the same estate into a deterministic tropical monsoon rather
 than a separate or random map state. A fixed pool of 64 screen-space streaks,
 ten puddles with manually phased rings, wet path bands, a cool multiply tint,
@@ -225,18 +232,31 @@ community-role motif. Mr. Long's portrait, for example, carries his side-part,
 ramp motif, and cane. Place/object narration uses a separate estate portrait
 rather than assigning an NPC face. Desktop conversations stage the portrait
 beside the script in a 940 px card; at 360 px the portrait becomes an 88×120 px
-header companion while the full dialogue area spans the card below.
+header companion while the full dialogue area spans the card below. Each named
+portrait has neutral, thoughtful, and warm code-drawn expressions selected
+from dialogue position and choice state. The expression is decorative; the
+speaker heading, complete live-region line, progress text, choices, and
+controls remain the semantic conversation. A single visible `>` chevron
+replaces the former full-width Continue bar; its 52×52 transparent button keeps
+an accessible name and keyboard-focus underline while reduced motion removes
+the horizontal pulse.
 
-Two 2026-08-03 OpenAI image-generation passes used current gameplay captures
-and project art as references. The first produced an original neighbourhood
-style key; human review translated its visible-community-activity idea into
-the four deterministic vignettes above. The second focused on estate density;
-human review translated its story-cluster grammar, drain/leaf accents, and
-tiny ambient life into the code-drawn systems above. Direct runtime use was
-rejected because the richer texture, pseudo-writing, generated residents, and
-flat raster would not preserve the scene's authored silhouettes, collision, or
-chapter state. Exact prompts, outputs, accepted ideas, and rejected ideas are
-preserved under `docs/prompts/`, `docs/art/`, and `docs/AI_USAGE_LOG.md`.
+Three OpenAI image-generation workflows used current gameplay captures and
+project art as references. Two 2026-08-03 studies produced an original
+neighbourhood style key and an estate-density study. Human review translated
+their community-activity, story-cluster, drain/leaf, and ambient-life ideas
+into the code-drawn systems above; direct runtime use was rejected because
+their richer texture, pseudo-writing, generated residents, and flat raster
+would not preserve authored silhouettes, collision, or chapter state. A
+2026-08-04 title-panorama workflow used a separate production path: the first
+output was rejected for pseudo-writing, a constrained edit replaced only the
+noticeboard papers with non-text pictograms, and the accepted 1668×943 source
+was optimized to a 326 kB WebP. It is the first reviewed generated raster
+intentionally shipped in the playable build. The title, tagline, controls, and
+caption remain semantic HTML over the responsive artwork. Exact prompts,
+artifacts, hashes, accepted/rejected decisions, and runtime use are preserved
+under `docs/prompts/`, `docs/art/`, `public/assets/generated/`, and
+`docs/AI_USAGE_LOG.md`. All three workflows are OpenAI evidence, not Miora.
 
 The four exterior quadrants are baked into static textures. Their shared 32 px
 terrain grammar places deterministic grass patches and tufts, running-bond
@@ -249,6 +269,14 @@ texture instead of retaining a full-size texture for every room. Movement
 reuses one vector, interaction distance uses squared comparisons on a 50 ms
 cadence, and the camera uses a small deadzone. Canvas remains the renderer until
 a real-device comparison justifies changing it.
+
+The production build intentionally keeps Phaser and the complete campaign
+scene in one lazy chunk after the title screen. That chunk triggers Vite's
+generic 500 kB warning, but it is not part of the initial title interaction and
+avoids splitting tightly coupled scene textures and registries across more
+requests. The warning is accepted as a documented tradeoff until real-device
+profiling shows that another split improves time-to-play; it is not treated as
+proof of older-device performance.
 
 The production smoke harness instantiates all 12 locations, snapshots resident
 routes to prove movement/attention/marker synchronization, samples all four

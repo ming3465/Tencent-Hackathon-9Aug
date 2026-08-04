@@ -2139,3 +2139,102 @@ the Codex built-in OpenAI image-generation tool.
   project-tracker maintenance. It does not add or imply a human playtest,
   real-device check, screen-reader pass, older-hardware benchmark, Miora run,
   social outcome, or same-hardware comparison with another game.
+
+---
+
+## 2026-08-04 — Cohesive Title, Visual-Novel, Room, Marker, and Audio Pass
+
+**Tools and real generation evidence:**
+
+- A same-day built-in OpenAI image-generation workflow used the current
+  `10-living-estate.png` gameplay capture and existing `key-art.jpeg` as
+  references for a new title panorama. The exact production prompt is
+  preserved in `docs/prompts/openai-title-panorama-v1.txt`.
+- The first artifact, `call_lZ0RYqzisrGEG4wbjBSfspRZ.png`, was rejected for
+  letter-like pseudo-writing on the noticeboard. It was not copied into the
+  repository or shipped.
+- A constrained edit changed only those noticeboard papers to non-text flower,
+  rain-cloud, bench, and geometric pictograms. The accepted artifact,
+  `call_wnOWVi7hlbIWirT1RzxYBLix.png`, became the reviewed 1668×943 source
+  `docs/art/openai-kampung-estate-title-v1.png` (SHA-256
+  `bfd6317f355a1d4cd78355f87f273f1e3365af12a69d2badb5aced1e267743ff`).
+  Its metadata-free 326 kB WebP runtime export has SHA-256
+  `90e273330716845242038f76a458e6bda823cab81b93fde14dcb2268f1c86b0f`.
+- Human review accepted the HDB, void deck, sheltered link, garden,
+  noticeboard, bicycles, warm light, responsive focal cluster, and older
+  residents visibly contributing. It rejected generated interface text: the
+  title, tagline, controls, and caption remain semantic HTML. This is OpenAI
+  evidence, not Miora evidence.
+
+**Curated implementation:**
+
+- Integrated the panorama as a semantic figure with concise alternative text,
+  high-priority preload, responsive cropping, slow image drift, eight
+  decorative particles, and reduced-motion stillness. Removed roughly 350
+  lines of retired CSS-scene clouds, buildings, trees, props, residents, and
+  mobile overrides so the replaced illustration no longer ships as dead
+  payload.
+- Added neutral, thoughtful, and warm expressions to all 13 code-drawn named
+  portraits; dialogue position and choice state select the expression while
+  complete live-region text continues to carry meaning. Portrait frames and
+  nameplates use each authored profile's accent colour.
+- In direct response to the user's visual-novel convention request, replaced
+  the full-width visible Continue bar with one literal `>` chevron. The
+  transparent control remains 52×52, is named “Continue dialogue” for assistive
+  technology, keeps a short high-contrast focus underline, supports the
+  existing touch/Space path, and stops pulsing under reduced motion.
+- Replaced square interaction-label backgrounds with one reusable
+  cream/gold/ink code-drawn plate and nearby glow. The Graphics implementation
+  remains visible under Canvas2D; smoke-only evidence proves exactly one plate
+  is visible for the selected nearby target.
+- Reworked reusable room backdrops with player-scale wood planks, tiles and
+  carpet courses, deterministic grain/speckle, plaster courses, corner/contact
+  shade, side falloff, and warm window shafts. Added deterministic tiny
+  wildflowers to the already baked exterior terrain without per-frame work.
+- Visual inspection found that an in-progress 32% gold multiply flattened the
+  whole estate to yellow-green. It was corrected to a chapter-progressive
+  3–12% glaze so grass, teal, coral, skin tones, labels, and warm windows retain
+  separation.
+- Replaced unrelated random ambient notes with deterministic four-chord day
+  and evening progressions. Three shared-tone sine voices plus one quiet
+  triangle lead move by no more than a perfect fourth across adjacent
+  chords; no audio file, runtime model, or network request was added.
+
+**Evidence and corrections:**
+
+- Unit coverage remains 75/75. It now proves three distinct portrait moods and
+  the four-step day/evening progressions, including bounded adjacent voice
+  motion.
+- A complete production-browser journey passed 60/60 across the full campaign,
+  demo, persistence, all 12 locations, desktop, 360 px, reduced motion,
+  monsoon, fullscreen, focus, and performance profiles. It proved the reviewed
+  WebP loaded at 1668×943, portrait expressions changed, the chevron had no
+  visible Continue text while retaining its accessible name and target size,
+  and the new marker plate followed the selected interaction.
+- That journey measured 9.10 ms title p95, 8.90 ms resident-route p95,
+  9.20 ms monsoon p95, and 9.30 ms active-movement p95 with 2.66 ms/frame
+  main-thread work. The 4× CPU-throttled sample measured 9.30 ms p95 with
+  10.34 ms/frame work. These are headless Chrome regression signals, not
+  real-device or cross-game benchmarks.
+- The current production build is 104.71 kB initial JavaScript (31.97 kB gzip)
+  and 1,587.65 kB lazy campaign/Phaser code (372.36 kB gzip). The HTML payload
+  is 78.11 kB (14.22 kB gzip) after removing the retired illustration CSS.
+- Codex visually inspected the desktop title, desktop/mobile Voice dialogue,
+  nearest-resident marker, room materials, and evening capture. The first
+  dialogue capture exposed the focused chevron's button-like circle; it was
+  replaced by the smaller underline treatment. The evening capture drove the
+  reduced lighting glaze described above.
+
+**Claim boundary:**
+
+- This is a real OpenAI image-generation workflow, Codex-assisted code and
+  test authoring, deterministic production-browser evidence, and human review
+  of rendered captures. It is not a Miora run, older-adult playtest,
+  real-device touch test, screen-reader session, 200% zoom pass, calibrated
+  display study, social-outcome measure, or same-hardware comparison with
+  Stardew Valley or another game.
+- The title panorama is the only new generated runtime raster. The playable
+  world, residents, portraits, markers, rooms, weather, lighting consequences,
+  and interactions remain original code-drawn systems. No backend, account,
+  analytics, personal-data collection, runtime LLM, timer, failure state,
+  energy system, copied game asset, or medical claim was introduced.

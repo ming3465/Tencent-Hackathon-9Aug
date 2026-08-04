@@ -125,8 +125,29 @@ export const FOOTSTEP_PROFILES: Readonly<
   },
 };
 
-const DAY_SCALE = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25];
-const EVENING_SCALE = [174.61, 196.0, 220.0, 261.63, 293.66, 329.63];
+interface AmbientChord {
+  voices: readonly [number, number, number];
+  lead: number;
+}
+
+/**
+ * Four-chord loops use inversions and shared tones so every voice moves by no
+ * more than a perfect fourth between adjacent chords. The result is
+ * intentionally calm and memorable rather than unrelated random notes.
+ */
+export const DAY_AMBIENT_PROGRESSION: readonly AmbientChord[] = [
+  { voices: [130.81, 164.81, 196.0], lead: 261.63 },
+  { voices: [123.47, 164.81, 196.0], lead: 246.94 },
+  { voices: [110.0, 130.81, 164.81], lead: 220.0 },
+  { voices: [110.0, 130.81, 174.61], lead: 261.63 },
+];
+
+export const EVENING_AMBIENT_PROGRESSION: readonly AmbientChord[] = [
+  { voices: [87.31, 110.0, 130.81], lead: 174.61 },
+  { voices: [82.41, 98.0, 130.81], lead: 164.81 },
+  { voices: [110.0, 130.81, 164.81], lead: 146.83 },
+  { voices: [98.0, 123.47, 146.83], lead: 130.81 },
+];
 
 interface ToneOptions {
   frequency: number;
@@ -148,6 +169,7 @@ export class KampungAudio {
   private footstepIndex = 0;
   private lastPlayed = new Map<SoundEvent, number>();
   private ambienceTimer: ReturnType<typeof setInterval> | null = null;
+  private ambienceStep = 0;
   private eveningMood = false;
   private suspendedByVisibility = false;
 
@@ -325,6 +347,7 @@ export class KampungAudio {
   setEveningMood(evening: boolean): void {
     if (this.eveningMood === evening) return;
     this.eveningMood = evening;
+    this.ambienceStep = 0;
     if (this.ambienceTimer !== null) {
       this.stopAmbience();
       this.startAmbience();
@@ -373,27 +396,32 @@ export class KampungAudio {
 
   private ambientNote(): void {
     if (!this.context || this.settings.muted) return;
-    const scale = this.eveningMood ? EVENING_SCALE : DAY_SCALE;
-    const root = scale[Math.floor(Math.random() * scale.length)];
-    this.tone({
-      frequency: root,
-      duration: this.eveningMood ? 4.2 : 3.4,
-      category: "music",
-      type: "sine",
-      gain: 0.1,
-      attack: 0.9,
-    });
-    if (Math.random() < 0.55) {
+    const progression = this.eveningMood
+      ? EVENING_AMBIENT_PROGRESSION
+      : DAY_AMBIENT_PROGRESSION;
+    const chord = progression[this.ambienceStep % progression.length];
+    this.ambienceStep += 1;
+    const duration = this.eveningMood ? 4.8 : 3.7;
+    chord.voices.forEach((frequency, voice) => {
       this.tone({
-        frequency: root * 1.5,
-        duration: 3.0,
+        frequency,
+        duration,
         category: "music",
         type: "sine",
-        gain: 0.05,
-        attack: 1.1,
-        delay: 0.6,
+        gain: voice === 0 ? 0.038 : 0.03,
+        attack: this.eveningMood ? 1.35 : 1.0,
+        delay: voice * 0.035,
       });
-    }
+    });
+    this.tone({
+      frequency: chord.lead,
+      duration: this.eveningMood ? 3.6 : 2.8,
+      category: "music",
+      type: "triangle",
+      gain: 0.024,
+      attack: 1.15,
+      delay: 0.48,
+    });
   }
 
   private canPlay(event: SoundEvent): boolean {

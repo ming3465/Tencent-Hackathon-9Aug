@@ -463,31 +463,32 @@
       </table>
       <div class="callout">
         CodeBuddy's retry returned <b>429 Credits exhausted</b>; we preserved
-        the failure. A later <b>OpenAI image-generation pass</b> produced one
-        style key. Humans rejected direct runtime use and translated its best
-        idea into four verified code-drawn activity vignettes.
+        the failure. Three <b>OpenAI visual workflows</b> passed human gates:
+        two became code-drawn systems; the title pass rejected pseudo-writing,
+        constrained the fix, optimized it, and shipped the reviewed panorama.
+        None is Miora.
       </div>
       <div class="split" style="height: 160px; margin-top: 14px; gap: 18px">
         <div>
           <p style="font-size: 14px; margin: 0 0 5px; color: var(--ink-soft)">
-            <b style="color: var(--ink)">AI visual target</b> &middot; exact prompt + output preserved
+            <b style="color: var(--ink)">Reviewed source</b> &middot; prompt + reject/edit trail preserved
           </p>
           <img
             class="shot"
             style="height: 126px; object-fit: cover; object-position: center"
-            src="../art/openai-neighbourhood-style-key.png"
-            alt="OpenAI-generated Kampung SG neighbourhood style key"
+            src="../art/openai-kampung-estate-title-v1.png"
+            alt="Reviewed OpenAI-generated Kampung SG HDB-estate title panorama"
           />
         </div>
         <div>
           <p style="font-size: 14px; margin: 0 0 5px; color: var(--ink-soft)">
-            <b style="color: var(--ink)">Human-curated playable result</b> &middot; swept, tended, talked
+            <b style="color: var(--ink)">Playable integration</b> &middot; semantic HTML stays separate
           </p>
           <img
             class="shot"
-            style="height: 126px; object-fit: cover; object-position: center"
-            src="../screenshots/27-ambient-micro-scenes.png"
-            alt="Verified code-drawn garden and kopitiam activity vignettes"
+            style="height: 126px; object-fit: cover; object-position: center 36%"
+            src="../screenshots/01-title.png"
+            alt="Verified playable title screen with the reviewed panorama and semantic interface"
           />
         </div>
       </div>
@@ -502,7 +503,7 @@
       <div class="stats">
         <div class="stat"><b>75</b><span>Passing tests</span></div>
         <div class="stat"><b>0</b><span>Vulnerabilities</span></div>
-        <div class="stat"><b>98 kB</b><span>Initial JavaScript</span></div>
+        <div class="stat"><b>105 kB</b><span>Initial JavaScript</span></div>
         <div class="stat"><b>0</b><span>Bytes collected</span></div>
       </div>
       <div class="split engineering-body">
@@ -584,7 +585,7 @@
         <p><b>Contact:</b> sutolimin.45@gmail.com &middot; <b>Source:</b> github.com/ming3465/Tencent-Hackathon-9Aug</p>
         <p><b>Engine:</b> Phaser 3 (MIT). <b>Build:</b> Vite, TypeScript, Vitest (MIT).</p>
         <p><b>Audio:</b> synthesised at runtime with the Web Audio API. No third-party audio files, no licence obligations.</p>
-        <p><b>Art:</b> in-game — procedural Phaser geometry, including four human-curated activity vignettes informed by a real OpenAI image-generation pass. Style-key prompt, output and review: <b>docs/prompts/openai-neighbourhood-style-key.txt</b>. This is not claimed as Miora.</p>
+        <p><b>Art:</b> code-drawn Phaser world plus one reviewed OpenAI title panorama. Three OpenAI workflows preserve prompts, artifacts, decisions, and verified results; the title trail is at <b>docs/prompts/openai-title-panorama-v1.txt</b>. None is claimed as Miora.</p>
         <p><b>Ageing statistic:</b> official &ldquo;AI CAN DO IT&rdquo; &mdash; &ldquo;Age Well&rdquo; Social Good Challenge Singapore hackathon brief.</p>
         <p><b>AI assistance:</b> CodeBuddy CLI 2.127.0 and AI coding agents under human direction. Full record, including the failed run, in <b>docs/AI_USAGE_LOG.md</b>.</p>
         <p>Kampung SG is an original work. It does not copy any existing game's art, characters, maps, or branding.</p>

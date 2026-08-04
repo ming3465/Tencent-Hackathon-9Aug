@@ -72,7 +72,7 @@ details in this document or the repository.
 
 | Information | Status | Why it is needed |
 | --- | --- | --- |
-| Final team name | UNKNOWN | Submission filenames and deck |
+| Final team name | DONE | TheTwoGuys — confirmed 2026-08-04 |
 | Team member display names | UNKNOWN | Deck and registration consistency |
 | Team member roles | UNKNOWN | Team slide and judging narrative |
 | University or organization names | UNKNOWN | Submission and team slide if required |

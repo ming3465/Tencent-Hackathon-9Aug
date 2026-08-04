@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#173f4f" />
     <title>Kampung SG - Every Small Act Grows the Kampung</title>
+    <link
+      rel="preload"
+      as="image"
+      href="./assets/generated/kampung-estate-title-v1.webp"
+      type="image/webp"
+      fetchpriority="high"
+    />
     <style>
       *, *::before, *::after {
         box-sizing: border-box;
@@ -94,10 +101,16 @@
         display: none;
         width: 100%;
         min-width: 0;
+        opacity: 0;
+        transition: opacity 220ms ease;
       }
 
       .screen.active {
         display: block;
+      }
+
+      .screen.fade-in {
+        opacity: 1;
       }
 
       .primary-button {
@@ -146,13 +159,17 @@
       }
 
       .title-shell {
-        width: min(1180px, 100%);
+        width: min(1320px, 100%);
         min-height: calc(100dvh - clamp(2rem, 8vw, 6rem));
         margin: 0 auto;
         display: grid;
-        grid-template-columns: minmax(0, 0.9fr) minmax(430px, 1.1fr);
+        grid-template-columns: minmax(0, 0.78fr) minmax(520px, 1.22fr);
         align-items: center;
-        gap: clamp(2rem, 5vw, 5rem);
+        gap: clamp(2rem, 4vw, 4rem);
+      }
+
+      .title-shell > * {
+        min-width: 0;
       }
 
       .title-copy h1 {
@@ -200,294 +217,20 @@
         font-weight: 700;
       }
 
-      /*
-       * Title illustration: the same flat-ink language as the in-game art -
-       * golden-hour sky, an HDB block with laundry and an open void deck, rain
-       * trees, a worked garden bed, and an elder with the player mid-chat.
-       * Everything is drawn in CSS; no image ships.
-       */
+      /* Reviewed title panorama; all readable copy remains semantic HTML. */
       .title-world {
         position: relative;
-        min-height: 560px;
+        min-height: 520px;
+        margin: 0;
         overflow: hidden;
         border: 7px solid var(--ink);
         border-radius: 40px 40px 120px 40px;
-        background: linear-gradient(
-          180deg,
-          #7ec1bd 0%,
-          #9fcbb0 36%,
-          #f0d9a0 50%,
-          #a8c47f 50.4%,
-          #9cba73 100%
-        );
-        box-shadow: var(--shadow);
-        isolation: isolate;
-      }
-
-      /* Grass speckle over the lower half so the ground never reads flat. */
-      .title-world::after {
-        content: "";
-        position: absolute;
-        inset: 52% 0 0 0;
-        background:
-          radial-gradient(rgba(122, 157, 89, 0.4) 2px, transparent 2.6px) 0 0 / 36px 28px,
-          radial-gradient(rgba(122, 157, 89, 0.25) 2px, transparent 2.6px) 18px 14px / 36px 28px;
-        pointer-events: none;
-      }
-
-      .tw-sun {
-        position: absolute;
-        top: 42px;
-        right: 46px;
-        width: 96px;
-        height: 96px;
-        border: 6px solid var(--ink);
-        border-radius: 50%;
-        background: radial-gradient(circle at 34% 30%, #f8d27c, var(--gold) 62%);
+        background: var(--night);
         box-shadow:
-          0 0 0 16px rgba(242, 184, 75, 0.26),
-          0 0 0 36px rgba(242, 184, 75, 0.1);
-      }
-
-      .tw-hdb {
-        position: absolute;
-        top: 104px;
-        left: 40px;
-        width: 62%;
-        height: 252px;
-        border: 6px solid var(--ink);
-        background: linear-gradient(#f8ecd3 0 16px, #f3e3c6 16px);
-        box-shadow: 16px 16px 0 rgba(23, 63, 79, 0.16);
-      }
-
-      .tw-hdb::before {
-        content: "";
-        position: absolute;
-        top: -28px;
-        left: -18px;
-        width: calc(100% + 36px);
-        height: 26px;
-        border: 6px solid var(--ink);
-        background: linear-gradient(var(--coral) 0 8px, #c25647 8px);
-      }
-
-      .tw-windows {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 14px;
-        padding: 22px 24px 0;
-      }
-
-      .tw-windows span {
-        position: relative;
-        aspect-ratio: 1;
-        border: 4px solid var(--ink);
-        background:
-          linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0 28%, transparent 28%),
-          #7297a8;
-      }
-
-      .tw-windows span:nth-child(3n) {
-        background:
-          linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0 28%, transparent 28%),
-          var(--gold);
-      }
-
-      /* Bamboo laundry poles under a few windows - the HDB signature. */
-      .tw-windows span:nth-child(4n + 2)::after {
-        content: "";
-        position: absolute;
-        left: -10%;
-        top: calc(100% + 3px);
-        width: 120%;
-        height: 8px;
-        border: 2px solid var(--ink);
-        background: repeating-linear-gradient(
-          90deg,
-          var(--coral) 0 7px,
-          var(--cream) 7px 13px,
-          var(--teal) 13px 20px,
-          var(--gold) 20px 26px
-        );
-      }
-
-      /* Open void deck with pillars along the base of the block. */
-      .tw-deck {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 38px;
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-around;
-        border-top: 4px solid var(--ink);
-        background: #9c8874;
-      }
-
-      .tw-deck span {
-        width: 15px;
-        height: 100%;
-        border: 3px solid var(--ink);
-        border-top: 0;
-        border-bottom: 0;
-        background: #e3d3b0;
-      }
-
-      .tw-path {
-        position: absolute;
-        left: -5%;
-        bottom: 24px;
-        width: 110%;
-        height: 112px;
-        border: 6px solid var(--ink);
-        background: linear-gradient(
-          var(--paper) 0 10px,
-          var(--sand) 10px calc(100% - 12px),
-          #cbb894 calc(100% - 12px)
-        );
-        transform: rotate(-4deg);
-      }
-
-      .tw-tree {
-        position: absolute;
-        width: 14px;
-        height: 52px;
-        border: 4px solid var(--ink);
-        background: linear-gradient(90deg, #88673f 0 45%, #6d5138 45%);
-        z-index: 2;
-      }
-
-      .tw-tree::before {
-        content: "";
-        position: absolute;
-        left: 50%;
-        bottom: calc(100% - 12px);
-        width: 128px;
-        height: 82px;
-        translate: -50% 0;
-        border: 5px solid var(--ink);
-        border-radius: 48% 52% 46% 54% / 62% 58% 42% 38%;
-        background: radial-gradient(
-          circle at 30% 28%,
-          #5f9a58 0 24%,
-          #437a4a 25% 58%,
-          #35633f 59%
-        );
-      }
-
-      .tw-tree-a { left: 6px; bottom: 118px; scale: 1.12; }
-      .tw-tree-b { right: 176px; bottom: 236px; scale: 0.78; z-index: 0; }
-
-      .tw-garden {
-        position: absolute;
-        right: 26px;
-        bottom: 152px;
-        width: 178px;
-        height: 102px;
-        border: 6px solid var(--ink);
-        border-radius: 14px;
-        background: repeating-linear-gradient(180deg, #6f4f36 0 24px, #8a674a 24px 29px);
-        transform: rotate(2deg);
-        z-index: 1;
-      }
-
-      .tw-garden::before {
-        content: "";
-        position: absolute;
-        inset: 5px;
-        background: radial-gradient(circle, #91b85d 0 6px, transparent 7px) 10px 6px / 33px 27px;
-      }
-
-      .tw-bench {
-        position: absolute;
-        left: 138px;
-        bottom: 128px;
-        width: 76px;
-        height: 13px;
-        border: 4px solid var(--ink);
-        border-radius: 4px;
-        background: #9b7653;
-        transform: rotate(-4deg);
-        z-index: 2;
-      }
-
-      .tw-bench::before,
-      .tw-bench::after {
-        content: "";
-        position: absolute;
-        top: 100%;
-        width: 9px;
-        height: 16px;
-        border: 3px solid var(--ink);
-        border-top: 0;
-        background: #7c5b3e;
-      }
-
-      .tw-bench::before { left: 6px; }
-      .tw-bench::after { right: 6px; }
-
-      /* The thesis, on screen: an elder and the player, mid-conversation. */
-      .tw-elder,
-      .tw-player {
-        position: absolute;
-        border: 5px solid var(--ink);
-        border-radius: 16px 16px 9px 9px;
-        z-index: 3;
-      }
-
-      .tw-elder {
-        left: 46%;
-        bottom: 116px;
-        width: 48px;
-        height: 66px;
-        background: var(--purple);
-      }
-
-      .tw-player {
-        left: calc(46% + 74px);
-        bottom: 110px;
-        width: 44px;
-        height: 58px;
-        background: #2d5f74;
-      }
-
-      .tw-elder::before,
-      .tw-player::before {
-        content: "";
-        position: absolute;
-        left: 50%;
-        top: -32px;
-        translate: -50% 0;
-        width: 32px;
-        height: 32px;
-        border: 5px solid var(--ink);
-        border-radius: 50%;
-      }
-
-      /* Silver hair for the elder; dark hair for the visitor. */
-      .tw-elder::before {
-        background: linear-gradient(#cfc8bd 0 42%, #cf9a6c 42%);
-      }
-
-      .tw-player::before {
-        width: 29px;
-        height: 29px;
-        top: -29px;
-        background: linear-gradient(#2a2523 0 38%, #d39c6d 38%);
-      }
-
-      /* A walking cane, held upright - a tool, not a punchline. */
-      .tw-elder::after {
-        content: "";
-        position: absolute;
-        right: -17px;
-        bottom: -2px;
-        width: 6px;
-        height: 52px;
-        border: 3px solid var(--ink);
-        border-radius: 4px 4px 2px 2px;
-        background: #b08d5a;
+          var(--shadow),
+          0 0 0 3px rgba(242, 184, 75, 0.3) inset,
+          0 24px 60px rgba(16, 46, 59, 0.28);
+        isolation: isolate;
       }
 
       .title-sign {
@@ -504,6 +247,113 @@
         letter-spacing: 0.08em;
         transform: rotate(-2deg);
         box-shadow: 4px 4px 0 var(--gold);
+      }
+
+      .title-art {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 50% 50%;
+        transform: scale(1.06);
+        animation: title-pan 35s ease-in-out infinite alternate;
+      }
+
+      @keyframes title-pan {
+        from { transform: scale(1.06) translate(1.5%, 1%); }
+        to { transform: scale(1.06) translate(-1.5%, -1%); }
+      }
+
+      .title-particles {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .title-particle {
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--gold);
+        box-shadow: 0 0 6px var(--gold);
+        opacity: 0;
+        animation: title-particle-float 12s ease-in-out infinite;
+      }
+
+      .title-particle.leaf {
+        width: 11px;
+        height: 7px;
+        border-radius: 0 8px 0 8px;
+        background: var(--coral);
+        box-shadow: none;
+        animation-name: title-leaf-float;
+        animation-duration: 14s;
+      }
+
+      .title-particle:nth-child(1) { top: 80%; left: 20%; }
+      .title-particle:nth-child(2) { top: 60%; left: 80%; animation-delay: -3s; }
+      .title-particle:nth-child(3) { top: 40%; left: 40%; animation-delay: -6s; }
+      .title-particle:nth-child(4) { top: 70%; left: 60%; animation-delay: -8s; }
+      .title-particle:nth-child(5) { top: 20%; left: 30%; animation-delay: -2s; }
+      .title-particle:nth-child(6) { top: 30%; left: 70%; animation-delay: -5s; }
+      .title-particle:nth-child(7) { top: -5%; left: 50%; animation-delay: -1s; }
+      .title-particle:nth-child(8) { top: -10%; left: 85%; animation-delay: -7s; }
+
+      @keyframes title-particle-float {
+        0% { transform: translate(0, 0) scale(0.5); opacity: 0; }
+        30%, 70% { opacity: 0.7; }
+        100% { transform: translate(-60px, -80px) scale(1.2); opacity: 0; }
+      }
+
+      @keyframes title-leaf-float {
+        0% { transform: translate(0, -20px) rotate(0deg); opacity: 0; }
+        15%, 85% { opacity: 0.85; }
+        100% { transform: translate(-120px, 160px) rotate(360deg); opacity: 0; }
+      }
+
+      .title-world::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background:
+          linear-gradient(180deg, transparent 52%, rgba(16, 46, 59, 0.08) 72%, rgba(16, 46, 59, 0.48)),
+          linear-gradient(90deg, rgba(16, 46, 59, 0.08), transparent 24% 76%, rgba(16, 46, 59, 0.06));
+        pointer-events: none;
+      }
+
+      .title-world::after {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        z-index: 3;
+        border: 2px solid rgba(255, 246, 220, 0.78);
+        border-radius: 26px 26px 96px 26px;
+        background: none;
+        box-shadow: 0 0 0 2px rgba(23, 63, 79, 0.2);
+        pointer-events: none;
+      }
+
+      .title-world .title-sign {
+        z-index: 4;
+        border: 2px solid rgba(255, 246, 220, 0.88);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .screen {
+          opacity: 1;
+          transition: none;
+        }
+
+        .title-art,
+        .title-particle {
+          animation: none;
+        }
       }
 
       .control-note kbd {
@@ -1095,13 +945,20 @@
         overflow-y: auto;
         border: 5px solid var(--ink);
         border-radius: 26px;
-        background: var(--paper);
+        background: rgba(255, 251, 239, 0.94);
+        backdrop-filter: blur(12px);
         box-shadow: 12px 12px 0 var(--gold);
       }
 
       .dialog-stripe {
-        height: 15px;
-        background: repeating-linear-gradient(90deg, var(--coral) 0 70px, var(--gold) 70px 140px, var(--teal) 140px 210px);
+        height: 10px;
+        background: linear-gradient(
+          90deg,
+          var(--coral) 0%,
+          var(--gold) 38%,
+          #8fd3c4 62%,
+          var(--teal) 100%
+        );
       }
 
       .dialog-content {
@@ -1128,6 +985,10 @@
 
       #dialog-overlay .dialog-card {
         width: min(940px, 100%);
+        background:
+          radial-gradient(circle at 18% 94%, rgba(242, 184, 75, 0.08), transparent 28%),
+          radial-gradient(circle at 88% 8%, rgba(217, 103, 86, 0.06), transparent 22%),
+          var(--paper);
       }
 
       .dialog-stage {
@@ -1152,6 +1013,7 @@
       }
 
       .dialog-portrait {
+        position: relative;
         width: 100%;
         aspect-ratio: 11 / 15;
         align-self: start;
@@ -1159,13 +1021,65 @@
         border-radius: 18px 18px 34px 18px;
         background: var(--cream);
         overflow: hidden;
-        box-shadow: 8px 8px 0 var(--ink);
+        box-shadow:
+          8px 8px 0 var(--ink),
+          0 0 24px rgba(242, 184, 75, 0.28),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.18);
         image-rendering: pixelated;
       }
 
-      .dialog-portrait svg { display: block; width: 100%; height: 100%; }
+      #dialog-overlay[data-accent] .dialog-portrait {
+        box-shadow:
+          8px 8px 0 var(--ink),
+          0 0 32px var(--portrait-glow, rgba(242, 184, 75, 0.32)),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+      }
+
+      .dialog-portrait::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0 18%, transparent 18%);
+        pointer-events: none;
+      }
+
+      .dialog-portrait svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        transform-origin: 50% 72%;
+        animation: portrait-expression 180ms ease-out both;
+      }
+
+      @keyframes portrait-expression {
+        from { opacity: 0.82; transform: translateY(3px) scale(0.99); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
 
       .dialog-ident { min-width: 0; }
+
+      #dialog-speaker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin: 0;
+        padding: 0.28rem 0.75rem 0.28rem 0.55rem;
+        color: var(--cream);
+        background: var(--ink);
+        border-radius: 8px 8px 8px 2px;
+        box-shadow: 3px 3px 0 var(--portrait-glow, var(--gold));
+        font-size: 1.35rem;
+      }
+
+      #dialog-speaker::before {
+        content: "";
+        width: 0.55rem;
+        height: 0.55rem;
+        flex: 0 0 auto;
+        border-radius: 50%;
+        background: var(--portrait-glow, var(--gold));
+      }
 
       #dialog-overlay.active .dialog-portrait {
         animation: portrait-enter 180ms ease-out both;
@@ -1200,7 +1114,10 @@
         padding: 1rem 1.1rem;
         border: 3px solid var(--ink);
         border-radius: 16px;
-        background: var(--cream);
+        background:
+          linear-gradient(180deg, rgba(255, 246, 220, 0.96), rgba(255, 251, 239, 0.98)),
+          repeating-linear-gradient(0deg, transparent 0 27px, rgba(23, 63, 79, 0.04) 28px);
+        box-shadow: inset 0 2px 6px rgba(23, 63, 79, 0.08);
       }
 
       .dialog-text {
@@ -1234,22 +1151,40 @@
 
       .dialog-advance {
         display: none;
-        width: 100%;
-        margin-top: 0.85rem;
-        padding: 0.8rem 1rem;
-        color: var(--cream);
-        background: var(--ink);
-        border: 3px solid var(--ink);
-        border-radius: 12px;
-        font-weight: 800;
-        box-shadow: 4px 4px 0 var(--gold);
+        align-items: center;
+        justify-content: center;
+        width: 52px;
+        height: 52px;
+        margin: 0.3rem 0 0 auto;
+        padding: 0;
+        color: var(--ink);
+        background: transparent;
+        border: 0;
+        border-radius: 4px;
+        box-shadow: none;
+        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+        font-size: 2.15rem;
+        font-weight: 900;
+        line-height: 1;
+        text-shadow: 2px 2px 0 var(--gold);
+        animation: dialogue-chevron 1.15s ease-in-out infinite;
       }
 
-      .dialog-advance.visible { display: block; }
+      .dialog-advance.visible { display: flex; }
 
       .dialog-advance:hover {
-        transform: translate(-1px, -1px);
-        box-shadow: 6px 6px 0 var(--gold);
+        transform: translateX(3px);
+        box-shadow: none;
+      }
+
+      .dialog-advance:focus-visible {
+        outline: 0;
+        box-shadow: 0 4px 0 var(--gold);
+      }
+
+      @keyframes dialogue-chevron {
+        0%, 100% { transform: translateX(0); }
+        50% { transform: translateX(4px); }
       }
 
       .visually-hidden {
@@ -1267,7 +1202,9 @@
 
       @media (prefers-reduced-motion: reduce) {
         .dialog-text.typing::after { animation: none; opacity: 1; }
+        .dialog-advance { animation: none; }
         .dialog-advance:hover { transform: none; }
+        .dialog-portrait svg { animation: none; }
         #dialog-overlay.active .dialog-portrait { animation: none; }
       }
 
@@ -1484,43 +1421,6 @@
           border-width: 5px;
           border-radius: 28px 28px 70px 28px;
         }
-
-        .tw-hdb {
-          top: 86px;
-          left: 22px;
-          width: 70%;
-          height: 176px;
-        }
-
-        .tw-windows {
-          gap: 9px;
-          padding: 14px 16px 0;
-        }
-
-        .tw-windows span { border-width: 3px; }
-        .tw-windows span:nth-child(4n + 2)::after { display: none; }
-        .tw-deck { height: 26px; }
-        .tw-deck span { width: 10px; }
-
-        .tw-sun {
-          top: 26px;
-          right: 24px;
-          width: 64px;
-          height: 64px;
-        }
-
-        .tw-garden {
-          width: 138px;
-          height: 88px;
-          bottom: 78px;
-        }
-
-        .tw-tree-a { scale: 0.85; bottom: 96px; }
-        .tw-tree-b { display: none; }
-        .tw-bench { display: none; }
-
-        .tw-elder { left: 40%; bottom: 96px; scale: 0.85; }
-        .tw-player { left: calc(40% + 60px); bottom: 92px; scale: 0.85; }
 
         #screen-sandbox {
           padding: 0.4rem;
@@ -2678,27 +2578,28 @@
             </p>
           </div>
 
-          <div class="title-world" aria-hidden="true">
-            <div class="tw-sun"></div>
-            <div class="tw-tree tw-tree-b"></div>
-            <div class="tw-hdb">
-              <div class="tw-windows">
-                <span></span><span></span><span></span><span></span><span></span>
-                <span></span><span></span><span></span><span></span><span></span>
-                <span></span><span></span><span></span><span></span><span></span>
-              </div>
-              <div class="tw-deck">
-                <span></span><span></span><span></span><span></span><span></span>
-              </div>
+          <figure class="title-world">
+            <img
+              class="title-art"
+              src="./assets/generated/kampung-estate-title-v1.webp"
+              width="1668"
+              height="943"
+              alt="Older neighbours tend a community garden and organise a noticeboard while a younger neighbour approaches through a sunlit HDB estate."
+              decoding="async"
+              fetchpriority="high"
+            />
+            <div class="title-particles" aria-hidden="true">
+              <span class="title-particle"></span>
+              <span class="title-particle"></span>
+              <span class="title-particle"></span>
+              <span class="title-particle"></span>
+              <span class="title-particle"></span>
+              <span class="title-particle"></span>
+              <span class="title-particle leaf"></span>
+              <span class="title-particle leaf"></span>
             </div>
-            <div class="tw-path"></div>
-            <div class="tw-garden"></div>
-            <div class="tw-bench"></div>
-            <div class="tw-tree tw-tree-a"></div>
-            <div class="tw-elder"></div>
-            <div class="tw-player"></div>
-            <div class="title-sign">EVERY SMALL ACT GROWS THE KAMPUNG</div>
-          </div>
+            <figcaption class="title-sign">EVERY SMALL ACT GROWS THE KAMPUNG</figcaption>
+          </figure>
         </div>
       </section>
 
@@ -2867,8 +2768,13 @@
                 <p id="dialog-text-a11y" class="visually-hidden" aria-live="polite"></p>
               </div>
 
-              <button id="btn-dialog-advance" class="dialog-advance" type="button">
-                Continue <span aria-hidden="true">▸</span>
+              <button
+                id="btn-dialog-advance"
+                class="dialog-advance"
+                type="button"
+                aria-label="Continue dialogue"
+              >
+                <span aria-hidden="true">&gt;</span>
               </button>
 
               <div id="dialog-choices" class="dialog-choices"></div>

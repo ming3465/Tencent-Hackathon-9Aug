@@ -47,10 +47,17 @@ hallucination path.
 - WASD, arrow-key, `E`, Space, visible buttons, and touch controls
 - Equivalent Journal actions for every meaningful world interaction
 - Surface-aware runtime Web Audio footsteps for grass, estate paving, and
-  interiors; one reusable synthesized-noise buffer and no audio files ship
+  interiors; one reusable synthesized-noise buffer and no audio files ship.
+  Separate deterministic four-chord day/evening progressions use shared-tone
+  voice-leading instead of unrelated random notes
 - Visual-novel conversations with 13 unique code-drawn bust portraits,
   resident-specific hair, build, age lines, accessories, and community-role
-  motifs; a separate estate portrait supports object and place narration
+  motifs; neutral, thoughtful, and warm expression variants; and a sole
+  visible `>` advance chevron with an accessible 52×52 control. A separate
+  estate portrait supports object and place narration
+- A reviewed OpenAI-assisted 1668×943 HDB-estate title panorama, optimized to
+  WebP after a documented first-pass rejection and constrained pseudo-writing
+  cleanup; the title, controls, tagline, and caption remain semantic HTML
 - Original Canvas-rendered pixel art with speed-responsive four-frame
   directional player walks, deterministic idle blinks, interaction-facing,
   four-frame resident walks, varied silhouettes, tiled room floors, and
@@ -85,9 +92,10 @@ hallucination path.
   provision crates, mosaic dragon playground, and exercise corner. A persistent
   downward guide triangle keeps the main character readable in every room and
   district. Seven exterior entrances now share one audited doorway registry
-  with their art, interaction points, and collision gaps. The current
-  runtime remains code-drawn after two generated visual-direction studies were
-  reviewed and selectively translated rather than copied into the scene
+  with their art, interaction points, and collision gaps. The playable world
+  remains code-drawn after two generated visual-direction studies were
+  selectively translated rather than copied; the separately reviewed title
+  panorama is the only generated raster intentionally shipped at runtime
 - No timer, failure state, energy system, account, analytics, personal-data
   collection, backend, or runtime LLM
 
@@ -100,14 +108,16 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
 | `npm test` | 75 tests across campaign, audio, and optional matching |
-| `npm run build` | 99.63 kB initial JS (30.73 kB gzip); 1,585.13 kB lazy scene (371.50 kB gzip) |
+| `npm run build` | 104.71 kB initial JS (31.97 kB gzip); 1,587.65 kB lazy scene (372.36 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
 | `npm run smoke` | 60/60 production-browser checks |
 
 The smoke harness drives complete full and demo campaigns through production
 JavaScript, instantiates all 12 locations, proves resident route movement,
 four-frame player/resident walks, deterministic player idle blinking,
-player-to-interaction facing, marker synchronization,
+player-to-interaction facing, marker synchronization, one nearest-target label
+plate, the reviewed title image, the accessible visual-novel chevron, and
+portrait expression changes,
 cat movement, four two-frame community activity vignettes, laundry animation,
 reduced-motion stillness, exterior wake-up, and physical travel to the east and
 south. It also physically opens one of 14 approach-only estate details with

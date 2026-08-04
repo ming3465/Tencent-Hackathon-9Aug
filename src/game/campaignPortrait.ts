@@ -2,6 +2,7 @@ import type { NpcId } from "./campaignTypes.js";
 
 type PortraitBuild = "wide" | "regular" | "slim";
 type PortraitAccessory = "apron" | "cane" | "glasses" | "none";
+export type PortraitMood = "neutral" | "thoughtful" | "warm";
 type PortraitHair =
   | "bob"
   | "bun"
@@ -375,6 +376,69 @@ function accessoryMarkup(
   return "";
 }
 
+function expressionMarkup(
+  mood: PortraitMood,
+  ink: string,
+  cream: string,
+  skinLight: string,
+  skinShade: string,
+): string {
+  const nose = `<rect x="106" y="130" width="8" height="22" fill="${skinShade}"/>
+    <rect x="110" y="130" width="4" height="17" fill="${skinLight}"/>`;
+
+  if (mood === "thoughtful") {
+    return `
+      <rect x="80" y="110" width="13" height="5" fill="${skinShade}"/>
+      <rect x="93" y="113" width="14" height="5" fill="${skinShade}"/>
+      <rect x="113" y="113" width="14" height="5" fill="${skinShade}"/>
+      <rect x="127" y="110" width="13" height="5" fill="${skinShade}"/>
+      <rect x="85" y="123" width="10" height="8" fill="${ink}"/>
+      <rect x="125" y="123" width="10" height="8" fill="${ink}"/>
+      <rect x="86" y="124" width="5" height="4" fill="${cream}" opacity="0.88"/>
+      <rect x="126" y="124" width="5" height="4" fill="${cream}" opacity="0.88"/>
+      <rect x="86" y="124" width="2" height="2" fill="${cream}"/>
+      <rect x="126" y="124" width="2" height="2" fill="${cream}"/>
+      ${nose}
+      <rect x="100" y="162" width="20" height="5" fill="${ink}"/>
+      <rect x="114" y="166" width="10" height="4" fill="${ink}"/>
+      <rect x="103" y="162" width="15" height="2" fill="#d96756"/>
+      <rect x="81" y="137" width="8" height="5" fill="#d96756" opacity="0.28"/>
+      <rect x="131" y="137" width="8" height="5" fill="#d96756" opacity="0.28"/>`;
+  }
+
+  if (mood === "warm") {
+    return `
+      <rect x="81" y="111" width="25" height="5" fill="${skinShade}"/>
+      <rect x="114" y="111" width="25" height="5" fill="${skinShade}"/>
+      <rect x="85" y="124" width="10" height="6" fill="${ink}"/>
+      <rect x="125" y="124" width="10" height="6" fill="${ink}"/>
+      <rect x="87" y="124" width="6" height="2" fill="${cream}" opacity="0.9"/>
+      <rect x="127" y="124" width="6" height="2" fill="${cream}" opacity="0.9"/>
+      ${nose}
+      <rect x="95" y="159" width="5" height="6" fill="${ink}"/>
+      <rect x="120" y="159" width="5" height="6" fill="${ink}"/>
+      <rect x="100" y="164" width="20" height="6" fill="${ink}"/>
+      <rect x="103" y="164" width="14" height="3" fill="#d96756"/>
+      <rect x="80" y="137" width="10" height="6" fill="#d96756" opacity="0.42"/>
+      <rect x="130" y="137" width="10" height="6" fill="#d96756" opacity="0.42"/>`;
+  }
+
+  return `
+    <rect x="80" y="113" width="27" height="5" fill="${skinShade}"/>
+    <rect x="113" y="113" width="27" height="5" fill="${skinShade}"/>
+    <rect x="85" y="123" width="10" height="8" fill="${ink}"/>
+    <rect x="125" y="123" width="10" height="8" fill="${ink}"/>
+    <rect x="87" y="124" width="5" height="4" fill="${cream}" opacity="0.88"/>
+    <rect x="127" y="124" width="5" height="4" fill="${cream}" opacity="0.88"/>
+    <rect x="88" y="124" width="2" height="2" fill="${cream}"/>
+    <rect x="128" y="124" width="2" height="2" fill="${cream}"/>
+    ${nose}
+    <rect x="95" y="162" width="30" height="6" fill="${ink}"/>
+    <rect x="101" y="162" width="18" height="3" fill="#d96756"/>
+    <rect x="81" y="137" width="8" height="5" fill="#d96756" opacity="0.34"/>
+    <rect x="131" y="137" width="8" height="5" fill="#d96756" opacity="0.34"/>`;
+}
+
 function renderEstatePortrait(): string {
   return `<svg
     viewBox="0 0 220 300"
@@ -383,6 +447,7 @@ function renderEstatePortrait(): string {
     data-portrait-id="estate"
     data-hair-style="none"
     data-accessory="none"
+    data-mood="neutral"
   >
     <rect width="220" height="300" fill="#dce9be"/>
     <rect width="220" height="18" fill="#f2b84b"/>
@@ -409,7 +474,10 @@ function renderEstatePortrait(): string {
   </svg>`;
 }
 
-export function renderCampaignPortrait(npcId: NpcId | null): string {
+export function renderCampaignPortrait(
+  npcId: NpcId | null,
+  mood: PortraitMood = "neutral",
+): string {
   if (!npcId) return renderEstatePortrait();
   const profile = CAMPAIGN_PORTRAITS[npcId];
   const ink = "#173f4f";
@@ -439,13 +507,44 @@ export function renderCampaignPortrait(npcId: NpcId | null): string {
     data-portrait-id="${npcId}"
     data-hair-style="${profile.hairStyle}"
     data-accessory="${profile.accessory}"
+    data-mood="${mood}"
   >
+    <defs>
+      <!-- Radial face highlight: soft light from top-left -->
+      <radialGradient id="pg-face-${npcId}" cx="38%" cy="28%" r="52%">
+        <stop offset="0%"  stop-color="${skinLight}" stop-opacity="0.72"/>
+        <stop offset="100%" stop-color="${skinShade}" stop-opacity="0"/>
+      </radialGradient>
+      <!-- Backdrop depth: vignette around edges -->
+      <radialGradient id="pg-vign-${npcId}" cx="50%" cy="50%" r="65%">
+        <stop offset="60%"  stop-color="${profile.backdrop}" stop-opacity="0"/>
+        <stop offset="100%" stop-color="${night}" stop-opacity="0.38"/>
+      </radialGradient>
+      <!-- Spotlight from top-centre for Stardew-style warmth -->
+      <radialGradient id="pg-spot-${npcId}" cx="50%" cy="0%" r="80%">
+        <stop offset="0%"  stop-color="${cream}" stop-opacity="0.12"/>
+        <stop offset="100%" stop-color="${cream}" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+
     <rect width="220" height="300" fill="${profile.backdrop}"/>
+    <!-- Backdrop vignette depth -->
+    <rect width="220" height="300" fill="url(#pg-vign-${npcId})"/>
+    <!-- Accent header stripe -->
     <rect width="220" height="18" fill="${profile.accent}"/>
-    <rect x="0" y="18" width="8" height="282" fill="${ink}" opacity="0.16"/>
-    <rect x="212" y="18" width="8" height="282" fill="${ink}" opacity="0.16"/>
-    <path d="M0 207 L74 151 L220 209 V300 H0 Z" fill="${ink}" opacity="0.09"/>
+    <!-- Stripe highlight shimmer -->
+    <rect width="110" height="8" fill="${cream}" opacity="0.12"/>
+    <!-- Side shadow pillars -->
+    <rect x="0" y="18" width="8" height="282" fill="${ink}" opacity="0.18"/>
+    <rect x="212" y="18" width="8" height="282" fill="${ink}" opacity="0.18"/>
+    <!-- Ground shadow plane -->
+    <path d="M0 207 L74 151 L220 209 V300 H0 Z" fill="${ink}" opacity="0.11"/>
+    <!-- Spot light from above -->
+    <rect width="220" height="300" fill="url(#pg-spot-${npcId})"/>
     ${motifMarkup(profile.motif, profile.accent)}
+
+    <!-- Character drop shadow -->
+    <ellipse cx="110" cy="294" rx="54" ry="8" fill="${night}" opacity="0.28"/>
 
     <path d="M${shoulderLeft} 300 V258 L54 223 H166 L${shoulderRight} 258 V300 Z" fill="${ink}"/>
     <path d="M${shoulderLeft + 7} 300 V263 L59 230 H161 L${shoulderRight - 7} 263 V300 Z" fill="${profile.shirt}"/>
@@ -463,18 +562,9 @@ export function renderCampaignPortrait(npcId: NpcId | null): string {
     <path d="M70 78 H150 V153 L138 184 H82 L70 153 Z" fill="${profile.skin}"/>
     <rect x="70" y="78" width="9" height="75" fill="${skinLight}"/>
     <rect x="141" y="78" width="9" height="75" fill="${skinShade}"/>
-    <rect x="80" y="113" width="27" height="5" fill="${skinShade}"/>
-    <rect x="113" y="113" width="27" height="5" fill="${skinShade}"/>
-    <rect x="85" y="123" width="10" height="8" fill="${ink}"/>
-    <rect x="125" y="123" width="10" height="8" fill="${ink}"/>
-    <rect x="88" y="123" width="4" height="3" fill="${cream}"/>
-    <rect x="128" y="123" width="4" height="3" fill="${cream}"/>
-    <rect x="106" y="130" width="8" height="22" fill="${skinShade}"/>
-    <rect x="110" y="130" width="4" height="17" fill="${skinLight}"/>
-    <rect x="95" y="162" width="30" height="6" fill="${ink}"/>
-    <rect x="101" y="162" width="18" height="3" fill="#d96756"/>
-    <rect x="81" y="137" width="8" height="5" fill="#d96756" opacity="0.34"/>
-    <rect x="131" y="137" width="8" height="5" fill="#d96756" opacity="0.34"/>
+    <!-- Face radial highlight overlay -->
+    <path d="M70 78 H150 V153 L138 184 H82 L70 153 Z" fill="url(#pg-face-${npcId})" opacity="0.55"/>
+    ${expressionMarkup(mood, ink, cream, skinLight, skinShade)}
     ${ageLines}
     ${extraAgeLine}
     ${hairMarkup(profile.hairStyle, profile.hair, hairHighlight)}

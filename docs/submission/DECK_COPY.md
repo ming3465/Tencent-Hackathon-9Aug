@@ -1,7 +1,7 @@
 # Kampung SG — Current Judge Deck Copy
 
 This file mirrors the eight-slide deck source in `docs/deck/index.html`.
-Screenshots and evidence figures are current as of 2026-08-03.
+Screenshots and evidence figures are current as of 2026-08-04.
 
 ## Slide 1 — Every Small Act Grows the Kampung
 
@@ -58,17 +58,19 @@ limit; our gate found 2 TypeScript errors, 3 failing tests, 1 unused dependency,
 Later AI-assisted work produced the procedural Phaser world, versioned campaign
 reducer, KampungMind, Web Audio layer, and tests under human direction.
 
-One OpenAI image-generation pass produced a neighbourhood style key from two
-labelled project references. Human review rejected direct runtime use, preserved
-the prompt and output, and translated its strongest idea into four deterministic
-activity vignettes verified in the game. This is not claimed as Miora.
+Three OpenAI visual workflows used labelled project references and preserved
+their prompts and artifacts. Humans translated the first two into verified
+code-drawn systems. The title workflow rejected pseudo-writing, constrained the
+cleanup to non-text pictograms, optimized the accepted image, and integrated it
+into the playable title while keeping interface text semantic. None is claimed
+as Miora.
 
 **Verified after:** strict TypeScript, 75/75 tests, 0 vulnerabilities, 60/60
 production-browser checks.
 
 ## Slide 6 — Fast, private, tested, no backend
 
-**75 tests · 0 vulnerabilities · 99.63 kB initial JavaScript · 0 bytes
+**75 tests · 0 vulnerabilities · 104.71 kB initial JavaScript · 0 bytes
 collected**
 
 - Vite + strict TypeScript + Phaser 3
@@ -104,9 +106,9 @@ Team members: Sutolimin Widjaja and Andreas Auwyano.
 - Contact: sutolimin.45@gmail.com
 - Source: github.com/ming3465/Tencent-Hackathon-9Aug
 - Live: ming3465.github.io/Tencent-Hackathon-9Aug
-- In-game art: procedural Phaser geometry, including a human-curated
-  translation of the generated activity-direction pass
-- OpenAI neighbourhood style key: exact prompt, saved output, review notes, and
-  verified in-game result; not claimed as Miora
+- In-game art: procedural Phaser geometry plus one reviewed generated title
+  panorama
+- Three OpenAI visual workflows: exact prompts, artifacts, review notes, and
+  verified code-drawn or runtime results; none claimed as Miora
 - Deck key art: AI-generated from the documented prompt
 - Full AI and verification record: `docs/AI_USAGE_LOG.md`

@@ -15,16 +15,20 @@
       share their correct building anchor
 - [x] Fourteen estate flavour details have unique IDs, useful authored
       narration, and in-bounds coordinates
-- [x] All 13 NPC profiles have unique, detailed code-drawn portrait definitions
-      and place narration has a separate estate portrait
+- [x] All 13 NPC profiles have unique, detailed code-drawn portrait definitions,
+      neutral/thoughtful/warm expression variants, and place narration has a
+      separate estate portrait
 - [x] Versioned saves, corrupt-save fallback, Start Over, and demo isolation
-- [x] Optional keepsake matching and audio rules
+- [x] Optional keepsake matching, audio rules, and bounded four-chord
+      day/evening voice-leading
 
 ## Production-browser smoke — 60 passing
 
 - [x] Production bundle creates exactly one Phaser Canvas
-- [x] Prologue Voice, authored-line progression, 238×325 px desktop portrait
-      in a 940 px card, choice, and focus
+- [x] Reviewed 1668×943 WebP title artwork loads without desktop overflow
+- [x] Prologue Voice, authored-line progression, sole visible `>` chevron with
+      an accessible name and 48 px target, 238×325 px desktop portrait in a
+      940 px card, expression changes, choice, and focus
 - [x] Keyboard and touch entry/exit with correct return positions
 - [x] Mr. Long, Grandma Ros, Ben, and craftsman interiors
 - [x] Locked progression and two independent clue gates
@@ -44,8 +48,8 @@
 - [x] Physical grass and paving movement expose the matching pooled visual
       response; all three synthesized footstep profiles use one reusable buffer
 - [x] A real approach to the shared bicycles reveals exactly one low-priority
-      marker, a contextual “Look” touch action, complete accessible narration,
-      and an in-bounds 360 px modal
+      marker and exactly one tactile label plate, a contextual “Look” touch
+      action, complete accessible narration, and an in-bounds 360 px modal
 - [x] Both community cats move and HDB laundry advances in normal motion
 - [x] Sweeping, noticeboard, garden, and kopitiam activity vignettes each expose
       both deterministic animation frames in normal motion

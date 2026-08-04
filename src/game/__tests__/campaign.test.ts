@@ -482,7 +482,19 @@ describe("campaign registries", () => {
       return svg;
     });
     expect(new Set(portraitSvgs).size).toBe(NPC_PROFILES.length);
+    const portraitMoods = (["neutral", "thoughtful", "warm"] as const).map(
+      (mood) => renderCampaignPortrait("uncle-ravi", mood),
+    );
+    portraitMoods.forEach((svg, index) => {
+      expect(svg).toContain(
+        `data-mood="${(["neutral", "thoughtful", "warm"] as const)[index]}"`,
+      );
+    });
+    expect(new Set(portraitMoods).size).toBe(3);
     expect(renderCampaignPortrait(null)).toContain('data-portrait-id="estate"');
+    expect(renderCampaignPortrait(null, "warm")).toContain(
+      'data-mood="neutral"',
+    );
   });
 
   it("has a connected, bidirectional location graph", () => {

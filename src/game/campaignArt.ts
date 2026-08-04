@@ -182,6 +182,23 @@ export function paintEstateTerrain(
           .fillStyle(grassLight, 0.58)
           .fillRect(tuftX + 1, tuftY + 1, 2, 2);
       }
+
+      // Scatter wildflower pixels: ~1-in-8 tiles get a tiny 2-pixel bloom
+      if (seed % 8 === 3) {
+        const bloomX = x + 8 + ((seed >>> 20) % 20);
+        const bloomY = y + 8 + ((seed >>> 24) % 16);
+        const bloomColour =
+          seed % 3 === 0
+            ? PALETTE.coral     // red spider lily
+            : seed % 3 === 1
+              ? PALETTE.gold    // golden daisy
+              : 0xd4b0e0;       // pale purple lantana
+        graphics
+          .fillStyle(bloomColour, 0.82)
+          .fillRect(bloomX, bloomY, 3, 3)
+          .fillStyle(0xfff6dc, 0.55)
+          .fillRect(bloomX + 1, bloomY, 1, 1);
+      }
     }
   }
 
@@ -1950,6 +1967,25 @@ export function createRoomBackdropTexture(
       .fillRect(x, 64, 3, height);
   }
 
+  // Plaster courses on the wall. Without them the wall reads as one flat
+  // slab and gives the eye no sense of scale next to the player sprite.
+  for (let y = 40; y < floorTop - 12; y += 26) {
+    graphics
+      .fillStyle(darkenColour(wallColour, 0.08), 0.3)
+      .fillRect(24, y, 912, 2)
+      .fillStyle(lightenColour(wallColour, 0.14), 0.24)
+      .fillRect(24, y + 2, 912, 1);
+  }
+  // Corner ambient occlusion so the room has walls rather than edges.
+  for (let step = 0; step < 5; step += 1) {
+    const inset = step * 6;
+    const alpha = 0.1 - step * 0.018;
+    graphics
+      .fillStyle(PALETTE.night, alpha)
+      .fillRect(24 + inset, 24, 6, floorTop - 24)
+      .fillRect(930 - inset, 24, 6, floorTop - 24);
+  }
+
   const woodFloor = [
     "y-flat",
     "mr-long-flat",
@@ -1965,42 +2001,136 @@ export function createRoomBackdropTexture(
   graphics.fillStyle(floorBase).fillRect(24, floorTop, 912, floorBottom - floorTop);
 
   if (woodFloor) {
-    for (let y = floorTop; y < floorBottom; y += 32) {
-      graphics
-        .fillStyle(darkenColour(floorBase, 0.13))
-        .fillRect(24, y, 912, 3)
-        .fillStyle(lightenColour(floorBase, 0.13))
-        .fillRect(24, y + 3, 912, 2);
-      const offset = ((y / 32) % 2) * 64;
-      for (let x = 24 + offset; x < 936; x += 128) {
-        graphics
-          .fillStyle(darkenColour(floorBase, 0.1))
-          .fillRect(x, y, 3, 32);
+    // Plank courses sized against the player sprite: a board is roughly a
+    // stride long and a boot wide, so the floor reads as material rather
+    // than as oversized panelling.
+    const plankHeight = 22;
+    let row = 0;
+    for (let y = floorTop; y < floorBottom; y += plankHeight) {
+      const rowHeight = Math.min(plankHeight, floorBottom - y);
+      let column = 0;
+      // Boards run long and break at staggered end joints. Equal-width cells
+      // would read as brickwork instead of floorboards.
+      let x = 24 - ((hash + row * 53) % 140);
+      while (x < 936) {
+        const grain = (hash + row * 37 + column * 61) >>> 0;
+        const boardWidth = 132 + (grain % 5) * 26;
+        const left = Math.max(24, x);
+        const right = Math.min(936, x + boardWidth);
+        if (right > left) {
+          const tone = grain % 3;
+          if (tone === 0) {
+            graphics
+              .fillStyle(darkenColour(floorBase, 0.06), 0.5)
+              .fillRect(left, y, right - left, rowHeight);
+          } else if (tone === 2) {
+            graphics
+              .fillStyle(lightenColour(floorBase, 0.07), 0.45)
+              .fillRect(left, y, right - left, rowHeight);
+          }
+          // Two long grain streaks per board rather than a short tick, so the
+          // eye follows the length of the timber.
+          graphics
+            .fillStyle(darkenColour(floorBase, 0.13), 0.4)
+            .fillRect(
+              left + 10,
+              y + 5 + (grain % 4),
+              Math.max(0, right - left - 26),
+              1,
+            )
+            .fillStyle(lightenColour(floorBase, 0.16), 0.34)
+            .fillRect(
+              left + 22,
+              y + 13 + ((grain >>> 3) % 4),
+              Math.max(0, right - left - 44),
+              1,
+            );
+          if (x >= 24) {
+            graphics
+              .fillStyle(darkenColour(floorBase, 0.26), 0.85)
+              .fillRect(x, y + 1, 2, rowHeight - 2);
+          }
+        }
+        x += boardWidth;
+        column += 1;
       }
+      graphics
+        .fillStyle(darkenColour(floorBase, 0.18), 0.8)
+        .fillRect(24, y, 912, 2)
+        .fillStyle(lightenColour(floorBase, 0.15), 0.45)
+        .fillRect(24, y + 2, 912, 1);
+      row += 1;
     }
   } else if (carpetFloor) {
-    for (let x = 42; x < 930; x += 64) {
+    for (let x = 42; x < 930; x += 44) {
       graphics
-        .fillStyle(lightenColour(PALETTE.purple, 0.18), 0.45)
-        .fillRect(x, floorTop, 4, floorBottom - floorTop);
+        .fillStyle(lightenColour(PALETTE.purple, 0.18), 0.4)
+        .fillRect(x, floorTop, 3, floorBottom - floorTop);
     }
-    for (let y = floorTop + 28; y < floorBottom; y += 72) {
+    for (let y = floorTop + 20; y < floorBottom; y += 52) {
       graphics
-        .fillStyle(PALETTE.gold, 0.42)
-        .fillRect(24, y, 912, 3);
+        .fillStyle(PALETTE.gold, 0.38)
+        .fillRect(24, y, 912, 2)
+        .fillStyle(darkenColour(PALETTE.purple, 0.16), 0.4)
+        .fillRect(24, y + 2, 912, 1);
     }
+    graphics
+      .fillStyle(PALETTE.gold, 0.32)
+      .fillRect(46, floorTop + 8, 868, 3)
+      .fillRect(46, floorBottom - 14, 868, 3);
   } else {
-    for (let y = floorTop; y < floorBottom; y += 48) {
-      graphics
-        .fillStyle(PALETTE.concreteEdge, 0.68)
-        .fillRect(24, y, 912, 3);
-      const offset = ((y / 48) % 2) * 32;
-      for (let x = 24 + offset; x < 936; x += 64) {
-        graphics
-          .fillStyle(PALETTE.concreteEdge, 0.58)
-          .fillRect(x, y, 3, 48);
+    // Floor tiles roughly one player-width across, with grout shading and a
+    // deterministic speckle so large rooms do not read as flat colour.
+    const tileHeight = 34;
+    const tileWidth = 46;
+    let row = 0;
+    for (let y = floorTop; y < floorBottom; y += tileHeight) {
+      const rowHeight = Math.min(tileHeight, floorBottom - y);
+      const offset = (row % 2) * (tileWidth / 2);
+      let column = 0;
+      for (let x = 24 - offset; x < 936; x += tileWidth) {
+        const left = Math.max(24, x);
+        const right = Math.min(936, x + tileWidth);
+        if (right > left) {
+          const speck = (hash + row * 29 + column * 53) >>> 0;
+          if (speck % 4 === 0) {
+            graphics
+              .fillStyle(darkenColour(floorBase, 0.05), 0.5)
+              .fillRect(left, y, right - left, rowHeight);
+          } else if (speck % 4 === 2) {
+            graphics
+              .fillStyle(lightenColour(floorBase, 0.07), 0.45)
+              .fillRect(left, y, right - left, rowHeight);
+          }
+          graphics
+            .fillStyle(lightenColour(floorBase, 0.22), 0.4)
+            .fillRect(left + 3, y + 3, Math.min(12, right - left - 6), 2)
+            .fillStyle(PALETTE.concreteEdge, 0.62)
+            .fillRect(x, y, 2, rowHeight);
+        }
+        column += 1;
       }
+      graphics
+        .fillStyle(PALETTE.concreteEdge, 0.7)
+        .fillRect(24, y, 912, 2);
+      row += 1;
     }
+  }
+
+  // Wall-to-floor contact shadow. Five stepped bands keep the crisp-edge art
+  // language while giving the floor somewhere to start.
+  for (let step = 0; step < 5; step += 1) {
+    graphics
+      .fillStyle(PALETTE.night, 0.13 - step * 0.024)
+      .fillRect(24, floorTop + step * 5, 912, 5);
+  }
+  // Side falloff so the middle of the room is the brightest place to stand.
+  for (let step = 0; step < 6; step += 1) {
+    const alpha = 0.075 - step * 0.012;
+    graphics
+      .fillStyle(PALETTE.night, alpha)
+      .fillRect(24 + step * 9, floorTop, 9, floorBottom - floorTop)
+      .fillRect(927 - step * 9, floorTop, 9, floorBottom - floorTop);
   }
 
   graphics
@@ -2008,13 +2138,29 @@ export function createRoomBackdropTexture(
     .fillRect(24, floorBottom, 912, 31)
     .fillStyle(lightenColour(PALETTE.concreteEdge))
     .fillRect(24, floorBottom, 912, 5)
-    .fillStyle(PALETTE.night, 0.08)
+    .fillStyle(PALETTE.night, 0.16)
+    .fillRect(24, floorBottom - 4, 912, 4);
+
+  // Daylight through the window, drawn as light rather than as the grey wedge
+  // this used to be. Two stacked wedges give the shaft a soft core.
+  graphics
+    .fillStyle(PALETTE.cream, 0.16)
     .fillPoints(
       [
         new Phaser.Geom.Point(630, floorTop),
         new Phaser.Geom.Point(875, floorTop),
-        new Phaser.Geom.Point(936, 390),
-        new Phaser.Geom.Point(760, 390),
+        new Phaser.Geom.Point(936, 404),
+        new Phaser.Geom.Point(744, 404),
+      ],
+      true,
+    )
+    .fillStyle(PALETTE.gold, 0.1)
+    .fillPoints(
+      [
+        new Phaser.Geom.Point(668, floorTop),
+        new Phaser.Geom.Point(838, floorTop),
+        new Phaser.Geom.Point(892, 362),
+        new Phaser.Geom.Point(768, 362),
       ],
       true,
     );
