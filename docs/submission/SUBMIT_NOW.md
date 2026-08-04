@@ -24,7 +24,7 @@
 | --- | --- | --- |
 | 1 | **Game Web Link** | ✅ https://ming3465.github.io/Tencent-Hackathon-9Aug/ — auto-deploys from `main`. Judge path: append `?demo=1` (see `docs/DEMO_MODE.md`). |
 | 2 | **Project Introduction Deck (PPT)** | ✅ `docs/deck/Kampung SG-Project Introduction Deck-TheTwoGuys.pptx` + `.pdf`, refreshed for the five-part campaign and KampungMind. Re-export after any later count or screenshot change. |
-| 3 | **Game Demo Video** | ❌ **NOT RECORDED — the critical item.** Beat sheet: `docs/WINNING_PLAYBOOK.md` §4. Shoot on `?demo=1`. Name it `Kampung SG-Game Demo Video-TheTwoGuys.mp4`. |
+| 3 | **Game Demo Video** | ⚠️ **STILL THE CRITICAL ITEM — but no longer from zero.** 86 s of silent gameplay B-roll is captured at `docs/video/kampung-sg-gameplay-broll.mp4`, following the §4 beat order, with a frame index at `docs/video/broll-beats.json`. Regenerate any time with `npm run capture:video`. **What is still missing is human:** voice-over, open captions, the AI-receipts montage, and the 8–10 s end slate. Name the final cut `Kampung SG-Game Demo Video-TheTwoGuys.mp4`. |
 | + | Social bonus (+5) | ❌ Copy ready in `docs/submission/SOCIAL_POST.md`. Confirmed hashtags: `#CodeBuddy #腾讯云黑客松` (+ event tags) on Xiaohongshu / YouTube / X. Post before submission, screenshot each. |
 
 ## USER actions before the window (owner: you two)
@@ -32,7 +32,7 @@
 | # | Action | Time | Notes |
 | --- | --- | --- | --- |
 | U1 | **One genuine CodeBuddy pass + export the chat history.** | 1–2 h | The published mainland rules list CodeBuddy chat history as a submission artifact; our only artifact today is the documented *failure*. Use the ready-made prompt in `docs/prompts/codebuddy-age-signal.txt` (age-signalling task). Keep the failure log too — the story is "what worked, what didn't, both documented". |
-| U2 | **Record the demo video** on `?demo=1`. | ~1 day | Beat sheet in the playbook §4: cold open on golden hour, three resident beats, AI-receipts montage quoting the rules verbatim, 8–10 s end slate with QR. Keep a local MP4; upload YouTube early; consider an unlisted Bilibili mirror. |
+| U2 | **Edit the demo video** (gameplay B-roll already captured). | ~half day | Start from `docs/video/kampung-sg-gameplay-broll.mp4` and cut on `broll-beats.json` rather than scrubbing. Add voice-over, open captions (most judges watch muted), the AI-receipts montage quoting the rules verbatim, and an 8–10 s end slate with QR. Playbook §4 has the timing. Keep a local MP4; upload YouTube early; consider an unlisted Bilibili mirror. **Do not describe the B-roll as a played session — it is a scripted machine capture of the live build.** |
 | U3 | **Playtest with 3–5 real older adults** (a grandparent counts). | half day | Consent script in `docs/PLAYTEST_PROTOCOL.md`. Capture: short quotes, one photo (with consent), one design change made from feedback. Quotes about fun/recognition only — never anything medical. |
 | U4 | **Miora key art** (miora.design, 1,000 free credits on signup). | 1 h | Still Miora-specific and still open. Three auditable OpenAI visual workflows now cover two human-curated code translations and one reviewed playable title asset; none is Miora. Use the prepared Miora prompt for poster/social/deck output and log the real run. Feeds U5. |
 | U5 | **Social posts** on all three platforms with the confirmed hashtags. | 1 h | Before submission. While there, spend 15 min scanning the hashtags for rival entries — free competitor intel. |
