@@ -907,6 +907,9 @@ try {
           `facades=${terrainDetailEvidence.facadeColourCount} colours/` +
           `${terrainDetailEvidence.facadeEdgeTransitions} edges/` +
           `${(terrainDetailEvidence.facadeDarkPixelRatio * 100).toFixed(1)}% dark; ` +
+          `facade-depth=${terrainDetailEvidence.facadeDepthBuildingCount} buildings/` +
+          `${terrainDetailEvidence.facadeEntryRecessCount} recesses/` +
+          `${terrainDetailEvidence.facadeRoofStyleCount} roof styles; ` +
           `bicycle-bays=${terrainDetailEvidence.bicycleRackCount}; ` +
           `motor-vehicles=${terrainDetailEvidence.motorVehicleCount}; ` +
           `layout-issues=${terrainDetailEvidence.layoutIssueCount}; ` +
@@ -2650,6 +2653,9 @@ try {
       && terrainDetailEvidence.facadeColourCount >= 20
       && terrainDetailEvidence.facadeEdgeTransitions >= 180
       && terrainDetailEvidence.facadeDarkPixelRatio >= 0.08
+      && terrainDetailEvidence.facadeDepthBuildingCount === 8
+      && terrainDetailEvidence.facadeEntryRecessCount === 7
+      && terrainDetailEvidence.facadeRoofStyleCount === 2
       && terrainDetailEvidence.bicycleRackCount === 3
       && terrainDetailEvidence.motorVehicleCount === 0
       && terrainDetailEvidence.layoutIssueCount === 0
@@ -2765,6 +2771,9 @@ try {
           `facade-colours=${terrainDetailEvidence.facadeColourCount}, ` +
           `facade-edges=${terrainDetailEvidence.facadeEdgeTransitions}, ` +
           `facade-dark=${(terrainDetailEvidence.facadeDarkPixelRatio * 100).toFixed(1)}%, ` +
+          `facade-depth=${terrainDetailEvidence.facadeDepthBuildingCount}, ` +
+          `entry-recesses=${terrainDetailEvidence.facadeEntryRecessCount}, ` +
+          `roof-styles=${terrainDetailEvidence.facadeRoofStyleCount}, ` +
           `bicycle-bays=${terrainDetailEvidence.bicycleRackCount}, ` +
           `motor-vehicles=${terrainDetailEvidence.motorVehicleCount}, ` +
           `layout-issues=${terrainDetailEvidence.layoutIssueCount}, ` +

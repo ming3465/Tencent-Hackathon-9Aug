@@ -108,7 +108,7 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
 | `npm test` | 75 tests across campaign, audio, and optional matching |
-| `npm run build` | 104.71 kB initial JS (31.97 kB gzip); 1,587.98 kB lazy scene (372.48 kB gzip) |
+| `npm run build` | 106.23 kB initial JS (32.29 kB gzip); 1,591.09 kB lazy scene (373.43 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
 | `npm run smoke` | 60/60 production-browser checks |
 

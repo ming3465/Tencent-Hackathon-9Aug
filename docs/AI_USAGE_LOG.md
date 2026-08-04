@@ -2364,3 +2364,81 @@ inspected at 1:1.
   claim was introduced by this session.
 - **2026-08-04** (Antigravity) — Applied Visual Novel UI layer polish. Added frosted glass `backdrop-filter` and warmer radial background to the main dialogue card. Refined portrait entrance animations with a smoother cubic-bezier slide-in curve and bottom-center transform origin. Re-applied text-shadow to dialogue text and enhanced hover interactions on choice buttons. Restored the title screen image overlay `title-art` which had been temporarily lost during CSS restoration. The entire journey was verified to pass 75 tests, 60/60 browser checks, and 0 vulnerabilities without breaking any smoke expectations.
 - **2026-08-04** (Antigravity) — Lighting & Atmosphere Enhancement continuation: Added a subtle CSS vignette overlay to the `#world-shell` using a radial gradient to darken the edges and draw focus to the player. Added 9 animated floating ambient particles (dust motes, pollen, leaves) to the game world via CSS that float continuously, enhancing the "golden hour" vibe without impacting Phaser's canvas rendering or performance budgets. Handled accessibility properly by tying the particle animation to `prefers-reduced-motion: reduce`. The implementation ran smoothly, maintaining the p95 ≤28ms limit for frame rendering and passing all 60 smoke checks.
+
+## 2026-08-04 - Shared Exterior Projection-Depth Pass
+
+**Tool:** Codex (GPT-5), working under human direction.
+
+**AI-assisted review and implementation:**
+
+- Codex reviewed the current production façade captures, the centralized
+  entrance/collision layout, the projection backlog, and the original
+  code-drawn palette. The user's Stardew-like reference was treated as a
+  quality bar for readable top-down architecture, not permission to copy its
+  sprites, palette, buildings, map, text, systems, or branding.
+- Added one geometry-only façade-depth registry keyed to all eight existing
+  building visual-zone IDs. It records hipped or sawtooth roof style, roof
+  depth/inset/segments, side-face width, and project-palette accent. The estate
+  layout audit now rejects missing, duplicate, or invalid projection profiles.
+- Added a separate renderer module for roof planes and seams, right-side faces,
+  sheared ground contact shadows, and recessed thresholds. The pass is baked
+  once into the four existing exterior textures, so it creates no per-frame
+  façade objects. Seven usable entrances gain a dark entry bay behind their
+  existing door art; Block 12 retains its non-enterable background role.
+- Door coordinates, interaction points, collision shells, occlusion crops,
+  return positions, and travel lanes were not moved. Existing fade behavior
+  therefore applies to the added roof, wall, and entry pixels as one building.
+- Extended the existing campaign registry assertion without increasing the
+  75-test headline. The 60-check browser gate now requires eight depth
+  profiles, seven entry recesses, and both roof styles in addition to its
+  façade colour/edge/dark-value and physical collision assertions.
+- Image generation was deliberately not used for this step: the target was a
+  renderer-native geometry system that must share live building IDs and
+  occlusion behavior. The result remains original code-drawn art.
+
+**Rendered evidence and documentation:**
+
+- A private production-browser journey passed 60/60 checks across the full and
+  demo campaigns, all locations, 360 px layout, reduced motion, monsoon,
+  fullscreen/focus, building collision, and façade fade/restore. It measured
+  214 sampled façade colours, 270 horizontal edge transitions, 28.6% dark
+  pixels, 95 obstacle bodies, and zero layout issues.
+- That passing run measured 9.20 ms title p95, 9.20 ms resident-route p95,
+  9.10 ms monsoon p95, 9.00 ms active-movement p95 at 2.68 ms/frame
+  main-thread work, and 9.20 ms p95 at 8.52 ms/frame under 4x CPU throttle.
+- Codex inspected refreshed landmark, occlusion, workshop, south-estate, and
+  360 px renders. Roof silhouettes, entry recesses, signs, player guide,
+  interaction prompts, and routes remained readable; no camera or collision
+  correction was needed after the render.
+- The documented build is 81.69 kB HTML (14.79 kB gzip), 106.23 kB initial
+  JavaScript (32.29 kB gzip), and 1,591.09 kB lazy scene code (373.43 kB
+  gzip). Current README, design, accessibility, demo, QA, evidence, playbook,
+  deck-copy, and backlog figures were synchronized.
+- The eight-slide deck was refreshed through its retained artifact-tool
+  template/edit workspace. The template plan and fidelity checks reported zero
+  issues, all eight 1280x720 slide renders were inspected, and the regenerated
+  PDF passed eight-page, 1280x720, unencrypted, title/author/subject, and
+  rendered-page checks.
+- `graphify update .` rebuilt the local graph to 1,121 nodes, 2,026 edges, and
+  61 communities. It retained the known fail-closed node, reported two
+  zero-node local JSON files, and warned that 59 saved labels trail the current
+  topology; no semantic relabel was claimed.
+- During this lane, a separate agent committed gameplay B-roll capture as
+  `dfc0fd9`. Codex preserved that commit and the remaining untracked
+  `scripts/build-demo-video.mjs` without editing or staging the latter. This
+  section makes no authorship, human-play-session, narration, caption, or
+  finished-video claim for that concurrent work.
+
+**Claim boundary:**
+
+- This is AI-assisted code authoring, deterministic production-browser
+  evidence, and human inspection of rendered captures. It is not a human
+  playtest, real-device touch check, screen-reader session, 200%-zoom pass,
+  calibrated display study, older-hardware run, or same-hardware comparison
+  with Stardew Valley or another game.
+- The connected in-app browser was unavailable, so verification used the
+  repository's production Chrome/CDP harness and local rendered-image
+  inspection.
+- No copied or generated runtime raster, new dependency, backend, account,
+  analytics, personal-data collection, runtime model, network request, timer,
+  failure state, energy system, medical claim, or Miora claim was introduced.

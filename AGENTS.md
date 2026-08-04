@@ -103,6 +103,29 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-04 (Codex, exterior projection lane)** — Replaced the remaining
+  flat-card treatment on all eight major exterior structures with one audited
+  shallow three-quarter contract: hipped or sawtooth roof planes and seams,
+  right-side faces, sheared contact shadows, and seven recessed usable
+  thresholds. Geometry is centralized by the existing visual-zone IDs and
+  rendered from a separate code-drawn helper into the four baked estate
+  textures; no door, prompt, collision shell, occlusion crop, return point, or
+  route moved. Registry assertions remain inside the 75-test headline, while
+  the 60-check browser gate now requires 8 depth profiles / 7 recesses / 2 roof
+  styles alongside physical collision and fade/restore. A private passing run
+  measured 214 façade colours / 270 edges / 28.6% dark pixels, 9.00 ms active
+  p95 at 2.68 ms/frame work, and 9.20 ms p95 at 8.52 ms/frame under 4x CPU
+  throttle. Desktop landmark/occlusion/workshop/south and 360 px captures were
+  inspected. Build is 81.69 kB HTML (14.79 kB gzip), 106.23 kB initial JS
+  (32.29 kB gzip), and 1,591.09 kB lazy scene code (373.43 kB gzip). The
+  eight-slide PPTX and eight-page PDF were synchronized; artifact-tool template
+  plan/fidelity and PDF page-size/metadata/render checks passed, and all slide
+  renders were inspected. Graphify rebuilt to 1,121 nodes / 2,026 edges / 61
+  communities with the known fail-closed/stale-label warnings. A concurrent
+  agent committed B-roll capture as `dfc0fd9`; its remaining untracked
+  composition script was preserved and excluded from this lane. No copied
+  game art, new generated runtime image, real-device/human playtest, Miora,
+  screen-reader, 200%-zoom, or cross-game-equivalence claim.
 - **2026-08-04 (Codex, integration and evidence lane)** — Accepted the user's
   cozy three-quarter reference as direction for a future faux-3/4 façade pass,
   without copying its sprites/layout or claiming a true-isometric rewrite.

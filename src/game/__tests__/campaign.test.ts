@@ -37,6 +37,7 @@ import {
   ESTATE_BUILDING_COLLISION_ZONES,
   ESTATE_BUILDING_VISUAL_ZONES,
   ESTATE_ENTRANCES,
+  ESTATE_FACADE_DEPTH_DEFINITIONS,
   ESTATE_VEHICLE_LANES,
   ESTATE_VEHICLE_ROUTES,
   getOccludingBuildingIds,
@@ -403,6 +404,23 @@ describe("campaign registries", () => {
     expect(ESTATE_VEHICLE_ROUTES).toHaveLength(0);
     expect(ESTATE_BUILDING_VISUAL_ZONES).toHaveLength(8);
     expect(ESTATE_BUILDING_COLLISION_ZONES).toHaveLength(14);
+    expect(ESTATE_FACADE_DEPTH_DEFINITIONS).toHaveLength(8);
+    expect(
+      new Set(
+        ESTATE_FACADE_DEPTH_DEFINITIONS.map(
+          (definition) => definition.buildingId,
+        ),
+      ),
+    ).toEqual(
+      new Set(ESTATE_BUILDING_VISUAL_ZONES.map((building) => building.id)),
+    );
+    expect(
+      new Set(
+        ESTATE_FACADE_DEPTH_DEFINITIONS.map(
+          (definition) => definition.roofStyle,
+        ),
+      ),
+    ).toEqual(new Set(["hipped", "sawtooth"]));
     expect(
       ESTATE_ENTRANCES.map((entrance) => [
         entrance.id,

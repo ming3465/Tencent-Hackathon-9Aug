@@ -101,10 +101,13 @@
 - [x] All seven exterior entrance visuals, prompts, thresholds, and collision
       gaps resolve from one audited registry; no doorway sits outside or high
       inside its named façade
+- [x] All eight exterior structures resolve one audited projection profile,
+      spanning two roof styles and seven baked entry recesses without changing
+      the entrance or collision registries
 - [x] The persistent downward guide triangle follows the player in rooms and
       outdoors and remains above façade-occlusion layers
 - [x] Generated landmark façade exposes at least 20 colours, 180 edge
-      transitions, and 8% dark pixels (documented pass: 56 / 226 / 25.4%)
+      transitions, and 8% dark pixels (documented pass: 214 / 270 / 28.6%)
 - [x] All 95 obstacle bodies instantiate; a real northward movement sample
       stops at the Minah storefront (about `y=396` to `y=253`) while east/south
       travel remains reachable

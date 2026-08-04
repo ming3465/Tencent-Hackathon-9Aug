@@ -56,6 +56,8 @@ frames, nearby attention, baked terrain details, community cats, and HDB
 laundry are the same in both modes; demo mode receives no lighter visual path.
 The same eight building-occlusion layers soften when covering the player;
 reduced-motion users receive that state change instantly.
+The shared roof planes, side faces, contact shadows, and recessed entry bays
+are baked into both modes; demo mode does not simplify the estate projection.
 Chapter 2 also uses the same deterministic monsoon, wet surfaces, puddles,
 shelter masking, resident/cat responses, and reduced-motion fallback. Only the
 helper and invitee thresholds change.
@@ -80,3 +82,4 @@ does not remove an animation, effect, location, or conversation.
 | 2026-08-03 | Confirmed the circular map, room-fit interiors, and quest-book Journal are shared unchanged. |
 | 2026-08-04 | Confirmed the player guide, aligned entrances, sound focus, and full-screen flow are shared unchanged. |
 | 2026-08-04 | Confirmed surface feedback, interaction-facing, idle behavior, and the speed-matched walk cadence are shared unchanged. |
+| 2026-08-04 | Confirmed the shared exterior projection-depth pass is identical in full and demo modes. |

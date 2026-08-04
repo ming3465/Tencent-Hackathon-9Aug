@@ -213,6 +213,12 @@ tools, thresholds, and code-drawn pixel signs. Seven exterior entrances share
 one registry for their code-drawn door, prompt point, named building, and
 placard. Fourteen building collision zones make the architecture physically
 solid while leaving explicit audited gaps aligned with those usable doors.
+All eight large exterior structures now also share one shallow three-quarter
+projection contract. Hipped or sawtooth roof planes, seam lines, right-side
+faces, ground contact shadows, and seven recessed entry bays are baked into the
+same quadrant textures as their original façades. The depth registry keys each
+profile to the existing visual-zone ID, and the layout audit rejects duplicate,
+missing, or invalid geometry without moving a doorway or collision shell.
 Three bicycle racks use centralized outdoor-verge
 placements, marked concrete bays, and solid collision. Their ground footprints
 are checked against the larger visual bounds of all eight exterior buildings
@@ -335,7 +341,7 @@ mobile density, dry shelter regions, and stored activity tools without turning
 animation-phase-dependent visible-streak counts into a product claim.
 It rendered the desktop bust at 238×325 px with 41 drawn primitives inside a
 940 px card and the mobile bust at 88×120 px without horizontal overflow.
-The current façade sample contains 56 colours, 226 edge transitions, and 25.4% dark
+The current façade sample contains 214 colours, 270 edge transitions, and 28.6% dark
 pixels; a real storefront collision moved the player from about `y=396` to
 `y=253` before stopping outside the wall.
 An earlier host-capped 30 Hz run remains logged as evidence that calibration

@@ -26,10 +26,12 @@ import {
   ESTATE_BUILDING_COLLISION_ZONES,
   ESTATE_BUILDING_VISUAL_ZONES,
   ESTATE_ENTRANCES,
+  ESTATE_FACADE_DEPTH_DEFINITIONS,
   ESTATE_VEHICLE_ROUTES,
   getOccludingBuildingIds,
   type EstateRect,
 } from "./estateLayout.js";
+import { paintFacadeDepth } from "./facadeDepthArt.js";
 import {
   movementSurfaceAt,
   stepIntervalFor,
@@ -320,6 +322,9 @@ export interface CampaignTerrainDetailSnapshot {
   facadeColourCount: number;
   facadeEdgeTransitions: number;
   facadeDarkPixelRatio: number;
+  facadeDepthBuildingCount: number;
+  facadeEntryRecessCount: number;
+  facadeRoofStyleCount: number;
   bicycleRackCount: number;
   motorVehicleCount: number;
   layoutIssueCount: number;
@@ -1985,6 +1990,9 @@ export class EstateScene extends WalkableScene {
         facadeColourCount: 0,
         facadeEdgeTransitions: 0,
         facadeDarkPixelRatio: 0,
+        facadeDepthBuildingCount: 0,
+        facadeEntryRecessCount: 0,
+        facadeRoofStyleCount: 0,
         bicycleRackCount: 0,
         motorVehicleCount: 0,
         layoutIssueCount: 0,
@@ -2114,6 +2122,17 @@ export class EstateScene extends WalkableScene {
       facadeEdgeTransitions,
       facadeDarkPixelRatio:
         facadeOpaquePixels === 0 ? 0 : facadeDarkPixels / facadeOpaquePixels,
+      facadeDepthBuildingCount: ESTATE_FACADE_DEPTH_DEFINITIONS.length,
+      facadeEntryRecessCount: ESTATE_ENTRANCES.filter((entrance) =>
+        ESTATE_FACADE_DEPTH_DEFINITIONS.some(
+          (definition) => definition.buildingId === entrance.buildingId,
+        ),
+      ).length,
+      facadeRoofStyleCount: new Set(
+        ESTATE_FACADE_DEPTH_DEFINITIONS.map(
+          (definition) => definition.roofStyle,
+        ),
+      ).size,
       bicycleRackCount: ESTATE_BICYCLE_RACKS.length,
       motorVehicleCount: ESTATE_VEHICLE_ROUTES.length,
       layoutIssueCount: auditEstateLayout().length,
@@ -2882,7 +2901,47 @@ export class EstateScene extends WalkableScene {
         .fillStyle(0x9b714b)
         .fillRect(221, 646, 150, 4);
     }
+    this.paintFacadeDepthDetails(graphics, originX, originY);
     this.paintGroundDetails(graphics, originX, originY);
+  }
+
+  private paintFacadeDepthDetails(
+    graphics: Phaser.GameObjects.Graphics,
+    originX: number,
+    originY: number,
+  ): void {
+    const tileRight = originX + 1280;
+    const tileBottom = originY + 800;
+    for (const definition of ESTATE_FACADE_DEPTH_DEFINITIONS) {
+      const worldZone = ESTATE_BUILDING_VISUAL_ZONES.find(
+        (candidate) => candidate.id === definition.buildingId,
+      );
+      if (
+        !worldZone
+        || worldZone.x < originX
+        || worldZone.y < originY
+        || worldZone.x + worldZone.width > tileRight
+        || worldZone.y + worldZone.height > tileBottom
+      ) {
+        continue;
+      }
+      const localZone: EstateRect = {
+        ...worldZone,
+        x: worldZone.x - originX,
+        y: worldZone.y - originY,
+      };
+      const worldEntrance = ESTATE_ENTRANCES.find(
+        (candidate) => candidate.buildingId === definition.buildingId,
+      );
+      const localEntrance = worldEntrance
+        ? {
+            ...worldEntrance,
+            x: worldEntrance.x - originX,
+            y: worldEntrance.y - originY,
+          }
+        : undefined;
+      paintFacadeDepth(graphics, definition, localZone, localEntrance);
+    }
   }
 
   private paintGroundDetails(

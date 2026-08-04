@@ -37,6 +37,23 @@ export interface EstateEntranceDefinition {
   placard: string;
 }
 
+export type EstateFacadeAccent =
+  | "coral"
+  | "gold"
+  | "green"
+  | "purple"
+  | "teal";
+
+export interface EstateFacadeDepthDefinition {
+  buildingId: string;
+  accent: EstateFacadeAccent;
+  roofStyle: "hipped" | "sawtooth";
+  roofDepth: number;
+  roofInset: number;
+  roofSegments: number;
+  sideFaceWidth: number;
+}
+
 export const ESTATE_WORLD_BOUNDS: EstateRect = {
   id: "estate-world",
   x: 0,
@@ -58,6 +75,87 @@ export const ESTATE_BUILDING_VISUAL_ZONES: readonly EstateRect[] = [
   { id: "craftsman-workshop", x: 920, y: 1108, width: 350, height: 252 },
   { id: "block-12", x: 1354, y: 1254, width: 442, height: 230 },
   { id: "prayer-hall", x: 1914, y: 1274, width: 462, height: 238 },
+];
+
+/**
+ * Every large exterior structure uses one projection contract. The values are
+ * intentionally geometry-only so art, occlusion, tests, and future collision
+ * work can share the same building IDs without importing a renderer.
+ */
+export const ESTATE_FACADE_DEPTH_DEFINITIONS:
+  readonly EstateFacadeDepthDefinition[] = [
+  {
+    buildingId: "block-9",
+    accent: "coral",
+    roofStyle: "hipped",
+    roofDepth: 27,
+    roofInset: 22,
+    roofSegments: 8,
+    sideFaceWidth: 16,
+  },
+  {
+    buildingId: "hawker-centre",
+    accent: "coral",
+    roofStyle: "hipped",
+    roofDepth: 24,
+    roofInset: 18,
+    roofSegments: 4,
+    sideFaceWidth: 12,
+  },
+  {
+    buildingId: "kopitiam",
+    accent: "teal",
+    roofStyle: "hipped",
+    roofDepth: 25,
+    roofInset: 18,
+    roofSegments: 5,
+    sideFaceWidth: 12,
+  },
+  {
+    buildingId: "provision-shop",
+    accent: "green",
+    roofStyle: "hipped",
+    roofDepth: 25,
+    roofInset: 20,
+    roofSegments: 6,
+    sideFaceWidth: 14,
+  },
+  {
+    buildingId: "community-centre",
+    accent: "purple",
+    roofStyle: "hipped",
+    roofDepth: 27,
+    roofInset: 22,
+    roofSegments: 6,
+    sideFaceWidth: 16,
+  },
+  {
+    buildingId: "craftsman-workshop",
+    accent: "coral",
+    roofStyle: "sawtooth",
+    roofDepth: 50,
+    roofInset: 10,
+    roofSegments: 4,
+    sideFaceWidth: 14,
+  },
+  {
+    buildingId: "block-12",
+    accent: "coral",
+    roofStyle: "hipped",
+    roofDepth: 27,
+    roofInset: 22,
+    roofSegments: 5,
+    sideFaceWidth: 14,
+  },
+  {
+    buildingId: "prayer-hall",
+    accent: "gold",
+    roofStyle: "hipped",
+    roofDepth: 27,
+    roofInset: 20,
+    roofSegments: 5,
+    sideFaceWidth: 14,
+  },
 ];
 
 /**
@@ -280,6 +378,41 @@ export function auditEstateLayout(): readonly string[] {
   const seenInteractionIds = new Set<string>();
   const seenEntranceIds = new Set<string>();
   const seenEntranceLocations = new Set<LocationId>();
+  const seenFacadeDepthBuildings = new Set<string>();
+
+  for (const definition of ESTATE_FACADE_DEPTH_DEFINITIONS) {
+    if (seenFacadeDepthBuildings.has(definition.buildingId)) {
+      issues.push(
+        `Duplicate facade depth definition: ${definition.buildingId}`,
+      );
+    }
+    seenFacadeDepthBuildings.add(definition.buildingId);
+    const building = ESTATE_BUILDING_VISUAL_ZONES.find(
+      (candidate) => candidate.id === definition.buildingId,
+    );
+    if (!building) {
+      issues.push(
+        `Facade depth definition references missing ${definition.buildingId}`,
+      );
+      continue;
+    }
+    if (
+      definition.roofDepth < 16
+      || definition.roofDepth >= building.height / 2
+      || definition.roofInset < 8
+      || definition.roofInset * 2 >= building.width
+      || definition.roofSegments < 2
+      || definition.sideFaceWidth < 8
+      || definition.sideFaceWidth >= building.width / 4
+    ) {
+      issues.push(`Invalid facade depth geometry: ${definition.buildingId}`);
+    }
+  }
+  for (const building of ESTATE_BUILDING_VISUAL_ZONES) {
+    if (!seenFacadeDepthBuildings.has(building.id)) {
+      issues.push(`Missing facade depth definition: ${building.id}`);
+    }
+  }
 
   for (const entrance of ESTATE_ENTRANCES) {
     if (seenEntranceIds.has(entrance.id)) {

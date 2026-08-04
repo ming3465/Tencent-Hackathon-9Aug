@@ -151,6 +151,8 @@ The code-drawn landmark names, awnings, glazing, and structural details are
 decorative reinforcement rather than the only route to meaning. Visible
 runtime door prompts, location announcements, and equivalent Journal actions
 remain the semantic path. The harness samples façade value/edge structure,
+counts all eight shared depth profiles, both roof styles, and seven recessed
+entry bays,
 counts 95 live obstacle bodies, confirms all three solid bicycle bays remain
 outside pedestrian spines and building footprints, and physically proves the
 Minah storefront is
