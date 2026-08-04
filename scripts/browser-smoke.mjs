@@ -93,8 +93,9 @@ class Cdp {
     socket.addEventListener("message", (event) => {
       const message = JSON.parse(event.data);
       if (message.id && this.#pending.has(message.id)) {
-        const { resolve, reject } = this.#pending.get(message.id);
+        const { resolve, reject, timeout } = this.#pending.get(message.id);
         this.#pending.delete(message.id);
+        clearTimeout(timeout);
         message.error ? reject(new Error(JSON.stringify(message.error))) : resolve(message.result);
         return;
       }
@@ -124,12 +125,24 @@ class Cdp {
     const id = ++this.#id;
     const message = sessionId ? { id, method, params, sessionId } : { id, method, params };
     return new Promise((resolve, reject) => {
-      this.#pending.set(id, { resolve, reject });
-      this.#socket.send(JSON.stringify(message));
+      const timeout = setTimeout(() => {
+        if (!this.#pending.delete(id)) return;
+        reject(new Error(`CDP command timed out after 30 seconds: ${method}`));
+      }, 30_000);
+      this.#pending.set(id, { resolve, reject, timeout });
+      try {
+        this.#socket.send(JSON.stringify(message));
+      } catch (error) {
+        clearTimeout(timeout);
+        this.#pending.delete(id);
+        reject(error);
+      }
     });
   }
 
   close() {
+    for (const { timeout } of this.#pending.values()) clearTimeout(timeout);
+    this.#pending.clear();
     this.#socket.close();
   }
 }
@@ -268,6 +281,39 @@ try {
   await page.send("Runtime.enable");
   await page.send("Performance.enable");
 
+  const waitForPageCondition = async (
+    expression,
+    label,
+    timeoutMs = 4000
+  ) => {
+    const deadline = Date.now() + timeoutMs;
+    do {
+      try {
+        if (await page.eval(`Boolean(${expression})`)) return;
+      } catch {
+        // A navigation may replace the execution context between polls.
+      }
+      await sleep(80);
+    } while (Date.now() < deadline);
+    throw new Error(`Timed out waiting for ${label}`);
+  };
+
+  const waitForRenderedDialogueLine = (label) =>
+    waitForPageCondition(
+      `(() => {
+        const visible = document.getElementById("dialog-text");
+        const complete = document.getElementById("dialog-text-a11y");
+        return Boolean(
+          visible
+          && complete
+          && visible.textContent === complete.textContent
+          && !visible.classList.contains("typing")
+        );
+      })()`,
+      label,
+      3000
+    );
+
   const sampleFramePacing = () => page.eval(`
     new Promise((resolve) => {
       const samples = [];
@@ -349,7 +395,13 @@ try {
   };
 
   const walkToAxis = async (axis, target, tolerance = 18) => {
-    for (let attempt = 0; attempt < 12; attempt += 1) {
+    // Single-axis walking stalls against any solid the route happens to line up
+    // with, so whether a leg succeeded used to depend on where the previous leg
+    // left the player. When an attempt makes no headway, step around the
+    // obstacle before pushing on the target axis again.
+    let previous = null;
+    let dodges = 0;
+    for (let attempt = 0; attempt < 16; attempt += 1) {
       const snapshot = await page.eval(
         `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
       );
@@ -358,6 +410,15 @@ try {
       }
       const delta = target - snapshot.player[axis];
       if (Math.abs(delta) <= tolerance) return snapshot;
+      if (previous !== null && Math.abs(snapshot.player[axis] - previous) < 4) {
+        const [dodgeKey, dodgeCode] =
+          axis === "x"
+            ? dodges % 2 === 0 ? ["ArrowDown", 40] : ["ArrowUp", 38]
+            : dodges % 2 === 0 ? ["ArrowRight", 39] : ["ArrowLeft", 37];
+        dodges += 1;
+        await walkWorld(dodgeKey, dodgeKey, dodgeCode, 220 + dodges * 110);
+      }
+      previous = snapshot.player[axis];
       const positive = delta > 0;
       const [key, keyCode] =
         axis === "x"
@@ -576,6 +637,7 @@ try {
           `id=${portraitEvidence.desktop.id}; ` +
           `mood=${portraitEvidence.desktop.mood}`
       );
+      await waitForRenderedDialogueLine("the prologue evidence line");
       await page.shot(`${SHOT_DIR}/04-dialogue.png`);
     }
     const firstLine = await page.eval(`document.getElementById("dialog-text-a11y").textContent`);
@@ -684,6 +746,7 @@ try {
       })()
     `);
     if (testTouchExit) {
+      await waitForRenderedDialogueLine("Mr. Long's evidence line");
       await page.shot(`${SHOT_DIR}/19-mr-long-portrait.png`);
     }
     await completeDialogueChoice();
@@ -1275,8 +1338,11 @@ try {
         `worst ${wanderingFramePacing.worst.toFixed(2)}ms`
     );
     await page.shot(`${SHOT_DIR}/10-living-estate.png`);
-    await walkToAxis("x", 1280);
+    // Leave the north-crossing prop line before travelling east. A straight
+    // axis-only hold can correctly meet the planter/trolley collision shells;
+    // the player route goes around them just as a real player would.
     await walkToAxis("y", 650);
+    await walkToAxis("x", 1280);
     await page.shot(`${SHOT_DIR}/27-ambient-micro-scenes.png`);
     await walkToAxis("y", 400);
     await walkToAxis("x", 700);
@@ -1434,9 +1500,10 @@ try {
         laundryStored: after.visibleLaundryCount === 0,
         mobile: false,
       };
-      // Centre the full 22 px player body in the authored 46 px gap between
-      // the frangipani trunk and flower bed before heading south.
-      await walkToAxis("x", 1013);
+      // Use the broad west-spine approach before heading south. The previous
+      // route depended on a 46 px decorative gap whose collision tolerance
+      // became too narrow once the player's full 22 px body was considered.
+      await walkToAxis("x", 700);
       await walkToAxis("y", 755);
       await walkToAxis("x", 650);
       await page.shot(`${SHOT_DIR}/22-monsoon-shelter.png`);
@@ -2232,7 +2299,12 @@ try {
     `)
   );
   await page.send("Page.navigate", { url: TEST_URL });
-  await sleep(900);
+  await waitForPageCondition(
+    `document.readyState === "complete"
+      && document.getElementById("btn-continue")
+      && !document.getElementById("btn-continue").hidden`,
+    "saved title actions after reload"
+  );
   await page.eval(`document.getElementById("btn-continue").click()`);
   await sleep(1500);
   check(
@@ -2247,7 +2319,12 @@ try {
     features: [{ name: "prefers-reduced-motion", value: "reduce" }],
   });
   await page.send("Page.navigate", { url: DEMO_TEST_URL });
-  await sleep(900);
+  await waitForPageCondition(
+    `document.readyState === "complete"
+      && document.getElementById("btn-start")
+      && !document.getElementById("btn-start").hidden`,
+    "demo title actions"
+  );
   check(
     "Demo mode ignores the full campaign save",
     await page.eval(`
@@ -2276,7 +2353,12 @@ try {
     features: [{ name: "prefers-reduced-motion", value: "no-preference" }],
   });
   await page.send("Page.navigate", { url: TEST_URL });
-  await sleep(900);
+  await waitForPageCondition(
+    `document.readyState === "complete"
+      && document.getElementById("btn-start-over")
+      && !document.getElementById("btn-start-over").hidden`,
+    "saved title actions before Start Over"
+  );
   await page.eval(`window.confirm = () => true; document.getElementById("btn-start-over").click()`);
   await sleep(1600);
   check(
@@ -2342,6 +2424,7 @@ try {
   await page.shot(`${SHOT_DIR}/14-mobile-game.png`);
   await page.eval(`document.getElementById("btn-touch-interact").click()`);
   await sleep(240);
+  await waitForRenderedDialogueLine("the mobile dialogue evidence line");
   portraitEvidence.mobile = await page.eval(`
     (() => {
       const overlay = document.getElementById("dialog-overlay");

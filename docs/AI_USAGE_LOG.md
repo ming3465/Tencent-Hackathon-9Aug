@@ -2211,19 +2211,39 @@ the Codex built-in OpenAI image-generation tool.
   WebP loaded at 1668×943, portrait expressions changed, the chevron had no
   visible Continue text while retaining its accessible name and target size,
   and the new marker plate followed the selected interaction.
-- That journey measured 9.10 ms title p95, 8.90 ms resident-route p95,
-  9.20 ms monsoon p95, and 9.30 ms active-movement p95 with 2.66 ms/frame
-  main-thread work. The 4× CPU-throttled sample measured 9.30 ms p95 with
-  10.34 ms/frame work. These are headless Chrome regression signals, not
+- The in-app Browser was unavailable (`iab`), so Codex used the repository's
+  production Chrome/CDP journey and local rendered-image inspection. One
+  journey correctly stopped at a solid north-crossing prop while its
+  axis-only evidence route tried to walk through it; the route now goes around
+  the prop. A later run attached to an older browser because two stale smoke
+  processes shared port 9222. Codex terminated only those exact stale test
+  processes and repeated the journey in one isolated browser profile. The
+  walker now sidesteps when an axis makes no headway, navigation waits on real
+  page conditions, evidence captures wait for the complete authored line, and
+  every CDP command has a 30-second fail-closed timeout.
+- The final clean journey measured 9.00 ms title p95, 9.10 ms resident-route
+  p95, 9.20 ms monsoon p95, and 9.20 ms active-movement p95 with 2.96 ms/frame
+  main-thread work. The 4× CPU-throttled sample measured 9.20 ms p95 with
+  9.80 ms/frame work. These are headless Chrome regression signals, not
   real-device or cross-game benchmarks.
 - The current production build is 104.71 kB initial JavaScript (31.97 kB gzip)
-  and 1,587.65 kB lazy campaign/Phaser code (372.36 kB gzip). The HTML payload
+  and 1,587.98 kB lazy campaign/Phaser code (372.47 kB gzip). The HTML payload
   is 78.11 kB (14.22 kB gzip) after removing the retired illustration CSS.
 - Codex visually inspected the desktop title, desktop/mobile Voice dialogue,
   nearest-resident marker, room materials, and evening capture. The first
   dialogue capture exposed the focused chevron's button-like circle; it was
   replaced by the smaller underline treatment. The evening capture drove the
   reduced lighting glaze described above.
+- The eight-slide judge deck was refreshed from the final 1280×720 captures.
+  Its template plan and final template-fidelity checks reported zero issues,
+  the slide overflow test passed, and Codex inspected the complete PPTX and
+  rendered eight-page PDF montages. Correcting an accidental 4× deck-capture
+  scale reduced the final PPTX/PDF from 20/31 MB to 2.6/2.8 MB without changing
+  slide composition.
+- `graphify update .` rebuilt the local graph to 1,061 nodes, 1,935 edges, and
+  58 communities. It retained the known one fail-closed node and reported that
+  56 saved labels trail the current communities with seven hub-based renames;
+  no LLM relabelling is claimed.
 
 **Claim boundary:**
 
@@ -2238,3 +2258,69 @@ the Codex built-in OpenAI image-generation tool.
   and interactions remain original code-drawn systems. No backend, account,
   analytics, personal-data collection, runtime LLM, timer, failure state,
   energy system, copied game asset, or medical claim was introduced.
+
+## 2026-08-04 — In-World Art Lane: Interiors, Markers, and a Red-Gate Fix
+
+**Tool:** Claude Code (Opus 5), running concurrently with a separate Codex /
+CodeBuddy session in the same working tree.
+
+**Concurrency, stated honestly.** Two other agent processes were live in this
+directory during this session. Rather than duplicate their work, this session
+claimed the in-world art layer and backed out its own portrait edits after
+discovering both sessions had independently added a vignette to the same
+portrait file within five minutes of each other. The parallel session's commit
+`694286c` swept up the interior and marker code from this session along with
+its own title/dialogue work; that is recorded here so attribution stays
+truthful rather than tidy.
+
+**Interior materials.** Floor panels were 128×32 px against a ~46 px player —
+roughly four player-heights per board, which read as masonry rather than
+flooring. Replaced with 22 px plank courses of 132–236 px boards, staggered
+end joints, deterministic per-board tone and two grain streaks per board.
+Tiled floors moved to 46×34 px with grout shading and speckle; carpet pitch
+tightened and bordered. Walls gained plaster courses and stepped corner
+occlusion; the floor gained a five-band contact shadow at the wall line and
+side falloff. The window wedge was a grey shadow polygon drawn where daylight
+should fall — it is now a two-layer warm shaft.
+
+**Furniture and rugs.** `addFurnitureBlock` and `addRug` are shared by all
+twelve rooms, so both were improved once: a floor contact shadow under every
+block, form shading proportional to the object (the fixed 4 px bands inside
+`drawPixelBlock` disappear on anything sofa-sized), a panel seam on wide
+pieces, and a woven cross-hatch plus banded diamond motif on rugs.
+
+**Markers.** The square white text background behind interaction names was
+replaced with a rounded cream nameplate — ink border, gold base, drop shadow —
+plus a soft glow ring on the active marker. The first implementation used
+`Phaser.GameObjects.NineSlice`, which is **WebGL-only**; this build runs
+Canvas2D in headless and on GPU-less machines, so the plate rendered nothing
+and the name floated bare on the path. The production capture caught it and it
+was rewritten with `Graphics`. The player guide triangle also moved from depth
+100_300 to 100_050 so it no longer covers the name it points at.
+
+**A genuinely red gate on `main`.** `walkToAxis` in the smoke harness pushed a
+single axis with no way around a solid, so the Chapter 2 travel leg stalled at
+`y≈471` and failed depending on where the previous leg left the player. This
+was **reproduced on clean `HEAD` in a throwaway `git worktree`** before any fix
+was attempted, confirming a pre-existing defect rather than a regression from
+this session. The harness now side-steps perpendicular when an attempt makes no
+headway.
+
+**Verification.** Run against a privately built and served bundle
+(`vite build --outDir` + `python3 -m http.server` + `--url/--shots/--port`) so
+it never raced the parallel session's `dist/` or `docs/screenshots/`. Strict
+typecheck passed, 75 tests passed, `npm audit` found 0 vulnerabilities, and the
+production-browser harness passed **60/60 three consecutive times** after the
+route fix — against 2 failures in 4 runs before it, one of those on clean
+`HEAD`. Desktop interior, estate, and cropped nameplate captures were visually
+inspected at 1:1.
+
+**Claim boundary:**
+
+- Verified by automated production-browser evidence and human inspection of
+  rendered captures. No human playtest, real-device or touch-hardware test,
+  screen-reader session, older-hardware run, Miora generation, or same-hardware
+  comparison with Stardew Valley, Terraria, or any other game is claimed.
+- No copied art, shipped raster, backend, account, analytics, personal-data
+  collection, runtime LLM, timer, failure state, energy system, or medical
+  claim was introduced by this session.

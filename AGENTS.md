@@ -64,6 +64,31 @@ Current truth: **75 unit tests, 60 smoke checks, 0 vulnerabilities.** If a doc
 or deck quotes different numbers after your change, update them — stale
 numbers are treated as defects.
 
+## Working alongside other agents
+
+More than one agent is often live in this working tree at the same time
+(observed on 2026-08-04: Codex, CodeBuddy and Claude Code together). Assume it.
+
+- **Claim a lane and say so** in your session-log entry. On 2026-08-04 two
+  agents independently added a vignette to the same portrait file within five
+  minutes; shipping both would have double-darkened every bust. Duplicated
+  polish is the main failure mode here, not merge conflicts.
+- **Re-read a file immediately before editing it.** Surgical string edits fail
+  loudly on stale content, which is what you want; whole-file writes do not.
+- **Never run the shared verification path while another agent may be running
+  it.** `npm run smoke` writes `dist/` and `docs/screenshots/`. To verify
+  without racing, build and serve somewhere private and point the harness at it:
+  ```bash
+  npx vite build --outDir /tmp/kampung-check --emptyOutDir
+  (cd /tmp/kampung-check && python3 -m http.server 4399 --bind 127.0.0.1 &)
+  node scripts/browser-smoke.mjs --url http://127.0.0.1:4399/ \
+    --shots /tmp/kampung-shots --port 9333
+  ```
+- **Before blaming your own change for a failure, reproduce it on `HEAD`** in a
+  throwaway worktree (`git worktree add --detach /tmp/head-wt HEAD`, symlink
+  `node_modules`). That is how the flaky travel route below was correctly
+  attributed rather than "fixed" by mistake.
+
 ## Git rules
 
 - Commit as **ming3465** only (`user.name ming3465`,
@@ -78,6 +103,40 @@ numbers are treated as defects.
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-04 (Claude Code, in-world art lane)** — Ran the aesthetic pass on
+  the world layer while a parallel agent session held the title/dialogue/UI
+  layer; portrait and overlay edits were deliberately backed out to avoid
+  duplicating their vignette work. **Interiors:** replaced the 128×32 px floor
+  panels — roughly four player-heights wide — with 22 px plank courses of
+  varying 132–236 px boards, staggered end joints, two grain streaks per board
+  and deterministic per-board tone; tiled floors moved to 46×34 px with grout
+  shading and speckle; carpet pitch tightened with a border. Added plaster
+  courses and stepped corner occlusion on walls, a five-band wall-to-floor
+  contact shadow, side falloff across the floor, and turned the window wedge
+  from a grey shadow into a two-layer warm daylight shaft. **Furniture:**
+  `addFurnitureBlock` now casts a floor contact shadow and shades proportional
+  to the object (the fixed 4 px bands vanished on anything sofa-sized), with a
+  panel seam on wide pieces; `addRug` gained a woven cross-hatch and a banded
+  diamond motif. **Markers:** the square white text background was replaced by
+  a rounded cream nameplate with ink border, gold base and drop shadow, plus a
+  soft glow ring on the active marker. The nameplate is drawn with `Graphics`,
+  **not** `NineSlice` — NineSlice is WebGL-only and this build runs Canvas2D in
+  headless and on GPU-less machines, where a nine-slice plate renders nothing;
+  the first attempt shipped exactly that bug and the production capture caught
+  it. The player guide triangle dropped from depth 100_300 to 100_050 so it no
+  longer covers the name it is pointing at. **Harness:** `walkToAxis` pushed a
+  single axis with no way around a solid, so the Chapter 2 travel leg failed
+  about half of all runs depending on where the previous leg left the player —
+  `main` was intermittently red at its own gate. It now side-steps
+  perpendicular when an attempt makes no headway. **This was reproduced on
+  clean `HEAD` in a throwaway worktree before being touched**, so it is a
+  pre-existing defect and not a regression from this session. Verification ran
+  against a privately built and served bundle to avoid racing the other agent:
+  strict typecheck, 75 tests, 0 vulnerabilities, and three consecutive
+  60/60 production-browser runs after the fix (it failed 2 of 4 runs before).
+  Desktop interior, estate and nameplate captures were visually inspected at
+  1:1 and cropped. No human playtest, real-device, screen-reader, Miora, or
+  cross-game equivalence claim.
 - **2026-08-04** — Added the tactile exploration pass: pure grass/paving/indoor
   surface classification, speed-responsive four-frame player cadence,
   deterministic idle blink, interaction-facing, six pooled dust/fleck effect

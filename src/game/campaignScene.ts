@@ -1234,7 +1234,7 @@ abstract class WalkableScene extends Phaser.Scene {
       const markerY = interaction.y - (interaction.kind === "npc" ? 96 : 70);
       const glow = this.add
         .circle(interaction.x, markerY, 24, GOLD, 0.2)
-        .setAlpha(0)
+        .setVisible(false)
         .setDepth(100_099);
       const ring = this.add
         .circle(interaction.x, markerY, 15, GOLD, 0.96)
@@ -1330,7 +1330,7 @@ abstract class WalkableScene extends Phaser.Scene {
       const active = id === nearest?.id;
       const inactiveRingAlpha = marker.approachOnly ? 0 : 0.56;
       const inactiveBadgeAlpha = marker.approachOnly ? 0 : 0.65;
-      marker.glow.setAlpha(active ? 1 : 0);
+      marker.glow.setVisible(active);
       marker.ring
         .setScale(active ? 1.12 : 0.75)
         .setAlpha(active ? 1 : inactiveRingAlpha);
