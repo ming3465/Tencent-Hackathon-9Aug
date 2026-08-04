@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+
+import html from "../../../index.html?raw";
 
 /**
  * Guards the accessibility promises the deck and docs/ACCESSIBILITY.md make.
@@ -10,8 +11,6 @@ import { describe, expect, it } from "vitest";
  * changed at the same time to require the regression. A cheap `npm test` check
  * makes any repeat turn the gate red instead of shipping.
  */
-const html = readFileSync(new URL("../../../index.html", import.meta.url), "utf8");
-
 const buttonMarkup = (id: string): string => {
   const start = html.indexOf(`id="${id}"`);
   expect(start, `#${id} is missing from index.html`).toBeGreaterThan(-1);
