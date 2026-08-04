@@ -103,6 +103,26 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-04 (Codex, cast-silhouette release)** — Used one current estate
+  capture in a real OpenAI visual-direction run; preserved the exact prompt,
+  1667×944 output, hash, and accepted/rejected human decisions. The generated
+  raster remains evidence-only. Added a pure 12-resident art registry with
+  three builds, five hair silhouettes, five outfit grammars, four accessory
+  states, and four carried totes; rebuilt code-drawn stepped anatomy,
+  connected limbs, grounded four-phase walks, and removed the duplicate baked
+  shadow so every resident has one synchronized contact shadow. The exact gate
+  passed strict TypeScript, 75/75 tests, 0 vulnerabilities, and 60/60 browser
+  checks; build is 81.69 kB HTML / 106.23 kB initial JS / 1,596.66 kB lazy
+  scene, while active movement measured 10.10 ms p95 at 2.59 ms/frame work and
+  4× CPU throttle measured 9.70 ms p95 at 7.73 ms/frame. The refreshed
+  eight-slide PPTX and eight-page PDF passed template-plan, fidelity, overflow,
+  metadata, and visual checks. Graphify rebuilt to 1,148 nodes / 2,082 edges /
+  63 communities with the known fail-closed, zero-node-JSON, and stale-label
+  warnings. Commit `b2fdf0d` deployed successfully through Pages run
+  `30892004181`; live full/demo endpoints returned HTTP 200 and served the new
+  audit fields. No runtime character raster, copied art, human/real-device
+  playtest, screen-reader/200%-zoom pass, Miora claim, or cross-game
+  equivalence claim.
 - **2026-08-04 (Codex, video/evidence lane)** — Regenerated the scripted judge
   B-roll from the new three-quarter-depth build (1,728 frames / 86.4 s /
   1280×720) and added a deterministic compositor whose moving clips resolve

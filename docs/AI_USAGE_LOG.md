@@ -2523,3 +2523,83 @@ projection lane stabilized.
   track. A human still must record the voice-over, add and verify the sound mix
   by ear, approve the final export, use the required filename, upload it, and
   verify the public link while logged out.
+
+## 2026-08-04 — Resident Silhouette and Grounded-Gait Release
+
+**Tools:** Codex (GPT-5) for implementation, review, verification, evidence,
+and deployment; one real OpenAI image-generation run for visual direction.
+
+**Generated study and human gate:**
+
+- The exact prompt is preserved at
+  `docs/prompts/openai-character-silhouette-study-v1.txt`. It used the current
+  `docs/screenshots/10-living-estate.png` only as a palette, outline-weight,
+  gameplay-scale, and camera reference.
+- The 1667×944 RGB result is preserved at
+  `docs/art/openai-character-silhouette-study-v1.png`; SHA-256 is
+  `efc0b95b6a6335186cc1913fbb41e81bb3339b8b73c56f0fa6d88c8dcd39ef61`.
+- Human review accepted stepped heads and shoulders, connected limbs, grounded
+  footwork, and clothing/hair shapes that remain readable near 44×58 px.
+  Costume-like sash/cap treatments and any culturally stereotyped direct
+  translation were rejected. The generated raster is evidence-only and is not
+  loaded by the game.
+
+**Curated runtime work:**
+
+- Added a pure `characterArt.ts` registry for all 12 named residents. It
+  records authored colours plus three builds, five hair silhouettes, five
+  outfit grammars, four accessory states, and four residents carrying totes.
+- Rebuilt the code-drawn player and resident anatomy with stepped profiles,
+  connected sleeves/hands, clearer faces and hair, grounded shoes, and
+  four-phase stride changes. The former shadow baked into every resident
+  texture was removed; each character now uses one synchronized runtime
+  contact shadow.
+- Exposed the registry audit through the production motion snapshot. Existing
+  campaign registry tests and the existing 60th browser check now fail unless
+  all exact cast counts are present, without inflating the 75-test or 60-check
+  headlines.
+- Refreshed current screenshots, design/accessibility/demo/QA/evidence docs,
+  the eight-slide judge PPTX, and the eight-page PDF. Stale instructions to
+  repeat the already-completed age-signalling task in CodeBuddy were replaced
+  with a requirement to select a genuinely open Todo Tencent item.
+
+**Verification and tool failures retained:**
+
+- One complete gate attempt reached the browser harness but timed out during an
+  early `Runtime.evaluate` while a separate Chrome journey still held the
+  harness's fixed CDP port. It stopped at three passes and was not counted as a
+  product pass. No source changed for that result.
+- After the competing process exited, the exact required gate passed:
+  `npm run typecheck && npm test && npm run build && npm audit && npm run
+  smoke`. Results were strict TypeScript, 75/75 unit tests, 0 vulnerabilities,
+  and 60/60 production-browser checks.
+- The production build is 81.69 kB HTML (14.79 kB gzip), 106.23 kB initial
+  JavaScript (32.29 kB gzip), and 1,596.66 kB lazy scene code (374.83 kB
+  gzip). The browser reported `cast=12/5 hair/5 outfits`, 10.10 ms active p95
+  at 2.59 ms/frame main-thread work, and 9.70 ms p95 at 7.73 ms/frame under
+  4× CPU throttling.
+- The first deck template-plan invocation pointed at the default scratch path
+  instead of the retained `tmp/template-inspect/` file and failed with one
+  missing-file issue. The corrected invocation passed with zero issues, as did
+  template fidelity and PowerPoint overflow checks. All eight slide renders
+  were inspected. The PDF passed eight-page, 1280×720, unencrypted,
+  title/author/subject, and rendered-page checks.
+- `graphify update .` rebuilt 1,148 nodes, 2,082 edges, and 63 communities. It
+  retained the known fail-closed node, reported three zero-node local JSON
+  inputs, and warned that 60 saved labels trail the changed topology; no LLM
+  relabel was claimed.
+
+**Deployment and claim boundary:**
+
+- Gameplay/art commit `b2fdf0d` deployed successfully through GitHub Pages run
+  `30892004181`. The public full and `?demo=1` endpoints returned HTTP 200, and
+  the served lazy bundle contained the four resident-audit field names. The
+  workflow emitted GitHub's non-blocking Node 20 action-deprecation annotation.
+- This is AI-assisted visual direction, original code-drawn implementation,
+  deterministic production-browser evidence, and human inspection of rendered
+  captures. It is not a human playtest, real-device pass, screen-reader
+  session, 200% zoom check, calibrated-display study, Miora run, or
+  same-hardware comparison with Stardew Valley or another game.
+- No copied game art, generated runtime character raster, dependency, backend,
+  account, analytics, personal-data collection, runtime model, network
+  request, timer, failure state, energy system, or medical claim was added.

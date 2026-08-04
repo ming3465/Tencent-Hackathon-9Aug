@@ -19,11 +19,18 @@ the playable bundle automatically.
   replaced only the noticeboard contents with non-text pictograms. Exact
   prompts, artifacts, hashes, accepted/rejected decisions, and the optimized
   runtime export are in `docs/prompts/openai-title-panorama-v1.txt`.
+- `openai-character-silhouette-study-v1.png` is the 2026-08-04 resident
+  silhouette/gait study. Human review accepted stepped anatomy, connected
+  limbs, grounded footwork, and readable outfit families while rejecting
+  costume-like treatments. It informed an original code-drawn cast registry
+  and remains evidence-only. The exact prompt is in
+  `docs/prompts/openai-character-silhouette-study-v1.txt`.
 
 Generated art is welcome when it improves the project. Every accepted output
 must retain its real tool provenance, prompt, review decisions, and intended
 use in `docs/AI_USAGE_LOG.md`. Runtime assets may be copied into `public/` only
 after actual-scale, accessibility, cultural, and performance review.
-Neither of the first two OpenAI studies is a Miora output, and neither raster
-ships in the playable bundle. The title panorama is also not Miora; its
-reviewed WebP export ships separately under `public/assets/generated/`.
+None of the four OpenAI workflows is a Miora output. The neighbourhood,
+density, and cast rasters do not ship in the playable bundle. The title
+panorama's reviewed WebP export ships separately under
+`public/assets/generated/`.

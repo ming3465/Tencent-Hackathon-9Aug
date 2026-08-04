@@ -30,7 +30,7 @@
       "openCaption": "A visual-novel conversation begins at home—with choice, not urgency.",
       "sourceType": "scripted machine-captured gameplay",
       "sourceFile": "docs/video/kampung-sg-gameplay-broll.mp4",
-      "sourceStartSecond": 12,
+      "sourceStartSecond": 12.8,
       "sourceBeat": "first conversation"
     },
     {
@@ -41,7 +41,7 @@
       "openCaption": "One calm choice opens the door. The world responds without a timer or punishment.",
       "sourceType": "scripted machine-captured gameplay",
       "sourceFile": "docs/video/kampung-sg-gameplay-broll.mp4",
-      "sourceStartSecond": 25.4,
+      "sourceStartSecond": 22.4,
       "sourceBeat": "player choice - 3 seconds"
     },
     {
@@ -61,7 +61,7 @@
       "openCaption": "Move freely through four flats and a shared corridor. No timer. No failure state.",
       "sourceType": "scripted machine-captured gameplay",
       "sourceFile": "docs/video/kampung-sg-gameplay-broll.mp4",
-      "sourceStartSecond": 43,
+      "sourceStartSecond": 35.5,
       "sourceBeat": "Block 9 corridor"
     },
     {
@@ -90,7 +90,7 @@
       "openCaption": "A dense, living HDB estate rewards wandering, noticing, and talking to neighbours.",
       "sourceType": "scripted machine-captured gameplay",
       "sourceFile": "docs/video/kampung-sg-gameplay-broll.mp4",
-      "sourceStartSecond": 54.9,
+      "sourceStartSecond": 41.6,
       "sourceBeat": "estate wide"
     },
     {
@@ -116,7 +116,7 @@
       "startSecond": 65.7,
       "durationSeconds": 7,
       "section": "AI—WITH RECEIPTS",
-      "openCaption": "CodeBuddy and three reviewed OpenAI visual workflows are logged. Rejected outputs stay rejected.",
+      "openCaption": "CodeBuddy and four reviewed OpenAI visual workflows are logged. Rejected outputs stay rejected.",
       "sourceType": "verified judge-deck slide",
       "sourceFile": "docs/deck/slides/slide-05.png"
     },

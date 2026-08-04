@@ -200,7 +200,7 @@ const segments = [
     id: "ai-receipts",
     section: "AI—WITH RECEIPTS",
     caption:
-      "CodeBuddy and three reviewed OpenAI visual workflows are logged. Rejected outputs stay rejected.",
+      "CodeBuddy and four reviewed OpenAI visual workflows are logged. Rejected outputs stay rejected.",
     duration: 7,
     source: {
       type: "image",
