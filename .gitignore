@@ -5,3 +5,5 @@ dist/
 .env.*
 !.env.example
 graphify-out/
+artifacts/
+docs/submission/FINAL_APPROVALS.json

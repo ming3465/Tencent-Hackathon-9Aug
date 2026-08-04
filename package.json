@@ -12,7 +12,9 @@
     "test:watch": "vitest",
     "smoke": "npm run build && node scripts/browser-smoke.mjs",
     "capture:video": "npm run build && node scripts/capture-gameplay.mjs",
-    "compose:video": "node scripts/build-demo-video.mjs"
+    "compose:video": "node scripts/build-demo-video.mjs",
+    "submission:review": "node scripts/prepare-submission.mjs review",
+    "submission:final": "node scripts/prepare-submission.mjs final"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

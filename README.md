@@ -208,6 +208,12 @@ npm run dev
 npm run typecheck && npm test && npm run build && npm audit && npm run smoke
 ```
 
+Prepare a clearly labelled, non-submittable review backup with
+`npm run submission:review`. After the human narration, sound check, approvals,
+CodeBuddy export, and public-video check are complete, build the correctly
+named fail-closed backup with `npm run submission:final`; see
+`docs/submission/SUBMIT_NOW.md` for the required arguments.
+
 `scripts/browser-smoke.mjs` starts a production preview and drives headless
 Chrome through keyboard and touch doors, unique interiors, locked chapter
 ordering, alternate resident routes, saved Continue/Start Over state, demo
@@ -230,7 +236,7 @@ superseded card-game build.
 | OpenCode | Built the original neighbourhood-sandbox pivot. |
 | Claude Code (Opus 5) | Added audio, reactive residents, lighting, smoke automation, deployment, and the first deck. |
 | Codex (GPT-5) | Built the versioned campaign reducer, KampungMind, enterable scene architecture, persistence, accessible campaign UI, original world/landmark art, visual-novel portraits, campaign tests, and expanded production smoke path. |
-| OpenAI image generation | Produced two visual-direction studies: a neighbourhood style key and a targeted estate-density reference. Human review rejected direct runtime use and translated selected activity, prop-cluster, ground-detail, and ambient-life ideas into deterministic code-drawn systems. |
+| OpenAI image generation | Produced four auditable workflows: neighbourhood direction, estate-density direction, the reviewed playable title panorama, and cast silhouette/gait direction. Human review rejected unfit output, constrained edits, and translated accepted ideas into original runtime assets or deterministic code-drawn systems; none is claimed as Miora. |
 | Gemini CLI 0.53.1 | An authoring pass was attempted on 2026-08-03 but blocked at Google authentication; it produced no draft and no content was used. |
 
 Humans set the product thesis, ethics, constraints, and final content. Prompts,

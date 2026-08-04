@@ -106,10 +106,11 @@ evidence.
 ### Current Risk
 
 This remains the largest scoring risk. CodeBuddy credits are exhausted and no
-Miora asset has been generated yet. Two OpenAI studies → human review →
-verified code-drawn translations, plus the third reject/edit/optimize →
-playable-title pipeline, provide strong visual AI evidence. They do not replace
-the planned second CodeBuddy task or Miora-specific before-and-after pipeline.
+Miora asset has been generated yet. Three OpenAI direction studies → human
+review → verified code-drawn translations, plus the fourth
+reject/edit/optimize → playable-title pipeline, provide strong visual AI
+evidence. They do not replace the planned second CodeBuddy task or
+Miora-specific before-and-after pipeline.
 
 ## Project Quality - 30 Points
 
@@ -174,4 +175,9 @@ higher priority than adding more systems.
 - [x] Finish and validate the eight-slide PPTX and eight-page PDF.
 - [ ] Add human narration and an ear-checked sound mix to the review cut,
       approve and publish it, then save the social-post timestamps.
-- [ ] Assemble the correctly named submission backup package.
+- [x] Add a fail-closed backup-package builder that validates exact filenames,
+      deck/media structure, hashes, public links, human approvals, repository
+      state, and the complete release gate without treating optional score
+      evidence as mandatory submission fields.
+- [ ] Run that builder in final mode after the remaining human/external work
+      and preserve the correctly named submission backup ZIP.

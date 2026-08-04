@@ -24,8 +24,41 @@
 | --- | --- | --- |
 | 1 | **Game Web Link** | ✅ https://ming3465.github.io/Tencent-Hackathon-9Aug/ — auto-deploys from `main`. Judge path: append `?demo=1` (see `docs/DEMO_MODE.md`). |
 | 2 | **Project Introduction Deck (PPT)** | ✅ `docs/deck/Kampung SG-Project Introduction Deck-TheTwoGuys.pptx` + `.pdf`, refreshed for the five-part campaign and KampungMind. Re-export after any later count or screenshot change. |
-| 3 | **Game Demo Video** | ⚠️ **HUMAN FINISHING REMAINS.** The current three-quarter-depth build has 86.4 s of indexed silent B-roll plus a reproducible, open-captioned **90.0 s narration-ready review cut** at `docs/video/kampung-sg-demo-review.mp4`. Its exact 14-beat sources and claim boundaries are in `demo-review-beats.json`; regenerate with `npm run compose:video`. The AI-receipts montage, engineering/integrity cards, and QR end slate are already present. **Still required:** human voice-over, an ear-checked sound mix, final approval, rename to `Kampung SG-Game Demo Video-TheTwoGuys.mp4`, upload, and logged-out link check. The checked-in MP4 is not the final submission video. |
+| 3 | **Game Demo Video** | ⚠️ **HUMAN FINISHING REMAINS.** The current cast-and-three-quarter-depth build has 63.1 s of indexed silent B-roll plus a reproducible, open-captioned **90.0 s narration-ready review cut** at `docs/video/kampung-sg-demo-review.mp4`. Its exact 14-beat sources and claim boundaries are in `demo-review-beats.json`; regenerate with `npm run compose:video`. The AI-receipts montage, engineering/integrity cards, and QR end slate are already present. **Still required:** human voice-over, an ear-checked sound mix, final approval, rename to `Kampung SG-Game Demo Video-TheTwoGuys.mp4`, upload, and logged-out link check. The checked-in MP4 is not the final submission video. |
 | + | Social bonus (+5) | ❌ Copy ready in `docs/submission/SOCIAL_POST.md`. Confirmed hashtags: `#CodeBuddy #腾讯云黑客松` (+ event tags) on Xiaohongshu / YouTube / X. Post before submission, screenshot each. |
+
+## Fail-closed backup package
+
+Rehearse the package now without creating a final-looking video:
+
+```bash
+npm run submission:review
+```
+
+This writes an ignored folder and ZIP under `artifacts/`. The silent cut is
+named `REVIEW ONLY - ...`, and the manifest remains `submissionReady: false`.
+It checks both public game routes, the eight-slide PPTX, eight-page PDF,
+90-second H.264/AAC review cut, hashes, filenames, provenance, and outstanding
+score risks.
+
+For the final backup, first copy
+`docs/submission/FINAL_APPROVALS.example.json` to the ignored
+`docs/submission/FINAL_APPROVALS.json` and complete it only after the named
+human checks occur. Then run:
+
+```bash
+npm run submission:final -- \
+  --video "/path/Kampung SG-Game Demo Video-TheTwoGuys.mp4" \
+  --codebuddy-history "/path/codebuddy-history.pdf" \
+  --approvals "docs/submission/FINAL_APPROVALS.json"
+```
+
+Final mode refuses a renamed silent review cut, missing/audibly silent media,
+unchecked public links, incomplete approvals, missing CodeBuddy history, a
+dirty or unsynchronized commit, or a failing full verification gate. Miora,
+playtest, real-device/accessibility, second-CodeBuddy-pass, and social evidence
+remain explicit scoring risks rather than being fabricated as submission
+requirements.
 
 ## USER actions before the window (owner: you two)
 
@@ -43,6 +76,9 @@
 
 - [x] Capture clean gameplay B-roll and generate the reproducible 90-second
       captioned review cut with source provenance and claim boundaries.
+- [x] Add a fail-closed review/final backup builder with exact filenames,
+      media/deck/link/hash checks, an untracked human-approval record, and
+      explicit scoring-risk warnings.
 - [ ] Prepare deck re-export the day of submission (numbers drift; see below).
 - [ ] Add playtest evidence slide once U3 happens (quotes + the one change).
 - [ ] Add the "rules verbatim" AI-compliance line to the deck if not already
