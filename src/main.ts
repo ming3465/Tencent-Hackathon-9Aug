@@ -279,8 +279,8 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
           dispatchCampaign({ type: "visit-location", locationId });
           announce(`${name}. Location changed.`);
         },
-        onStep: () => {
-          audio.play("step");
+        onStep: (surface) => {
+          audio.playFootstep(surface);
           renderMinimap();
         },
       },
@@ -380,6 +380,7 @@ function updateNearbyPrompt(interaction: WorldInteraction | null): void {
 }
 
 function handleWorldInteraction(interaction: WorldInteraction): void {
+  audio.play("interact");
   switch (interaction.kind) {
     case "npc":
       openNpc(interaction.npcId);
@@ -582,7 +583,6 @@ function advanceDialogue(): void {
   }
   if (dialogueIndex < dialogueLines.length - 1) {
     dialogueIndex += 1;
-    audio.play("overlay-open");
     showDialogueLine();
     return;
   }

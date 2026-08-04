@@ -61,6 +61,8 @@ let districtTravelEvidence = null;
 let terrainDetailEvidence = null;
 let facadeCollisionEvidence = null;
 let worldFeelEvidence = null;
+let grassFootstepEvidence = null;
+let stoneFootstepEvidence = null;
 let portraitEvidence = {
   desktop: null,
   named: null,
@@ -800,6 +802,12 @@ try {
         nearbyId:
           window.__kampungSmoke?.getMotionSnapshot?.().nearbyInteractionId
           ?? null,
+        nearbyPoint:
+          window.__kampungSmoke?.getMotionSnapshot?.().nearbyInteractionPoint
+          ?? null,
+        player:
+          window.__kampungSmoke?.getMotionSnapshot?.().player
+          ?? null,
         visibleFlavourMarkers:
           window.__kampungSmoke?.getMotionSnapshot?.()
             .visibleFlavourMarkerCount
@@ -810,6 +818,9 @@ try {
     await sleep(100);
     await page.key("keyUp", "e", "KeyE", 69);
     await sleep(260);
+    const detailFacing = await page.eval(
+      `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
+    );
     await page.eval(`document.getElementById("btn-dialog-advance").click()`);
     await sleep(80);
     const detailDialogue = await page.eval(`
@@ -892,6 +903,25 @@ try {
     const before = await page.eval(
       `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
     );
+    const playerIdleTexturePromise = page.eval(`
+      new Promise((resolve) => {
+        const keys = new Set();
+        const startedAt = performance.now();
+        const sample = (now) => {
+          const snapshot =
+            window.__kampungSmoke?.getMotionSnapshot?.() ?? null;
+          if (snapshot?.playerTextureKey) {
+            keys.add(snapshot.playerTextureKey);
+          }
+          if (now - startedAt >= 2500) {
+            resolve(Array.from(keys));
+            return;
+          }
+          requestAnimationFrame(sample);
+        };
+        requestAnimationFrame(sample);
+      })
+    `);
     const residentTexturePromise = page.eval(`
       new Promise((resolve) => {
         const keysByNpc = new Map();
@@ -987,6 +1017,7 @@ try {
     const residentTextureKeys = await residentTexturePromise;
     const ambientActivityTextureKeys = await ambientActivityTexturePromise;
     const ambientFlutterTextureKeys = await ambientFlutterTexturePromise;
+    const playerIdleTextureKeys = await playerIdleTexturePromise;
     wanderingFramePacing = await pacingPromise;
     if (!after || after.locationId !== "estate") {
       throw new Error("Resident motion snapshot disappeared during the route sample");
@@ -1063,6 +1094,25 @@ try {
       })
       .map(([flutterId]) => flutterId);
     const nearbyNpc = after.npcs.find((npc) => npc.npcId === "uncle-ravi");
+    const detailFacingAligned = (() => {
+      if (
+        !detailPrompt.player
+        || !detailPrompt.nearbyPoint
+        || !detailFacing
+      ) return false;
+      const deltaX = detailPrompt.nearbyPoint.x - detailPrompt.player.x;
+      const deltaY = detailPrompt.nearbyPoint.y - detailPrompt.player.y;
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        return (
+          detailFacing.playerFacing === "side"
+          && detailFacing.playerFlipX === (deltaX < 0)
+        );
+      }
+      return (
+        detailFacing.playerFacing === (deltaY < 0 ? "up" : "down")
+        && detailFacing.playerFlipX === false
+      );
+    })();
     const nearbyDistance = nearbyNpc
       ? Math.hypot(
           after.player.x - nearbyNpc.x,
@@ -1117,7 +1167,10 @@ try {
         && mobileDetail.cardInside
         && mobileDetail.closeTarget
         && /unit numbers/i.test(mobileDetail.line),
+      playerFacesInteraction: detailFacingAligned,
       playerWalkFrames: playerWalkFrames.size,
+      playerIdleBlink:
+        playerIdleTextureKeys.some((key) => key.endsWith("-blink")),
       residentFourFrameIds,
       movedAmbientIds,
       ambientDirectionalTexture: after.ambientActors.every((actor) =>
@@ -1160,7 +1213,9 @@ try {
         `markers synchronized=${markerSync}; ` +
         `details=${residentMotionEvidence.flavourInteractionCount}; ` +
         `physical-detail=${residentMotionEvidence.physicalDetail}; ` +
+        `player-faces-interaction=${residentMotionEvidence.playerFacesInteraction}; ` +
         `player-frames=${residentMotionEvidence.playerWalkFrames}; ` +
+        `player-idle-blink=${residentMotionEvidence.playerIdleBlink}; ` +
         `resident-frames=${residentFourFrameIds.join(",") || "none"}; ` +
         `ambient=${movedAmbientIds.join(",") || "none"}; ` +
         `activities=${ambientActivityTwoFrameIds.join(",") || "none"}; ` +
@@ -1244,6 +1299,11 @@ try {
       stepPuffsStill:
         before.visibleStepPuffs === 0
         && after.visibleStepPuffs === 0,
+      playerIdleStill:
+        before.playerIdleBlinking === false
+        && after.playerIdleBlinking === false
+        && !before.playerTextureKey.endsWith("-blink")
+        && !after.playerTextureKey.endsWith("-blink"),
       buildingOcclusionInstant:
         before.buildingOcclusionMotion === "instant"
         && after.buildingOcclusionMotion === "instant"
@@ -1257,6 +1317,7 @@ try {
         `laundry=${reducedMotionEvidence.laundryStill}; ` +
         `pond=${reducedMotionEvidence.pondStill}; ` +
         `step-puffs=${reducedMotionEvidence.stepPuffsStill}; ` +
+        `player-idle=${reducedMotionEvidence.playerIdleStill}; ` +
         `occlusion-instant=${reducedMotionEvidence.buildingOcclusionInstant}`
     );
   };
@@ -1329,9 +1390,9 @@ try {
         laundryStored: after.visibleLaundryCount === 0,
         mobile: false,
       };
-      // Approach through the open gap east of the bicycle verge so the
-      // evidence capture remains a genuine keyboard walk around solid props.
-      await walkToAxis("x", 1005);
+      // Centre the full 22 px player body in the authored 46 px gap between
+      // the frangipani trunk and flower bed before heading south.
+      await walkToAxis("x", 1018);
       await walkToAxis("y", 755);
       await walkToAxis("x", 650);
       await page.shot(`${SHOT_DIR}/22-monsoon-shelter.png`);
@@ -1946,6 +2007,8 @@ try {
     ? {
         cameraZoom: worldFeelSnapshot.cameraZoom,
         visibleStepPuffs: worldFeelSnapshot.visibleStepPuffs,
+        movementSurface: worldFeelSnapshot.movementSurface,
+        activeStepSurfaces: worldFeelSnapshot.activeStepSurfaces,
         pondRippleCount: worldFeelSnapshot.pondRippleCount,
         obstacleCount: worldFeelSnapshot.obstacleCount,
       }
@@ -1954,6 +2017,7 @@ try {
     worldFeelEvidence
       ? `  FEEL  zoom=${worldFeelEvidence.cameraZoom.toFixed(2)}x; ` +
         `step-puffs=${worldFeelEvidence.visibleStepPuffs}; ` +
+        `surface=${worldFeelEvidence.movementSurface}; ` +
         `pond-ripples=${worldFeelEvidence.pondRippleCount}; ` +
         `obstacles=${worldFeelEvidence.obstacleCount}`
       : "  FEEL  world feedback snapshot missing"
@@ -1962,8 +2026,50 @@ try {
   await page.shotElement("#sandbox-stage canvas", `${SHOT_DIR}/hero-evening.png`);
   await walkToAxis("x", 350);
   await walkToAxis("y", 520);
+  await page.key("keyDown", "ArrowDown", "ArrowDown", 40);
+  await sleep(230);
+  const grassFootstepSnapshot = await page.eval(
+    `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
+  );
   await page.shot(`${SHOT_DIR}/21-pond-life.png`);
+  await page.key("keyUp", "ArrowDown", "ArrowDown", 40);
+  await sleep(380);
+  grassFootstepEvidence = grassFootstepSnapshot
+    ? {
+        movementSurface: grassFootstepSnapshot.movementSurface,
+        activeStepSurfaces: grassFootstepSnapshot.activeStepSurfaces,
+        visibleStepPuffs: grassFootstepSnapshot.visibleStepPuffs,
+      }
+    : null;
+  diagnostics.push(
+    grassFootstepEvidence
+      ? `  FEEL  grass surface=${grassFootstepEvidence.movementSurface}; ` +
+        `active=${grassFootstepEvidence.activeStepSurfaces.join(",")}; ` +
+        `step-puffs=${grassFootstepEvidence.visibleStepPuffs}`
+      : "  FEEL  grass footstep snapshot missing"
+  );
   await walkToAxis("y", 400);
+  await page.key("keyDown", "ArrowRight", "ArrowRight", 39);
+  await sleep(230);
+  const stoneFootstepSnapshot = await page.eval(
+    `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
+  );
+  await page.key("keyUp", "ArrowRight", "ArrowRight", 39);
+  await sleep(380);
+  stoneFootstepEvidence = stoneFootstepSnapshot
+    ? {
+        movementSurface: stoneFootstepSnapshot.movementSurface,
+        activeStepSurfaces: stoneFootstepSnapshot.activeStepSurfaces,
+        visibleStepPuffs: stoneFootstepSnapshot.visibleStepPuffs,
+      }
+    : null;
+  diagnostics.push(
+    stoneFootstepEvidence
+      ? `  FEEL  stone surface=${stoneFootstepEvidence.movementSurface}; ` +
+        `active=${stoneFootstepEvidence.activeStepSurfaces.join(",")}; ` +
+        `step-puffs=${stoneFootstepEvidence.visibleStepPuffs}`
+      : "  FEEL  stone footstep snapshot missing"
+  );
   const eastSnapshot = await walkToAxis("x", 2240);
   const eastMapTransform = await page.eval(
     `document.getElementById("minimap-player").getAttribute("transform")`
@@ -2300,7 +2406,9 @@ try {
       && residentMotionEvidence.directionalTexture
       && residentMotionEvidence.flavourInteractionCount === 14
       && residentMotionEvidence.physicalDetail
+      && residentMotionEvidence.playerFacesInteraction
       && residentMotionEvidence.playerWalkFrames === 4
+      && residentMotionEvidence.playerIdleBlink
       && residentMotionEvidence.residentFourFrameIds.length >= 1
       && residentMotionEvidence.movedAmbientIds.length === 2
       && residentMotionEvidence.ambientDirectionalTexture
@@ -2325,6 +2433,7 @@ try {
       && reducedMotionEvidence.laundryStill
       && reducedMotionEvidence.pondStill
       && reducedMotionEvidence.stepPuffsStill
+      && reducedMotionEvidence.playerIdleStill
       && reducedMotionEvidence.buildingOcclusionInstant
       && monsoonWeatherEvidence
       && monsoonWeatherEvidence.active
@@ -2381,8 +2490,19 @@ try {
       && worldFeelEvidence
       && worldFeelEvidence.cameraZoom >= 1.3
       && worldFeelEvidence.visibleStepPuffs >= 1
+      && worldFeelEvidence.activeStepSurfaces.includes(
+        worldFeelEvidence.movementSurface
+      )
       && worldFeelEvidence.pondRippleCount === 3
       && worldFeelEvidence.obstacleCount >= 90
+      && grassFootstepEvidence
+      && grassFootstepEvidence.movementSurface === "grass"
+      && grassFootstepEvidence.activeStepSurfaces.includes("grass")
+      && grassFootstepEvidence.visibleStepPuffs >= 1
+      && stoneFootstepEvidence
+      && stoneFootstepEvidence.movementSurface === "stone"
+      && stoneFootstepEvidence.activeStepSurfaces.includes("stone")
+      && stoneFootstepEvidence.visibleStepPuffs >= 1
       && exteriorWakePaletteSize >= 12
       && exteriorWorldWidth >= browserWidth * 0.9
       && exteriorEdgePaletteSize >= 4
@@ -2487,9 +2607,18 @@ try {
       worldFeelEvidence
         ? `world-zoom=${worldFeelEvidence.cameraZoom.toFixed(2)}x, ` +
           `step-puffs=${worldFeelEvidence.visibleStepPuffs}, ` +
+          `surface=${worldFeelEvidence.movementSurface}, ` +
           `pond-ripples=${worldFeelEvidence.pondRippleCount}, ` +
           `world-obstacles=${worldFeelEvidence.obstacleCount}`
         : "world feel evidence missing",
+      grassFootstepEvidence
+        ? `grass-surface=${grassFootstepEvidence.movementSurface}, ` +
+          `grass-puffs=${grassFootstepEvidence.visibleStepPuffs}`
+        : "grass footstep evidence missing",
+      stoneFootstepEvidence
+        ? `stone-surface=${stoneFootstepEvidence.movementSurface}, ` +
+          `stone-puffs=${stoneFootstepEvidence.visibleStepPuffs}`
+        : "stone footstep evidence missing",
       mobileGameEvidence
         ? `mobile-world=${mobileGameEvidence.world}, ` +
           `mobile-journal=${mobileGameEvidence.journal}, ` +

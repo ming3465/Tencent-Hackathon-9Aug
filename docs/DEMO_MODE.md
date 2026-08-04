@@ -65,6 +65,9 @@ the active campaign state's 3/5 or 2/2 requirements.
 The main-character guide triangle, audited exterior door alignment, Sound
 focus restoration, and browser-fullscreen/Escape flow are likewise shared
 unchanged.
+Surface-aware footsteps, interaction-facing, and idle behavior are also shared.
+The existing faster demo walk uses the matching faster animation cadence; it
+does not remove an animation, effect, location, or conversation.
 
 ## Change log
 
@@ -76,3 +79,4 @@ unchanged.
 | 2026-08-03 | Confirmed Chapter 2 monsoon content and accessibility behavior are shared unchanged. |
 | 2026-08-03 | Confirmed the circular map, room-fit interiors, and quest-book Journal are shared unchanged. |
 | 2026-08-04 | Confirmed the player guide, aligned entrances, sound focus, and full-screen flow are shared unchanged. |
+| 2026-08-04 | Confirmed surface feedback, interaction-facing, idle behavior, and the speed-matched walk cadence are shared unchanged. |

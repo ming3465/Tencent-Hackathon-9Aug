@@ -377,6 +377,7 @@ function drawPlayerFrame(
   graphics: Phaser.GameObjects.Graphics,
   facing: PlayerFacing,
   step: WalkFrame,
+  blinking = false,
 ): void {
   const skin = 0xd39c6d;
   const hair = 0x2a2523;
@@ -437,7 +438,7 @@ function drawPlayerFrame(
       .fillRect(10, 5, 18, 8)
       .fillRect(10, 9, 5, 12)
       .fillStyle(PALETTE.ink)
-      .fillRect(25, 14, 3, 3)
+      .fillRect(25, blinking ? 16 : 14, 3, blinking ? 1 : 3)
       .fillStyle(PALETTE.coral)
       .fillRect(27, 19, 3, 2);
   } else {
@@ -449,8 +450,8 @@ function drawPlayerFrame(
       .fillRect(10, 9, 4, 10)
       .fillRect(26, 9, 4, 10)
       .fillStyle(PALETTE.ink)
-      .fillRect(15, 15, 3, 3)
-      .fillRect(22, 15, 3, 3)
+      .fillRect(15, blinking ? 17 : 15, 3, blinking ? 1 : 3)
+      .fillRect(22, blinking ? 17 : 15, 3, blinking ? 1 : 3)
       .fillStyle(PALETTE.coral)
       .fillRect(18, 21, 5, 2);
   }
@@ -467,6 +468,13 @@ function createPlayerTextures(scene: Phaser.Scene): void {
         (graphics) => drawPlayerFrame(graphics, facing, step),
       );
     }
+    makeTexture(
+      scene,
+      `campaign-player-${facing}-0-blink`,
+      40,
+      56,
+      (graphics) => drawPlayerFrame(graphics, facing, 0, true),
+    );
   }
 }
 

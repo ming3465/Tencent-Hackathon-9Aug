@@ -46,12 +46,14 @@ hallucination path.
   indoor building, live outdoor player movement, and a direct Places shortcut
 - WASD, arrow-key, `E`, Space, visible buttons, and touch controls
 - Equivalent Journal actions for every meaningful world interaction
-- Runtime Web Audio synthesis; no audio files ship
+- Surface-aware runtime Web Audio footsteps for grass, estate paving, and
+  interiors; one reusable synthesized-noise buffer and no audio files ship
 - Visual-novel conversations with 13 unique code-drawn bust portraits,
   resident-specific hair, build, age lines, accessories, and community-role
   motifs; a separate estate portrait supports object and place narration
-- Original Canvas-rendered pixel art with four-frame directional player and
-  resident walks, varied silhouettes, tiled room floors, and
+- Original Canvas-rendered pixel art with speed-responsive four-frame
+  directional player walks, deterministic idle blinks, interaction-facing,
+  four-frame resident walks, varied silhouettes, tiled room floors, and
   code-drawn estate props; a baked 32 px terrain grammar gives grass, running-
   bond paths, planted edge growth, leaf litter, kerbs, drains, and utility
   covers tile-scale material detail; three layered tropical tree forms and 41
@@ -74,8 +76,9 @@ hallucination path.
   utilities, stacked chairs, and shaded seating; 26 drain grates and 28 leaf
   patches add baked ground detail; eight deterministic butterflies and
   dragonflies move between those clusters; a layered, solid-edged pond adds
-  lily pads and three deterministic ripple rings, while a six-object pool
-  provides subtle walking puffs without per-step allocation; adaptive exterior
+  lily pads and three deterministic ripple rings, while a six-slot pool
+  provides surface-coloured dust and leaf flecks without per-step allocation;
+  adaptive exterior
   framing uses 1.32× on wide desktop, 1.22× on tablet, and 1× on mobile;
   interiors use the full shell, a room-fit zoom, and balanced camera margins
   instead of cutting the room against one edge; district dressing includes a tray-return station,
@@ -97,13 +100,14 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
 | `npm test` | 75 tests across campaign, audio, and optional matching |
-| `npm run build` | 98.71 kB initial JS (30.42 kB gzip); 1,581.99 kB lazy scene (370.64 kB gzip) |
+| `npm run build` | 99.63 kB initial JS (30.73 kB gzip); 1,585.13 kB lazy scene (371.50 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
 | `npm run smoke` | 60/60 production-browser checks |
 
 The smoke harness drives complete full and demo campaigns through production
 JavaScript, instantiates all 12 locations, proves resident route movement,
-four-frame player/resident walks, nearby stop/facing, marker synchronization,
+four-frame player/resident walks, deterministic player idle blinking,
+player-to-interaction facing, marker synchronization,
 cat movement, four two-frame community activity vignettes, laundry animation,
 reduced-motion stillness, exterior wake-up, and physical travel to the east and
 south. It also physically opens one of 14 approach-only estate details with
@@ -122,7 +126,9 @@ zero semantic layout issues. It also proved eight localized building-occlusion
 layers fade at a solid façade and restore after the player steps away. It also
 proves 1.32× wide-desktop and 1× mobile exterior framing, three animated pond
 rings, pooled walking feedback, all eight two-frame butterflies/dragonflies,
-and reduced-motion stillness for those systems.
+and reduced-motion stillness for those systems. It separately walks on grass
+and estate paving to prove that the pooled visual effects and terrain
+classification change together.
 The same journey presses Sound, verifies focus returns to the world, and
 proves movement resumes. It also exercises the full-screen viewport state,
 exit contract, and Sound-button focus after leaving full screen.
@@ -158,6 +164,12 @@ The 2026-08-03 density-evidence run measured 9.90 ms title p95, 10.00 ms
 resident-route p95, 9.80 ms monsoon p95, and 10.10 ms active-movement p95
 with 3.60 ms/frame main-thread work; its 4× CPU-throttled sample measured
 10.00 ms p95 with 8.10 ms/frame work.
+
+One passing 2026-08-04 tactile-movement gate measured 9.10 ms title p95,
+9.10 ms resident-route p95, 9.30 ms monsoon p95, and 9.20 ms active-movement
+p95 with 2.40 ms/frame main-thread work. Its 4× CPU-throttled active sample
+measured 9.30 ms p95 with 9.57 ms/frame work. This is headless desktop-Chrome
+regression evidence, not a real-device or cross-game performance comparison.
 
 ## Requirements and local setup
 

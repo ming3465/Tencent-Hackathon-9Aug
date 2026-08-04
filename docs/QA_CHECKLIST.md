@@ -39,6 +39,10 @@
       faces the player, and keeps its marker synchronized
 - [x] Physical keyboard movement exposes all four player frames, and sampled
       moving residents expose all four directional walk frames
+- [x] The player blinks while idle, faces the selected interaction before its
+      overlay opens, and uses faster four-frame cadence while hurrying
+- [x] Physical grass and paving movement expose the matching pooled visual
+      response; all three synthesized footstep profiles use one reusable buffer
 - [x] A real approach to the shared bicycles reveals exactly one low-priority
       marker, a contextual “Look” touch action, complete accessible narration,
       and an in-bounds 360 px modal
@@ -58,7 +62,8 @@
       overflow (documented density-evidence pass: 26)
 - [x] Residents, cats, laundry, pond phase, and walking puffs remain static or
       hidden under emulated reduced motion; all four activity vignettes and
-      eight ambient insects hold a static first frame
+      eight ambient insects hold a static first frame; player idle blinking is
+      disabled
 - [x] Reduced-motion monsoon keeps the overcast/wet story state while falling
       rain is hidden and puddle phase remains static
 - [x] A slept exterior wakes with its location label, controls, camera image,

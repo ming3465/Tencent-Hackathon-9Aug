@@ -2018,3 +2018,79 @@ the Codex built-in OpenAI image-generation tool.
 - This records repository deployment and connected-workspace task maintenance.
   It does not add or imply a playtest, real-device check, social outcome,
   external AI-tool run, or runtime AI feature.
+
+## 2026-08-04 - Tactile Exploration and Surface-Audio Pass
+
+**AI-assisted direction and implementation:**
+
+- The user asked Codex to continue raising the exploration layer toward a
+  Stardew-like quality bar while preserving Kampung SG's visual-novel
+  conversations. Codex treated that reference as a standard for readable,
+  tactile top-down movement—not permission to copy another game's assets,
+  palette, map, characters, progression, or branding.
+- Codex inspected the current production captures and broad public screenshot
+  references for movement readability, environmental density, and character
+  grounding. The existing original code-drawn art direction was retained; no
+  reference image or generated bitmap was added to the game.
+- Added a pure movement-feel module that mirrors the baked estate terrain
+  grammar and classifies grass, estate paving, and indoor floors without pixel
+  reads. Normal movement uses a 125 ms four-frame cadence; Shift hurry and
+  accelerated demo movement use 92 ms. Unit assertions were folded into the
+  existing 75-test headline.
+- Added deterministic player idle blinks and made the player face the nearest
+  NPC, door, exit, quest object, or flavour detail before the interaction
+  opens. Reduced motion keeps a static directional frame and disables the idle
+  blink.
+- Replaced the generic walking circle with six reusable effect slots. Each
+  slot owns one dust shape and two flecks; grass, paving, and indoor variants
+  change colour and lift while remaining pooled and hidden under reduced
+  motion. The player shadow changes width subtly across the walk cadence.
+- Added three matching Web Audio footstep profiles. They share one
+  deterministic noise buffer generated at audio unlock rather than allocating
+  a new buffer on every step. The previously unused interaction cue now plays,
+  line advance no longer repeats the overlay-open blip, UI tones bypass
+  reverb, and the global send was reduced.
+
+**Automated evidence and corrections:**
+
+- Extended the existing 60-check production-browser journey without increasing
+  its headline. It now proves all four player walk frames, a real idle blink,
+  player-to-interaction facing, live grass and paving effects, and the absence
+  of player blink/walking effects under emulated reduced motion.
+- The first sandboxed smoke attempt could not bind Vite to localhost; Codex
+  reran the same self-contained journey with approved local-browser access.
+- Production journeys exposed two evidence-route assumptions. A monsoon route
+  landed on either edge of a narrow prop gap, so Codex measured the player
+  body and centred it in the authored 46 px opening between a frangipani trunk
+  and flower bed. A new lawn capture initially stepped sideways into existing
+  planting/bench collision lines; it was changed to move down open grass before
+  returning along the already verified x=350 route. One overly broad patch
+  briefly changed a Journal ArrowLeft sample; the next run caught the tracking
+  failure, and Codex restored the key before the final journey.
+- Repeated final repository gates passed strict TypeScript, all 75 unit tests, the
+  production build, `npm audit` with zero vulnerabilities, and 60/60 browser
+  checks across the complete full campaign,
+  accelerated demo, persistence, all 12 locations, desktop, 360 px mobile,
+  reduced motion, monsoon, collision, focus, fullscreen, and visual-novel
+  states. One recorded passing gate measured 9.10 ms title p95, 9.10 ms
+  resident-route p95, 9.30 ms monsoon p95, and 9.20 ms active-movement p95
+  with 2.40 ms/frame main-thread work. Its 4× CPU-throttled active sample
+  measured 9.30 ms p95 with 9.57 ms/frame work.
+- The production bundle is 99.63 kB initial JavaScript (30.73 kB gzip) and
+  1,585.13 kB lazy campaign/Phaser code (371.50 kB gzip). Codex visually
+  inspected the refreshed world-scale, pond/lawn, and 360 px captures; the
+  response stays subtle, the player guide remains clear, and the mobile
+  composition is not crowded.
+- Graphify rebuilt locally to 1,054 nodes, 1,919 edges, and 61 communities. It
+  retained the known single fail-closed node and reported that saved semantic
+  labels trail the changed topology; no semantic relabel was claimed.
+
+**Claim boundary:**
+
+- This is AI-assisted code authoring, deterministic automated
+  production-browser evidence, and human inspection of rendered captures. It
+  is not a human playtest, real-device touch test, screen-reader session,
+  200%-zoom pass, or same-hardware comparison with Stardew Valley.
+- No runtime model, network request, backend, account, analytics, data
+  collection, timer, failure state, energy system, copied art, or new shipped
+  image asset was introduced.

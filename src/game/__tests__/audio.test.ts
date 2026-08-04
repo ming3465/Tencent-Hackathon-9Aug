@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   AUDIO_STORAGE_KEY,
   DEFAULT_AUDIO_SETTINGS,
+  FOOTSTEP_PROFILES,
   categoryGain,
   clampVolume,
   normalizeAudioSettings,
@@ -81,6 +82,14 @@ describe("categoryGain", () => {
   it("routes each category to its own volume", () => {
     expect(categoryGain(settings, "music")).toBe(0.4);
     expect(categoryGain(settings, "sfx")).toBe(0.8);
+    expect(Object.keys(FOOTSTEP_PROFILES).sort()).toEqual([
+      "grass",
+      "indoor",
+      "stone",
+    ]);
+    expect(new Set(
+      Object.values(FOOTSTEP_PROFILES).map((profile) => profile.frequency),
+    ).size).toBe(3);
   });
 
   it("routes interface sounds through the effects volume", () => {

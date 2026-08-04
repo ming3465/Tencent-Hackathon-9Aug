@@ -11,6 +11,8 @@
  * tested without a browser.
  */
 
+import type { MovementSurface } from "./movementFeel.js";
+
 export type SoundCategory = "music" | "sfx" | "ui";
 
 export type SoundEvent =
@@ -80,9 +82,47 @@ export function readStoredAudioSettings(storage?: Pick<Storage, "getItem">): Aud
 
 /** Minimum milliseconds between repeats, so held movement keys cannot machine-gun. */
 const THROTTLE_MS: Partial<Record<SoundEvent, number>> = {
-  step: 290,
+  step: 180,
   match: 90,
   mismatch: 160,
+};
+
+interface FootstepProfile {
+  filter: BiquadFilterType;
+  frequency: number;
+  q: number;
+  gain: number;
+  duration: number;
+  playbackRate: number;
+}
+
+export const FOOTSTEP_PROFILES: Readonly<
+  Record<MovementSurface, FootstepProfile>
+> = {
+  grass: {
+    filter: "lowpass",
+    frequency: 520,
+    q: 0.72,
+    gain: 0.052,
+    duration: 0.07,
+    playbackRate: 0.9,
+  },
+  stone: {
+    filter: "bandpass",
+    frequency: 760,
+    q: 1.6,
+    gain: 0.047,
+    duration: 0.052,
+    playbackRate: 1.08,
+  },
+  indoor: {
+    filter: "bandpass",
+    frequency: 460,
+    q: 1.05,
+    gain: 0.036,
+    duration: 0.05,
+    playbackRate: 0.98,
+  },
 };
 
 const DAY_SCALE = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25];
@@ -104,6 +144,8 @@ export class KampungAudio {
   private context: AudioContext | null = null;
   private buses: Record<SoundCategory, GainNode> | null = null;
   private reverbSend: GainNode | null = null;
+  private footstepBuffer: AudioBuffer | null = null;
+  private footstepIndex = 0;
   private lastPlayed = new Map<SoundEvent, number>();
   private ambienceTimer: ReturnType<typeof setInterval> | null = null;
   private eveningMood = false;
@@ -147,7 +189,7 @@ export class KampungAudio {
       delay.connect(master);
 
       const send = context.createGain();
-      send.gain.value = 0.5;
+      send.gain.value = 0.32;
       send.connect(delay);
 
       const makeBus = (category: SoundCategory): GainNode => {
@@ -160,6 +202,7 @@ export class KampungAudio {
       this.context = context;
       this.reverbSend = send;
       this.buses = { music: makeBus("music"), sfx: makeBus("sfx"), ui: makeBus("ui") };
+      this.footstepBuffer = this.createFootstepBuffer(context);
     }
 
     if (this.context.state === "suspended") void this.context.resume();
@@ -179,18 +222,11 @@ export class KampungAudio {
 
   play(event: SoundEvent): void {
     if (!this.context || !this.buses || this.settings.muted) return;
-
-    const throttle = THROTTLE_MS[event];
-    if (throttle !== undefined) {
-      const now = this.context.currentTime * 1000;
-      const previous = this.lastPlayed.get(event);
-      if (previous !== undefined && now - previous < throttle) return;
-      this.lastPlayed.set(event, now);
-    }
+    if (!this.canPlay(event)) return;
 
     switch (event) {
       case "step":
-        this.footstep();
+        this.footstep("stone");
         break;
       case "interact":
         this.tone({ frequency: 392, duration: 0.16, category: "ui", gain: 0.16 });
@@ -266,6 +302,12 @@ export class KampungAudio {
     }
   }
 
+  playFootstep(surface: MovementSurface): void {
+    if (!this.context || !this.buses || this.settings.muted) return;
+    if (!this.canPlay("step")) return;
+    this.footstep(surface);
+  }
+
   startAmbience(): void {
     if (this.ambienceTimer !== null || !this.context) return;
     const tick = (): void => this.ambientNote();
@@ -296,6 +338,7 @@ export class KampungAudio {
     this.context = null;
     this.buses = null;
     this.reverbSend = null;
+    this.footstepBuffer = null;
   }
 
   private handleVisibility = (): void => {
@@ -353,32 +396,57 @@ export class KampungAudio {
     }
   }
 
-  private footstep(): void {
-    if (!this.context || !this.buses) return;
-    const { context } = this;
-    const frames = Math.floor(context.sampleRate * 0.06);
+  private canPlay(event: SoundEvent): boolean {
+    if (!this.context) return false;
+    const throttle = THROTTLE_MS[event];
+    if (throttle === undefined) return true;
+    const now = this.context.currentTime * 1000;
+    const previous = this.lastPlayed.get(event);
+    if (previous !== undefined && now - previous < throttle) return false;
+    this.lastPlayed.set(event, now);
+    return true;
+  }
+
+  private createFootstepBuffer(context: AudioContext): AudioBuffer {
+    const frames = Math.floor(context.sampleRate * 0.075);
     const buffer = context.createBuffer(1, frames, context.sampleRate);
     const channel = buffer.getChannelData(0);
+    let seed = 0x4b414d50;
     for (let index = 0; index < frames; index += 1) {
-      channel[index] = (Math.random() * 2 - 1) * (1 - index / frames);
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      const noise = seed / 0xffffffff * 2 - 1;
+      channel[index] = noise * (1 - index / frames);
     }
+    return buffer;
+  }
 
+  private footstep(surface: MovementSurface): void {
+    if (!this.context || !this.buses || !this.footstepBuffer) return;
+    const { context } = this;
+    const profile = FOOTSTEP_PROFILES[surface];
+    const cadenceVariation = [0.96, 1.04, 1, 1.02][this.footstepIndex % 4];
+    this.footstepIndex += 1;
     const source = context.createBufferSource();
-    source.buffer = buffer;
+    source.buffer = this.footstepBuffer;
+    source.playbackRate.value = profile.playbackRate * cadenceVariation;
 
     const filter = context.createBiquadFilter();
-    filter.type = "bandpass";
-    filter.frequency.value = 380 + Math.random() * 160;
-    filter.Q.value = 1.4;
+    filter.type = profile.filter;
+    filter.frequency.value = profile.frequency * cadenceVariation;
+    filter.Q.value = profile.q;
 
     const envelope = context.createGain();
-    envelope.gain.value = 0.05;
+    envelope.gain.setValueAtTime(profile.gain, context.currentTime);
+    envelope.gain.exponentialRampToValueAtTime(
+      0.0001,
+      context.currentTime + profile.duration,
+    );
 
     source.connect(filter);
     filter.connect(envelope);
     envelope.connect(this.buses.sfx);
     source.start();
-    source.stop(context.currentTime + 0.07);
+    source.stop(context.currentTime + profile.duration + 0.015);
   }
 
   private tone(options: ToneOptions): void {
@@ -410,7 +478,9 @@ export class KampungAudio {
 
     oscillator.connect(envelope);
     envelope.connect(this.buses[category]);
-    if (this.reverbSend) envelope.connect(this.reverbSend);
+    if (this.reverbSend && category !== "ui") {
+      envelope.connect(this.reverbSend);
+    }
 
     oscillator.start(start);
     oscillator.stop(start + duration + 0.05);

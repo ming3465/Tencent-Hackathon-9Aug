@@ -30,6 +30,12 @@ import {
   getOccludingBuildingIds,
   type EstateRect,
 } from "./estateLayout.js";
+import {
+  movementSurfaceAt,
+  stepIntervalFor,
+  walkFrameAt,
+  type MovementSurface,
+} from "./movementFeel.js";
 import type {
   CampaignStateV1,
   LocationId,
@@ -183,7 +189,7 @@ export interface CampaignSceneCallbacks {
   onNearbyInteraction: (interaction: WorldInteraction | null) => void;
   onInteract: (interaction: WorldInteraction) => void;
   onLocationChange: (locationId: LocationId, name: string) => void;
-  onStep: () => void;
+  onStep: (surface: MovementSurface) => void;
 }
 
 export interface CampaignGameOptions {
@@ -337,6 +343,11 @@ export interface CampaignMotionSnapshot {
   player: SpawnPoint;
   playerGuide: CampaignPlayerGuideSnapshot;
   playerTextureKey: string;
+  playerFacing: PlayerFacing;
+  playerFlipX: boolean;
+  playerIdleBlinking: boolean;
+  movementSurface: MovementSurface;
+  activeStepSurfaces: MovementSurface[];
   cameraZoom: number;
   obstacleCount: number;
   interactionCount: number;
@@ -344,6 +355,7 @@ export interface CampaignMotionSnapshot {
   visibleFlavourMarkerCount: number;
   visibleStepPuffs: number;
   nearbyInteractionId: string | null;
+  nearbyInteractionPoint: SpawnPoint | null;
   npcs: CampaignNpcMotionSnapshot[];
   ambientActors: CampaignAmbientMotionSnapshot[];
   ambientActivities: CampaignAmbientActivitySnapshot[];
@@ -413,9 +425,21 @@ abstract class WalkableScene extends Phaser.Scene {
   private lastInteractionCheckAt = Number.NEGATIVE_INFINITY;
   private playerFacing: PlayerFacing = "down";
   private playerTextureKey = "campaign-player-down-0";
+  private playerIsMoving = false;
+  private currentWalkFrame: WalkFrame = 0;
+  private currentSurface: MovementSurface = "indoor";
+  private nextPlayerBlinkAt = Number.POSITIVE_INFINITY;
+  private playerBlinkUntil = Number.NEGATIVE_INFINITY;
   private stepPuffs: {
-    circle: Phaser.GameObjects.Arc;
+    dust: Phaser.GameObjects.Arc;
+    fleckLeft: Phaser.GameObjects.Rectangle;
+    fleckRight: Phaser.GameObjects.Rectangle;
     bornAt: number;
+    originX: number;
+    originY: number;
+    directionX: number;
+    directionY: number;
+    surface: MovementSurface;
   }[] = [];
   private nextStepPuff = 0;
 
@@ -469,6 +493,12 @@ abstract class WalkableScene extends Phaser.Scene {
       this.physics.add.collider(this.player, obstacle);
     }
     this.createStepPuffPool();
+    this.currentSurface = movementSurfaceAt(
+      this.locationId,
+      spawn.x,
+      spawn.y,
+    );
+    this.nextPlayerBlinkAt = this.time.now + 2100;
     this.configureInput();
     this.createInteractionMarkers();
     this.cameras.main.startFollow(
@@ -496,13 +526,22 @@ abstract class WalkableScene extends Phaser.Scene {
     this.updateStepPuffs(time);
     this.playerShadow
       .setPosition(this.player.x, this.player.y + 23)
-      .setDepth(depthFor(this.player.y, 1));
+      .setDepth(depthFor(this.player.y, 1))
+      .setScale(
+        this.reducedMotion || !this.playerIsMoving
+          ? 1
+          : this.currentWalkFrame % 2 === 0
+            ? 0.96
+            : 1.04,
+        1,
+      );
     this.player.setDepth(depthFor(this.player.y, 3));
     const guideBob = this.reducedMotion ? 0 : Math.sin(time / 260) * 2;
     this.playerGuide.setPosition(this.player.x, this.player.y + guideBob);
 
     if (!this.controlsEnabled) {
       this.player.setVelocity(0, 0);
+      this.playerIsMoving = false;
       return;
     }
 
@@ -518,25 +557,51 @@ abstract class WalkableScene extends Phaser.Scene {
     );
 
     if (movement.lengthSq() > 0) {
-      const speed = this.hurryKey.isDown
+      const hurrying =
+        this.hurryKey.isDown || this.playerSpeed >= HURRY_SPEED;
+      const speed = hurrying
         ? Math.max(this.playerSpeed, HURRY_SPEED)
         : this.playerSpeed;
+      if (!this.playerIsMoving) {
+        this.playerBlinkUntil = Number.NEGATIVE_INFINITY;
+        this.nextPlayerBlinkAt = time + 2100;
+      }
+      this.playerIsMoving = true;
       movement.normalize().scale(speed);
       this.player.setVelocity(movement.x, movement.y);
       this.setPlayerFacing(movement.x, movement.y);
-      this.setPlayerWalkFrame(
-        this.reducedMotion
-          ? 0
-          : Math.floor(time / 110) % 4 as WalkFrame,
+      this.setPlayerWalkFrame(walkFrameAt(
+        time,
+        hurrying,
+        this.reducedMotion,
+      ));
+      this.currentSurface = movementSurfaceAt(
+        this.locationId,
+        this.player.x,
+        this.player.y,
       );
-      this.emitStepPuff(time, movement.x / speed, movement.y / speed);
-      if (time - this.lastStepAt > 220) {
+      this.emitStepPuff(
+        time,
+        movement.x / speed,
+        movement.y / speed,
+        this.currentSurface,
+      );
+      if (time - this.lastStepAt > stepIntervalFor(hurrying)) {
         this.lastStepAt = time;
-        this.callbacks.onStep();
+        this.callbacks.onStep(this.currentSurface);
       }
     } else {
       this.player.setVelocity(0, 0);
-      this.setPlayerWalkFrame(0);
+      if (this.playerIsMoving) {
+        this.playerIsMoving = false;
+        this.nextPlayerBlinkAt = time + 1900;
+      }
+      this.currentSurface = movementSurfaceAt(
+        this.locationId,
+        this.player.x,
+        this.player.y,
+      );
+      this.updatePlayerIdle(time);
     }
 
     this.updateNpcLife(time, delta);
@@ -569,6 +634,7 @@ abstract class WalkableScene extends Phaser.Scene {
     if (!enabled && this.player) {
       this.player.setVelocity(0, 0);
       this.virtualDirection.set(0, 0);
+      this.playerIsMoving = false;
       this.setPlayerWalkFrame(0);
       for (const [npcId, view] of this.npcViews) {
         view.isMoving = false;
@@ -587,6 +653,10 @@ abstract class WalkableScene extends Phaser.Scene {
       && this.time.now >= this.readyForInteractionAt
       && this.nearbyInteraction
     ) {
+      this.facePlayerToward(
+        this.nearbyInteraction.x,
+        this.nearbyInteraction.y,
+      );
       this.callbacks.onInteract(this.nearbyInteraction);
     }
   }
@@ -616,6 +686,13 @@ abstract class WalkableScene extends Phaser.Scene {
         depth: this.playerGuide.depth,
       },
       playerTextureKey: this.player.texture.key,
+      playerFacing: this.playerFacing,
+      playerFlipX: this.player.flipX,
+      playerIdleBlinking: this.player.texture.key.endsWith("-blink"),
+      movementSurface: this.currentSurface,
+      activeStepSurfaces: this.stepPuffs
+        .filter(({ dust }) => dust.visible)
+        .map(({ surface }) => surface),
       cameraZoom: this.cameras.main.zoom,
       obstacleCount: this.obstacles.length,
       interactionCount: this.interactions.length,
@@ -625,8 +702,14 @@ abstract class WalkableScene extends Phaser.Scene {
       visibleFlavourMarkerCount: [...this.markers.values()].filter(
         (marker) => marker.approachOnly && marker.ring.alpha > 0,
       ).length,
-      visibleStepPuffs: this.stepPuffs.filter(({ circle }) => circle.visible).length,
+      visibleStepPuffs: this.stepPuffs.filter(({ dust }) => dust.visible).length,
       nearbyInteractionId: this.nearbyInteraction?.id ?? null,
+      nearbyInteractionPoint: this.nearbyInteraction
+        ? {
+            x: this.nearbyInteraction.x,
+            y: this.nearbyInteraction.y,
+          }
+        : null,
       ambientActors: [],
       ambientActivities: [],
       ambientActivityTick: null,
@@ -738,10 +821,21 @@ abstract class WalkableScene extends Phaser.Scene {
 
   private createStepPuffPool(): void {
     this.stepPuffs = Array.from({ length: 6 }, () => ({
-      circle: this.add
+      dust: this.add
         .circle(0, 0, 5, CONCRETE_EDGE, 0)
         .setVisible(false),
+      fleckLeft: this.add
+        .rectangle(0, 0, 2, 4, GRASS_DARK, 0)
+        .setVisible(false),
+      fleckRight: this.add
+        .rectangle(0, 0, 2, 3, GOLD, 0)
+        .setVisible(false),
       bornAt: Number.NEGATIVE_INFINITY,
+      originX: 0,
+      originY: 0,
+      directionX: 0,
+      directionY: 0,
+      surface: "indoor" as MovementSurface,
     }));
     this.nextStepPuff = 0;
     this.lastStepPuffAt = Number.NEGATIVE_INFINITY;
@@ -751,34 +845,95 @@ abstract class WalkableScene extends Phaser.Scene {
     time: number,
     directionX: number,
     directionY: number,
+    surface: MovementSurface,
   ): void {
     if (this.reducedMotion || time - this.lastStepPuffAt < 170) return;
     this.lastStepPuffAt = time;
     const puff = this.stepPuffs[this.nextStepPuff];
     this.nextStepPuff = (this.nextStepPuff + 1) % this.stepPuffs.length;
     puff.bornAt = time;
-    puff.circle
-      .setPosition(
-        this.player.x - directionX * 11,
-        this.player.y + 18 - directionY * 5,
-      )
+    puff.originX = this.player.x - directionX * 11;
+    puff.originY = this.player.y + 18 - directionY * 5;
+    puff.directionX = directionX;
+    puff.directionY = directionY;
+    puff.surface = surface;
+    const dustColour =
+      surface === "grass"
+        ? GRASS_DARK
+        : surface === "stone"
+          ? CONCRETE_EDGE
+          : SAND;
+    const fleckLeftColour =
+      surface === "grass"
+        ? GREEN
+        : surface === "stone"
+          ? CONCRETE
+          : NIGHT;
+    const fleckRightColour = surface === "grass" ? GOLD : dustColour;
+    const dustAlpha =
+      surface === "grass" ? 0.24 : surface === "stone" ? 0.34 : 0.18;
+    const depth = depthFor(this.player.y, 2);
+    puff.dust
+      .setPosition(puff.originX, puff.originY)
       .setDepth(depthFor(this.player.y, 2))
       .setScale(0.55)
-      .setAlpha(0.34)
+      .setFillStyle(dustColour, 1)
+      .setAlpha(dustAlpha)
+      .setVisible(true);
+    puff.fleckLeft
+      .setPosition(puff.originX - 2, puff.originY - 1)
+      .setDepth(depth)
+      .setFillStyle(fleckLeftColour, 1)
+      .setAngle(0)
+      .setAlpha(dustAlpha)
+      .setVisible(true);
+    puff.fleckRight
+      .setPosition(puff.originX + 3, puff.originY)
+      .setDepth(depth)
+      .setFillStyle(fleckRightColour, 1)
+      .setAngle(0)
+      .setAlpha(dustAlpha * 0.9)
       .setVisible(true);
   }
 
   private updateStepPuffs(time: number): void {
     for (const puff of this.stepPuffs) {
-      if (!puff.circle.visible) continue;
+      if (!puff.dust.visible) continue;
       const phase = (time - puff.bornAt) / 360;
       if (phase >= 1 || this.reducedMotion) {
-        puff.circle.setVisible(false).setAlpha(0);
+        puff.dust.setVisible(false).setAlpha(0);
+        puff.fleckLeft.setVisible(false).setAlpha(0);
+        puff.fleckRight.setVisible(false).setAlpha(0);
         continue;
       }
-      puff.circle
+      const baseAlpha =
+        puff.surface === "grass"
+          ? 0.24
+          : puff.surface === "stone"
+            ? 0.34
+            : 0.18;
+      const lift = puff.surface === "grass" ? 10 : 5;
+      puff.dust
+        .setPosition(
+          puff.originX - puff.directionX * phase * 5,
+          puff.originY - phase * 2,
+        )
         .setScale(0.55 + phase * 1.25)
-        .setAlpha(0.34 * (1 - phase));
+        .setAlpha(baseAlpha * (1 - phase));
+      puff.fleckLeft
+        .setPosition(
+          puff.originX - 2 - phase * 6 - puff.directionX * phase * 3,
+          puff.originY - phase * lift,
+        )
+        .setAlpha(baseAlpha * (1 - phase))
+        .setAngle(-phase * 35);
+      puff.fleckRight
+        .setPosition(
+          puff.originX + 3 + phase * 6 - puff.directionX * phase * 3,
+          puff.originY - phase * (lift - 1),
+        )
+        .setAlpha(baseAlpha * 0.9 * (1 - phase))
+        .setAngle(phase * 35);
     }
   }
 
@@ -1153,9 +1308,35 @@ abstract class WalkableScene extends Phaser.Scene {
     }
   }
 
-  private setPlayerWalkFrame(frame: WalkFrame): void {
-    const key = `campaign-player-${this.playerFacing}-${frame}`;
+  private facePlayerToward(x: number, y: number): void {
+    const deltaX = x - this.player.x;
+    const deltaY = y - this.player.y;
+    if (Math.abs(deltaX) + Math.abs(deltaY) < 1) return;
+    this.setPlayerFacing(deltaX, deltaY);
+    this.setPlayerWalkFrame(0);
+  }
+
+  private updatePlayerIdle(time: number): void {
+    if (this.reducedMotion) {
+      this.setPlayerWalkFrame(0);
+      return;
+    }
+    if (time >= this.nextPlayerBlinkAt) {
+      this.playerBlinkUntil = time + 130;
+      this.nextPlayerBlinkAt =
+        time + 2800 + (this.locationId.length % 4) * 220;
+    }
+    this.setPlayerWalkFrame(0, time < this.playerBlinkUntil);
+  }
+
+  private setPlayerWalkFrame(
+    frame: WalkFrame,
+    blinking = false,
+  ): void {
+    const key =
+      `campaign-player-${this.playerFacing}-${frame}${blinking ? "-blink" : ""}`;
     if (key === this.playerTextureKey) return;
+    this.currentWalkFrame = frame;
     this.playerTextureKey = key;
     this.player.setTexture(key);
   }

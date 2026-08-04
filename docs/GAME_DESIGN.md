@@ -145,7 +145,11 @@ it does not mean copying another game’s art, characters, tiles, maps, systems,
 or branding.
 
 The player has down, up, and side-facing four-frame walks (side frames flip for
-left/right). A persistent gold-and-cream downward triangle follows above the
+left/right). Normal walking advances at a calmer 125 ms per frame, while Shift
+hurry and accelerated demo movement use a 92 ms cadence. When standing still,
+the player blinks on a deterministic authored interval; approaching an NPC,
+door, or detail turns the player toward it before the visual-novel or location
+transition opens. A persistent gold-and-cream downward triangle follows above the
 player at a fixed high depth so the protagonist stays readable through dense
 props and softened façades; reduced motion removes its subtle bob. Resident
 sprites vary build, height, hair, skin tone, posture, and
@@ -173,8 +177,12 @@ activity tools. The rebuilt pond has a layered water ramp, kerbed outline,
 highlights, lily pads, flowers, and two collision rectangles around its
 walkable silhouette.
 Three manually phased ripple rings animate without tweens; reduced motion holds
-them as static water marks. A six-object pool adds short walking puffs without
-creating a new object on each step and hides them under reduced motion.
+them as static water marks. A six-slot effect pool adds short dust and fleck
+responses without creating a new object on each step. Its grass, estate-paving,
+and indoor variants mirror the baked terrain geometry and pair with three
+Web Audio footstep profiles generated from one reusable deterministic noise
+buffer. Reduced motion hides the visual effects and player idle blink. Audio
+remains available because it does not convey quest state by itself.
 Chapter 2 changes the same estate into a deterministic tropical monsoon rather
 than a separate or random map state. A fixed pool of 64 screen-space streaks,
 ten puddles with manually phased rings, wet path bands, a cool multiply tint,
@@ -263,8 +271,10 @@ desktop portrait/card geometry and a named NPC's profile traits, and captures
 the actual game, visual-novel card, circular map, and stacked Journal at 360
 px. Motion snapshots prove 1.32× wide-desktop and 1× mobile
 exterior framing, three pond rings with changing phase in normal motion, static
-pond phase and zero walking puffs under reduced motion, and pooled puffs during
-normal walking. Chapter 2 snapshots also prove the fixed 64-streak rain pool,
+pond phase, zero walking effects, and no player idle blink under reduced
+motion. Normal-motion snapshots prove the player's interaction-facing and
+idle blink plus separate grass and paving effects. Chapter 2 snapshots also
+prove the fixed 64-streak rain pool,
 ten puddle rings, dry shelter masks, sheltered helped residents and cats,
 stored activity tools and laundry, a readable 360 px rain composition, and a
 static no-falling-rain reduced-motion alternative. It samples 120 frames during resident,
@@ -286,6 +296,10 @@ zoom, two visible pooled puffs, three pond rings, and 78 obstacle bodies before
 the story-cluster pass increased that count to 90, solid bicycle bays raised
 it to 93, and audited hawker/workshop doorway gaps split the final shells into
 95 bodies.
+One passing 2026-08-04 tactile-movement gate measured 9.10 ms title p95,
+9.10 ms resident-route p95, 9.30 ms monsoon p95, and 9.20 ms active p95 with
+2.40 ms/frame main-thread work. Its 4× CPU-throttled sample measured 9.30 ms
+p95 with 9.57 ms/frame work while both grass and paving responses were live.
 Repeated activity-vignette evidence runs remained inside the configured
 cadence and main-thread budgets on both normal and 4×-throttled samples. They
 proved the fixed 64-streak pool, intentionally culled but legible desktop and

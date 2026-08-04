@@ -50,6 +50,11 @@ import {
   buildJournalView,
   defaultJournalEntryId,
 } from "../journal.js";
+import {
+  movementSurfaceAt,
+  stepIntervalFor,
+  walkFrameAt,
+} from "../movementFeel.js";
 import type {
   CampaignEvent,
   CampaignStateV1,
@@ -498,6 +503,18 @@ describe("campaign registries", () => {
       queue.push(...location.connections);
     }
     expect(visited.size).toBe(LOCATIONS.length);
+    expect(movementSurfaceAt("estate", 650, 400)).toBe("stone");
+    expect(movementSurfaceAt("estate", 350, 520)).toBe("grass");
+    expect(movementSurfaceAt("estate", 1930, 1180)).toBe("stone");
+    expect(movementSurfaceAt("y-flat", 650, 400)).toBe("indoor");
+    expect([0, 125, 250, 375].map(
+      (time) => walkFrameAt(time, false, false),
+    )).toEqual([0, 1, 2, 3]);
+    expect([0, 92, 184, 276].map(
+      (time) => walkFrameAt(time, true, false),
+    )).toEqual([0, 1, 2, 3]);
+    expect(walkFrameAt(375, false, true)).toBe(0);
+    expect(stepIntervalFor(true)).toBeLessThan(stepIntervalFor(false));
   });
 
   it("keeps all authored intent events pointed at real quests and NPCs", () => {

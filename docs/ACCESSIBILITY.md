@@ -56,7 +56,8 @@ product requirements, not optional polish.
   routes and community cats stay at home, and deterministic blinks, four
   ambient task vignettes, laundry flutter, and eight butterflies/dragonflies
   hold static first-frame poses. Pond rings hold a static phase and walking
-  puffs remain hidden. During the Chapter 2 monsoon, falling rain and ambient
+  effects remain hidden; the player's deterministic idle blink is also
+  disabled. During the Chapter 2 monsoon, falling rain and ambient
   insects are hidden and puddle rings hold still while wet surfaces, overcast
   colour, shelter light, gathered residents, sheltered cats, and stored
   activity tools/laundry preserve the story state.
@@ -99,10 +100,14 @@ targets, saved progress, demo isolation, normal and 4×-CPU-throttled active
 frame pacing, resident stop/facing and marker synchronization, ambient
 cat/laundry/pond motion, all four two-frame community task vignettes, all eight
 two-frame butterflies/dragonflies, all four player/resident walk frames, an
-emulated reduced-motion stillness sample, normal walking puffs, successful
+emulated reduced-motion stillness sample, deterministic player idle blinking,
+player-to-interaction facing, separate grass/paving walking effects, successful
 exterior wake-up, physical
 pond/east/south travel,
 responsive desktop/mobile camera zoom, and absence of uncaught console errors.
+The surface effects and footstep timbres are redundant ambience: paths retain
+their kerbs and texture, and no objective, collision, or interaction depends on
+seeing or hearing the surface response.
 It physically approaches one of 14 low-priority estate details, verifies that
 only its marker appears, opens it with `E`, checks the complete accessible
 estate narration and contextual touch label, and repeats the open card at
