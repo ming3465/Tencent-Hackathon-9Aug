@@ -61,6 +61,7 @@ let districtTravelEvidence = null;
 let terrainDetailEvidence = null;
 let facadeCollisionEvidence = null;
 let worldFeelEvidence = null;
+const scamCheckEvidence = [];
 let grassFootstepEvidence = null;
 let stoneFootstepEvidence = null;
 let portraitEvidence = {
@@ -656,8 +657,6 @@ try {
         && (await page.eval(`
           (() => {
             const button = document.getElementById("btn-dialog-advance");
-            // The primary action must carry a visible word, not just a
-            // chevron, and its accessible name must come from that word.
             if (!button) return false;
             const chevron = button.querySelector("[aria-hidden='true']");
             const visibleWord = button.textContent
@@ -799,8 +798,84 @@ try {
   };
 
   const completeChapter2 = async (attendeeCount) => {
+    const expectedLayout = attendeeCount === 2
+      ? "numbered-steps"
+      : "icons-and-words";
     await clickButton("Ask Auntie Minah", "Main Story");
-    await completeDialogueChoice();
+    const minahLines = [];
+    for (let step = 0; step < 12; step += 1) {
+      const advancing = await page.eval(
+        `document.getElementById("btn-dialog-advance").classList.contains("visible")`
+      );
+      if (!advancing) break;
+      const line = await page.eval(
+        `document.getElementById("dialog-text-a11y").textContent`
+      );
+      if (line && minahLines.at(-1) !== line) minahLines.push(line);
+      await page.eval(`document.getElementById("btn-dialog-advance").click()`);
+      await sleep(75);
+    }
+    const minahChoiceState = await page.eval(`
+      (() => ({
+        title: document.getElementById("dialog-kicker").textContent,
+        speaker: document.getElementById("dialog-speaker").textContent,
+        portraitId:
+          document.querySelector("#dialog-portrait svg")?.dataset.portraitId ?? null,
+        labels: Array.from(
+          document.querySelectorAll("#dialog-choices .choice-button")
+        ).map((button) => button.textContent.trim()),
+      }))()
+    `);
+    await choose(expectedLayout === "numbered-steps" ? 0 : 1, true);
+    await finishResponse();
+    const minahResult = await page.eval(
+      `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
+    );
+    await ensureJournalOpen();
+    await activateJournalSection("Main Story");
+    const safetyEntrySelected = await page.eval(`
+      (() => {
+        const item = Array.from(document.querySelectorAll(".journal-item"))
+          .find((candidate) =>
+            candidate.querySelector("h3")?.textContent.trim()
+              === "Who Knows Grandma Ros?"
+          );
+        const button = item?.querySelector(".journal-entry-select");
+        if (!button) return false;
+        button.click();
+        return true;
+      })()
+    `);
+    await sleep(80);
+    const safetyJournalText = await page.eval(`
+      Array.from(document.querySelectorAll("#journal-detail .journal-objective"))
+        .map((item) => item.textContent.trim())
+        .join(" ")
+    `);
+    scamCheckEvidence.push({
+      authoredAdvice:
+        minahLines.some((line) => /check before I act/i.test(line))
+        && minahLines.some((line) => /ScamShield at 1799/i.test(line))
+        && minahLines.some((line) => /one-time password/i.test(line)),
+      noFailureChoice:
+        minahChoiceState.labels.length === 2
+        && minahChoiceState.labels.every((label) =>
+          /numbered steps|icons with short words/i.test(label)
+        ),
+      elderExpert:
+        minahChoiceState.title === "Check Before You Act"
+        && minahChoiceState.speaker === "Auntie Minah"
+        && minahChoiceState.portraitId === "auntie-minah",
+      expectedLayout,
+      persistedLayout: minahResult?.scamCheckCardLayout ?? null,
+      cardVisible: minahResult?.scamCheckCardVisible ?? false,
+      cardAlpha: minahResult?.scamCheckCardAlpha ?? null,
+      semanticRevisit:
+        safetyEntrySelected
+        && /PAUSE, CHECK, TELL/i.test(safetyJournalText)
+        && /never share an OTP/i.test(safetyJournalText)
+        && /Shop card:/i.test(safetyJournalText),
+    });
     await clickButton("Ask Uncle Seng", "Main Story");
     await completeDialogueChoice();
     check(
@@ -1929,7 +2004,15 @@ try {
     })()
   `);
   await page.eval(`document.getElementById("btn-fullscreen").click()`);
-  await sleep(140);
+  await waitForPageCondition(
+    `document.fullscreenElement === document.documentElement
+      && document.documentElement.classList.contains("game-fullscreen")
+      && document.getElementById("world-shell").classList.contains("fullscreen-active")
+      && document.activeElement?.id === "sandbox-stage"`,
+    "mocked full-screen entry",
+    2000
+  );
+  await sleep(80);
   const enteredFullscreen = await page.eval(`
     (() => ({
       active:
@@ -1949,7 +2032,15 @@ try {
     }))()
   `);
   await page.eval(`document.exitFullscreen()`);
-  await sleep(140);
+  await waitForPageCondition(
+    `document.fullscreenElement === null
+      && !document.documentElement.classList.contains("game-fullscreen")
+      && !document.getElementById("world-shell").classList.contains("fullscreen-active")
+      && document.activeElement?.id === "btn-sound"`,
+    "mocked full-screen exit",
+    2000
+  );
+  await sleep(40);
   const exitedFullscreen = await page.eval(`
     (() => ({
       active:
@@ -1970,6 +2061,8 @@ try {
   `);
   const fullscreenEvidence = {
     control: await page.eval(`!!document.getElementById("btn-fullscreen")`),
+    enteredDetails: enteredFullscreen,
+    exitedDetails: exitedFullscreen,
     entered:
       enteredFullscreen.active
       && enteredFullscreen.pressed === "true"
@@ -2181,6 +2274,9 @@ try {
         activeStepSurfaces: worldFeelSnapshot.activeStepSurfaces,
         pondRippleCount: worldFeelSnapshot.pondRippleCount,
         obstacleCount: worldFeelSnapshot.obstacleCount,
+        scamCheckCardLayout: worldFeelSnapshot.scamCheckCardLayout,
+        scamCheckCardVisible: worldFeelSnapshot.scamCheckCardVisible,
+        scamCheckCardAlpha: worldFeelSnapshot.scamCheckCardAlpha,
       }
     : null;
   diagnostics.push(
@@ -2189,7 +2285,10 @@ try {
         `step-puffs=${worldFeelEvidence.visibleStepPuffs}; ` +
         `surface=${worldFeelEvidence.movementSurface}; ` +
         `pond-ripples=${worldFeelEvidence.pondRippleCount}; ` +
-        `obstacles=${worldFeelEvidence.obstacleCount}`
+        `obstacles=${worldFeelEvidence.obstacleCount}; ` +
+        `scam-card=${worldFeelEvidence.scamCheckCardLayout}/` +
+        `${worldFeelEvidence.scamCheckCardVisible}@` +
+        `${worldFeelEvidence.scamCheckCardAlpha}`
       : "  FEEL  world feedback snapshot missing"
   );
   await page.shot(`${SHOT_DIR}/05-choice-consequence.png`);
@@ -2277,15 +2376,21 @@ try {
     obstacleCount: afterFacadeCollision?.obstacleCount ?? 0,
     faded:
       activeFacadeOcclusion?.faded === true
-      && activeFacadeOcclusion.alpha <= 0.35,
+      && activeFacadeOcclusion.alpha <= 0.35
+      && afterFacadeCollision?.scamCheckCardAlpha <= 0.35,
     restored:
       restoredFacadeOcclusion?.faded === false
-      && restoredFacadeOcclusion.alpha >= 0.98,
+      && restoredFacadeOcclusion.alpha >= 0.98
+      && restoredFacadeSnapshot?.scamCheckCardAlpha >= 0.98,
+    cardAlphaFaded: afterFacadeCollision?.scamCheckCardAlpha ?? null,
+    cardAlphaRestored: restoredFacadeSnapshot?.scamCheckCardAlpha ?? null,
   };
   diagnostics.push(
     `  FACADE  collision=${facadeCollisionEvidence.blocked}; ` +
       `faded=${facadeCollisionEvidence.faded}; ` +
       `restored=${facadeCollisionEvidence.restored}; ` +
+      `card-alpha=${facadeCollisionEvidence.cardAlphaFaded}/` +
+      `${facadeCollisionEvidence.cardAlphaRestored}; ` +
       `start=${JSON.stringify(facadeCollisionEvidence.start)}; ` +
       `end=${JSON.stringify(facadeCollisionEvidence.end)}; ` +
       `obstacles=${facadeCollisionEvidence.obstacleCount}`
@@ -2690,6 +2795,22 @@ try {
       )
       && worldFeelEvidence.pondRippleCount === 3
       && worldFeelEvidence.obstacleCount >= 90
+      && worldFeelEvidence.scamCheckCardLayout === "icons-and-words"
+      && worldFeelEvidence.scamCheckCardVisible
+      && worldFeelEvidence.scamCheckCardAlpha >= 0.98
+      && scamCheckEvidence.length === 2
+      && new Set(
+        scamCheckEvidence.map((evidence) => evidence.persistedLayout)
+      ).size === 2
+      && scamCheckEvidence.every((evidence) =>
+        evidence.authoredAdvice
+        && evidence.noFailureChoice
+        && evidence.elderExpert
+        && evidence.persistedLayout === evidence.expectedLayout
+        && evidence.cardVisible
+        && evidence.cardAlpha >= 0.98
+        && evidence.semanticRevisit
+      )
       && grassFootstepEvidence
       && grassFootstepEvidence.movementSurface === "grass"
       && grassFootstepEvidence.activeStepSurfaces.includes("grass")
@@ -2808,8 +2929,13 @@ try {
           `step-puffs=${worldFeelEvidence.visibleStepPuffs}, ` +
           `surface=${worldFeelEvidence.movementSurface}, ` +
           `pond-ripples=${worldFeelEvidence.pondRippleCount}, ` +
-          `world-obstacles=${worldFeelEvidence.obstacleCount}`
+          `world-obstacles=${worldFeelEvidence.obstacleCount}, ` +
+          `scam-card=${worldFeelEvidence.scamCheckCardLayout}/` +
+          `${worldFeelEvidence.scamCheckCardVisible}`
         : "world feel evidence missing",
+      scamCheckEvidence.length
+        ? `scam-check=${JSON.stringify(scamCheckEvidence)}`
+        : "scam-check evidence missing",
       grassFootstepEvidence
         ? `grass-surface=${grassFootstepEvidence.movementSurface}, ` +
           `grass-puffs=${grassFootstepEvidence.visibleStepPuffs}`
