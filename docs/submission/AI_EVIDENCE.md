@@ -21,8 +21,8 @@ to declare its own work complete; the repository gate is the acceptance test.
 | CodeBuddy CLI 2.127.0 | Authored the first 10 Phase 1 files, including `matchEngine.ts`, which remains as the optional keepsake table | Exceeded its 50-turn limit. The gate found 2 TypeScript errors, 3 failing tests, 1 unused dependency, 4 audit findings, and a stale-timer race. A focused retry returned `429 Credits exhausted`. |
 | OpenCode | Corrected the Phase 1 defects and implemented the original top-down sandbox pivot | That sandbox state/scene architecture was superseded by the 2026-08-03 campaign upgrade. |
 | Claude Code (Opus 5) | Audio, reactive residents, lighting, procedural-art pass, Node CDP smoke harness, Pages workflow, and original deck | No human usability or accessibility outcome was inferred from automated checks. |
-| Codex (GPT-5) | `CampaignStateV1`, pure reducer, KampungMind, content registries, versioned save, four-tab quest Journal, circular estate map, room-fit interior camera, Estate/Interior scene architecture, original resident/environment art including tropical landscaping, landmark façades, 13 visual-novel portraits with three expressions, four-frame locomotion, 14 approach-only details, responsive world scale, pond/movement feedback, deterministic day/evening ambient voice-leading, the Chapter 2 monsoon, 12 story clusters, 54 baked ground accents, eight ambient insects, building solidity, generated-title integration, campaign tests, full/demo browser campaigns, and refreshed artifacts/docs | Authored deterministic content and code-drawn visuals ahead of time and integrated one reviewed generated title asset; no runtime model or network path was added. |
-| OpenAI image generation | Produced three original visual workflows from labelled project references: a neighbourhood style key, a targeted estate-density study, and a production HDB-estate title panorama with a constrained cleanup edit | Human review translated the first two outputs into original code-drawn systems. For the title, review rejected pseudo-writing, constrained the edit to non-text pictograms, optimized the accepted source, and integrated it at runtime while keeping all interface text semantic. Prompts, accepted outputs, artifact IDs, decisions, uses, and the title hashes are preserved. None was Miora. |
+| Codex (GPT-5) | `CampaignStateV1`, pure reducer, KampungMind, content registries, versioned save, four-tab quest Journal, circular estate map, room-fit interior camera, Estate/Interior scene architecture, original resident/environment art including tropical landscaping, landmark façades, 13 visual-novel portraits with three expressions, four-frame locomotion, a pure 12-resident silhouette/outfit registry, 14 approach-only details, responsive world scale, pond/movement feedback, deterministic day/evening ambient voice-leading, the Chapter 2 monsoon, 12 story clusters, 54 baked ground accents, eight ambient insects, building solidity, generated-title integration, campaign tests, full/demo browser campaigns, and refreshed artifacts/docs | Authored deterministic content and code-drawn visuals ahead of time and integrated one reviewed generated title asset; no runtime model or network path was added. |
+| OpenAI image generation | Produced four original visual workflows from labelled project references: a neighbourhood style key, a targeted estate-density study, a production HDB-estate title panorama with a constrained cleanup edit, and a cast silhouette/gait study | Human review translated the neighbourhood, density, and cast studies into original code-drawn systems. The cast review accepted stepped anatomy, connected limbs, grounded feet, and readable outfit variation while rejecting costume-like treatments. For the title, review rejected pseudo-writing, constrained the edit to non-text pictograms, optimized the accepted source, and integrated it at runtime while keeping all interface text semantic. Prompts, accepted outputs, artifact IDs, decisions, uses, and hashes are preserved. None was Miora. |
 | Gemini CLI 0.53.1 | One real authoring invocation was attempted with `docs/prompts/gemini-kampungmind-authoring.txt` | Google authentication opened and the run was cancelled while blocked. It produced no draft; no Gemini text was reviewed or committed. We do not claim a completed Gemini pass. |
 
 ## 3. KampungMind: the AI feature
@@ -46,7 +46,7 @@ later” never closes a route. No line is generated at runtime.
 | --- | --- |
 | Strict TypeScript | `npm run typecheck` passes |
 | Unit tests | 75/75: 27 campaign, 31 optional matching, 17 audio |
-| Production build | 106.23 kB initial JS (32.29 kB gzip); 1,591.09 kB lazy campaign scene (373.43 kB gzip) |
+| Production build | 106.23 kB initial JS (32.29 kB gzip); 1,596.66 kB lazy campaign scene (374.83 kB gzip) |
 | Dependency audit | 0 known vulnerabilities |
 | Production browser | 60/60 checks; complete full and demo campaigns in headless Chrome |
 
@@ -58,7 +58,8 @@ four-tab Journal selection/tracking, generated terrain/landscape/façade evidenc
 reviewed title-art loading, code-drawn portrait
 dimensions/detail/named traits and neutral-to-thoughtful expression state,
 desktop and mobile visual-novel fit,
-four-frame player/resident locomotion, one physical keyboard/touch path through
+four-frame player/resident locomotion, a 12-resident production registry with
+five hair and five outfit silhouettes, one physical keyboard/touch path through
 the 14 approach-only estate details, all four two-frame community task
 vignettes, all eight two-frame butterflies/dragonflies, 88 exterior props
 across 22 forms, 12 collision-aware story clusters across six forms, 54 baked
@@ -78,7 +79,8 @@ and console errors.
 | OpenAI neighbourhood prompt and review | `docs/prompts/openai-neighbourhood-style-key.txt` |
 | OpenAI estate-density prompt and review | `docs/prompts/openai-estate-density-reference.txt` |
 | OpenAI title prompt, rejection, cleanup, hashes, and review | `docs/prompts/openai-title-panorama-v1.txt` |
-| Reviewed generated visual outputs | `docs/art/openai-neighbourhood-style-key.png`, `docs/art/openai-estate-density-reference.png`, `docs/art/openai-kampung-estate-title-v1.png` |
+| OpenAI cast-silhouette prompt and reviewed study | `docs/prompts/openai-character-silhouette-study-v1.txt`, `docs/art/openai-character-silhouette-study-v1.png` |
+| Reviewed generated visual outputs | `docs/art/openai-neighbourhood-style-key.png`, `docs/art/openai-estate-density-reference.png`, `docs/art/openai-kampung-estate-title-v1.png`, `docs/art/openai-character-silhouette-study-v1.png` |
 | Optimized generated runtime asset | `public/assets/generated/kampung-estate-title-v1.webp` |
 | Curated in-game activity/density result | `src/game/campaignArt.ts`, `src/game/campaignScene.ts`, `docs/screenshots/10-living-estate.png`, `docs/screenshots/27-ambient-micro-scenes.png` |
 | Full chronological AI record | `docs/AI_USAGE_LOG.md` |
@@ -100,11 +102,11 @@ and console errors.
 - No timer, failure state, energy system, streak, or dark pattern
 - No unreviewed, unattributed, or culturally unchecked generated asset
 
-Generated visual work is explicitly allowed. The first two reviewed OpenAI
-studies remain visual-direction evidence with human-curated code-drawn runtime
-translations. The third followed a documented reject/edit/optimize path and
-ships as the title panorama. No claim depends on pretending any workflow was a
-Miora run.
+Generated visual work is explicitly allowed. The neighbourhood, density, and
+cast studies remain visual-direction evidence with human-curated code-drawn
+runtime translations. The title followed a documented reject/edit/optimize
+path and ships as the title panorama. No claim depends on pretending any
+workflow was a Miora run.
 
 ## 7. Known limitations
 
@@ -114,7 +116,7 @@ Miora run.
 - The Phaser lazy chunk still triggers Vite’s standard 500 kB warning.
 - No completed Gemini authoring output exists; the authentication-blocked
   attempt is evidence of process honesty, not a content contribution.
-- No Miora generation has occurred. The three OpenAI workflows are useful
+- No Miora generation has occurred. The four OpenAI workflows are useful
   cross-tool evidence but do not satisfy a Miora-specific artifact request.
 
 ## Judge summary

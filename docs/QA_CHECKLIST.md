@@ -106,6 +106,10 @@
       the entrance or collision registries
 - [x] The persistent downward guide triangle follows the player in rooms and
       outdoors and remains above façade-occlusion layers
+- [x] The production snapshot exposes all 12 resident art definitions with
+      three builds, five hair silhouettes, five outfit grammars, four
+      accessory states, and four carried totes; refreshed captures show one
+      synchronized contact shadow per resident
 - [x] Generated landmark façade exposes at least 20 colours, 180 edge
       transitions, and 8% dark pixels (documented pass: 214 / 270 / 28.6%)
 - [x] All 95 obstacle bodies instantiate; a real northward movement sample
@@ -146,9 +150,9 @@
 - [x] Original pixel-art and frame-pacing work is recorded without a
       real-device or cross-game performance claim
 - [x] Gemini CLI authentication-blocked attempt is recorded without claiming output
-- [x] Both OpenAI image-generation studies, exact prompts, accepted/rejected
-      details, and curated code translations are recorded without a Miora
-      claim
+- [x] All four OpenAI image-generation workflows, exact prompts,
+      accepted/rejected details, and curated code or title-asset uses are
+      recorded without a Miora claim
 - [x] Automated counts match the current repository
 - [x] Known manual limitations remain explicit
 - [x] No playtest, metric, or AI-tool run is invented

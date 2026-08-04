@@ -1,0 +1,9 @@
+Use case: stylized-concept
+Asset type: original game-character silhouette and animation design study for a code-drawn top-down Singapore neighbourhood game
+Input images: Image 1 is the current playable estate capture and is a palette, outline-weight, gameplay-scale, and camera reference only
+Primary request: design a clean sprite-study board for one young adult player and six distinct older Singapore estate residents, showing each character in front, back, and side views plus four readable walk phases; emphasize improved human proportions, stepped pixel silhouettes, connected arms and legs, natural posture, expressive hair and clothing shapes, grounded feet, and dignified age signals such as silver hair, glasses, apron, cane, flat cap, or tote bag
+Scene/backdrop: plain warm cream design-board background with generous spacing
+Style/medium: original crisp pixel-art concept study; cozy top-down life-sim readability; limited palette derived from the current game's teal, coral, gold, cream, ink, green, and purple; shapes must be simple enough to reproduce with rectangles and small polygons in Phaser Canvas
+Composition/framing: orderly character rows, every full body visible at comparable scale, silhouettes readable when reduced to roughly 44 by 58 pixels
+Lighting/mood: warm, friendly, grounded, everyday neighbourhood dignity
+Constraints: no text, labels, logos, trademarks, watermarks, copied game characters, copied costumes, isometric projection, weapons, fantasy clothing, medical imagery, caricature, infantilization, or exaggerated frailty; preserve Singapore multicultural variety without stereotypes; this is a visual-direction study, not a final runtime sprite sheet

@@ -79,6 +79,10 @@ product requirements, not optional polish.
   margins. Preserve a 0.56× phone readability floor while exposing more of the
   room than the former 1× crop.
 - Keep characters and interaction markers legible on grass, paths, and rooms.
+- Distinguish residents through stepped silhouettes, build, hair, clothing
+  motifs, carried objects, and walking aids rather than colour alone. Keep one
+  clear contact shadow per character so feet remain grounded without a dark
+  duplicate underlay.
 - Keep a high-contrast downward triangle directly above the main character in
   every location. It is a visual guide only; player position and interaction
   meaning remain available through the nearby prompt, location label, map,

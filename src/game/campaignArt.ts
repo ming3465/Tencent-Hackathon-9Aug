@@ -1,4 +1,8 @@
 import Phaser from "phaser";
+import {
+  RESIDENT_ART,
+  type ResidentArtDefinition,
+} from "./characterArt.js";
 import type { LocationId } from "./campaignTypes.js";
 
 export const PALETTE = {
@@ -22,33 +26,6 @@ export type PlayerFacing = "down" | "up" | "side";
 export type WalkFrame = 0 | 1 | 2 | 3;
 
 const WALK_FRAMES: readonly WalkFrame[] = [0, 1, 2, 3];
-
-type ResidentBuild = "short" | "tall" | "wide";
-type ResidentAccessory = "glasses" | "cane" | "apron" | "none";
-
-interface ResidentArtDefinition {
-  key: string;
-  shirt: number;
-  hair: number;
-  skin: number;
-  build: ResidentBuild;
-  accessory: ResidentAccessory;
-}
-
-const RESIDENT_ART: readonly ResidentArtDefinition[] = [
-  { key: "npc-mei", shirt: 0xc85c5c, hair: 0x6b6560, skin: 0xe3b58c, build: "wide", accessory: "apron" },
-  { key: "npc-ravi", shirt: 0x3d7a80, hair: 0xb0aaa0, skin: 0xb87f52, build: "tall", accessory: "glasses" },
-  { key: "npc-siti", shirt: 0x7b5aa6, hair: 0x4c3b5f, skin: 0xcf9a6c, build: "short", accessory: "cane" },
-  { key: "npc-yusof", shirt: 0x4a6fa5, hair: 0x8c8580, skin: 0xcf9a6c, build: "wide", accessory: "none" },
-  { key: "npc-meng", shirt: 0xd98a3c, hair: 0x5a5550, skin: 0xe3b58c, build: "tall", accessory: "none" },
-  { key: "npc-seng", shirt: 0x8a6b3d, hair: 0xa7a198, skin: 0xe8c49b, build: "short", accessory: "glasses" },
-  { key: "npc-minah", shirt: 0x2f7d5f, hair: 0x2a2523, skin: 0xa8703f, build: "wide", accessory: "apron" },
-  { key: "npc-weiling", shirt: 0xc76a9a, hair: 0x241f1c, skin: 0xecc6a0, build: "tall", accessory: "none" },
-  { key: "npc-long", shirt: 0x5b748f, hair: 0xb6b0a7, skin: 0xd6a177, build: "short", accessory: "cane" },
-  { key: "npc-ros", shirt: 0xc76b52, hair: 0xb3ada5, skin: 0xa8703f, build: "wide", accessory: "apron" },
-  { key: "npc-tan", shirt: 0x596d55, hair: 0x827d77, skin: 0xcf9a6c, build: "tall", accessory: "glasses" },
-  { key: "npc-ben", shirt: 0x5e698a, hair: 0x2a2523, skin: 0xd6a177, build: "tall", accessory: "none" },
-] as const;
 
 function mixColour(colour: number, target: number, amount: number): number {
   const channel = (shift: number): number => {
@@ -390,6 +367,269 @@ function makeTexture(
   graphics.destroy();
 }
 
+function drawSteppedHeadBase(
+  graphics: Phaser.GameObjects.Graphics,
+  centreX: number,
+  skin: number,
+): void {
+  graphics
+    .fillStyle(PALETTE.ink)
+    .fillRect(centreX - 8, 3, 16, 2)
+    .fillRect(centreX - 10, 5, 20, 19)
+    .fillRect(centreX - 8, 24, 16, 3)
+    .fillStyle(skin)
+    .fillRect(centreX - 7, 6, 14, 18)
+    .fillRect(centreX - 9, 9, 18, 12)
+    .fillRect(centreX - 6, 24, 12, 1)
+    .fillStyle(lightenColour(skin, 0.12))
+    .fillRect(centreX - 7, 7, 3, 11)
+    .fillStyle(darkenColour(skin, 0.1))
+    .fillRect(centreX + 5, 9, 3, 12);
+}
+
+function drawSteppedTorso(
+  graphics: Phaser.GameObjects.Graphics,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  fill: number,
+): void {
+  const shoulderInset = Math.min(4, Math.floor(width / 5));
+  graphics
+    .fillStyle(PALETTE.ink)
+    .fillRect(x + shoulderInset, y - 2, width - shoulderInset * 2, 2)
+    .fillRect(x + 2, y, width - 4, 2)
+    .fillRect(x, y + 2, width, Math.max(4, height - 7))
+    .fillRect(x + 2, y + height - 5, width - 4, 5)
+    .fillStyle(fill)
+    .fillRect(x + shoulderInset, y + 1, width - shoulderInset * 2, 2)
+    .fillRect(x + 3, y + 3, width - 6, 2)
+    .fillRect(x + 3, y + 5, width - 6, Math.max(3, height - 11))
+    .fillRect(x + 5, y + height - 6, width - 10, 4)
+    .fillStyle(lightenColour(fill, 0.16))
+    .fillRect(x + 4, y + 4, 3, Math.max(3, height - 10))
+    .fillStyle(darkenColour(fill, 0.18))
+    .fillRect(x + width - 7, y + 5, 3, Math.max(3, height - 11))
+    .fillRect(x + 5, y + height - 6, width - 10, 2);
+}
+
+function drawPlayerHair(
+  graphics: Phaser.GameObjects.Graphics,
+  facing: PlayerFacing,
+  hair: number,
+): void {
+  if (facing === "up") {
+    graphics
+      .fillStyle(hair)
+      .fillRect(12, 5, 16, 4)
+      .fillRect(10, 8, 20, 13)
+      .fillRect(12, 21, 16, 3)
+      .fillStyle(lightenColour(hair, 0.15))
+      .fillRect(13, 6, 8, 2)
+      .fillRect(11, 10, 2, 7);
+    return;
+  }
+  if (facing === "side") {
+    graphics
+      .fillStyle(hair)
+      .fillRect(12, 4, 15, 3)
+      .fillRect(10, 7, 19, 6)
+      .fillRect(10, 11, 5, 9)
+      .fillRect(14, 12, 3, 4)
+      .fillStyle(lightenColour(hair, 0.15))
+      .fillRect(13, 5, 8, 2);
+    return;
+  }
+  graphics
+    .fillStyle(hair)
+    .fillRect(12, 4, 16, 3)
+    .fillRect(10, 7, 20, 6)
+    .fillRect(10, 11, 5, 7)
+    .fillRect(25, 11, 5, 5)
+    .fillRect(15, 12, 3, 3)
+    .fillStyle(lightenColour(hair, 0.15))
+    .fillRect(13, 5, 9, 2);
+}
+
+function drawResidentHair(
+  graphics: Phaser.GameObjects.Graphics,
+  definition: ResidentArtDefinition,
+  facing: PlayerFacing,
+): void {
+  const hair = definition.hair;
+  const highlight = lightenColour(hair, 0.28);
+  if (facing === "up") {
+    if (definition.hairStyle === "receding") {
+      graphics
+        .fillStyle(hair)
+        .fillRect(12, 8, 5, 13)
+        .fillRect(27, 8, 5, 13)
+        .fillRect(15, 20, 14, 4)
+        .fillStyle(highlight)
+        .fillRect(13, 9, 2, 8);
+      return;
+    }
+    graphics
+      .fillStyle(hair)
+      .fillRect(14, 4, 16, 3)
+      .fillRect(12, 7, 20, 15)
+      .fillRect(14, 21, 16, 3);
+    if (definition.hairStyle === "bun") {
+      graphics
+        .fillStyle(PALETTE.ink)
+        .fillRect(18, 1, 9, 5)
+        .fillStyle(hair)
+        .fillRect(20, 1, 5, 4);
+    } else if (definition.hairStyle === "bob") {
+      graphics
+        .fillStyle(hair)
+        .fillRect(10, 9, 5, 14)
+        .fillRect(29, 9, 5, 14);
+    } else if (definition.hairStyle === "crop") {
+      graphics
+        .fillStyle(definition.skin)
+        .fillRect(13, 17, 18, 6);
+    } else {
+      graphics
+        .fillStyle(darkenColour(hair, 0.18))
+        .fillRect(21, 5, 2, 17);
+    }
+    graphics
+      .fillStyle(highlight)
+      .fillRect(15, 5, 8, 2);
+    return;
+  }
+
+  if (definition.hairStyle === "receding") {
+    graphics
+      .fillStyle(hair)
+      .fillRect(12, 7, 5, 11)
+      .fillRect(facing === "side" ? 27 : 28, 8, 4, 10)
+      .fillRect(15, 5, 7, 3)
+      .fillStyle(highlight)
+      .fillRect(13, 8, 2, 7);
+    return;
+  }
+
+  const sideFace = facing === "side";
+  graphics
+    .fillStyle(hair)
+    .fillRect(14, 4, sideFace ? 14 : 16, 3)
+    .fillRect(12, 7, sideFace ? 18 : 20, 6)
+    .fillRect(12, 11, 5, definition.hairStyle === "bob" ? 12 : 8);
+
+  if (!sideFace) {
+    graphics.fillRect(
+      28,
+      11,
+      4,
+      definition.hairStyle === "bob" ? 12 : 7,
+    );
+  }
+  if (definition.hairStyle === "bun") {
+    const bunX = sideFace ? 10 : 27;
+    graphics
+      .fillStyle(PALETTE.ink)
+      .fillRect(bunX, 2, 8, 7)
+      .fillStyle(hair)
+      .fillRect(bunX + 2, 3, 5, 4);
+  } else if (definition.hairStyle === "side-part") {
+    graphics
+      .fillStyle(darkenColour(hair, 0.2))
+      .fillRect(sideFace ? 23 : 22, 5, 2, 7)
+      .fillStyle(hair)
+      .fillRect(sideFace ? 17 : 16, 11, 7, 4);
+  } else if (definition.hairStyle === "crop") {
+    graphics
+      .fillStyle(definition.skin)
+      .fillRect(13, 12, sideFace ? 15 : 18, 5);
+  }
+  graphics
+    .fillStyle(highlight)
+    .fillRect(15, 5, 8, 2);
+}
+
+function drawResidentOutfit(
+  graphics: Phaser.GameObjects.Graphics,
+  definition: ResidentArtDefinition,
+  facing: PlayerFacing,
+  bodyLeft: number,
+  bodyTop: number,
+  bodyWidth: number,
+  bodyHeight: number,
+): void {
+  const centreX = bodyLeft + Math.floor(bodyWidth / 2);
+  const usableWidth = Math.max(6, bodyWidth - 10);
+  if (definition.outfit === "collared" && facing !== "up") {
+    graphics
+      .fillStyle(PALETTE.cream)
+      .fillTriangle(centreX - 5, bodyTop + 3, centreX, bodyTop + 8, centreX, bodyTop + 3)
+      .fillTriangle(centreX, bodyTop + 3, centreX, bodyTop + 8, centreX + 5, bodyTop + 3)
+      .fillStyle(PALETTE.gold)
+      .fillRect(centreX - 1, bodyTop + 8, 2, 2);
+  } else if (definition.outfit === "floral") {
+    const flowerY = bodyTop + Math.min(10, bodyHeight - 7);
+    graphics
+      .fillStyle(PALETTE.gold)
+      .fillRect(bodyLeft + 6, flowerY, 3, 3)
+      .fillRect(bodyLeft + bodyWidth - 9, flowerY + 4, 3, 3)
+      .fillStyle(PALETTE.cream)
+      .fillRect(bodyLeft + 7, flowerY + 1, 1, 1)
+      .fillRect(bodyLeft + bodyWidth - 8, flowerY + 5, 1, 1);
+  } else if (definition.outfit === "striped") {
+    graphics
+      .fillStyle(lightenColour(definition.shirt, 0.36))
+      .fillRect(bodyLeft + 5, bodyTop + 8, usableWidth, 3)
+      .fillRect(bodyLeft + 5, bodyTop + 14, usableWidth, 2);
+  } else if (definition.outfit === "work-vest") {
+    graphics
+      .fillStyle(darkenColour(definition.shirt, 0.3))
+      .fillRect(bodyLeft + 4, bodyTop + 5, 4, Math.max(7, bodyHeight - 11))
+      .fillRect(bodyLeft + bodyWidth - 8, bodyTop + 5, 4, Math.max(7, bodyHeight - 11))
+      .fillStyle(PALETTE.gold)
+      .fillRect(centreX - 1, bodyTop + 9, 2, 2)
+      .fillRect(centreX - 1, bodyTop + 15, 2, 2);
+  } else if (facing !== "up") {
+    graphics
+      .fillStyle(lightenColour(definition.shirt, 0.25))
+      .fillRect(bodyLeft + bodyWidth - 10, bodyTop + 10, 5, 4)
+      .fillStyle(PALETTE.ink, 0.36)
+      .fillRect(bodyLeft + bodyWidth - 9, bodyTop + 11, 3, 1);
+  }
+}
+
+function drawResidentTote(
+  graphics: Phaser.GameObjects.Graphics,
+  definition: ResidentArtDefinition,
+  facing: PlayerFacing,
+  bodyLeft: number,
+  bodyTop: number,
+  bodyWidth: number,
+  armSwing: number,
+): void {
+  if (definition.carry !== "tote") return;
+  const bagX =
+    facing === "side"
+      ? bodyLeft - 6
+      : Math.min(35, bodyLeft + bodyWidth - 1);
+  const bagY = bodyTop + 12 + Math.round(armSwing / 2);
+  graphics
+    .lineStyle(2, PALETTE.ink, 1)
+    .lineBetween(
+      bodyLeft + Math.floor(bodyWidth / 2),
+      bodyTop + 3,
+      bagX + 4,
+      bagY + 2,
+    )
+    .fillStyle(PALETTE.ink)
+    .fillRect(bagX, bagY, 9, 12)
+    .fillStyle(PALETTE.green)
+    .fillRect(bagX + 2, bagY + 2, 5, 8)
+    .fillStyle(lightenColour(PALETTE.green, 0.2))
+    .fillRect(bagX + 3, bagY + 3, 2, 5);
+}
+
 function drawPlayerFrame(
   graphics: Phaser.GameObjects.Graphics,
   facing: PlayerFacing,
@@ -401,10 +641,10 @@ function drawPlayerFrame(
   const shirt = PALETTE.teal;
   const trousers = 0x355b68;
   const stride = [
-    { leftLegX: 11, rightLegX: 23, leftFootY: 49, rightFootY: 49, arm: 0 },
-    { leftLegX: 10, rightLegX: 24, leftFootY: 51, rightFootY: 47, arm: 2 },
-    { leftLegX: 13, rightLegX: 21, leftFootY: 48, rightFootY: 48, arm: 0 },
-    { leftLegX: 14, rightLegX: 20, leftFootY: 47, rightFootY: 51, arm: -2 },
+    { leftLegX: 11, rightLegX: 23, leftFootY: 51, rightFootY: 51, arm: 0 },
+    { leftLegX: 10, rightLegX: 24, leftFootY: 53, rightFootY: 49, arm: 2 },
+    { leftLegX: 12, rightLegX: 22, leftFootY: 50, rightFootY: 50, arm: 0 },
+    { leftLegX: 13, rightLegX: 21, leftFootY: 49, rightFootY: 53, arm: -2 },
   ] as const;
   const {
     leftLegX,
@@ -416,61 +656,91 @@ function drawPlayerFrame(
 
   graphics
     .fillStyle(PALETTE.ink)
-    .fillRect(leftLegX - 2, 42, 9, 12)
-    .fillRect(rightLegX - 2, 42, 9, 12)
+    .fillRect(leftLegX - 1, 41, 8, 13)
+    .fillRect(rightLegX - 1, 41, 8, 13)
     .fillStyle(trousers)
-    .fillRect(leftLegX, 42, 5, 8)
-    .fillRect(rightLegX, 42, 5, 8)
-    .fillStyle(PALETTE.cream)
-    .fillRect(leftLegX - 1, leftFootY, 8, 4)
-    .fillRect(rightLegX - 1, rightFootY, 8, 4);
-
-  graphics
+    .fillRect(leftLegX + 1, 42, 4, 9)
+    .fillRect(rightLegX + 1, 42, 4, 9)
+    .fillStyle(darkenColour(trousers, 0.2))
+    .fillRect(leftLegX + 1, 49, 4, 3)
+    .fillRect(rightLegX + 1, 49, 4, 3)
     .fillStyle(PALETTE.ink)
-    .fillRect(5, 27 + armOffset, 7, 17)
-    .fillRect(28, 29 - armOffset, 7, 17)
-    .fillStyle(skin)
-    .fillRect(7, 29 + armOffset, 3, 12)
-    .fillRect(30, 31 - armOffset, 3, 12);
+    .fillRect(leftLegX - 2, leftFootY - 1, 9, 4)
+    .fillRect(rightLegX - 2, rightFootY - 1, 9, 4)
+    .fillStyle(PALETTE.cream)
+    .fillRect(leftLegX, leftFootY, 6, 2)
+    .fillRect(rightLegX, rightFootY, 6, 2);
 
-  drawPixelBlock(graphics, 10, 24, 20, 22, shirt, 3, false);
-  graphics
-    .fillStyle(PALETTE.gold)
-    .fillRect(13, 27, 14, 3)
-    .fillStyle(PALETTE.coral)
-    .fillRect(12, 31, 3, 13);
-
-  graphics.fillStyle(PALETTE.ink).fillRect(9, 5, 22, 21);
-  if (facing === "up") {
+  if (facing === "side") {
     graphics
-      .fillStyle(hair)
-      .fillRect(11, 7, 18, 17)
-      .fillStyle(lightenColour(hair, 0.12))
-      .fillRect(12, 7, 12, 3);
-  } else if (facing === "side") {
-    graphics
+      .fillStyle(PALETTE.ink, 0.72)
+      .fillRect(9, 28 - armOffset, 6, 16)
+      .fillStyle(darkenColour(shirt, 0.14))
+      .fillRect(11, 29 - armOffset, 3, 6)
       .fillStyle(skin)
-      .fillRect(12, 8, 16, 16)
-      .fillStyle(hair)
-      .fillRect(10, 5, 18, 8)
-      .fillRect(10, 9, 5, 12)
-      .fillStyle(PALETTE.ink)
-      .fillRect(25, blinking ? 16 : 14, 3, blinking ? 1 : 3)
-      .fillStyle(PALETTE.coral)
-      .fillRect(27, 19, 3, 2);
+      .fillRect(11, 35 - armOffset, 3, 7);
   } else {
     graphics
+      .fillStyle(PALETTE.ink)
+      .fillRect(5, 27 + armOffset, 7, 17)
+      .fillRect(28, 27 - armOffset, 7, 17)
+      .fillStyle(shirt)
+      .fillRect(7, 29 + armOffset, 3, 6)
+      .fillRect(30, 29 - armOffset, 3, 6)
       .fillStyle(skin)
-      .fillRect(12, 8, 16, 16)
-      .fillStyle(hair)
-      .fillRect(10, 5, 20, 8)
-      .fillRect(10, 9, 4, 10)
-      .fillRect(26, 9, 4, 10)
+      .fillRect(7, 35 + armOffset, 3, 7)
+      .fillRect(30, 35 - armOffset, 3, 7)
+      .fillStyle(lightenColour(skin, 0.14))
+      .fillRect(6, 40 + armOffset, 5, 4)
+      .fillRect(29, 40 - armOffset, 5, 4);
+  }
+
+  drawSteppedTorso(graphics, 10, 24, 20, 22, shirt);
+  graphics
+    .fillStyle(PALETTE.gold)
+    .fillRect(14, 27, 12, 3)
+    .fillStyle(PALETTE.coral)
+    .fillRect(facing === "side" ? 23 : 13, 31, 3, 11)
+    .fillStyle(PALETTE.cream)
+    .fillRect(facing === "up" ? 17 : 18, 25, 4, 3);
+  if (facing === "side") {
+    graphics
+      .fillStyle(PALETTE.ink)
+      .fillRect(27, 28 + armOffset, 7, 17)
+      .fillStyle(shirt)
+      .fillRect(29, 30 + armOffset, 3, 6)
+      .fillStyle(skin)
+      .fillRect(29, 36 + armOffset, 3, 7)
+      .fillStyle(lightenColour(skin, 0.14))
+      .fillRect(28, 41 + armOffset, 5, 4);
+  }
+
+  drawSteppedHeadBase(graphics, 20, skin);
+  drawPlayerHair(graphics, facing, hair);
+  if (facing === "up") {
+    graphics
+      .fillStyle(darkenColour(hair, 0.18))
+      .fillRect(24, 13, 3, 7);
+  } else if (facing === "side") {
+    graphics
+      .fillStyle(PALETTE.ink)
+      .fillRect(25, blinking ? 16 : 14, 3, blinking ? 1 : 3)
+      .fillStyle(lightenColour(skin, 0.18))
+      .fillRect(28, 16, 2, 3)
+      .fillStyle(PALETTE.coral)
+      .fillRect(27, 20, 3, 2);
+  } else {
+    graphics
       .fillStyle(PALETTE.ink)
       .fillRect(15, blinking ? 17 : 15, 3, blinking ? 1 : 3)
       .fillRect(22, blinking ? 17 : 15, 3, blinking ? 1 : 3)
+      .fillStyle(lightenColour(skin, 0.18))
+      .fillRect(18, 17, 4, 3)
       .fillStyle(PALETTE.coral)
-      .fillRect(18, 21, 5, 2);
+      .fillRect(18, 21, 5, 2)
+      .fillStyle(darkenColour(skin, 0.12))
+      .fillRect(13, 18, 2, 2)
+      .fillRect(25, 18, 2, 2);
   }
 }
 
@@ -507,96 +777,166 @@ function drawResidentFrame(
     definition.build === "short" ? 20 : definition.build === "tall" ? 27 : 23;
   const bodyLeft = Math.round(22 - bodyWidth / 2);
   const bodyTop = 25;
-  const footY = Math.min(53, bodyTop + bodyHeight - 1);
+  const footY = Math.min(51, bodyTop + bodyHeight - 1);
   const stride = [
-    { leftX: 0, rightX: 0, leftY: -2, rightY: -2, arm: 0 },
-    { leftX: -1, rightX: 1, leftY: 0, rightY: -5, arm: 2 },
-    { leftX: 1, rightX: -1, leftY: -3, rightY: -3, arm: 0 },
-    { leftX: 1, rightX: -1, leftY: -5, rightY: 0, arm: -2 },
+    { leftX: 0, rightX: 0, leftY: 0, rightY: 0, arm: 0 },
+    { leftX: -1, rightX: 1, leftY: 2, rightY: -2, arm: 2 },
+    { leftX: 1, rightX: -1, leftY: -1, rightY: -1, arm: 0 },
+    { leftX: 1, rightX: -1, leftY: -2, rightY: 2, arm: -2 },
   ] as const;
   const phase = stride[step];
-  const leftFootX = bodyLeft + 2 + phase.leftX;
-  const rightFootX = bodyLeft + bodyWidth - 10 + phase.rightX;
+  const leftFootX = bodyLeft + 3 + phase.leftX;
+  const rightFootX = bodyLeft + bodyWidth - 9 + phase.rightX;
   const leftFootY = footY + phase.leftY;
   const rightFootY = footY + phase.rightY;
   const armSwing = phase.arm;
 
   graphics
-    .fillStyle(PALETTE.night, 0.18)
-    .fillEllipse(22, 54, bodyWidth + 10, 7)
     .fillStyle(PALETTE.ink)
-    .fillRect(leftFootX, leftFootY - 4, 8, 9)
-    .fillRect(rightFootX, rightFootY - 4, 8, 9)
-    .fillStyle(darkenColour(definition.shirt))
-    .fillRect(leftFootX + 2, leftFootY - 3, 4, 6)
-    .fillRect(rightFootX + 2, rightFootY - 3, 4, 6);
+    .fillRect(leftFootX, leftFootY - 7, 7, 10)
+    .fillRect(rightFootX, rightFootY - 7, 7, 10)
+    .fillStyle(darkenColour(definition.shirt, 0.36))
+    .fillRect(leftFootX + 2, leftFootY - 6, 3, 6)
+    .fillRect(rightFootX + 2, rightFootY - 6, 3, 6)
+    .fillStyle(PALETTE.ink)
+    .fillRect(leftFootX - 1, leftFootY, 9, 4)
+    .fillRect(rightFootX - 1, rightFootY, 9, 4)
+    .fillStyle(PALETTE.sand)
+    .fillRect(leftFootX + 1, leftFootY + 1, 6, 2)
+    .fillRect(rightFootX + 1, rightFootY + 1, 6, 2);
 
   if (facing === "side") {
     graphics
-      .fillStyle(PALETTE.ink)
-      .fillRect(bodyLeft + 1, bodyTop + 5 - armSwing, 7, bodyHeight - 5)
+      .fillStyle(PALETTE.ink, 0.72)
+      .fillRect(
+        bodyLeft + 1,
+        bodyTop + 4 - armSwing,
+        7,
+        Math.max(13, bodyHeight - 5),
+      )
+      .fillStyle(darkenColour(definition.shirt, 0.18))
+      .fillRect(bodyLeft + 3, bodyTop + 6 - armSwing, 3, 6)
       .fillStyle(definition.skin)
-      .fillRect(bodyLeft + 3, bodyTop + 8 - armSwing, 3, bodyHeight - 10);
+      .fillRect(
+        bodyLeft + 3,
+        bodyTop + 12 - armSwing,
+        3,
+        Math.max(5, bodyHeight - 15),
+      );
   } else {
     graphics
       .fillStyle(PALETTE.ink)
       .fillRect(bodyLeft - 5, bodyTop + 4 + armSwing, 6, bodyHeight - 5)
       .fillRect(bodyLeft + bodyWidth - 1, bodyTop + 4 - armSwing, 6, bodyHeight - 5)
+      .fillStyle(definition.shirt)
+      .fillRect(bodyLeft - 3, bodyTop + 6 + armSwing, 3, 6)
+      .fillRect(bodyLeft + bodyWidth, bodyTop + 6 - armSwing, 3, 6)
       .fillStyle(definition.skin)
-      .fillRect(bodyLeft - 3, bodyTop + 7 + armSwing, 3, bodyHeight - 10)
-      .fillRect(bodyLeft + bodyWidth, bodyTop + 7 - armSwing, 3, bodyHeight - 10);
+      .fillRect(
+        bodyLeft - 3,
+        bodyTop + 12 + armSwing,
+        3,
+        Math.max(5, bodyHeight - 15),
+      )
+      .fillRect(
+        bodyLeft + bodyWidth,
+        bodyTop + 12 - armSwing,
+        3,
+        Math.max(5, bodyHeight - 15),
+      )
+      .fillStyle(lightenColour(definition.skin, 0.12))
+      .fillRect(bodyLeft - 4, bodyTop + bodyHeight - 4 + armSwing, 5, 4)
+      .fillRect(
+        bodyLeft + bodyWidth - 1,
+        bodyTop + bodyHeight - 4 - armSwing,
+        5,
+        4,
+      );
   }
 
-  drawPixelBlock(
+  drawSteppedTorso(
     graphics,
     bodyLeft,
     bodyTop,
     bodyWidth,
     bodyHeight,
     definition.shirt,
-    3,
-    false,
+  );
+  drawResidentOutfit(
+    graphics,
+    definition,
+    facing,
+    bodyLeft,
+    bodyTop,
+    bodyWidth,
+    bodyHeight,
+  );
+  drawResidentTote(
+    graphics,
+    definition,
+    facing,
+    bodyLeft,
+    bodyTop,
+    bodyWidth,
+    armSwing,
   );
 
-  graphics
-    .fillStyle(PALETTE.ink)
-    .fillRect(10, 4, 24, 22);
+  if (facing === "side") {
+    const frontArmX = bodyLeft + bodyWidth - 5;
+    graphics
+      .fillStyle(PALETTE.ink)
+      .fillRect(
+        frontArmX,
+        bodyTop + 5 + armSwing,
+        7,
+        Math.max(13, bodyHeight - 5),
+      )
+      .fillStyle(definition.shirt)
+      .fillRect(frontArmX + 2, bodyTop + 7 + armSwing, 3, 6)
+      .fillStyle(definition.skin)
+      .fillRect(
+        frontArmX + 2,
+        bodyTop + 13 + armSwing,
+        3,
+        Math.max(5, bodyHeight - 15),
+      )
+      .fillStyle(lightenColour(definition.skin, 0.12))
+      .fillRect(
+        frontArmX + 1,
+        bodyTop + bodyHeight - 4 + armSwing,
+        5,
+        4,
+      );
+  }
+
+  drawSteppedHeadBase(graphics, 22, definition.skin);
+  drawResidentHair(graphics, definition, facing);
   if (facing === "up") {
     graphics
-      .fillStyle(definition.hair)
-      .fillRect(12, 6, 20, 18)
-      .fillRect(10, 8, 5, 12)
-      .fillRect(29, 8, 5, 12)
-      .fillStyle(lightenColour(definition.hair, 0.28))
-      .fillRect(14, 6, 10, 3);
+      .fillStyle(darkenColour(definition.hair, 0.18))
+      .fillRect(27, 13, 3, 7);
   } else if (facing === "side") {
     graphics
-      .fillStyle(definition.skin)
-      .fillRect(13, 7, 18, 17)
-      .fillStyle(definition.hair)
-      .fillRect(11, 4, 21, 8)
-      .fillRect(11, 8, 5, 12)
-      .fillStyle(lightenColour(definition.hair, 0.28))
-      .fillRect(14, 5, 8, 3)
       .fillStyle(PALETTE.ink)
       .fillRect(27, blinking ? 16 : 15, 3, blinking ? 1 : 3)
+      .fillStyle(lightenColour(definition.skin, 0.16))
+      .fillRect(30, 16, 2, 3)
       .fillStyle(PALETTE.coral)
-      .fillRect(30, 20, 3, 2);
+      .fillRect(29, 21, 3, 2)
+      .fillStyle(darkenColour(definition.skin, 0.14))
+      .fillRect(15, 19, 3, 2);
   } else {
     graphics
-      .fillStyle(definition.skin)
-      .fillRect(13, 7, 18, 17)
-      .fillStyle(definition.hair)
-      .fillRect(11, 4, 22, 8)
-      .fillRect(11, 8, 4, 10)
-      .fillRect(29, 8, 4, 10)
-      .fillStyle(lightenColour(definition.hair, 0.28))
-      .fillRect(14, 5, 9, 3)
       .fillStyle(PALETTE.ink)
       .fillRect(16, blinking ? 16 : 15, 3, blinking ? 1 : 3)
       .fillRect(25, blinking ? 16 : 15, 3, blinking ? 1 : 3)
+      .fillStyle(lightenColour(definition.skin, 0.16))
+      .fillRect(20, 17, 4, 3)
       .fillStyle(PALETTE.coral)
-      .fillRect(20, 21, 5, 2);
+      .fillRect(20, 21, 5, 2)
+      .fillStyle(darkenColour(definition.skin, 0.14))
+      .fillRect(14, 19, 3, 2)
+      .fillRect(27, 19, 3, 2);
   }
 
   if (definition.accessory === "glasses" && facing !== "up") {
@@ -622,15 +962,24 @@ function drawResidentFrame(
       graphics
         .fillStyle(PALETTE.cream)
         .fillRect(17, 27, 10, 3)
-        .fillRect(20, 30, 4, Math.min(13, bodyHeight - 7));
+        .fillRect(20, 30, 4, Math.min(13, bodyHeight - 7))
+        .fillStyle(PALETTE.gold)
+        .fillRect(19, 36, 6, 2);
     } else {
       const apronLeft = facing === "side" ? 21 : 17;
       const apronWidth = facing === "side" ? 7 : 10;
       graphics
         .fillStyle(PALETTE.cream)
-        .fillRect(apronLeft, 29, apronWidth, Math.min(16, bodyHeight - 5))
+        .fillRect(apronLeft, 29, apronWidth, Math.min(15, bodyHeight - 6))
         .fillStyle(PALETTE.coral)
-        .fillRect(apronLeft + 2, 33, Math.max(3, apronWidth - 4), 2);
+        .fillRect(apronLeft + 2, 33, Math.max(3, apronWidth - 4), 2)
+        .fillStyle(PALETTE.gold)
+        .fillRect(
+          apronLeft + 2,
+          bodyTop + Math.min(16, bodyHeight - 5),
+          Math.max(3, apronWidth - 4),
+          2,
+        );
     }
   }
 }

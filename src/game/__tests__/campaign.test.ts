@@ -30,6 +30,7 @@ import {
   CAMPAIGN_PORTRAITS,
   renderCampaignPortrait,
 } from "../campaignPortrait.js";
+import { getCharacterArtAudit } from "../characterArt.js";
 import { selectNpcIntent } from "../kampungMind.js";
 import {
   auditEstateLayout,
@@ -493,6 +494,14 @@ describe("campaign registries", () => {
     expect(new Set(Object.keys(CAMPAIGN_PORTRAITS))).toEqual(
       new Set(NPC_PROFILES.map((npc) => npc.id)),
     );
+    expect(getCharacterArtAudit()).toEqual({
+      residentCount: 12,
+      hairStyleCount: 5,
+      outfitCount: 5,
+      buildCount: 3,
+      accessoryCount: 4,
+      carryingResidentCount: 4,
+    });
     const portraitSvgs = NPC_PROFILES.map((npc) => {
       const svg = renderCampaignPortrait(npc.id);
       expect(svg).toContain(`data-portrait-id="${npc.id}"`);

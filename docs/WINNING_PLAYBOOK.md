@@ -40,21 +40,29 @@ Why: The video is the primary shortlisting filter (Devpost judge panel; MLH "dem
 Must not break: honest-evidence rule — no footage of anything not in the shipped build; every claim checkable against the repo.
 
 **4. One genuine CodeBuddy pass + Miora key art, this week. (3–4 h)**
-What: Use CodeBuddy for a real task from this list (the `?demo=1` work or the age-signalling pass is ideal) and export the chat history; generate poster/key-art/social assets with Miora (miora.design, 1,000 free credits).
+What: Use CodeBuddy for one genuinely open, tightly scoped Todo Tencent task
+and export the chat history; do not rerun the completed demo-mode or
+age-signalling work. Generate poster/key-art/social assets with Miora
+(miora.design, 1,000 free credits).
 Why: CodeBuddy chat history is a required submission artifact in the mainland rules, and a *failure log as our only artifact* is actively risky before Tencent Cloud judges whose event exists to showcase CodeBuddy — May's PR was wall-to-wall CodeBuddy praise (Ecosystem memo §B2, Critic §B8).
 Must not break: the honesty story. Keep the documented failure; the narrative becomes "what worked, what didn't, both documented" — verification-minded judges reward exactly this (Devfolio, Money Forward).
 
-Current progress: three genuine OpenAI image-generation workflows now provide
-an auditable neighbourhood style key, targeted estate-density study, and
-reviewed production title panorama. Exact prompts, source references,
-artifacts, human review, and curated code-drawn or runtime results are
-preserved. The title workflow includes a rejected pseudo-writing pass,
-constrained cleanup, hashes, optimization, and playable integration. This
-strengthens cross-tool visual evidence but is not Miora; the Miora-specific
-action remains open.
+Current progress: four genuine OpenAI image-generation workflows now provide
+an auditable neighbourhood style key, targeted estate-density study, reviewed
+cast silhouette/gait study, and production title panorama. Exact prompts,
+source references, artifacts, human review, and curated code-drawn or runtime
+results are preserved. The cast study informed stepped anatomy and authored
+outfit variation while costume-like treatments were rejected. The title
+workflow includes a rejected pseudo-writing pass, constrained cleanup, hashes,
+optimization, and playable integration. This strengthens cross-tool visual
+evidence but is not Miora; the Miora-specific action remains open.
 
-**5. Age-signal the cast. (half day)**
-What: Procedural silver hair, slight stoop (2 px head offset), cane/hand fan/flat cap accessories, slower gait for elders, turn-to-face on player approach. At least one clearly female elder.
+**5. Age-signal the cast. (completed 2026-08-04)**
+What shipped: twelve authored code-drawn resident profiles with three builds,
+five hair silhouettes, five outfit grammars, glasses/canes/aprons, carried
+totes, connected limbs, grounded four-phase walks, turn-to-face behavior, and
+one synchronized contact shadow each. A reviewed OpenAI silhouette study
+informed the stepped anatomy; costume-like treatments were rejected.
 Why: In a 120-second judging window the cast must visibly BE older adults or Impact-30 doesn't land (Memo 1 §5); shared silhouettes violate the Gerontoludic "Heterogeneity" principle we cite; 94% of older game characters are male — one female elder is a citable differentiator (Prior-art memo §5.2).
 Must not break: dignity — props, never punchlines; smoke suite; consistent art
 direction and truthful provenance for any generated asset.
@@ -84,7 +92,9 @@ What: Post on Xiaohongshu, YouTube, and X with #CodeBuddy #腾讯云黑客松 + 
 Why: The cheapest 5 points in the rubric, and the hashtag feed is free live competitor intel nobody has checked (Critic §B7, §B9). Use the Miora key art from #4.
 Must not break: nothing. Do it before locking the video in case the scan changes positioning.
 
-**Build order for the week:** 1 → 2 → 5 → 4 (CodeBuddy does 5's work) → 7 → 3 (video) → 6 (parallel, scheduling-bound) → 8 → 9 → 10.
+**Remaining build order for the week:** 1 → 2 → 4 → 7 → 3 (video) → 6
+(parallel, scheduling-bound) → 8 → 9 → 10. Action 5 is complete; the genuine
+CodeBuddy pass in action 4 remains open and must use a different scoped task.
 
 ---
 

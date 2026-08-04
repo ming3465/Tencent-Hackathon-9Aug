@@ -58,12 +58,12 @@ limit; our gate found 2 TypeScript errors, 3 failing tests, 1 unused dependency,
 Later AI-assisted work produced the procedural Phaser world, versioned campaign
 reducer, KampungMind, Web Audio layer, and tests under human direction.
 
-Three OpenAI visual workflows used labelled project references and preserved
-their prompts and artifacts. Humans translated the first two into verified
-code-drawn systems. The title workflow rejected pseudo-writing, constrained the
-cleanup to non-text pictograms, optimized the accepted image, and integrated it
-into the playable title while keeping interface text semantic. None is claimed
-as Miora.
+Four OpenAI visual workflows used labelled project references and preserved
+their prompts and artifacts. Humans translated the neighbourhood, density,
+and cast-silhouette studies into verified code-drawn systems. The title
+workflow rejected pseudo-writing, constrained the cleanup to non-text
+pictograms, optimized the accepted image, and integrated it into the playable
+title while keeping interface text semantic. None is claimed as Miora.
 
 **Verified after:** strict TypeScript, 75/75 tests, 0 vulnerabilities, 60/60
 production-browser checks.
@@ -108,7 +108,7 @@ Team members: Sutolimin Widjaja and Andreas Auwyano.
 - Live: ming3465.github.io/Tencent-Hackathon-9Aug
 - In-game art: procedural Phaser geometry plus one reviewed generated title
   panorama
-- Three OpenAI visual workflows: exact prompts, artifacts, review notes, and
+- Four OpenAI visual workflows: exact prompts, artifacts, review notes, and
   verified code-drawn or runtime results; none claimed as Miora
 - Deck key art: AI-generated from the documented prompt
 - Full AI and verification record: `docs/AI_USAGE_LOG.md`

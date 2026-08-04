@@ -152,11 +152,15 @@ door, or detail turns the player toward it before the visual-novel or location
 transition opens. A persistent gold-and-cream downward triangle follows above the
 player at a fixed high depth so the protagonist stays readable through dense
 props and softened façades; reduced motion removes its subtle bob. Resident
-sprites vary build, height, hair, skin tone, posture, and
-everyday accessories. Each resident has directional four-frame walks and a
-short deterministic estate route. Residents pause, face the nearby player, and
-blink on authored schedules; their interaction coordinates and non-colour
-markers move with them. Reduced motion keeps them at a static home frame.
+sprites use stepped head and shoulder profiles, connected sleeves and hands,
+grounded two-foot phases, and one runtime contact shadow rather than a second
+baked shadow. A pure art registry gives the 12 residents three builds, five
+hair silhouettes, five outfit grammars, four accessory states, and optional
+carried totes while retaining authored skin, hair, and clothing colours.
+Each resident has directional four-frame walks and a short deterministic
+estate route. Residents pause, face the nearby player, and blink on authored
+schedules; their interaction coordinates and non-colour markers move with
+them. Reduced motion keeps them at a static home frame.
 The nearest interaction reveals one shared cream-and-gold code-drawn label
 plate. It replaces square debug-like text backgrounds without creating
 separate textures for every name and stays visible in the Canvas2D fallback.
@@ -247,7 +251,7 @@ replaces the former full-width Continue bar; its 52×52 transparent button keeps
 an accessible name and keyboard-focus underline while reduced motion removes
 the horizontal pulse.
 
-Three OpenAI image-generation workflows used current gameplay captures and
+Four OpenAI image-generation workflows used current gameplay captures and
 project art as references. Two 2026-08-03 studies produced an original
 neighbourhood style key and an estate-density study. Human review translated
 their community-activity, story-cluster, drain/leaf, and ambient-life ideas
@@ -262,7 +266,13 @@ intentionally shipped in the playable build. The title, tagline, controls, and
 caption remain semantic HTML over the responsive artwork. Exact prompts,
 artifacts, hashes, accepted/rejected decisions, and runtime use are preserved
 under `docs/prompts/`, `docs/art/`, `public/assets/generated/`, and
-`docs/AI_USAGE_LOG.md`. All three workflows are OpenAI evidence, not Miora.
+`docs/AI_USAGE_LOG.md`. A fourth 2026-08-04 cast study used a current estate
+capture to explore silhouette and gait. Human review accepted stepped
+heads/shoulders, connected limbs, grounded footwork, and readable outfit
+families, while rejecting costume-like or culturally stereotyped details.
+Those decisions informed the original code-drawn resident registry; the raster
+study remains evidence-only. All four workflows are OpenAI evidence, not
+Miora.
 
 The four exterior quadrants are baked into static textures. Their shared 32 px
 terrain grammar places deterministic grass patches and tufts, running-bond

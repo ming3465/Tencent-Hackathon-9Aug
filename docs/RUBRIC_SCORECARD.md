@@ -75,19 +75,22 @@ evidence.
 
 ### Cross-tool Visual Evidence
 
-- [x] Three real OpenAI image-generation workflows have exact prompts, labelled
+- [x] Four real OpenAI image-generation workflows have exact prompts, labelled
   project references, preserved accepted outputs and artifact IDs, and
   acceptance/rejection notes.
 - [x] Human review rejected direct runtime use and translated selected ideas
   into four deterministic activity vignettes, six story-cluster forms, 54
   baked ground accents, and eight ambient insects.
 - [x] The title workflow records a rejected pseudo-writing pass, constrained
-  cleanup, source/runtime hashes, actual-scale review, WebP optimization, and
-  verified playable integration with semantic HTML copy.
+      cleanup, source/runtime hashes, actual-scale review, WebP optimization, and
+      verified playable integration with semantic HTML copy.
+- [x] The cast workflow records the accepted stepped anatomy, connected limbs,
+      grounded gait, and outfit variation plus the rejected costume-like
+      treatments; the runtime result remains original code-drawn art.
 - [x] Production smoke proves all four vignettes and eight insects animate,
   respect reduced motion, store during the monsoon, and coexist with 12
   collision-aware cluster placements on open campaign routes.
-- [x] All three OpenAI workflows are explicitly not relabelled as Miora.
+- [x] All four OpenAI workflows are explicitly not relabelled as Miora.
 
 ### AI Attention to Detail
 
@@ -145,8 +148,8 @@ the planned second CodeBuddy task or Miora-specific before-and-after pipeline.
 
 ### Current Risk
 
-The complete campaign is demo-ready, has two human-curated visual-direction
-translations, and now ships one reviewed generated title asset. Miora-specific
+The complete campaign is demo-ready, has three human-curated visual-direction
+translations, and ships one reviewed generated title asset. Miora-specific
 production art, real-device performance, and human accessibility checks remain
 higher priority than adding more systems.
 

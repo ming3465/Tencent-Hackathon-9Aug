@@ -70,6 +70,8 @@ unchanged.
 Surface-aware footsteps, interaction-facing, and idle behavior are also shared.
 The existing faster demo walk uses the matching faster animation cadence; it
 does not remove an animation, effect, location, or conversation.
+The 12-resident silhouette registry, stepped anatomy, outfit details, carried
+totes, and single runtime contact shadows are identical in both modes.
 
 ## Change log
 
@@ -83,3 +85,4 @@ does not remove an animation, effect, location, or conversation.
 | 2026-08-04 | Confirmed the player guide, aligned entrances, sound focus, and full-screen flow are shared unchanged. |
 | 2026-08-04 | Confirmed surface feedback, interaction-facing, idle behavior, and the speed-matched walk cadence are shared unchanged. |
 | 2026-08-04 | Confirmed the shared exterior projection-depth pass is identical in full and demo modes. |
+| 2026-08-04 | Confirmed the cast-silhouette and grounded-walk pass is identical in full and demo modes. |

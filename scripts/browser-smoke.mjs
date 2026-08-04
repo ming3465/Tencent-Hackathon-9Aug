@@ -1302,6 +1302,7 @@ try {
       playerIdleBlink:
         playerIdleTextureKeys.some((key) => key.endsWith("-blink")),
       residentFourFrameIds,
+      characterArt: initial.characterArt,
       movedAmbientIds,
       ambientDirectionalTexture: after.ambientActors.every((actor) =>
         /ambient-cat-(ginger|tabby)-[01]$/.test(actor.textureKey)
@@ -1347,6 +1348,9 @@ try {
         `player-frames=${residentMotionEvidence.playerWalkFrames}; ` +
         `player-idle-blink=${residentMotionEvidence.playerIdleBlink}; ` +
         `resident-frames=${residentFourFrameIds.join(",") || "none"}; ` +
+        `cast=${residentMotionEvidence.characterArt.residentCount}/` +
+        `${residentMotionEvidence.characterArt.hairStyleCount} hair/` +
+        `${residentMotionEvidence.characterArt.outfitCount} outfits; ` +
         `ambient=${movedAmbientIds.join(",") || "none"}; ` +
         `activities=${ambientActivityTwoFrameIds.join(",") || "none"}; ` +
         `flutter=${movedFlutterIds.join(",") || "none"}; ` +
@@ -2585,6 +2589,12 @@ try {
       && residentMotionEvidence.playerWalkFrames === 4
       && residentMotionEvidence.playerIdleBlink
       && residentMotionEvidence.residentFourFrameIds.length >= 1
+      && residentMotionEvidence.characterArt.residentCount === 12
+      && residentMotionEvidence.characterArt.hairStyleCount === 5
+      && residentMotionEvidence.characterArt.outfitCount === 5
+      && residentMotionEvidence.characterArt.buildCount === 3
+      && residentMotionEvidence.characterArt.accessoryCount === 4
+      && residentMotionEvidence.characterArt.carryingResidentCount === 4
       && residentMotionEvidence.movedAmbientIds.length === 2
       && residentMotionEvidence.ambientDirectionalTexture
       && residentMotionEvidence.ambientActivityCount === 4
@@ -2709,6 +2719,7 @@ try {
           `physical-detail=${residentMotionEvidence.physicalDetail}, ` +
           `player-frames=${residentMotionEvidence.playerWalkFrames}, ` +
           `resident-frames=${residentMotionEvidence.residentFourFrameIds.join(",") || "none"}, ` +
+          `cast=${JSON.stringify(residentMotionEvidence.characterArt)}, ` +
           `ambient=${residentMotionEvidence.movedAmbientIds.join(",") || "none"}, ` +
           `activities=${residentMotionEvidence.ambientActivityTwoFrameIds.join(",") || "none"}, ` +
           `flutter=${residentMotionEvidence.movedFlutterIds.join(",") || "none"}, ` +

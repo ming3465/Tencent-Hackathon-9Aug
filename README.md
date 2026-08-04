@@ -60,7 +60,9 @@ hallucination path.
   cleanup; the title, controls, tagline, and caption remain semantic HTML
 - Original Canvas-rendered pixel art with speed-responsive four-frame
   directional player walks, deterministic idle blinks, interaction-facing,
-  four-frame resident walks, varied silhouettes, tiled room floors, and
+  four-frame resident walks, stepped head-and-body silhouettes, connected
+  limbs, grounded feet, five hair profiles, five outfit grammars, carried
+  totes, and one runtime shadow per character; tiled room floors and
   code-drawn estate props; a baked 32 px terrain grammar gives grass, running-
   bond paths, planted edge growth, leaf litter, kerbs, drains, and utility
   covers tile-scale material detail; three layered tropical tree forms and 41
@@ -108,7 +110,7 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
 | `npm test` | 75 tests across campaign, audio, and optional matching |
-| `npm run build` | 106.23 kB initial JS (32.29 kB gzip); 1,591.09 kB lazy scene (373.43 kB gzip) |
+| `npm run build` | 106.23 kB initial JS (32.29 kB gzip); 1,596.66 kB lazy scene (374.83 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
 | `npm run smoke` | 60/60 production-browser checks |
 
@@ -116,7 +118,8 @@ The smoke harness drives complete full and demo campaigns through production
 JavaScript, instantiates all 12 locations, proves resident route movement,
 four-frame player/resident walks, deterministic player idle blinking,
 player-to-interaction facing, marker synchronization, one nearest-target label
-plate, the reviewed title image, the accessible visual-novel chevron, and
+plate, a 12-resident cast registry spanning five hair and five outfit
+silhouettes, the reviewed title image, the accessible visual-novel chevron, and
 portrait expression changes,
 cat movement, four two-frame community activity vignettes, laundry animation,
 reduced-motion stillness, exterior wake-up, and physical travel to the east and

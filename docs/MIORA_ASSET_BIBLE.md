@@ -7,13 +7,17 @@ Phaser art is a production-capable procedural layer used to validate movement,
 layout, interactions, accessibility, and game feel before spending generation
 credits.
 
-Three OpenAI-generated visual workflows now exist. The first two studies are at
+Four OpenAI-generated visual workflows now exist. The first two studies are at
 `docs/art/openai-neighbourhood-style-key.png` and
 `docs/art/openai-estate-density-reference.png`; their strongest reviewed ideas
 were translated into deterministic code-drawn activity vignettes, prop
 clusters, ground accents, and ambient insects. The third is the reviewed title
 panorama at `docs/art/openai-kampung-estate-title-v1.png`, with its optimized
-runtime WebP under `public/assets/generated/`. All three are cross-tool
+runtime WebP under `public/assets/generated/`. The fourth is the resident
+silhouette/gait study at
+`docs/art/openai-character-silhouette-study-v1.png`; direct runtime use was
+rejected, while its stepped anatomy, grounded footwork, and readable outfit
+grammar informed an original code-drawn cast registry. All four are cross-tool
 evidence, not Miora outputs; do not relabel them as Miora.
 
 Generate components, not complete screenshots. Interface layout, text,

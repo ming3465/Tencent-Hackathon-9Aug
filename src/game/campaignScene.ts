@@ -11,6 +11,10 @@ import {
   type WalkFrame,
 } from "./campaignArt.js";
 import {
+  getCharacterArtAudit,
+  type CharacterArtAudit,
+} from "./characterArt.js";
+import {
   ESTATE_FLAVOUR_INTERACTIONS,
   LOCATION_BY_ID,
   NPC_BY_ID,
@@ -59,6 +63,7 @@ const PURPLE = PALETTE.purple;
 const CONCRETE = PALETTE.concrete;
 const CONCRETE_EDGE = PALETTE.concreteEdge;
 const GRASS_DARK = PALETTE.grassDark;
+const CHARACTER_ART_AUDIT = getCharacterArtAudit();
 
 const ESTATE_WIDTH = 2560;
 const ESTATE_HEIGHT = 1600;
@@ -362,6 +367,7 @@ export interface CampaignMotionSnapshot {
   visibleFlavourMarkerCount: number;
   visibleMarkerPlateCount: number;
   visibleStepPuffs: number;
+  characterArt: CharacterArtAudit;
   nearbyInteractionId: string | null;
   nearbyInteractionPoint: SpawnPoint | null;
   npcs: CampaignNpcMotionSnapshot[];
@@ -716,6 +722,7 @@ abstract class WalkableScene extends Phaser.Scene {
         (marker) => marker.plate.visible,
       ).length,
       visibleStepPuffs: this.stepPuffs.filter(({ dust }) => dust.visible).length,
+      characterArt: CHARACTER_ART_AUDIT,
       nearbyInteractionId: this.nearbyInteraction?.id ?? null,
       nearbyInteractionPoint: this.nearbyInteraction
         ? {
