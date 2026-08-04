@@ -1976,3 +1976,45 @@ the Codex built-in OpenAI image-generation tool.
 - No runtime model, backend, account, analytics, data collection, timer,
   failure state, energy system, copied art, or new shipped in-game image asset
   was introduced. No deployment had occurred at the time of this entry.
+
+## 2026-08-04 - Control-Clarity Deployment and Notion Reconciliation
+
+**Deployment:**
+
+- Codex committed the verified implementation as `e8601b4` under the required
+  `ming3465` repository identity and pushed it to `main` with the user's
+  explicit deployment authorization.
+- GitHub Actions run
+  [30870964882](https://github.com/ming3465/Tencent-Hackathon-9Aug/actions/runs/30870964882)
+  completed both build and deploy jobs successfully. GitHub Pages returned
+  HTTP 200 with a 2026-08-04 last-modified response; the served HTML exposed
+  `btn-fullscreen`, and the served initial JavaScript exposed
+  `requestFullscreen`, `fullscreen-active`, and the fullscreen control ID.
+- The deployed game is
+  [https://ming3465.github.io/Tencent-Hackathon-9Aug/](https://ming3465.github.io/Tencent-Hackathon-9Aug/);
+  the full judge path remains the documented `?demo=1` URL.
+
+**Todo Tencent reconciliation:**
+
+- Codex fetched the live `Todo Tencent` schema and audited all 20 existing
+  cards before changing status. The genuine Miora/nanobanana/refract pass,
+  submission media, consented playtests, older-hardware profiling, manual
+  accessibility/real-device work, and Actions-runtime maintenance remain open;
+  no unfinished work was relabelled as complete.
+- The shipped Genshin-inspired quest-display card moved from `In progress` to
+  `Done`, with its map, bottom objective prompt, Journal tracking, 360 px
+  evidence, and 2026-08-04 end date recorded.
+- The existing fullscreen card remained `Done` but was corrected from generic
+  room-fit wording to the actual browser-fullscreen, Escape, Sound-focus,
+  Music/Effects, commit, workflow, and live-build evidence.
+- Added four completed cards: main-character guide marker; audited/re-aligned
+  estate entrances; restored WASD focus after Sound; and the deployed
+  player-guide/control-clarity release.
+- The verified final board count is 18 `Done`, 2 `In progress`, and 4
+  `Not started [bugs/feat]`.
+
+**Claim boundary:**
+
+- This records repository deployment and connected-workspace task maintenance.
+  It does not add or imply a playtest, real-device check, social outcome,
+  external AI-tool run, or runtime AI feature.

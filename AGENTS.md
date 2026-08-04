@@ -93,7 +93,10 @@ finish a work session.
   and passed template-fidelity, overflow, metadata, and visual checks. Graphify
   rebuilt to 1,041 nodes / 1,868 edges / 59 communities, retaining the known
   fail-closed node and reporting 24 hub-based community renames. No real-device
-  or human-playtest claim; deployment had not occurred at session-log time.
+  or human-playtest claim. Commit `e8601b4` deployed successfully through Pages
+  run 30870964882 and the public endpoint was probed for the new controls. Todo
+  Tencent was reconciled to 18 Done / 2 In progress / 4 Not started after
+  completing the Quest-display card and adding four release-evidence cards.
 - **2026-08-03** — Added a circular code-drawn estate map with seven real
   landmark anchors, live exterior player movement, indoor building state, and
   a direct Places shortcut. Rebuilt the Journal as a four-tab quest book with
