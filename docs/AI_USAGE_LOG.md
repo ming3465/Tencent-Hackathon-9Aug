@@ -2606,19 +2606,19 @@ and deployment; one real OpenAI image-generation run for visual direction.
 
 ## 2026-08-04 — Fail-Closed Submission Backup and Media Refresh
 
-**Tools:** A concurrent Claude Code release-preparation lane authored the
-submission packager and recaptured the media; Codex reviewed the source,
-corrected the AI-workflow caption, regenerated and inspected the cut, and
-validated the fail-closed behavior.
+**Tools:** Codex authored and validated the submission packager. A concurrent
+Claude Code release-preparation lane recaptured the cast-current media,
+refreshed browser evidence, and independently corrected the same stale
+AI-workflow caption that Codex caught during review.
 
 **Submission tooling:**
 
 - Added `scripts/prepare-submission.mjs`, `npm run submission:review`, and
-  `npm run submission:final`. Review mode creates an ignored, explicitly
-  labelled non-submittable folder and ZIP. Final mode requires the exact final
-  filename, human-voiced non-silent media, exported CodeBuddy history,
-  completed human approvals, reachable logged-out URLs, a clean synchronized
-  commit, and the complete repository gate.
+  `npm run submission:final` in Codex commit `f67759d`. Review mode creates an
+  ignored, explicitly labelled non-submittable folder and ZIP. Final mode
+  requires the exact final filename, human-voiced non-silent media, exported
+  CodeBuddy history, completed human approvals, reachable logged-out URLs, a
+  clean synchronized commit, and the complete repository gate.
 - Added `docs/submission/FINAL_APPROVALS.example.json`; the completed
   `FINAL_APPROVALS.json` is gitignored. Miora, older-adult playtesting,
   real-device/accessibility evidence, a second successful CodeBuddy pass, and
@@ -2632,6 +2632,11 @@ validated the fail-closed behavior.
 - `npm run submission:final` without the required inputs exited 1 as designed,
   naming the missing final video, CodeBuddy history, and approval record and
   explicitly refusing the silent review cut.
+- Codex then used a clearly labelled synthetic `/tmp` fixture with two fake
+  approval names and a hard link that renamed the silent review cut to the
+  required final filename. Final mode rejected the file as byte-identical
+  before running the expensive gate. The exact fixture was removed; its
+  booleans are test data and do not claim any human approval.
 
 **Current media verification:**
 
@@ -2644,6 +2649,31 @@ validated the fail-closed behavior.
   reviewed OpenAI visual workflows. Fourteen accurately sought midpoint frames
   were inspected at original resolution; every source, open caption, crop,
   chapter frame, AI/engineering/integrity slide, and QR end slate matched.
+- A representative six-frame post-smoke sheet covering title, visual-novel
+  dialogue, living estate, depth façade, mobile monsoon, and mobile detail was
+  also inspected. No crop, overflow, contrast, or route-cue regression was
+  found.
+
+**Exact verification and unavailable device lane:**
+
+- A detached worktree pinned to `f67759d` passed the mandated sequence:
+  strict TypeScript, 75/75 tests, the production build, `npm audit` with zero
+  vulnerabilities, and 60/60 production-browser checks. It was removed after
+  the run.
+- The build is 81.69 kB HTML (14.81 kB gzip), 106.23 kB initial JavaScript
+  (32.25 kB gzip), and 1,596.66 kB lazy scene code (372.89 kB gzip).
+  Browser evidence retained 12 cast entries / five hair silhouettes / five
+  outfits, eight depth façades / seven recesses / two roof styles, 95
+  obstacles, zero layout issues, 360 px/touch/focus/reduced-motion/monsoon
+  coverage, and both full and demo campaigns.
+- The run measured 9.20 ms title and resident-route p95, 9.10 ms monsoon p95,
+  9.00 ms active p95 at 2.61 ms/frame main-thread work, and 9.00 ms p95 at
+  8.32 ms/frame under 4× CPU throttling.
+- Codex inspected the `controlling-mobile-devices` skill and used deferred-tool
+  discovery twice for its required MobAI `list_devices` and `execute_dsl`
+  capabilities. This session exposed no MobAI connector, so no device was
+  listed, launched, tapped, inspected, or screenshotted. That is an external
+  blocker, not a device pass.
 - `graphify update .` rebuilt 1,182 nodes, 2,143 edges, and 65 communities. It
   retained the known fail-closed node, reported four zero-node local JSON
   inputs, and warned that 63 saved labels trail the topology; no semantic
@@ -2654,7 +2684,8 @@ validated the fail-closed behavior.
 - The review ZIP and MP4 are not submission-ready. No human voice-over, audio
   ear-check, team approval, exported successful CodeBuddy history, public video
   upload, logged-out video-link check, Miora run, human playtest, real-device
-  pass, screen-reader session, or organiser submission is claimed.
+  or emulator pass, screen-reader/200%-zoom session, or organiser submission
+  is claimed.
 - A conflicting uncommitted edit attempted to restore a visible `Continue`
   label. It was rejected because the user explicitly requested the sole `>`
   visual-novel cue; the existing accessible name and 52×52 target remain.

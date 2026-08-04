@@ -103,23 +103,27 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
-- **2026-08-04 (Claude Code packaging lane + Codex integration)** — Added a
-  fail-closed review/final submission backup builder, ignored human-approval
-  record, exact filename/media/deck/link/hash checks, and explicit unresolved
-  score risks. Review mode passed and produced a clearly labelled
-  `submissionReady: false` ZIP; final mode correctly exited 1 without the human
-  voice-over, audible mix, approvals, CodeBuddy export, and public-video
-  evidence. Recaptured 1,262 frames / 63.1 s of cast-current B-roll and rebuilt
-  the 90.000 s H.264/AAC review cut. Its source and manifest now say four
-  OpenAI visual workflows; all 14 accurately sought midpoint frames were
-  inspected and matched their sources/captions. Current hashes are
-  `b81ffda1…d7d6c` for B-roll and `7acfb9dc…79a23c` for the review cut.
-  Graphify rebuilt to 1,182 nodes / 2,143 edges / 65 communities with the known
-  fail-closed, four-zero-node-JSON, and stale-label warnings. A conflicting
+- **2026-08-04 (Codex packaging + Claude Code media integration)** — Codex
+  added the fail-closed review/final submission builder in `f67759d`, including
+  the ignored human-approval record, exact filename/media/deck/link/hash checks,
+  and explicit score risks. Review mode produced a clearly labelled
+  `submissionReady: false` ZIP; missing inputs and a synthetic renamed-silent
+  cut were both rejected, and the exact `/tmp` fixture was removed. A
+  concurrent Claude Code lane recaptured 1,262 frames / 63.1 s of cast-current
+  B-roll and rebuilt the 90.000 s H.264/AAC review cut; its source and manifest
+  now say four OpenAI workflows. Fourteen midpoint frames and a representative
+  six-frame post-smoke sheet matched their sources/captions without visual
+  regressions. A detached `f67759d` gate passed strict TypeScript, 75/75 tests,
+  0 vulnerabilities, and 60/60 browser checks; active p95 was 9.00 ms at
+  2.61 ms/frame work and 4× p95 was 9.00 ms at 8.32 ms/frame. Graphify reported
+  1,182 nodes / 2,143 edges / 65 communities with the known fail-closed,
+  four-zero-node-JSON, and stale-label warnings. MobAI tools were unavailable,
+  so no device/emulator/accessibility pass is claimed. A conflicting
   uncommitted visible `Continue` label was rejected; the user-requested sole
-  `>` cue, accessible name, and 52×52 target remain. No final video, human
-  approval, CodeBuddy success, Miora/playtest/device/accessibility evidence,
-  upload, or organiser submission is claimed.
+  `>` cue, accessible name, and 52×52 target remain. Human narration/audio
+  approval, final video publication, CodeBuddy export/success, Miora,
+  playtests, devices/accessibility, social posts, and organiser submission
+  remain external.
 - **2026-08-04 (Codex, cast-silhouette release)** — Used one current estate
   capture in a real OpenAI visual-direction run; preserved the exact prompt,
   1667×944 output, hash, and accepted/rejected human decisions. The generated
