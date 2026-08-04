@@ -103,6 +103,23 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-04 (Claude Code packaging lane + Codex integration)** — Added a
+  fail-closed review/final submission backup builder, ignored human-approval
+  record, exact filename/media/deck/link/hash checks, and explicit unresolved
+  score risks. Review mode passed and produced a clearly labelled
+  `submissionReady: false` ZIP; final mode correctly exited 1 without the human
+  voice-over, audible mix, approvals, CodeBuddy export, and public-video
+  evidence. Recaptured 1,262 frames / 63.1 s of cast-current B-roll and rebuilt
+  the 90.000 s H.264/AAC review cut. Its source and manifest now say four
+  OpenAI visual workflows; all 14 accurately sought midpoint frames were
+  inspected and matched their sources/captions. Current hashes are
+  `b81ffda1…d7d6c` for B-roll and `7acfb9dc…79a23c` for the review cut.
+  Graphify rebuilt to 1,182 nodes / 2,143 edges / 65 communities with the known
+  fail-closed, four-zero-node-JSON, and stale-label warnings. A conflicting
+  uncommitted visible `Continue` label was rejected; the user-requested sole
+  `>` cue, accessible name, and 52×52 target remain. No final video, human
+  approval, CodeBuddy success, Miora/playtest/device/accessibility evidence,
+  upload, or organiser submission is claimed.
 - **2026-08-04 (Codex, cast-silhouette release)** — Used one current estate
   capture in a real OpenAI visual-direction run; preserved the exact prompt,
   1667×944 output, hash, and accepted/rejected human decisions. The generated
@@ -124,7 +141,7 @@ finish a work session.
   playtest, screen-reader/200%-zoom pass, Miora claim, or cross-game
   equivalence claim.
 - **2026-08-04 (Codex, video/evidence lane)** — Regenerated the scripted judge
-  B-roll from the new three-quarter-depth build (1,728 frames / 86.4 s /
+  B-roll from the cast-current three-quarter-depth build (1,262 frames / 63.1 s /
   1280×720) and added a deterministic compositor whose moving clips resolve
   from named `broll-beats.json` entries rather than fragile fixed timestamps.
   The resulting narration-ready review cut contains 14 open-captioned beats:

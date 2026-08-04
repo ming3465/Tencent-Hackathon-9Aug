@@ -9,10 +9,10 @@
 | `kampung-sg-demo-review.mp4` | **Narration-ready 90-second review cut**, 1280×720 at 30 fps. Open captions, silent AAC guide track, story beats, AI receipts, engineering evidence, claim boundaries, and QR end slate. |
 | `demo-review-beats.json` | Exact timeline, source provenance, captions, media metadata, and claim boundaries for the review cut. |
 
-**Neither MP4 is the final submission video.** The review cut removes the clean
-capture, visual edit, open-caption, AI-receipt, engineering-evidence, integrity,
-and end-slate steps. Deliverable #3 still needs a human voice-over, sound mix,
-final approval, and upload.
+**Neither MP4 is the final submission video.** The review cut completes the
+clean capture, visual edit, open-caption, AI-receipt, engineering-evidence,
+integrity, and end-slate steps. Deliverable #3 still needs a human voice-over,
+sound mix, final approval, and upload.
 
 ## Regenerate the gameplay B-roll
 

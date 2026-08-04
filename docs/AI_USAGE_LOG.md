@@ -2450,11 +2450,11 @@ projection lane stabilized.
 
 **Current-build capture:**
 
-- Regenerated the scripted `?demo=1` gameplay B-roll from the deployed
+- Regenerated the scripted `?demo=1` gameplay B-roll from the cast-current,
   three-quarter-depth source state instead of reusing the earlier flat-façade
-  recording. The result is 1,728 frames / 86.4 s at 20 fps, 1280×720 H.264,
-  6,402,471 bytes, with SHA-256
-  `2e879e8a86108bb46e33a1ee7390bfee55bd9b5b6f40a3ab28cd9377e9fb4317`.
+  recording. The current result is 1,262 frames / 63.1 s at 20 fps,
+  1280×720 H.264, 5,006,804 bytes, with SHA-256
+  `b81ffda1dad51c6ca7efc60dd565191839a5d02eb0abe45a2a54d8ac955d7d6c`.
 - `broll-beats.json` records the nine actual screencast beats. Its timings
   shifted from the first capture because `Page.startScreencast` is
   acknowledgement-paced, so the final compositor derives every moving clip
@@ -2484,16 +2484,16 @@ projection lane stabilized.
 
 **Rendered evidence and verification:**
 
-- `kampung-sg-demo-review.mp4` is 4,527,979 bytes, 1280×720 at 30 fps, exactly
+- `kampung-sg-demo-review.mp4` is 4,809,298 bytes, 1280×720 at 30 fps, exactly
   90.000 s, H.264 with a stereo 48 kHz AAC guide track. `volumedetect`
   measured both mean and peak at -91.0 dB, consistent with the intentionally
   silent source. SHA-256 is
-  `bd4558062ca195c6f86c4956c62759b8973b473e77aad3a23909aa2985a1a057`.
+  `7acfb9dc20f7efbf6227f94d07a6ce7694e58ec66f14463aca0a72689f79a23c`.
 - One midpoint from every beat was extracted into a 14-frame contact sheet and
   inspected at original resolution. All captions were legible; the dialogue,
   three chapter frames, current estate, dedicated three-quarter-depth frame,
-  AI/engineering/integrity slides, and QR end slate remained readable with no
-  black frames or harmful crops.
+  four-workflow AI receipt, engineering/integrity slides, and QR end slate
+  remained readable with no black frames or harmful crops.
 - The complete repository gate then passed strict TypeScript, 75/75 unit
   tests, the production build, `npm audit` with 0 vulnerabilities, and 60/60
   production-browser checks. The gate measured eight façade-depth profiles,
@@ -2603,3 +2603,58 @@ and deployment; one real OpenAI image-generation run for visual direction.
 - No copied game art, generated runtime character raster, dependency, backend,
   account, analytics, personal-data collection, runtime model, network
   request, timer, failure state, energy system, or medical claim was added.
+
+## 2026-08-04 — Fail-Closed Submission Backup and Media Refresh
+
+**Tools:** A concurrent Claude Code release-preparation lane authored the
+submission packager and recaptured the media; Codex reviewed the source,
+corrected the AI-workflow caption, regenerated and inspected the cut, and
+validated the fail-closed behavior.
+
+**Submission tooling:**
+
+- Added `scripts/prepare-submission.mjs`, `npm run submission:review`, and
+  `npm run submission:final`. Review mode creates an ignored, explicitly
+  labelled non-submittable folder and ZIP. Final mode requires the exact final
+  filename, human-voiced non-silent media, exported CodeBuddy history,
+  completed human approvals, reachable logged-out URLs, a clean synchronized
+  commit, and the complete repository gate.
+- Added `docs/submission/FINAL_APPROVALS.example.json`; the completed
+  `FINAL_APPROVALS.json` is gitignored. Miora, older-adult playtesting,
+  real-device/accessibility evidence, a second successful CodeBuddy pass, and
+  published social links remain visible scoring risks rather than fabricated
+  blockers or claims.
+- `npm run submission:review` passed deck/media/link/hash inspection and
+  produced an ignored 10,751,834-byte review ZIP with
+  `submissionReady: false`. Its manifest listed the four genuine human
+  blockers and five optional evidence risks. ZIP SHA-256 was
+  `16da17aaf3766da4e2e321f2239751a4cf7340d56373547f807de2c26bad3ed2`.
+- `npm run submission:final` without the required inputs exited 1 as designed,
+  naming the missing final video, CodeBuddy history, and approval record and
+  explicitly refusing the silent review cut.
+
+**Current media verification:**
+
+- The current B-roll is the 1,262-frame / 63.1-second cast-and-depth capture
+  documented above. The 14-beat review cut is exactly 90.000 seconds at
+  1280×720/30 fps, H.264 plus a stereo 48 kHz AAC guide track. The guide track
+  remains intentionally silent at -91.0 dB mean/peak; human voice-over and an
+  ear-checked mix are still required.
+- The compositor source and generated provenance manifest now both say four
+  reviewed OpenAI visual workflows. Fourteen accurately sought midpoint frames
+  were inspected at original resolution; every source, open caption, crop,
+  chapter frame, AI/engineering/integrity slide, and QR end slate matched.
+- `graphify update .` rebuilt 1,182 nodes, 2,143 edges, and 65 communities. It
+  retained the known fail-closed node, reported four zero-node local JSON
+  inputs, and warned that 63 saved labels trail the topology; no semantic
+  relabel was claimed.
+
+**Claim boundary:**
+
+- The review ZIP and MP4 are not submission-ready. No human voice-over, audio
+  ear-check, team approval, exported successful CodeBuddy history, public video
+  upload, logged-out video-link check, Miora run, human playtest, real-device
+  pass, screen-reader session, or organiser submission is claimed.
+- A conflicting uncommitted edit attempted to restore a visible `Continue`
+  label. It was rejected because the user explicitly requested the sole `>`
+  visual-novel cue; the existing accessible name and 52×52 target remain.
