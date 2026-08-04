@@ -78,6 +78,23 @@ numbers are treated as defects.
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-04** — Added the tactile exploration pass: pure grass/paving/indoor
+  surface classification, speed-responsive four-frame player cadence,
+  deterministic idle blink, interaction-facing, six pooled dust/fleck effect
+  slots, and three surface-specific synthesized footstep profiles sharing one
+  deterministic noise buffer. Interaction audio is wired, repeated
+  dialogue-line blips are removed, and UI reverb is restrained. Smoke now
+  proves grass and paving feedback, interaction-facing, idle animation, and
+  reduced-motion stillness while retaining the 60-check headline. The exact
+  gate passed 75 tests, 60/60 browser checks, and 0 vulnerabilities; build is
+  99.63 kB initial (30.73 kB gzip) / 1,585.13 kB lazy (371.50 kB gzip).
+  Graphify rebuilt to 1,054 nodes / 1,919 edges / 61 communities, retaining the
+  known fail-closed node and stale semantic-label warning. Commit `654ce4b`
+  deployed successfully through Pages run 30875727660; the live endpoint
+  served the matching asset hashes. Todo Tencent was audited to 21 Done / 2 In
+  progress / 5 Not started after adding three shipped cards and one honest
+  ambient-pad follow-up. No human playtest, real-device, screen-reader,
+  older-hardware, Miora, or cross-game equivalence claim.
 - **2026-08-04** — Added a persistent code-drawn downward guide triangle above
   the main character across all locations. Centralized seven exterior
   entrances and 14 building collision zones in `estateLayout.ts`; realigned

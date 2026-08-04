@@ -1392,7 +1392,7 @@ try {
       };
       // Centre the full 22 px player body in the authored 46 px gap between
       // the frangipani trunk and flower bed before heading south.
-      await walkToAxis("x", 1018);
+      await walkToAxis("x", 1013);
       await walkToAxis("y", 755);
       await walkToAxis("x", 650);
       await page.shot(`${SHOT_DIR}/22-monsoon-shelter.png`);

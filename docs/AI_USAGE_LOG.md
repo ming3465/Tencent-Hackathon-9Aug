@@ -2094,3 +2094,48 @@ the Codex built-in OpenAI image-generation tool.
 - No runtime model, network request, backend, account, analytics, data
   collection, timer, failure state, energy system, copied art, or new shipped
   image asset was introduced.
+
+## 2026-08-04 - Tactile Release Deployment and Todo Tencent Reconciliation
+
+**Deployment:**
+
+- Codex committed the verified implementation as `654ce4b` under the required
+  `ming3465` repository identity. The first push attempt was rejected because
+  the machine's active HTTPS credential was `ming-precix`; Codex inspected the
+  existing authenticated accounts, temporarily switched to the already
+  configured `ming3465` account, pushed successfully, and restored the previous
+  active account.
+- GitHub Actions run
+  [30875727660](https://github.com/ming3465/Tencent-Hackathon-9Aug/actions/runs/30875727660)
+  completed both build and deploy jobs successfully. The existing Actions
+  runtime deprecation annotation remains visible and is still tracked as open;
+  it did not fail this release.
+- The public endpoint returned HTTP 200 with a 2026-08-04 last-modified
+  response. It served `index-B4i08O13.js` and
+  `campaignScene-ZEj2hhib.js`; the latter exposed the new
+  `playerIdleBlinking`, `movementSurface`, `activeStepSurfaces`, and
+  `nearbyInteractionPoint` state.
+- The deployed game remains
+  [https://ming3465.github.io/Tencent-Hackathon-9Aug/](https://ming3465.github.io/Tencent-Hackathon-9Aug/).
+
+**Todo Tencent reconciliation:**
+
+- Codex fetched the live schema and audited all 24 pre-existing cards before
+  writing. No unrelated work was moved: the Miora/nanobanana/refract pass and
+  submission media remain `In progress`; manual accessibility/real-device QA,
+  older-hardware profiling, consented playtests, and Actions-runtime
+  maintenance remain `Not started`.
+- Added three completed cards with commit, workflow, live-build, and
+  verification evidence: tactile surface-aware movement; footsteps and
+  interaction-audio polish; and the deployed tactile-exploration release.
+- Added one explicit `Not started` follow-up for authored ambient-pad
+  voice-leading, the only remaining part of the repository's P2-11 audio item.
+- A final database query verified 21 `Done`, 2 `In progress`, and 5
+  `Not started [bugs/feat]` cards.
+
+**Claim boundary:**
+
+- This records a repository deployment, public-asset probe, and connected
+  project-tracker maintenance. It does not add or imply a human playtest,
+  real-device check, screen-reader pass, older-hardware benchmark, Miora run,
+  social outcome, or same-hardware comparison with another game.
