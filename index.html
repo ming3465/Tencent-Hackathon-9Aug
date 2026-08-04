@@ -351,7 +351,8 @@
         }
 
         .title-art,
-        .title-particle {
+        .title-particle,
+        .world-particle {
           animation: none;
         }
       }
@@ -498,9 +499,79 @@
         box-shadow: var(--shadow);
       }
 
+      .world-shell::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background: radial-gradient(circle at center, transparent 40%, rgba(16, 46, 59, 0.35) 130%);
+        pointer-events: none;
+      }
+
+      .world-particles {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .world-particle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--gold);
+        opacity: 0;
+        animation: world-particle-float 15s linear infinite;
+      }
+
+      .world-particle.leaf {
+        width: 9px;
+        height: 6px;
+        border-radius: 0 6px 0 6px;
+        background: var(--coral);
+        animation-name: world-leaf-float;
+        animation-duration: 18s;
+      }
+
+      .world-particle.mote {
+        width: 3px;
+        height: 3px;
+        background: var(--cream);
+        box-shadow: 0 0 4px var(--cream);
+        animation-duration: 22s;
+      }
+
+      .world-particle:nth-child(1) { top: 80%; left: 20%; }
+      .world-particle:nth-child(2) { top: 60%; left: 80%; animation-delay: -3s; }
+      .world-particle:nth-child(3) { top: 40%; left: 40%; animation-delay: -6s; }
+      .world-particle:nth-child(4) { top: 70%; left: 60%; animation-delay: -8s; }
+      .world-particle:nth-child(5) { top: 20%; left: 30%; animation-delay: -2s; }
+      .world-particle:nth-child(6) { top: 30%; left: 70%; animation-delay: -5s; }
+      .world-particle:nth-child(7) { top: -5%; left: 50%; animation-delay: -1s; }
+      .world-particle:nth-child(8) { top: -10%; left: 85%; animation-delay: -7s; }
+      .world-particle:nth-child(9) { top: 15%; left: 15%; animation-delay: -12s; }
+
+      @keyframes world-particle-float {
+        0% { transform: translate(0, 0) scale(0.5); opacity: 0; }
+        20%, 80% { opacity: 0.6; }
+        100% { transform: translate(-40px, -60px) scale(1.1); opacity: 0; }
+      }
+
+      @keyframes world-leaf-float {
+        0% { transform: translate(0, -10px) rotate(0deg); opacity: 0; }
+        15%, 85% { opacity: 0.7; }
+        100% { transform: translate(-80px, 120px) rotate(360deg); opacity: 0; }
+      }
+
       .world-shell.interior-framing {
         width: 100%;
         margin-inline: 0;
+      }
+
+      .world-shell.interior-framing .world-particles {
+        display: none;
       }
 
       html.game-fullscreen #screen-sandbox {
@@ -988,7 +1059,9 @@
         background:
           radial-gradient(circle at 18% 94%, rgba(242, 184, 75, 0.08), transparent 28%),
           radial-gradient(circle at 88% 8%, rgba(217, 103, 86, 0.06), transparent 22%),
-          var(--paper);
+          rgba(255, 246, 220, 0.92);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
       }
 
       .dialog-stage {
@@ -1026,6 +1099,7 @@
           0 0 24px rgba(242, 184, 75, 0.28),
           inset 0 0 0 1px rgba(255, 255, 255, 0.18);
         image-rendering: pixelated;
+        transform-origin: bottom center;
       }
 
       #dialog-overlay[data-accent] .dialog-portrait {
@@ -1081,18 +1155,22 @@
         background: var(--portrait-glow, var(--gold));
       }
 
+      /* Animation hook fired by campaignScene.ts when dialogue opens */
       #dialog-overlay.active .dialog-portrait {
-        animation: portrait-enter 180ms ease-out both;
+        animation: portrait-enter 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
       }
 
       @keyframes portrait-enter {
-        from {
+        0% {
           opacity: 0;
-          transform: translate(-10px, 5px);
+          transform: translateX(-40px) scale(0.95);
         }
-        to {
+        50% {
           opacity: 1;
-          transform: translate(0, 0);
+        }
+        100% {
+          opacity: 1;
+          transform: translateX(0) scale(1);
         }
       }
 
@@ -1106,11 +1184,15 @@
         opacity: 0.75;
       }
 
-      /* Reserve height so the card does not jump between short and long lines. */
+      /*
+       * Reserve enough height that the card does not jump between short and
+       * long lines, but centre the text: a single line pinned to the top of a
+       * 10 rem box left most of the panel looking empty.
+       */
       .dialog-scroll {
         display: flex;
-        align-items: flex-start;
-        min-height: 10.25rem;
+        align-items: center;
+        min-height: 7.5rem;
         padding: 1rem 1.1rem;
         border: 3px solid var(--ink);
         border-radius: 16px;
@@ -1126,6 +1208,7 @@
         font-family: var(--font-display);
         font-size: 1.12rem;
         line-height: 1.62;
+        text-shadow: 1px 1px 0 rgba(23, 63, 79, 0.1);
       }
 
       .dialog-text::after {
@@ -1149,6 +1232,10 @@
         50%, 100% { opacity: 0; }
       }
 
+      /*
+       * Visual-novel advance cue: the visible control is intentionally only
+       * ">", while the button retains an accessible name and a 52 px target.
+       */
       .dialog-advance {
         display: none;
         align-items: center;
@@ -1231,7 +1318,7 @@
 
       .choice-button:hover {
         background: #ffe8ad;
-        transform: translate(-1px, -1px);
+        transform: translate(-2px, -2px);
         box-shadow: 6px 6px 0 var(--ink);
       }
 
@@ -2636,6 +2723,17 @@
         <div class="game-layout">
           <div id="world-shell" class="world-shell">
             <div id="sandbox-stage" tabindex="0" aria-label="Top-down neighbourhood. Use WASD or arrow keys to move, E or Space to interact, and hold Shift to move faster."></div>
+            <div class="world-particles" aria-hidden="true">
+              <span class="world-particle"></span>
+              <span class="world-particle"></span>
+              <span class="world-particle"></span>
+              <span class="world-particle"></span>
+              <span class="world-particle leaf"></span>
+              <span class="world-particle leaf"></span>
+              <span class="world-particle mote"></span>
+              <span class="world-particle mote"></span>
+              <span class="world-particle mote"></span>
+            </div>
             <p id="area-name" class="area-chip">Community Court</p>
             <p class="fullscreen-hint" aria-hidden="true"><kbd>Esc</kbd> for sound &amp; volume</p>
 

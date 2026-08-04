@@ -473,7 +473,7 @@ try {
     await sleep(70);
   };
 
-  const clickButton = async (label, section = "") => {
+  const clickButton = async (label, section = "", expectedArea = "") => {
     await ensureJournalOpen();
     if (section) await activateJournalSection(section);
     const clicked = await page.eval(`
@@ -495,7 +495,15 @@ try {
       })()
     `);
     if (!clicked) throw new Error(`Could not find button "${label}" in "${section || "document"}"`);
-    await sleep(520);
+    if (expectedArea) {
+      await waitForPageCondition(
+        `document.getElementById("area-name")?.textContent?.includes(${JSON.stringify(expectedArea)})`,
+        `${expectedArea} to finish loading`,
+        2500
+      );
+    } else {
+      await sleep(520);
+    }
   };
 
   const clickJournalItem = async (section, title) => {
@@ -704,7 +712,7 @@ try {
     );
 
     if (!testPhysicalControls) {
-      await clickButton("Use the first door", "Main Story");
+      await clickButton("Use the first door", "Main Story", "Block 9 Corridor");
     } else {
       await page.eval(`document.getElementById("sandbox-stage").focus()`);
       await page.key("keyDown", "ArrowDown", "ArrowDown", 40);
@@ -728,7 +736,7 @@ try {
   };
 
   const inspectMrLong = async (testTouchExit) => {
-    await clickButton("Visit Mr. Long", "Main Story");
+    await clickButton("Visit Mr. Long", "Main Story", "Mr. Long's Flat");
     check(
       "Chapter 1 enters Mr. Long's unique flat",
       /Mr. Long/i.test(await page.eval(`document.getElementById("area-name").textContent`))
@@ -792,7 +800,11 @@ try {
       "Two independent clues open Grandma Ros's kitchen",
       /kitchen is now open/i.test(await page.eval(`document.getElementById("campaign-progress").textContent`))
     );
-    await clickButton("Enter Grandma Ros's kitchen", "Main Story");
+    await clickButton(
+      "Enter Grandma Ros's kitchen",
+      "Main Story",
+      "Grandma Ros's Kitchen"
+    );
     check(
       "Chapter 2 enters Grandma Ros's lived-in kitchen",
       /Grandma Ros/i.test(await page.eval(`document.getElementById("area-name").textContent`))
@@ -807,7 +819,11 @@ try {
   };
 
   const completeChapter3 = async () => {
-    await clickButton("Visit the workshop", "Main Story");
+    await clickButton(
+      "Visit the workshop",
+      "Main Story",
+      "Craftsman's Workshop"
+    );
     check(
       "Chapter 3 enters the code-drawn craftsman's workshop",
       /Craftsman/i.test(await page.eval(`document.getElementById("area-name").textContent`))
@@ -824,7 +840,7 @@ try {
         `)
       )
     );
-    await clickButton("Visit Ben's flat", "Main Story");
+    await clickButton("Visit Ben's flat", "Main Story", "Ben's Flat");
     await clickButton("Talk with Ben", "Main Story");
     await completeDialogueChoice();
     const approach = JSON.parse(
@@ -833,7 +849,11 @@ try {
     check("Ben remembers the player's supportive approach", approach === "sit-beside", approach);
     await clickButton("Ask Ben to walk together", "Main Story");
     await completeDialogueChoice();
-    await clickButton("Walk to the workshop", "Main Story");
+    await clickButton(
+      "Walk to the workshop",
+      "Main Story",
+      "Craftsman's Workshop"
+    );
     await clickButton("Weave with Mr. Tan and Ben", "Main Story");
     await completeDialogueChoice();
     check(
@@ -844,7 +864,7 @@ try {
   };
 
   const completeEnding = async () => {
-    await clickButton("Return to Y's flat", "Main Story");
+    await clickButton("Return to Y's flat", "Main Story", "Y's Flat");
     await clickButton("Listen at the last door", "Main Story");
     await completeDialogueChoice();
     check(
@@ -1633,9 +1653,19 @@ try {
   };
 
   await page.send("Page.navigate", { url: TEST_URL });
-  await sleep(1500);
+  await waitForPageCondition(
+    `location.origin === ${JSON.stringify(new URL(TEST_URL).origin)}
+      && document.readyState === "complete"
+      && document.getElementById("btn-start")`,
+    "the initial title screen"
+  );
   await page.eval(`localStorage.clear(); location.reload()`);
-  await sleep(1500);
+  await waitForPageCondition(
+    `location.origin === ${JSON.stringify(new URL(TEST_URL).origin)}
+      && document.readyState === "complete"
+      && document.getElementById("btn-start")`,
+    "the cleared title screen"
+  );
 
   const titleScreenEvidence = await page.eval(`
     (() => {
