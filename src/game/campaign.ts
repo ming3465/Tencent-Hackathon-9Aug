@@ -351,6 +351,29 @@ export function reduceCampaign(
       next = remember(next, event.npcId, `shared:${event.clueId}`);
       break;
     }
+    case "publish-scam-check":
+      if (
+        state.currentChapter !== "chapter-2"
+        || state.objectives.includes("scam-check-shared")
+      ) {
+        return state;
+      }
+      next = withObjective(state, "scam-check-shared");
+      next = {
+        ...next,
+        choices: {
+          ...next.choices,
+          "scam-check-card": event.layoutId,
+        },
+      };
+      next = remember(
+        next,
+        "auntie-minah",
+        `shared:scam-check:${event.layoutId}`,
+      );
+      next = withObjective(next, "ros-clue-minah");
+      next = remember(next, "auntie-minah", "shared:ros-clue-minah");
+      break;
     case "invite-resident":
       if (eventBelongsToFutureChapter(state, "chapter-2")) return state;
       if (state.invitedResidents.includes(event.npcId)) return state;

@@ -33,8 +33,9 @@ without affecting a full saved campaign.
 1. Listen to the Voice in Y’s flat and use the first door.
 2. Enter Mr. Long’s flat and hear about the broken step.
 3. Complete any two resident routes; the ramp appears and Chapter 2 opens.
-4. Gather Auntie Minah’s and Uncle Seng’s clues, enter Grandma Ros’s kitchen,
-   and invite any two residents.
+4. Let Auntie Minah teach her check-before-you-act habit and choose either
+   readable shop-card layout, gather Uncle Seng's clue, enter Grandma Ros's
+   kitchen, and invite any two residents.
 5. Visit the workshop, collect two clues about Ben, choose a supportive
    approach in his flat, and complete the no-failure weaving interaction.
 6. Return to Y’s flat for The Last Door, then continue exploring.
@@ -72,6 +73,9 @@ The existing faster demo walk uses the matching faster animation cadence; it
 does not remove an animation, effect, location, or conversation.
 The 12-resident silhouette registry, stepped anatomy, outfit details, carried
 totes, and single runtime contact shadows are identical in both modes.
+Minah's sourced safety dialogue, two equally valid presentation choices, saved
+layout preference, and persistent shop-window card are also identical. The
+browser journey completes and verifies the beat in both modes.
 
 ## Change log
 
@@ -86,3 +90,4 @@ totes, and single runtime contact shadows are identical in both modes.
 | 2026-08-04 | Confirmed surface feedback, interaction-facing, idle behavior, and the speed-matched walk cadence are shared unchanged. |
 | 2026-08-04 | Confirmed the shared exterior projection-depth pass is identical in full and demo modes. |
 | 2026-08-04 | Confirmed the cast-silhouette and grounded-walk pass is identical in full and demo modes. |
+| 2026-08-04 | Added the same elder-led check-before-you-act beat and persistent Minah shop card to both modes. |

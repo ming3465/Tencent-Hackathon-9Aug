@@ -37,8 +37,8 @@ Challenge Singapore*, official brief PDF, 2026.
 
 ### Verified quotations
 
-These are the only external claims the project makes. Both were read directly
-from the brief on 2026-08-01 and are quoted verbatim.
+These are the only external ageing/population claims the project makes. Both
+were read directly from the brief on 2026-08-01 and are quoted verbatim.
 
 | Page | Verbatim quotation | Where we use it |
 | --- | --- | --- |
@@ -49,3 +49,26 @@ Do not cite any ageing, health, or population figure that is not in this table.
 If a number is needed that the brief does not contain, find a primary government
 source and add it here with its own verbatim quotation before it appears in any
 deliverable.
+
+## Scam-awareness dialogue sources
+
+Minah's Chapter 2 scene is authored safety context, not a claim that the game
+can classify a message or prevent harm. It models pausing, checking through a
+contact channel the resident already holds, using the official ScamShield
+service, and never sharing an OTP. The player chooses only how to present the
+habit to neighbours; there is no scored scam quiz.
+
+Primary Singapore sources reviewed on 2026-08-04:
+
+- [Singapore Police Force: social-media impersonation scams (8 May 2026)](https://www.police.gov.sg/Media-Hub/News/2026/05/20260508_police_advisory_on_social_media_impersonation_scams)
+  describes victims resolving impersonation through a separate verification,
+  warns never to relinquish OTPs, and directs checks to official sources.
+- [Singapore Police Force: phishing scams and online messaging channels (19 December 2024)](https://www.police.gov.sg/media-hub/news/2024/20241219_police_advisory_on_phishing_scams_and_usage_of_online_messaging_channels)
+  documents urgency plus malicious links, recommends verifying directly with
+  the named company, and says not to click dubious URLs.
+- [ScamShield: how to check for scams](https://www.scamshield.gov.sg/check-for-scams/how-to-check-for-scams-on-scamshield-app/)
+  documents checking a suspicious message or link before acting and the 1799
+  helpline.
+
+These sources support only the narrow habits above. The game must not say that
+a logo, spelling style, app result, or any single cue proves a message safe.

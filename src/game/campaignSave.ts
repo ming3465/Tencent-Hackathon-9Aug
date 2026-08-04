@@ -1,5 +1,8 @@
 import { CAMPAIGN_SAVE_KEY, CAMPAIGN_VERSION } from "./campaign.js";
-import type { CampaignStateV1 } from "./campaignTypes.js";
+import type {
+  CampaignStateV1,
+  ScamCheckCardLayout,
+} from "./campaignTypes.js";
 
 export interface CampaignStorage {
   getItem(key: string): string | null;
@@ -65,6 +68,50 @@ export function isCampaignStateV1(value: unknown): value is CampaignStateV1 {
   return true;
 }
 
+function migrateScamCheckCard(state: CampaignStateV1): CampaignStateV1 {
+  const hasMinahClue = state.objectives.includes("ros-clue-minah");
+  const hasScamCard = state.objectives.includes("scam-check-shared");
+  if (!hasMinahClue && !hasScamCard) return state;
+  const savedLayout = state.choices["scam-check-card"];
+  const layout: ScamCheckCardLayout =
+    savedLayout === "numbered-steps" || savedLayout === "icons-and-words"
+      ? savedLayout
+      : "numbered-steps";
+  const expectedMemories = [
+    `shared:scam-check:${layout}`,
+    "shared:ros-clue-minah",
+  ];
+  const storedMemories = state.npcMemories["auntie-minah"];
+  const minahMemories = isStringArray(storedMemories) ? storedMemories : [];
+  const missingObjectives = [
+    ...(hasScamCard ? [] : ["scam-check-shared"]),
+    ...(hasMinahClue ? [] : ["ros-clue-minah"]),
+  ];
+  const choiceMissing = savedLayout !== layout;
+  const missingMemories = expectedMemories.filter(
+    (memory) => !minahMemories.includes(memory),
+  );
+  if (!missingObjectives.length && !choiceMissing && !missingMemories.length) {
+    return state;
+  }
+  return {
+    ...state,
+    objectives: missingObjectives.length
+      ? [...state.objectives, ...missingObjectives]
+      : state.objectives,
+    choices: choiceMissing
+      ? { ...state.choices, "scam-check-card": layout }
+      : state.choices,
+    npcMemories: missingMemories.length
+      ? {
+          ...state.npcMemories,
+          "auntie-minah": [...minahMemories, ...missingMemories],
+        }
+      : state.npcMemories,
+    revision: state.revision + 1,
+  };
+}
+
 export function loadCampaign(
   storage: CampaignStorage,
   demo: boolean,
@@ -74,7 +121,7 @@ export function loadCampaign(
   if (!raw) return null;
   try {
     const parsed: unknown = JSON.parse(raw);
-    return isCampaignStateV1(parsed) ? parsed : null;
+    return isCampaignStateV1(parsed) ? migrateScamCheckCard(parsed) : null;
   } catch {
     return null;
   }

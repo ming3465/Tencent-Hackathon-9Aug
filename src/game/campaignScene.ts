@@ -15,6 +15,16 @@ import {
   type CharacterArtAudit,
 } from "./characterArt.js";
 import {
+  CONSEQUENCE_ART_IDS,
+  drawExteriorRamp,
+  drawFlowerSeatGarden,
+  drawHerbGarden,
+  drawInteriorRamp,
+  drawShelteredLinkway,
+  emptyConsequenceArtSnapshot,
+  type CampaignConsequenceArtSnapshot,
+} from "./consequenceArt.js";
+import {
   ESTATE_FLAVOUR_INTERACTIONS,
   LOCATION_BY_ID,
   NPC_BY_ID,
@@ -47,6 +57,7 @@ import type {
   LocationId,
   NpcId,
   QuestId,
+  ScamCheckCardLayout,
   WorldInteraction,
 } from "./campaignTypes.js";
 
@@ -145,6 +156,82 @@ function drawPixelText(
       }
     }
     cursor += scale * 4;
+  }
+}
+
+function drawScamCheckCard(
+  graphics: Phaser.GameObjects.Graphics,
+  layout: ScamCheckCardLayout,
+): void {
+  const x = 2020;
+  const y = 184;
+  const width = 190;
+  const height = 84;
+  drawPixelBlock(graphics, x, y, width, height, PAPER, 4, false);
+  graphics
+    .fillStyle(TEAL)
+    .fillRect(x + 4, y + 4, width - 8, 23)
+    .fillStyle(lightenColour(TEAL, 0.22))
+    .fillRect(x + 7, y + 7, width - 14, 4);
+  const heading = "CHECK FIRST";
+  drawPixelText(
+    graphics,
+    heading,
+    x + Math.round((width - pixelTextWidth(heading, 2)) / 2),
+    y + 10,
+    2,
+    CREAM,
+  );
+
+  if (layout === "numbered-steps") {
+    for (const [index, label] of ["PAUSE", "CHECK", "TELL"].entries()) {
+      const rowY = y + 32 + index * 17;
+      graphics
+        .fillStyle(index === 1 ? GREEN : GOLD)
+        .fillRect(x + 12, rowY - 2, 18, 14);
+      drawPixelText(graphics, String(index + 1), x + 18, rowY, 2, INK);
+      drawPixelText(graphics, label, x + 40, rowY, 2, INK);
+    }
+    return;
+  }
+
+  const centres = [x + 36, x + 95, x + 154];
+  graphics
+    .fillStyle(GOLD)
+    .fillRect(centres[0] - 10, y + 33, 20, 20)
+    .fillStyle(INK)
+    .fillRect(centres[0] - 5, y + 37, 3, 12)
+    .fillRect(centres[0] + 2, y + 37, 3, 12)
+    .fillStyle(GREEN)
+    .fillPoints(
+      [
+        new Phaser.Geom.Point(centres[1], y + 31),
+        new Phaser.Geom.Point(centres[1] + 12, y + 36),
+        new Phaser.Geom.Point(centres[1] + 8, y + 52),
+        new Phaser.Geom.Point(centres[1], y + 57),
+        new Phaser.Geom.Point(centres[1] - 8, y + 52),
+        new Phaser.Geom.Point(centres[1] - 12, y + 36),
+      ],
+      true,
+    )
+    .fillStyle(CREAM)
+    .fillRect(centres[1] - 2, y + 37, 4, 13)
+    .fillRect(centres[1] - 5, y + 42, 10, 4)
+    .fillStyle(CORAL)
+    .fillRect(centres[2] - 13, y + 34, 18, 14)
+    .fillRect(centres[2] - 2, y + 40, 18, 14)
+    .fillStyle(INK)
+    .fillRect(centres[2] - 9, y + 39, 10, 2)
+    .fillRect(centres[2] + 2, y + 45, 10, 2);
+  for (const [index, label] of ["PAUSE", "CHECK", "TELL"].entries()) {
+    drawPixelText(
+      graphics,
+      label,
+      centres[index] - Math.round(pixelTextWidth(label, 2) / 2),
+      y + 62,
+      2,
+      INK,
+    );
   }
 }
 
@@ -350,6 +437,32 @@ export interface CampaignPlayerGuideSnapshot {
   depth: number;
 }
 
+export type CampaignTapNavigationOutcome =
+  | "idle"
+  | "moving"
+  | "interacted"
+  | "arrived"
+  | "cancelled"
+  | "stalled";
+
+export interface CampaignTapNavigationSnapshot {
+  active: boolean;
+  interactionId: string | null;
+  destination: SpawnPoint | null;
+  ringVisible: boolean;
+  ringScreenDiameter: number;
+  outcome: CampaignTapNavigationOutcome;
+  cancelReason: string | null;
+  controlsEnabled: boolean;
+  virtualDirection: SpawnPoint;
+  cameraWorldView: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}
+
 export interface CampaignMotionSnapshot {
   locationId: LocationId;
   player: SpawnPoint;
@@ -367,9 +480,14 @@ export interface CampaignMotionSnapshot {
   visibleFlavourMarkerCount: number;
   visibleMarkerPlateCount: number;
   visibleStepPuffs: number;
+  scamCheckCardLayout: ScamCheckCardLayout | null;
+  scamCheckCardVisible: boolean;
+  scamCheckCardAlpha: number | null;
   characterArt: CharacterArtAudit;
+  consequenceArt: CampaignConsequenceArtSnapshot;
   nearbyInteractionId: string | null;
   nearbyInteractionPoint: SpawnPoint | null;
+  tapNavigation: CampaignTapNavigationSnapshot;
   npcs: CampaignNpcMotionSnapshot[];
   ambientActors: CampaignAmbientMotionSnapshot[];
   ambientActivities: CampaignAmbientActivitySnapshot[];
@@ -409,6 +527,13 @@ interface BuildingOcclusionView {
   faded: boolean;
 }
 
+interface TapNavigationTarget {
+  destination: SpawnPoint;
+  interactionId: string | null;
+  progressAnchor: SpawnPoint;
+  progressSince: number;
+}
+
 abstract class WalkableScene extends Phaser.Scene {
   protected readonly callbacks: CampaignSceneCallbacks;
   protected readonly getState: () => CampaignStateV1;
@@ -420,7 +545,9 @@ abstract class WalkableScene extends Phaser.Scene {
   private playerGuide!: Phaser.GameObjects.Graphics;
   protected obstacles: Phaser.GameObjects.GameObject[] = [];
   protected interactions: WorldInteraction[] = [];
-  protected consequences?: Phaser.GameObjects.Container;
+  protected consequences: Phaser.GameObjects.GameObject[] = [];
+  protected scamCheckCard?: Phaser.GameObjects.Graphics;
+  protected consequenceArt = emptyConsequenceArtSnapshot();
   protected npcViews = new Map<NpcId, NpcView>();
   private worldWidth = 1;
   private worldHeight = 1;
@@ -430,6 +557,7 @@ abstract class WalkableScene extends Phaser.Scene {
   private hurryKey!: Phaser.Input.Keyboard.Key;
   private virtualDirection = new Phaser.Math.Vector2();
   private movementVector = new Phaser.Math.Vector2();
+  private tapWorldPoint = new Phaser.Math.Vector2();
   private controlsEnabled = false;
   private nearbyInteraction: WorldInteraction | null = null;
   private markers = new Map<string, MarkerView>();
@@ -444,6 +572,10 @@ abstract class WalkableScene extends Phaser.Scene {
   private currentSurface: MovementSurface = "indoor";
   private nextPlayerBlinkAt = Number.POSITIVE_INFINITY;
   private playerBlinkUntil = Number.NEGATIVE_INFINITY;
+  private tapDestinationRing!: Phaser.GameObjects.Arc;
+  private tapNavigation: TapNavigationTarget | null = null;
+  private tapNavigationOutcome: CampaignTapNavigationOutcome = "idle";
+  private tapNavigationCancelReason: string | null = null;
   private stepPuffs: {
     dust: Phaser.GameObjects.Arc;
     fleckLeft: Phaser.GameObjects.Rectangle;
@@ -502,6 +634,11 @@ abstract class WalkableScene extends Phaser.Scene {
       // Above every world object, but under interaction markers and nameplates
       // so the guide never sits on top of the name you are walking towards.
       .setDepth(100_050);
+    this.tapDestinationRing = this.add
+      .circle(spawn.x, spawn.y, 14, NIGHT, 0.18)
+      .setStrokeStyle(3, GOLD, 0.96)
+      .setVisible(false)
+      .setDepth(100_098);
     this.player.setCollideWorldBounds(true);
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     body.setSize(22, 18).setOffset(9, 35);
@@ -567,10 +704,16 @@ abstract class WalkableScene extends Phaser.Scene {
     const keyboardY =
       Number(this.cursors.down.isDown || this.movementKeys.down.isDown)
       - Number(this.cursors.up.isDown || this.movementKeys.up.isDown);
-    const movement = this.movementVector.set(
-      keyboardX || this.virtualDirection.x,
-      keyboardY || this.virtualDirection.y,
-    );
+    const manualX = keyboardX || this.virtualDirection.x;
+    const manualY = keyboardY || this.virtualDirection.y;
+    if ((manualX !== 0 || manualY !== 0) && this.tapNavigation) {
+      this.cancelTapNavigation("manual-input");
+    }
+    const movement = manualX !== 0 || manualY !== 0
+      ? this.movementVector.set(manualX, manualY)
+      : this.updateTapNavigation(time)
+        ? this.movementVector
+        : this.movementVector.set(0, 0);
 
     if (movement.lengthSq() > 0) {
       const hurrying =
@@ -648,6 +791,7 @@ abstract class WalkableScene extends Phaser.Scene {
       else keyboard.removeCapture(captures);
     }
     if (!enabled && this.player) {
+      this.cancelTapNavigation("controls-disabled");
       this.player.setVelocity(0, 0);
       this.virtualDirection.set(0, 0);
       this.playerIsMoving = false;
@@ -660,7 +804,102 @@ abstract class WalkableScene extends Phaser.Scene {
   }
 
   setVirtualDirection(x: number, y: number): void {
+    if ((x !== 0 || y !== 0) && this.tapNavigation) {
+      this.cancelTapNavigation("virtual-input");
+    }
     this.virtualDirection.set(x, y);
+  }
+
+  handleViewportTap(
+    viewportX: number,
+    viewportY: number,
+  ): "ignored" | "moving" | "interacted" {
+    if (
+      !this.controlsEnabled
+      || !this.player?.body
+      || !Number.isFinite(viewportX)
+      || !Number.isFinite(viewportY)
+      || viewportX < 0
+      || viewportY < 0
+      || viewportX > this.scale.width
+      || viewportY > this.scale.height
+    ) {
+      return "ignored";
+    }
+
+    this.cancelTapNavigation("redirected");
+    const camera = this.cameras.main;
+    camera.getWorldPoint(viewportX, viewportY, this.tapWorldPoint);
+    const hitRadius = 48 / Math.max(0.01, camera.zoom);
+    const hitRadiusSquared = hitRadius * hitRadius;
+    let tappedInteraction: WorldInteraction | null = null;
+    let tappedDistanceSquared = Number.POSITIVE_INFINITY;
+    for (const interaction of this.interactions) {
+      const marker = this.markers.get(interaction.id);
+      const actorDx = this.tapWorldPoint.x - interaction.x;
+      const actorDy = this.tapWorldPoint.y - interaction.y;
+      const actorDistanceSquared = actorDx * actorDx + actorDy * actorDy;
+      const markerDx = marker
+        ? this.tapWorldPoint.x - marker.ring.x
+        : Number.POSITIVE_INFINITY;
+      const markerDy = marker
+        ? this.tapWorldPoint.y - marker.ring.y
+        : Number.POSITIVE_INFINITY;
+      const markerDistanceSquared = marker
+        ? markerDx * markerDx + markerDy * markerDy
+        : Number.POSITIVE_INFINITY;
+      const distanceSquared = Math.min(
+        actorDistanceSquared,
+        markerDistanceSquared,
+      );
+      if (
+        distanceSquared <= hitRadiusSquared
+        && distanceSquared < tappedDistanceSquared
+      ) {
+        tappedInteraction = interaction;
+        tappedDistanceSquared = distanceSquared;
+      }
+    }
+
+    if (tappedInteraction) {
+      const dx = this.player.x - tappedInteraction.x;
+      const dy = this.player.y - tappedInteraction.y;
+      if (
+        dx * dx + dy * dy < INTERACTION_DISTANCE * INTERACTION_DISTANCE
+        && this.time.now >= this.readyForInteractionAt
+      ) {
+        this.tapNavigationOutcome = "interacted";
+        this.facePlayerToward(tappedInteraction.x, tappedInteraction.y);
+        this.callbacks.onInteract(tappedInteraction);
+        return "interacted";
+      }
+      this.beginTapNavigation(
+        { x: tappedInteraction.x, y: tappedInteraction.y },
+        tappedInteraction.id,
+      );
+      return "moving";
+    }
+
+    const destination = {
+      x: Phaser.Math.Clamp(this.tapWorldPoint.x, 24, this.worldWidth - 24),
+      y: Phaser.Math.Clamp(this.tapWorldPoint.y, 24, this.worldHeight - 24),
+    };
+    const dx = destination.x - this.player.x;
+    const dy = destination.y - this.player.y;
+    if (dx * dx + dy * dy <= 12 * 12) {
+      this.tapNavigationOutcome = "arrived";
+      return "ignored";
+    }
+    this.beginTapNavigation(destination, null);
+    return "moving";
+  }
+
+  cancelTapNavigation(reason = "external"): void {
+    if (!this.tapNavigation) return;
+    this.tapNavigation = null;
+    this.tapDestinationRing?.setVisible(false);
+    this.tapNavigationOutcome = "cancelled";
+    this.tapNavigationCancelReason = reason;
   }
 
   tryInteract(): void {
@@ -691,6 +930,12 @@ abstract class WalkableScene extends Phaser.Scene {
   }
 
   getMotionSnapshot(): CampaignMotionSnapshot {
+    const scamCheckCardChoice = this.getState().choices["scam-check-card"];
+    const scamCheckCardLayout =
+      scamCheckCardChoice === "numbered-steps"
+      || scamCheckCardChoice === "icons-and-words"
+        ? scamCheckCardChoice
+        : null;
     return {
       locationId: this.locationId,
       player: this.getPlayerPosition(),
@@ -722,7 +967,13 @@ abstract class WalkableScene extends Phaser.Scene {
         (marker) => marker.plate.visible,
       ).length,
       visibleStepPuffs: this.stepPuffs.filter(({ dust }) => dust.visible).length,
+      scamCheckCardLayout,
+      scamCheckCardVisible:
+        this.scamCheckCard?.active === true
+        && this.scamCheckCard.visible,
+      scamCheckCardAlpha: this.scamCheckCard?.alpha ?? null,
       characterArt: CHARACTER_ART_AUDIT,
+      consequenceArt: { ...this.consequenceArt },
       nearbyInteractionId: this.nearbyInteraction?.id ?? null,
       nearbyInteractionPoint: this.nearbyInteraction
         ? {
@@ -730,6 +981,30 @@ abstract class WalkableScene extends Phaser.Scene {
             y: this.nearbyInteraction.y,
           }
         : null,
+      tapNavigation: {
+        active: this.tapNavigation !== null,
+        interactionId: this.tapNavigation?.interactionId ?? null,
+        destination: this.tapNavigation
+          ? { ...this.tapNavigation.destination }
+          : null,
+        ringVisible: this.tapDestinationRing?.visible ?? false,
+        ringScreenDiameter:
+          (this.tapDestinationRing?.displayWidth ?? 0)
+          * this.cameras.main.zoom,
+        outcome: this.tapNavigationOutcome,
+        cancelReason: this.tapNavigationCancelReason,
+        controlsEnabled: this.controlsEnabled,
+        virtualDirection: {
+          x: this.virtualDirection.x,
+          y: this.virtualDirection.y,
+        },
+        cameraWorldView: {
+          x: this.cameras.main.worldView.x,
+          y: this.cameras.main.worldView.y,
+          width: this.cameras.main.worldView.width,
+          height: this.cameras.main.worldView.height,
+        },
+      },
       ambientActors: [],
       ambientActivities: [],
       ambientActivityTick: null,
@@ -779,6 +1054,7 @@ abstract class WalkableScene extends Phaser.Scene {
   }
 
   setPlayerPosition(spawn: SpawnPoint): void {
+    this.cancelTapNavigation("player-position");
     this.player?.setPosition(spawn.x, spawn.y);
     this.playerGuide?.setPosition(spawn.x, spawn.y);
     this.readyForInteractionAt = this.time.now + TRANSITION_LATCH_MS;
@@ -822,21 +1098,122 @@ abstract class WalkableScene extends Phaser.Scene {
         this.worldWidth + horizontalMargin * 2,
         this.worldHeight + verticalMargin * 2,
       );
+    this.syncTapDestinationRingScale();
   }
 
   protected resetWorldCollections(): void {
+    this.clearConsequences();
+    this.scamCheckCard?.destroy();
     this.obstacles = [];
     this.interactions = [];
-    this.consequences = undefined;
+    this.scamCheckCard = undefined;
+    this.consequenceArt = emptyConsequenceArtSnapshot();
     this.npcViews.clear();
     this.markers.clear();
     this.nearbyInteraction = null;
+    this.tapNavigation = null;
+    this.tapNavigationOutcome = "idle";
+    this.tapNavigationCancelReason = null;
   }
 
   protected abstract drawConsequences(): void;
 
+  protected clearConsequences(): void {
+    for (const object of this.consequences) object.destroy();
+    this.consequences = [];
+  }
+
   protected cameraZoomForViewport(width: number, _height: number): number {
     return width >= 760 ? 1.12 : 1;
+  }
+
+  private beginTapNavigation(
+    destination: SpawnPoint,
+    interactionId: string | null,
+  ): void {
+    this.tapNavigation = {
+      destination: { ...destination },
+      interactionId,
+      progressAnchor: this.getPlayerPosition(),
+      progressSince: this.time.now,
+    };
+    this.tapNavigationOutcome = "moving";
+    this.tapNavigationCancelReason = null;
+    this.tapDestinationRing
+      .setPosition(destination.x, destination.y)
+      .setVisible(true);
+    this.syncTapDestinationRingScale();
+  }
+
+  private syncTapDestinationRingScale(): void {
+    if (!this.tapDestinationRing) return;
+    this.tapDestinationRing.setScale(
+      1 / Math.max(0.01, this.cameras.main.zoom),
+    );
+  }
+
+  private finishTapNavigation(
+    outcome: Exclude<CampaignTapNavigationOutcome, "idle" | "moving">,
+  ): void {
+    this.tapNavigation = null;
+    this.tapDestinationRing.setVisible(false);
+    this.tapNavigationOutcome = outcome;
+    this.tapNavigationCancelReason = null;
+  }
+
+  private updateTapNavigation(time: number): boolean {
+    const navigation = this.tapNavigation;
+    if (!navigation) return false;
+
+    if (navigation.interactionId) {
+      const interaction = this.interactions.find(
+        (candidate) => candidate.id === navigation.interactionId,
+      );
+      if (!interaction) {
+        this.finishTapNavigation("cancelled");
+        return false;
+      }
+      navigation.destination.x = interaction.x;
+      navigation.destination.y = interaction.y;
+      this.tapDestinationRing.setPosition(interaction.x, interaction.y);
+    }
+
+    const progressX = this.player.x - navigation.progressAnchor.x;
+    const progressY = this.player.y - navigation.progressAnchor.y;
+    if (progressX * progressX + progressY * progressY >= 4 * 4) {
+      navigation.progressAnchor.x = this.player.x;
+      navigation.progressAnchor.y = this.player.y;
+      navigation.progressSince = time;
+    } else if (time - navigation.progressSince >= 650) {
+      this.finishTapNavigation("stalled");
+      return false;
+    }
+
+    const dx = navigation.destination.x - this.player.x;
+    const dy = navigation.destination.y - this.player.y;
+    const distanceSquared = dx * dx + dy * dy;
+    if (navigation.interactionId) {
+      if (distanceSquared < INTERACTION_DISTANCE * INTERACTION_DISTANCE) {
+        if (time < this.readyForInteractionAt) return false;
+        const interaction = this.interactions.find(
+          (candidate) => candidate.id === navigation.interactionId,
+        );
+        if (!interaction) {
+          this.finishTapNavigation("cancelled");
+          return false;
+        }
+        this.finishTapNavigation("interacted");
+        this.facePlayerToward(interaction.x, interaction.y);
+        this.callbacks.onInteract(interaction);
+        return false;
+      }
+    } else if (distanceSquared <= 12 * 12) {
+      this.finishTapNavigation("arrived");
+      return false;
+    }
+
+    this.movementVector.set(dx, dy);
+    return true;
   }
 
   private createStepPuffPool(): void {
@@ -2150,7 +2527,10 @@ export class EstateScene extends WalkableScene {
   }
 
   protected drawConsequences(): void {
-    this.consequences?.destroy(true);
+    this.clearConsequences();
+    this.scamCheckCard?.destroy();
+    this.scamCheckCard = undefined;
+    this.consequenceArt = emptyConsequenceArtSnapshot();
     const state = this.getState();
     const objects: Phaser.GameObjects.GameObject[] = [];
     const windowXs = [142, 234, 326, 418, 510, 602, 694, 786];
@@ -2171,64 +2551,40 @@ export class EstateScene extends WalkableScene {
     }
 
     if (state.objectives.includes("ramp-built")) {
-      objects.push(
-        this.add
-          .polygon(
-            650,
-            330,
-            [0, 34, 150, 34, 150, 5, 25, 5],
-            CONCRETE,
-          )
-          .setStrokeStyle(5, INK)
-          .setDepth(depthFor(340, 2)),
-        this.add
-          .text(725, 350, "RAMP BUILT BY THE BLOCK", {
-            color: "#173f4f",
-            backgroundColor: "#fff6dcee",
-            fontFamily: "system-ui, sans-serif",
-            fontSize: "15px",
-            fontStyle: "bold",
-            padding: { x: 6, y: 3 },
-          })
-          .setOrigin(0.5)
-          .setDepth(depthFor(350, 5)),
-      );
+      objects.push(...drawExteriorRamp(this));
+      this.consequenceArt.exteriorRamp = CONSEQUENCE_ART_IDS.exteriorRamp;
     }
 
     if (state.completedQuests.includes("garden-request")) {
       const choice = state.choices["request:garden-request"];
-      const label = choice === "herbs" ? "PANDAN · MINT · CURRY LEAF" : "FLOWERS · FOUR O'CLOCK SEAT";
-      objects.push(
-        this.add
-          .rectangle(1160, 760, 230, 70, choice === "herbs" ? GREEN : CORAL)
-          .setStrokeStyle(5, INK)
-          .setDepth(depthFor(760, 1)),
-        this.add
-          .text(1160, 760, label, {
-            color: "#fff6dc",
-            fontFamily: "system-ui, sans-serif",
-            fontSize: "14px",
-            fontStyle: "bold",
-          })
-          .setOrigin(0.5)
-          .setDepth(depthFor(760, 3)),
-      );
+      if (choice === "herbs") {
+        objects.push(...drawHerbGarden(this));
+        this.consequenceArt.garden = CONSEQUENCE_ART_IDS.gardenHerbs;
+      } else {
+        objects.push(...drawFlowerSeatGarden(this));
+        this.consequenceArt.garden = CONSEQUENCE_ART_IDS.gardenFlowersSeat;
+      }
     }
 
     if (state.completedQuests.includes("sheltered-route-request")) {
-      objects.push(
-        this.add
-          .rectangle(600, 830, 340, 20, TEAL)
-          .setStrokeStyle(4, INK)
-          .setDepth(depthFor(830, 2)),
+      objects.push(...drawShelteredLinkway(this));
+      this.consequenceArt.shelteredRoute = CONSEQUENCE_ART_IDS.shelteredRoute;
+    }
+
+    const scamCheckCardLayout = state.choices["scam-check-card"];
+    if (
+      scamCheckCardLayout === "numbered-steps"
+      || scamCheckCardLayout === "icons-and-words"
+    ) {
+      this.scamCheckCard = this.add
+        .graphics()
+        .setName(`scam-check-card:${scamCheckCardLayout}`)
+        .setDepth(depthFor(280, 9));
+      drawScamCheckCard(this.scamCheckCard, scamCheckCardLayout);
+      const provisionOcclusion = this.buildingOcclusionViews.find(
+        (view) => view.zone.id === "provision-shop",
       );
-      for (let x = 460; x <= 740; x += 70) {
-        objects.push(
-          this.add
-            .rectangle(x, 885, 9, 100, INK)
-            .setDepth(depthFor(885, 1)),
-        );
-      }
+      this.scamCheckCard.setAlpha(provisionOcclusion?.overlay.alpha ?? 1);
     }
 
     if (state.objectives.includes("cooking-lesson-staged")) {
@@ -2287,7 +2643,7 @@ export class EstateScene extends WalkableScene {
       }
     }
 
-    this.consequences = this.add.container(0, 0, objects);
+    this.consequences = objects;
     this.applyMonsoonState(state);
     this.arrangeResidentsForState(state);
     const warmthAlpha = this.monsoonActive
@@ -2405,16 +2761,24 @@ export class EstateScene extends WalkableScene {
     );
     for (const view of this.buildingOcclusionViews) {
       const faded = occludingIds.has(view.zone.id);
-      if (view.faded === faded) continue;
+      const companion = view.zone.id === "provision-shop"
+        ? this.scamCheckCard
+        : undefined;
+      if (view.faded === faded) {
+        companion?.setAlpha(view.overlay.alpha);
+        continue;
+      }
       view.faded = faded;
       const alpha = faded ? BUILDING_OCCLUSION_FADE_ALPHA : 1;
       this.tweens.killTweensOf(view.overlay);
+      if (companion) this.tweens.killTweensOf(companion);
       if (this.reducedMotion) {
         view.overlay.setAlpha(alpha);
+        companion?.setAlpha(alpha);
         continue;
       }
       this.tweens.add({
-        targets: view.overlay,
+        targets: companion ? [view.overlay, companion] : view.overlay,
         alpha,
         duration: 180,
         ease: "Sine.easeOut",
@@ -3792,12 +4156,12 @@ export class InteriorScene extends WalkableScene {
   }
 
   protected cameraZoomForViewport(width: number, height: number): number {
-    const fittedZoom = Math.min(
-      (width - 24) / ROOM_WIDTH,
-      (height - 24) / ROOM_HEIGHT,
-    );
+    const horizontalFit = (width - 24) / ROOM_WIDTH;
+    const verticalFit = (height - 24) / ROOM_HEIGHT;
+    const fittedZoom = Math.min(horizontalFit, verticalFit);
     const readableFloor = width < 520 ? 0.56 : width < 700 ? 0.7 : 0;
-    return Math.min(1.08, Math.max(readableFloor, fittedZoom));
+    const heightAwareFloor = Math.min(readableFloor, verticalFit);
+    return Math.min(1.08, Math.max(heightAwareFloor, fittedZoom));
   }
 
   init(data: SceneStartData = {}): void {
@@ -3819,17 +4183,14 @@ export class InteriorScene extends WalkableScene {
   }
 
   protected drawConsequences(): void {
-    this.consequences?.destroy(true);
+    this.clearConsequences();
+    this.consequenceArt = emptyConsequenceArtSnapshot();
     const state = this.getState();
     const objects: Phaser.GameObjects.GameObject[] = [];
 
     if (this.locationId === "mr-long-flat" && state.objectives.includes("ramp-built")) {
-      objects.push(
-        this.add
-          .polygon(480, 556, [0, 20, 160, 20, 130, 0, 22, 0], CONCRETE)
-          .setStrokeStyle(4, INK)
-          .setDepth(depthFor(560, 2)),
-      );
+      objects.push(...drawInteriorRamp(this));
+      this.consequenceArt.interiorRamp = CONSEQUENCE_ART_IDS.interiorRamp;
     }
     if (
       this.locationId === "grandma-ros-kitchen"
@@ -3869,7 +4230,7 @@ export class InteriorScene extends WalkableScene {
           .setDepth(98_000),
       );
     }
-    this.consequences = this.add.container(0, 0, objects);
+    this.consequences = objects;
   }
 
   private drawRoomShell(): void {
@@ -4693,6 +5054,12 @@ export interface CampaignGameHandle {
   resize(width: number, height: number): void;
   setControlsEnabled(enabled: boolean): void;
   setVirtualDirection(x: number, y: number): void;
+  handleViewportTap(
+    x: number,
+    y: number,
+  ): "ignored" | "moving" | "interacted";
+  cancelTapNavigation(): void;
+  setPlayerPosition(spawn: SpawnPoint): void;
   tryInteract(): void;
   transitionTo(locationId: LocationId): void;
   setCampaignState(state: CampaignStateV1): void;
@@ -4811,6 +5178,18 @@ export function createCampaignGame(
     },
     setVirtualDirection(x: number, y: number): void {
       activeScene()?.setVirtualDirection(x, y);
+    },
+    handleViewportTap(
+      x: number,
+      y: number,
+    ): "ignored" | "moving" | "interacted" {
+      return activeScene()?.handleViewportTap(x, y) ?? "ignored";
+    },
+    cancelTapNavigation(): void {
+      activeScene()?.cancelTapNavigation("external");
+    },
+    setPlayerPosition(spawn: SpawnPoint): void {
+      activeScene()?.setPlayerPosition(spawn);
     },
     tryInteract(): void {
       activeScene()?.tryInteract();

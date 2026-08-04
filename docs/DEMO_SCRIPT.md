@@ -4,12 +4,17 @@ Use `?demo=1`. This preserves the prologue, all three chapters, the ending, and
 free exploration; it lowers only the helper/invite thresholds from 3/5 to 2/2
 and increases walking speed.
 
+For a touch demo, tap a ground destination to walk or tap a nearby person or
+activity to interact; the d-pad remains the fallback. Automated compact-browser
+coverage exists, but do not describe it as a real-phone test.
+
 ## Route
 
 1. **Y’s flat:** listen to the Voice and use the first door.
 2. **Mr. Long’s flat:** hear his account of the broken step.
 3. **Two resident routes:** complete any two; point out that the full game asks
-   for three. Show the ramp and Mr. Long outside.
+   for three. Show the current code-drawn three-quarter ramp outside and inside
+   Mr. Long's flat rather than relying on an older review-cut shot.
 4. **Grandma Ros:** get Auntie Minah’s and Uncle Seng’s clues, enter the
    kitchen, and invite any two residents. State that the full game asks for
    five.
@@ -29,8 +34,13 @@ interaction has an equivalent Journal action.
 - “Maybe later never closes a route.”
 - “There is no timer, energy system, failure state, account, analytics,
   backend, or runtime language model.”
-- “Current gate: 75 unit tests, 60 production-browser checks, zero known
-  vulnerabilities.”
+- “Current gate: 79 out of 79 unit tests—27 campaign, 31 match, 17 audio,
+  and 4 accessibility tests—plus 60 out of 60 production-browser
+  checks and zero known vulnerabilities.”
+
+If a judge asks about load behavior, say that the campaign scene is lazy-loaded
+behind opening, slow, cancel, retry, and back-to-title states. Those paths are
+automated; startup on a real phone is still an open check.
 
 ## Do not claim
 
@@ -40,3 +50,5 @@ interaction has an equivalent Journal action.
 - A completed Gemini authoring pass
 
 For the edited 90-second video, use `docs/submission/VIDEO_SCRIPT.md`.
+The checked-in review cut predates the latest loader, touch, consequence-art,
+and 79-test build; do not present it as footage of the current build.

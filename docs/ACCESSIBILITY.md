@@ -7,6 +7,16 @@ product requirements, not optional polish.
 
 - Support WASD, arrow keys, `E`, Space, visible desktop buttons, and touch.
 - Keep active controls at least 48×48 CSS pixels.
+- Let a short primary tap set or redirect a straight-line walking destination;
+  tapping an interaction follows a moving target and activates it on arrival.
+  Nearby taps may activate immediately. Manual keyboard or directional-pad
+  input, collision stalls, blur, visibility changes, and leaving or restarting
+  the game clear pending navigation.
+- Reject long presses over 600 ms, drags over 12 CSS pixels, and multi-touch as
+  navigation gestures. Preserve browser pinch/pan on the stage with
+  `touch-action: manipulation`; reserve `touch-action: none` for the grouped
+  directional pad and Talk control. Directional buttons must also respond to
+  zero-detail clicks from keyboard and assistive technology.
 - Prevent movement-key browser scrolling and stop world movement while an
   overlay owns focus.
 - Restore focus to the world after dialogue and after the Journal closes.
@@ -39,9 +49,15 @@ product requirements, not optional polish.
 - Expose complete dialogue lines to assistive technology while the visual
   typewriter effect runs.
 - Use a sole visible `>` chevron to advance authored lines rather than a
-  labelled Continue bar. Its transparent 52×52 button retains the accessible
-  name “Continue dialogue,” a short high-contrast keyboard-focus underline,
-  and the existing touch/Space activation path.
+  labelled Continue bar. Its transparent button is exactly 52×52 CSS pixels,
+  has `aria-label="Continue dialogue"`, and receives an enclosing high-contrast
+  focus treatment (3 px outline plus 6 px outer ring) without exposing another
+  visible label. Preserve the existing touch/Space activation path.
+- Announce campaign loading through an atomic polite `role="status"` region.
+  While opening, make world and topbar actions inert. After 12 seconds, expose
+  and focus a return-to-title action; after import failure, expose focused Try
+  again and Back to title actions. A failed save must warn without preventing
+  gameplay, and retry/cancel must not create a late or duplicate Canvas.
 - Keep code-drawn dialogue portraits decorative with `aria-hidden`; the
   speaker heading, complete live-region line, progress text, choices, and
   controls carry all conversational meaning. Neutral, thoughtful, and warm
@@ -50,6 +66,19 @@ product requirements, not optional polish.
 - Keep the generated title panorama's HDB, gardening, and noticeboard scene
   described by concise alternative text. Keep the title, tagline, controls,
   and caption as semantic HTML rather than text baked into the image.
+- Treat Minah's two safety-card choices as equivalent presentation
+  preferences, not a correctness test. Both use full semantic button labels,
+  advance the same story route, and preserve the complete safety wording in
+  the dialogue live region. The code-drawn shop-window card is a persistent
+  visual consequence; no instruction is available only through its icons,
+  colour, or tiny in-world text. The Chapter 2 Journal repeats the PAUSE,
+  CHECK, TELL habit, separate-verification/1799 route, OTP warning, and chosen
+  card layout as semantic text.
+- Treat the exterior/interior ramps, alternate raised-bed gardens, shaded seat,
+  and sheltered-linkway extension as visual reinforcement of completed routes.
+  Their rails, tactile edge, plant labels, flowers, roof, and shade never carry
+  an instruction or outcome that is absent from dialogue, status, and Journal
+  text.
 - Use respectful non-medical language; never rank performance.
 - Keep place names, prompts, status pills, and meter changes understandable
   without colour or animation.
@@ -59,7 +88,8 @@ product requirements, not optional polish.
 - Keep essential body text at least 16px on narrow screens and 18px on larger
   screens.
 - Maintain clear visible focus and WCAG AA text contrast.
-- Avoid horizontal scrolling at 360px.
+- Avoid document overflow at 320×568 and 360×560 portrait and 640×360 landscape;
+  keep the 100dvh shell, stage, topbar, touch controls, and Journal usable.
 - Respect `prefers-reduced-motion`: location changes become instant and DOM
   motion is removed; player walking uses a static directional frame, resident
   routes and community cats stay at home, and deterministic blinks, four
@@ -76,8 +106,8 @@ product requirements, not optional polish.
   1.22× tablet, and 1× mobile framing; responsive resize updates both Phaser
   scale and the active camera rather than relying on CSS stretching.
 - Fit desktop interiors from both viewport dimensions and centre unused camera
-  margins. Preserve a 0.56× phone readability floor while exposing more of the
-  room than the former 1× crop.
+  margins. Prefer a 0.56× phone readability floor, but cap it by available
+  vertical fit on short landscape viewports so the room is not clipped.
 - Keep characters and interaction markers legible on grass, paths, and rooms.
 - Distinguish residents through stepped silhouettes, build, hair, clothing
   motifs, carried objects, and walking aids rather than colour alone. Keep one
@@ -109,6 +139,10 @@ complete the story.
 
 ## Automated evidence
 
+Four source-contract tests protect the dialogue's sole visible `>` text,
+`aria-label="Continue dialogue"`, exact 52×52 geometry, enclosing focus ring,
+reduced-motion pulse removal, and the continued availability of “Maybe later.”
+
 The 60-check production-browser harness verifies keyboard and touch entry,
 Space-key choices, visible modal state, focus return, correct return doors,
 Journal completion paths, all 12 locations rendering, 360px overflow, 48px
@@ -121,6 +155,15 @@ player-to-interaction facing, separate grass/paving walking effects, successful
 exterior wake-up, physical
 pond/east/south travel,
 responsive desktop/mobile camera zoom, and absence of uncaught console errors.
+It also verifies loader idle prefetch and cache reuse, Save-Data/2g-class
+prefetch suppression, opening and 12-second slow status, cancellation, retry,
+failed-import cache clearing, stale-attempt suppression, inert world controls,
+and recovery when browser storage rejects a save.
+The same full and demo journeys read Minah's complete check-before-you-act
+dialogue, expose two no-failure presentation choices, render a different large
+layout in each route, select it by keyboard, revisit the semantic Journal note,
+and verify that the saved card stays visible at rest while matching Minah's
+façade fade and restore alpha.
 The surface effects and footstep timbres are redundant ambience: paths retain
 their kerbs and texture, and no objective, collision, or interaction depends on
 seeing or hearing the surface response.
@@ -132,6 +175,10 @@ It also verifies the Chapter 2 monsoon's fixed rain pool, dry shelter masks,
 ten puddles, sheltered residents and cats, stored activity tools and laundry,
 stored ambient insects, mobile density, and an equivalent static
 no-falling-rain state under emulated reduced motion.
+Consequence snapshots separately prove the exterior ramp, interior-only ramp
+in Mr. Long's flat, mutually exclusive herb and flower-plus-shaded-seat beds,
+five-post pitched-roof linkway extension, and their absence outside the correct
+story and location states.
 It opens the Journal through its visible control, checks four tabs and their
 selected state, uses arrow keys to switch categories, verifies selected-quest
 objectives/progress and tracked state, checks `aria-hidden`/`inert` state and
@@ -139,9 +186,15 @@ Close-button focus, wraps focus from the final control, dismisses with both
 Escape and backdrop, and confirms world-focus restoration. It also proves a
 desktop room fits the full-width camera and the circular map has seven
 landmarks, one current indoor anchor, and a marker that changes between
-physical east/south positions. Its 360px run enters gameplay, verifies visible
-touch controls and the circular map, opens an in-bounds dialogue card and the
-full-width stacked Journal, and captures all three states. The grass/paver micro-texture
+physical east/south positions. Runs at 320×568, 360×560, and 640×360 verify the
+100dvh fit, no document overflow, reachable Journal, 48 px topbar/touch targets,
+and the short-landscape interior fit. Touch evidence covers tap redirection,
+target following and auto-interaction, manual/collision cancellation, rejection
+of drag/long-press/multi-touch input, grouped directional-pad activation from
+assistive-technology-style clicks, preserved stage pinch/pan, and a constant
+28 px destination-ring diameter across zoom. The 360px run also opens an
+in-bounds dialogue card and the full-width stacked Journal and captures all
+three states. The grass/paver micro-texture
 and tropical planting are decorative: walkable routes retain outlined kerbs
 and geometry, plant bases have collision, and the new path-edge growth leaves
 the complete physical travel route open. The nearby prompt, location label,
@@ -171,7 +224,9 @@ portrait, complete text, and controls remain inside the 360 px viewport. The
 portrait itself remains hidden from assistive technology; no dialogue
 information depends on its colours, motif, age lines, accessory, or expression.
 The same dialogue journey verifies a neutral-to-thoughtful expression change
-without increasing the 60-check headline. The title check confirms the
+and the exact chevron target, accessible name, enclosing focus treatment, and
+reduced-motion stillness without increasing the 60-check headline. The title
+check confirms the
 reviewed 1668×943 WebP loads and that the page has no desktop overflow; the
 existing 360 px capture and overflow assertion remain the mobile evidence.
 The same run toggles Sound, confirms focus returns to the world, and proves

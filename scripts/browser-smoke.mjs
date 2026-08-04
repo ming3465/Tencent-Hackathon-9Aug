@@ -59,6 +59,12 @@ let reducedMonsoonEvidence = null;
 let monsoonFramePacing = null;
 let districtTravelEvidence = null;
 let terrainDetailEvidence = null;
+let consequenceArtEvidence = {
+  before: null,
+  exterior: null,
+  interior: null,
+  flowers: null,
+};
 let facadeCollisionEvidence = null;
 let worldFeelEvidence = null;
 const scamCheckEvidence = [];
@@ -395,6 +401,41 @@ try {
     await sleep(350);
   };
 
+  const dispatchTouch = (type, touchPoints) => page.send(
+    "Input.dispatchTouchEvent",
+    {
+      type,
+      touchPoints: touchPoints.map((point) => ({
+        id: point.id,
+        x: point.x,
+        y: point.y,
+        radiusX: 2,
+        radiusY: 2,
+        force: 1,
+      })),
+    },
+  );
+
+  const touchTap = async (x, y, holdMs = 50) => {
+    await dispatchTouch("touchStart", [{ id: 1, x, y }]);
+    await sleep(holdMs);
+    await dispatchTouch("touchEnd", []);
+  };
+
+  const worldPointToClient = (x, y) => page.eval(`
+    (() => {
+      const snapshot = window.__kampungSmoke?.getMotionSnapshot?.();
+      const canvas = document.querySelector("#sandbox-stage canvas");
+      if (!snapshot || !canvas) return null;
+      const rect = canvas.getBoundingClientRect();
+      const view = snapshot.tapNavigation.cameraWorldView;
+      return {
+        x: rect.left + ((${x} - view.x) / view.width) * rect.width,
+        y: rect.top + ((${y} - view.y) / view.height) * rect.height,
+      };
+    })()
+  `);
+
   const walkToAxis = async (axis, target, tolerance = 18) => {
     // Single-axis walking stalls against any solid the route happens to line up
     // with, so whether a leg succeeded used to depend on where the previous leg
@@ -658,14 +699,11 @@ try {
           (() => {
             const button = document.getElementById("btn-dialog-advance");
             if (!button) return false;
-            const chevron = button.querySelector("[aria-hidden='true']");
-            const visibleWord = button.textContent
-              .replace(chevron?.textContent ?? "", "")
-              .trim();
-            return /continue/i.test(visibleWord)
-              && !button.hasAttribute("aria-label")
-              && button.getBoundingClientRect().width >= 48
-              && button.getBoundingClientRect().height >= 48;
+            const target = button.getBoundingClientRect();
+            return button.textContent.trim() === ">"
+              && button.getAttribute("aria-label") === "Continue dialogue"
+              && target.width >= 52
+              && target.height >= 52;
           })()
         `))
         && (
@@ -784,13 +822,18 @@ try {
     }
   };
 
-  const recruitHelpers = async (count) => {
+  const recruitHelpers = async (count, gardenChoice = 0) => {
     const requests = [
       "A Garden People Use",
       "An Invitation, Not a Notice",
       "Shade That Follows the Route",
     ];
-    for (const request of requests.slice(0, count)) await completeRequest(request);
+    for (const request of requests.slice(0, count)) {
+      await completeRequest(
+        request,
+        request === "A Garden People Use" ? gardenChoice : 0,
+      );
+    }
     check(
       `${count} distinct helper routes advance to Chapter 2`,
       /CHAPTER 2/i.test(await page.eval(`document.getElementById("chapter-label").textContent`))
@@ -972,6 +1015,7 @@ try {
     if (!initial || initial.locationId !== "estate") {
       throw new Error("Smoke-only resident motion snapshot was unavailable");
     }
+    consequenceArtEvidence.before = initial.consequenceArt;
     terrainDetailEvidence = initial.terrainDetail;
     diagnostics.push(
       terrainDetailEvidence
@@ -1548,6 +1592,11 @@ try {
     if (!before || before.locationId !== "estate" || !before.monsoonActive) {
       throw new Error("Chapter 2 monsoon snapshot was unavailable");
     }
+    if (motionMode === "normal") {
+      consequenceArtEvidence.exterior = before.consequenceArt;
+    } else {
+      consequenceArtEvidence.flowers = before.consequenceArt;
+    }
 
     const pacingPromise =
       motionMode === "normal" ? sampleFramePacing() : null;
@@ -1732,7 +1781,7 @@ try {
     await inspectMrLong(physicalControls);
     if (environmentMode === "living") await verifyResidentLife();
     if (environmentMode === "reduced") await verifyReducedEnvironment();
-    await recruitHelpers(helpers);
+    await recruitHelpers(helpers, environmentMode === "reduced" ? 1 : 0);
     await verifyMonsoonWeather(
       environmentMode === "reduced" ? "reduced" : "normal"
     );
@@ -1754,6 +1803,205 @@ try {
       && document.readyState === "complete"
       && document.getElementById("btn-start")`,
     "the cleared title screen"
+  );
+
+  const loaderBefore = await page.eval(
+    `window.__kampungLoaderSmoke?.getSnapshot?.() ?? null`
+  );
+  if (!loaderBefore) throw new Error("Campaign loader smoke controls are unavailable");
+  await page.eval(`
+    window.__kampungLoaderSmoke.prepareHeldLoad();
+    window.__kampungLoaderSmoke.failNextSave();
+    const start = document.getElementById("btn-start");
+    start.click();
+    start.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  `);
+  await waitForPageCondition(
+    `window.__kampungLoaderSmoke?.getSnapshot?.().phase === "opening"`,
+    "the held campaign loading state"
+  );
+  const loaderOpening = await page.eval(`
+    (() => {
+      const loader = document.getElementById("campaign-loader");
+      const snapshot = window.__kampungLoaderSmoke.getSnapshot();
+      return {
+        visible: !loader.hidden && getComputedStyle(loader).display !== "none",
+        message: document.getElementById("campaign-loader-message").textContent,
+        busy: document.getElementById("sandbox-stage").getAttribute("aria-busy"),
+        worldControlsInert:
+          document.getElementById("sandbox-stage").hasAttribute("inert")
+          && document.getElementById("estate-minimap").hasAttribute("inert")
+          && document.getElementById("interaction-prompt").hasAttribute("inert")
+          && document.querySelector(".touch-controls").hasAttribute("inert")
+          && document.querySelector(".topbar-actions").hasAttribute("inert"),
+        buttonsDisabled:
+          document.getElementById("btn-start").disabled
+          && document.getElementById("btn-continue").disabled
+          && document.getElementById("btn-start-over").disabled,
+        oneStart: snapshot.starts === ${loaderBefore.starts + 1},
+        oneImport: snapshot.imports === ${loaderBefore.imports + 1},
+        saveFailureSurvived: snapshot.storageAvailable === false,
+      };
+    })()
+  `);
+  await page.eval(`window.__kampungLoaderSmoke.showSlowState()`);
+  await sleep(20);
+  const loaderSlow = await page.eval(`
+    (() => {
+      const cancel = document.getElementById("btn-campaign-load-cancel");
+      return {
+        phase: window.__kampungLoaderSmoke.getSnapshot().phase === "slow",
+        message:
+          document.getElementById("campaign-loader-message").textContent
+          === "Still opening; you can go back to the title",
+        cancel: !cancel.hidden && getComputedStyle(cancel).display !== "none",
+        cancelFocused: document.activeElement === cancel,
+      };
+    })()
+  `);
+  await page.eval(`
+    document.getElementById("btn-campaign-load-cancel").click();
+    window.__kampungLoaderSmoke.releaseHeldLoad();
+  `);
+  await waitForPageCondition(
+    `document.getElementById("screen-title").classList.contains("active")
+      && !window.__kampungLoaderSmoke?.getSnapshot?.().loading`,
+    "loader cancellation returning to title"
+  );
+  await sleep(650);
+  const loaderCancelled = await page.eval(`
+    (() => {
+      const snapshot = window.__kampungLoaderSmoke.getSnapshot();
+      return {
+        idle: snapshot.phase === "idle",
+        noCanvas: snapshot.canvasCount === 0,
+        title: document.getElementById("screen-title").classList.contains("active"),
+        notBusy: document.getElementById("sandbox-stage").getAttribute("aria-busy") === "false",
+        controlsEnabled:
+          !document.getElementById("btn-start").disabled
+          && !document.getElementById("btn-continue").disabled
+          && !document.getElementById("btn-start-over").disabled,
+        worldControlsRestored:
+          !document.getElementById("sandbox-stage").hasAttribute("inert")
+          && !document.getElementById("estate-minimap").hasAttribute("inert")
+          && !document.getElementById("interaction-prompt").hasAttribute("inert")
+          && !document.querySelector(".touch-controls").hasAttribute("inert")
+          && !document.querySelector(".topbar-actions").hasAttribute("inert"),
+        storageRecovered: snapshot.storageAvailable === true,
+      };
+    })()
+  `);
+
+  await page.eval(`
+    window.__kampungLoaderSmoke.failNextLoad();
+    document.getElementById("btn-continue").click();
+  `);
+  try {
+    await waitForPageCondition(
+      `window.__kampungLoaderSmoke?.getSnapshot?.().phase === "failed"`,
+      "the recoverable campaign load failure"
+    );
+  } catch (error) {
+    const loaderFailureSnapshot = await page.eval(`
+      (() => ({
+        loader: window.__kampungLoaderSmoke?.getSnapshot?.() ?? null,
+        titleActive: document.getElementById("screen-title").classList.contains("active"),
+        sandboxActive: document.getElementById("screen-sandbox").classList.contains("active"),
+        continueHidden: document.getElementById("btn-continue").hidden,
+        continueDisabled: document.getElementById("btn-continue").disabled,
+      }))()
+    `);
+    throw new Error(`${error.message}; loader=${JSON.stringify(loaderFailureSnapshot)}`);
+  }
+  await sleep(100);
+  const loaderFailed = await page.eval(`
+    (() => {
+      const loader = document.getElementById("campaign-loader");
+      const snapshot = window.__kampungLoaderSmoke.getSnapshot();
+      return {
+        visible: !loader.hidden && getComputedStyle(loader).display !== "none",
+        retry: !document.getElementById("btn-campaign-load-retry").hidden,
+        cancel: !document.getElementById("btn-campaign-load-cancel").hidden,
+        message: /could not open/i.test(
+          document.getElementById("campaign-loader-message").textContent
+        ),
+        notBusy: document.getElementById("sandbox-stage").getAttribute("aria-busy") === "false",
+        worldControlsInert:
+          document.getElementById("sandbox-stage").hasAttribute("inert")
+          && document.getElementById("estate-minimap").hasAttribute("inert")
+          && document.getElementById("interaction-prompt").hasAttribute("inert")
+          && document.querySelector(".touch-controls").hasAttribute("inert")
+          && document.querySelector(".topbar-actions").hasAttribute("inert"),
+        retryFocused: document.activeElement?.id === "btn-campaign-load-retry",
+        retryable: snapshot.cached === false && snapshot.canvasCount === 0,
+        controlsEnabled: !document.getElementById("btn-continue").disabled,
+      };
+    })()
+  `);
+  const expectedLoaderError = consoleErrors.findIndex((message) =>
+    message.includes("Smoke campaign loader import failure")
+  );
+  if (expectedLoaderError >= 0) consoleErrors.splice(expectedLoaderError, 1);
+  await page.eval(`document.getElementById("btn-campaign-load-retry").click()`);
+  await waitForPageCondition(
+    `window.__kampungLoaderSmoke?.getSnapshot?.().phase === "ready"
+      && document.getElementById("sandbox-stage").getAttribute("aria-busy") === "false"`,
+    "campaign loader retry reaching ready",
+    8000
+  );
+  const loaderReady = await page.eval(`
+    (() => {
+      const loader = document.getElementById("campaign-loader");
+      const snapshot = window.__kampungLoaderSmoke.getSnapshot();
+      return {
+        hidden: loader.hidden && getComputedStyle(loader).display === "none",
+        oneCanvas: snapshot.canvasCount === 1,
+        notLoading: snapshot.loading === false,
+        controlsEnabled:
+          !document.getElementById("btn-start").disabled
+          && !document.getElementById("btn-continue").disabled
+          && !document.getElementById("btn-start-over").disabled,
+        worldControlsRestored:
+          !document.getElementById("sandbox-stage").hasAttribute("inert")
+          && !document.getElementById("estate-minimap").hasAttribute("inert")
+          && !document.getElementById("interaction-prompt").hasAttribute("inert")
+          && !document.querySelector(".touch-controls").hasAttribute("inert")
+          && !document.querySelector(".topbar-actions").hasAttribute("inert"),
+      };
+    })()
+  `);
+  await page.eval(`document.getElementById("btn-return-title").click()`);
+  await waitForPageCondition(
+    `document.getElementById("screen-title").classList.contains("active")
+      && document.querySelectorAll("#sandbox-stage canvas").length === 0`,
+    "the loader test returning from a ready campaign"
+  );
+  const loaderEvidence = {
+    opening:
+      loaderOpening.visible
+      && loaderOpening.message === "Opening the neighbourhood…"
+      && loaderOpening.busy === "true"
+      && loaderOpening.worldControlsInert
+      && loaderOpening.buttonsDisabled
+      && loaderOpening.oneStart
+      && loaderOpening.oneImport
+      && loaderOpening.saveFailureSurvived
+      && Object.values(loaderSlow).every(Boolean),
+    cancelled: Object.values(loaderCancelled).every(Boolean),
+    failed:
+      Object.values(loaderFailed).every(Boolean)
+      && expectedLoaderError >= 0,
+    ready: Object.values(loaderReady).every(Boolean),
+  };
+  diagnostics.push(`  LOAD  ${JSON.stringify(loaderEvidence)}`);
+
+  await page.eval(`localStorage.clear(); location.reload()`);
+  await waitForPageCondition(
+    `location.origin === ${JSON.stringify(new URL(TEST_URL).origin)}
+      && document.readyState === "complete"
+      && document.getElementById("btn-start")
+      && !document.getElementById("btn-start").hidden`,
+    "the fresh title after loader fault checks"
   );
 
   const titleScreenEvidence = await page.eval(`
@@ -1786,8 +2034,10 @@ try {
     )
   );
   check(
-    "Start button is present and focusable",
-    await page.eval(`!document.getElementById("btn-start").hidden`)
+    "Campaign loader handles ready, cancel, failure, and double-start races",
+    (await page.eval(`!document.getElementById("btn-start").hidden`))
+      && Object.values(loaderEvidence).every(Boolean),
+    JSON.stringify(loaderEvidence)
   );
   baselineFramePacing = await sampleFramePacing();
   diagnostics.push(
@@ -2179,6 +2429,11 @@ try {
       throw new Error(`Expected ${locationName}, rendered ${renderedName}`);
     }
     renderedLocationNames.add(renderedName);
+    if (locationName === "Mr. Long's Flat") {
+      consequenceArtEvidence.interior = await page.eval(
+        `window.__kampungSmoke?.getMotionSnapshot?.().consequenceArt ?? null`
+      );
+    }
     if (CAPTURE_LOCATION_GALLERY) {
       const slug = locationName
         .toLowerCase()
@@ -2571,7 +2826,15 @@ try {
     })()
   `);
   await page.shot(`${SHOT_DIR}/14-mobile-game.png`);
-  await page.eval(`document.getElementById("btn-touch-interact").click()`);
+  const touchTalkFocused = await page.eval(`
+    (() => {
+      const button = document.getElementById("btn-touch-interact");
+      button.focus();
+      const focused = document.activeElement === button;
+      button.click();
+      return focused;
+    })()
+  `);
   await sleep(240);
   await waitForRenderedDialogueLine("the mobile dialogue evidence line");
   portraitEvidence.mobile = await page.eval(`
@@ -2654,7 +2917,8 @@ try {
       && mobileJournalState.tabs === 4
       && mobileJournalState.detailBelowList,
     dialogue:
-      portraitEvidence.mobile.open
+      touchTalkFocused
+      && portraitEvidence.mobile.open
       && portraitEvidence.mobile.id === "voice"
       && portraitEvidence.mobile.left >= 0
       && portraitEvidence.mobile.right <= 361
@@ -2669,15 +2933,395 @@ try {
         `document.getElementById("journal-panel").classList.contains("open")`
       )),
   };
+
+  await page.send("Emulation.setTouchEmulationEnabled", {
+    enabled: true,
+    maxTouchPoints: 5,
+  });
+  const shortViewportLayouts = [];
+  for (const viewport of [
+    { width: 320, height: 568 },
+    { width: 360, height: 560 },
+    { width: 640, height: 360 },
+  ]) {
+    await page.send("Emulation.setDeviceMetricsOverride", {
+      ...viewport,
+      deviceScaleFactor: 2,
+      mobile: true,
+    });
+    await sleep(420);
+    const layout = await page.eval(`
+      (() => {
+        const inside = (inner, outer) =>
+          inner.left >= outer.left - 1
+          && inner.right <= outer.right + 1
+          && inner.top >= outer.top - 1
+          && inner.bottom <= outer.bottom + 1;
+        const viewport = {
+          left: 0,
+          top: 0,
+          right: innerWidth,
+          bottom: innerHeight,
+        };
+        const screen = document.getElementById("screen-sandbox").getBoundingClientRect();
+        const topbar = document.querySelector(".topbar").getBoundingClientRect();
+        const shell = document.querySelector(".world-shell").getBoundingClientRect();
+        const stage = document.getElementById("sandbox-stage").getBoundingClientRect();
+        const topbarTargets = Array.from(document.querySelectorAll(".topbar button"))
+          .filter((button) => button.offsetParent !== null)
+          .every((button) => {
+            const rect = button.getBoundingClientRect();
+            return rect.width >= 48 && rect.height >= 48 && inside(rect, viewport);
+          });
+        const touchTargets = Array.from(document.querySelectorAll(
+          ".dpad button, #btn-touch-interact"
+        )).every((button) => {
+          const rect = button.getBoundingClientRect();
+          return rect.width >= 48
+            && rect.height >= 48
+            && inside(rect, shell)
+            && inside(rect, viewport);
+        });
+        return {
+          viewport: [innerWidth, innerHeight],
+          screenHeight: screen.height,
+          shellHeight: shell.height,
+          stageHeight: stage.height,
+          fits:
+            Math.abs(screen.height - innerHeight) <= 1
+            && inside(topbar, viewport)
+            && inside(shell, viewport)
+            && shell.height > 120
+            && stage.height > 110
+            && document.documentElement.scrollWidth <= innerWidth + 1
+            && document.documentElement.scrollHeight <= innerHeight + 1
+            && topbarTargets
+            && touchTargets,
+        };
+      })()
+    `);
+    if (viewport.width === 320) {
+      await page.eval(`document.getElementById("btn-journal").click()`);
+      await waitForPageCondition(
+        `(() => {
+          const panel = document.getElementById("journal-panel").getBoundingClientRect();
+          return panel.left >= -1 && panel.right <= innerWidth + 1;
+        })()`,
+        "320px journal drawer to settle",
+        1000,
+      );
+      layout.journalReachable = await page.eval(`
+        (() => {
+          const panel = document.getElementById("journal-panel").getBoundingClientRect();
+          const close = document.getElementById("btn-journal-close").getBoundingClientRect();
+          return panel.left >= 0
+            && panel.top >= 0
+            && panel.right <= innerWidth + 1
+            && panel.bottom <= innerHeight + 1
+            && close.width >= 48
+            && close.height >= 48
+            && close.right <= innerWidth + 1
+            && close.bottom <= innerHeight + 1;
+        })()
+      `);
+      await page.eval(`document.getElementById("btn-journal-close").click()`);
+      await sleep(120);
+    } else {
+      layout.journalReachable = true;
+    }
+    shortViewportLayouts.push(layout);
+  }
+
+  await page.send("Emulation.setDeviceMetricsOverride", {
+    width: 360,
+    height: 560,
+    deviceScaleFactor: 2,
+    mobile: true,
+  });
+  await sleep(420);
+  await page.eval(`
+    window.__kampungSmoke.resetTouchInput();
+    document.getElementById("sandbox-stage").focus();
+  `);
+  const touchCentre = await page.eval(`
+    (() => {
+      const rect = document.querySelector("#sandbox-stage canvas").getBoundingClientRect();
+      return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    })()
+  `);
+  const beforeRejectedGestures = await page.eval(
+    `window.__kampungSmoke.getMotionSnapshot()`,
+  );
+  await touchTap(touchCentre.x, touchCentre.y, 700);
+  await sleep(80);
+  const afterLongPress = await page.eval(
+    `window.__kampungSmoke.getMotionSnapshot()`,
+  );
+  await dispatchTouch("touchStart", [
+    { id: 1, x: touchCentre.x, y: touchCentre.y },
+  ]);
+  await sleep(40);
+  await dispatchTouch("touchMove", [
+    { id: 1, x: touchCentre.x + 30, y: touchCentre.y },
+  ]);
+  await sleep(40);
+  await dispatchTouch("touchEnd", []);
+  await sleep(80);
+  const afterDrag = await page.eval(
+    `window.__kampungSmoke.getMotionSnapshot()`,
+  );
+  await dispatchTouch("touchStart", [
+    { id: 1, x: touchCentre.x - 18, y: touchCentre.y },
+    { id: 2, x: touchCentre.x + 18, y: touchCentre.y },
+  ]);
+  await sleep(60);
+  await dispatchTouch("touchEnd", []);
+  await sleep(80);
+  const afterMultiTouch = await page.eval(
+    `window.__kampungSmoke.getMotionSnapshot()`,
+  );
+  const rejectedGestures = [afterLongPress, afterDrag, afterMultiTouch].every(
+    (snapshot) =>
+      !snapshot.tapNavigation.active
+      && snapshot.tapNavigation.outcome
+        === beforeRejectedGestures.tapNavigation.outcome
+      && Math.hypot(
+        snapshot.player.x - beforeRejectedGestures.player.x,
+        snapshot.player.y - beforeRejectedGestures.player.y,
+      ) < 4,
+  );
+
+  // Establish interaction following on a clear route before deliberately
+  // exercising d-pad cancellation and a collision stall below.
+  await page.eval(`
+    window.__kampungSmoke.setPlayerPosition(420, 390);
+    document.getElementById("sandbox-stage").focus();
+  `);
+  await sleep(180);
+  const farVoiceStart = await page.eval(
+    `window.__kampungSmoke.getMotionSnapshot()`,
+  );
+  const farVoicePoint = await worldPointToClient(540, 390);
+  await touchTap(farVoicePoint.x, farVoicePoint.y);
+  await sleep(70);
+  const followingVoice = await page.eval(
+    `window.__kampungSmoke.getMotionSnapshot()`,
+  );
+  try {
+    await waitForPageCondition(
+      `document.getElementById("dialog-overlay").classList.contains("active")`,
+      "tap navigation to auto-interact with the Voice",
+      2200,
+    );
+  } catch (error) {
+    const endingTouchState = await page.eval(`
+      (() => ({
+        snapshot: window.__kampungSmoke?.getMotionSnapshot?.() ?? null,
+        activeElement: document.activeElement?.id ?? document.activeElement?.tagName,
+        dialogueOpen: document.getElementById("dialog-overlay").classList.contains("active"),
+      }))()
+    `);
+    throw new Error(
+      `${error.message}; start=${JSON.stringify(farVoiceStart)}; `
+        + `after-tap=${JSON.stringify(followingVoice)}; `
+        + `ending=${JSON.stringify(endingTouchState)}`
+    );
+  }
+  const farAutoInteracted = await page.eval(`
+    window.__kampungSmoke.getMotionSnapshot().tapNavigation.outcome === "interacted"
+  `);
+  await page.eval(`document.getElementById("btn-dialog-close").click()`);
+  await sleep(160);
+  const voicePoint = await worldPointToClient(540, 390);
+  await touchTap(voicePoint.x, voicePoint.y);
+  await waitForPageCondition(
+    `document.getElementById("dialog-overlay").classList.contains("active")`,
+    "nearby viewport tap to open dialogue",
+    1200,
+  );
+  const shortDialogue = await page.eval(`
+    (() => {
+      const card = document.querySelector("#dialog-overlay .dialog-card")
+        .getBoundingClientRect();
+      const advance = document.getElementById("btn-dialog-advance");
+      advance.focus();
+      const target = advance.getBoundingClientRect();
+      const focusStyle = getComputedStyle(advance);
+      return {
+        fits: card.left >= 0
+          && card.top >= 0
+          && card.right <= innerWidth + 1
+          && card.bottom <= innerHeight + 1,
+        soleCue: advance.textContent.trim() === ">"
+          && advance.getAttribute("aria-label") === "Continue dialogue"
+          && target.width >= 52
+          && target.height >= 52,
+        focusRing: focusStyle.outlineStyle !== "none"
+          && parseFloat(focusStyle.outlineWidth) >= 3
+          && focusStyle.boxShadow !== "none",
+      };
+    })()
+  `);
+  await page.eval(`document.getElementById("btn-dialog-close").click()`);
+  await sleep(120);
+
+  const beforeSyntheticDpad = await page.eval(
+    `window.__kampungSmoke.getMotionSnapshot()`,
+  );
+  const syntheticDpadFocused = await page.eval(`
+    (() => {
+      const button = document.querySelector('[data-direction="right"]');
+      button.focus();
+      const focused = document.activeElement === button;
+      button.click();
+      return focused;
+    })()
+  `);
+  await sleep(260);
+  const afterSyntheticDpad = await page.eval(
+    `window.__kampungSmoke.getMotionSnapshot()`,
+  );
+  await page.eval(`document.getElementById("sandbox-stage").focus()`);
+  await sleep(80);
+
+  const canvasRect = await page.eval(`
+    (() => {
+      const rect = document.querySelector("#sandbox-stage canvas").getBoundingClientRect();
+      return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+    })()
+  `);
+  await touchTap(
+    canvasRect.left + canvasRect.width * 0.84,
+    canvasRect.top + canvasRect.height * 0.45,
+  );
+  await sleep(90);
+  const firstGroundTap = await page.eval(
+    `window.__kampungSmoke.getMotionSnapshot()`,
+  );
+  await touchTap(
+    canvasRect.left + canvasRect.width * 0.16,
+    canvasRect.top + canvasRect.height * 0.45,
+  );
+  await sleep(90);
+  const redirectedGroundTap = await page.eval(
+    `window.__kampungSmoke.getMotionSnapshot()`,
+  );
+  const upButton = await page.eval(`
+    (() => {
+      const rect = document.querySelector('[data-direction="up"]').getBoundingClientRect();
+      return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    })()
+  `);
+  await touchTap(upButton.x, upButton.y);
+  await sleep(90);
+  const afterDpadCancel = await page.eval(
+    `window.__kampungSmoke.getMotionSnapshot()`,
+  );
+  // CDP's synthetic touch focuses the button after release, unlike the
+  // preventDefault path on a physical held d-pad. Restore the world before
+  // exercising the independent canvas gestures that follow.
+  await page.eval(`document.getElementById("sandbox-stage").focus()`);
+  await sleep(80);
+
+  // Start close to the known wall so this assertion measures the 650ms
+  // no-progress cutoff rather than variable travel time from an earlier tap.
+  await page.eval(`
+    window.__kampungSmoke.setPlayerPosition(470, 250);
+    document.getElementById("sandbox-stage").focus();
+  `);
+  await sleep(120);
+  const blockedPoint = await worldPointToClient(350, 250);
+  await touchTap(blockedPoint.x, blockedPoint.y);
+  await sleep(1900);
+  const afterCollisionStall = await page.eval(
+    `window.__kampungSmoke.getMotionSnapshot()`,
+  );
+
+  const firstDestination = firstGroundTap.tapNavigation.destination;
+  const redirectedDestination = redirectedGroundTap.tapNavigation.destination;
+  const tapNavigationEvidence = {
+    rejectedGestures,
+    started:
+      firstGroundTap.tapNavigation.active
+      && firstGroundTap.tapNavigation.outcome === "moving"
+      && firstGroundTap.tapNavigation.interactionId === null
+      && firstGroundTap.tapNavigation.ringVisible,
+    redirected:
+      redirectedGroundTap.tapNavigation.active
+      && redirectedGroundTap.tapNavigation.outcome === "moving"
+      && redirectedGroundTap.tapNavigation.ringVisible
+      && firstDestination
+      && redirectedDestination
+      && Math.hypot(
+        redirectedDestination.x - firstDestination.x,
+        redirectedDestination.y - firstDestination.y,
+      ) > 80,
+    dpadCancelled:
+      !afterDpadCancel.tapNavigation.active
+      && !afterDpadCancel.tapNavigation.ringVisible
+      && afterDpadCancel.tapNavigation.outcome === "cancelled",
+    collisionStalled:
+      !afterCollisionStall.tapNavigation.active
+      && !afterCollisionStall.tapNavigation.ringVisible
+      && afterCollisionStall.tapNavigation.outcome === "stalled",
+    followedInteraction:
+      Math.hypot(
+        farVoiceStart.player.x - 540,
+        farVoiceStart.player.y - 390,
+      ) > 112
+      && followingVoice.tapNavigation.active
+      && followingVoice.tapNavigation.interactionId === "npc:voice"
+      && followingVoice.tapNavigation.ringVisible
+      && farAutoInteracted,
+    pointerCleanup:
+      followingVoice.tapNavigation.active
+      && followingVoice.tapNavigation.interactionId === "npc:voice",
+    stableRingSize:
+      followingVoice.tapNavigation.ringScreenDiameter >= 27
+      && followingVoice.tapNavigation.ringScreenDiameter <= 29,
+    syntheticDpad:
+      syntheticDpadFocused
+      && afterSyntheticDpad.player.x - beforeSyntheticDpad.player.x >= 20
+      && !afterSyntheticDpad.tapNavigation.active,
+    nearbyInteracted:
+      shortDialogue.fits
+      && shortDialogue.soleCue
+      && shortDialogue.focusRing,
+    pinchCss: await page.eval(`
+      getComputedStyle(document.getElementById("sandbox-stage")).touchAction === "manipulation"
+        && document.querySelector(".touch-controls").getAttribute("role") === "group"
+        && Array.from(document.querySelectorAll(
+          ".dpad button, #btn-touch-interact"
+        )).every((button) => getComputedStyle(button).touchAction === "none")
+    `),
+  };
+  mobileGameEvidence.shortViewports = shortViewportLayouts.every(
+    (layout) => layout.fits && layout.journalReachable,
+  );
+  mobileGameEvidence.tapNavigation = Object.values(tapNavigationEvidence).every(Boolean);
   diagnostics.push(
     `  MOBILE  world=${mobileGameEvidence.world}; ` +
       `journal=${mobileGameEvidence.journal}; ` +
       `dialogue=${mobileGameEvidence.dialogue}; ` +
       `close-focus=${mobileGameEvidence.closedToWorld}; ` +
+      `short=${mobileGameEvidence.shortViewports}; ` +
+      `tap=${mobileGameEvidence.tapNavigation}; ` +
       `drawer=${mobileJournalState.width.toFixed(0)}px; ` +
       `portrait=${portraitEvidence.mobile.portraitWidth.toFixed(0)}x` +
       `${portraitEvidence.mobile.portraitHeight.toFixed(0)}px; ` +
       `zoom=${mobileWorldState.cameraZoom?.toFixed(2) ?? "missing"}x`
+  );
+  diagnostics.push(
+    `  CONSEQUENCE ART  before=${JSON.stringify(consequenceArtEvidence.before)}; ` +
+      `exterior=${JSON.stringify(consequenceArtEvidence.exterior)}; ` +
+      `interior=${JSON.stringify(consequenceArtEvidence.interior)}; ` +
+      `flowers=${JSON.stringify(consequenceArtEvidence.flowers)}`
+  );
+  diagnostics.push(
+    `  TOUCH  ${JSON.stringify(tapNavigationEvidence)}; ` +
+      `viewports=${shortViewportLayouts.map((layout) =>
+        `${layout.viewport.join("x")}:${layout.fits}/${layout.journalReachable}`
+      ).join(",")}`
   );
   const normalFrameBudget = Math.max(
     28,
@@ -2707,6 +3351,31 @@ try {
       && residentMotionEvidence.characterArt.buildCount === 3
       && residentMotionEvidence.characterArt.accessoryCount === 4
       && residentMotionEvidence.characterArt.carryingResidentCount === 4
+      && consequenceArtEvidence.before
+      && Object.values(consequenceArtEvidence.before).every(
+        (artId) => artId === null
+      )
+      && consequenceArtEvidence.exterior
+      && consequenceArtEvidence.exterior.exteriorRamp
+        === "ramp-exterior-three-quarter-v1"
+      && consequenceArtEvidence.exterior.interiorRamp === null
+      && consequenceArtEvidence.exterior.garden
+        === "garden-raised-herbs-v1"
+      && consequenceArtEvidence.exterior.shelteredRoute
+        === "sheltered-linkway-extension-v1"
+      && consequenceArtEvidence.interior
+      && consequenceArtEvidence.interior.exteriorRamp === null
+      && consequenceArtEvidence.interior.interiorRamp
+        === "ramp-interior-three-quarter-v1"
+      && consequenceArtEvidence.interior.garden === null
+      && consequenceArtEvidence.interior.shelteredRoute === null
+      && consequenceArtEvidence.flowers
+      && consequenceArtEvidence.flowers.exteriorRamp
+        === "ramp-exterior-three-quarter-v1"
+      && consequenceArtEvidence.flowers.interiorRamp === null
+      && consequenceArtEvidence.flowers.garden
+        === "garden-flowers-shaded-seat-v1"
+      && consequenceArtEvidence.flowers.shelteredRoute === null
       && residentMotionEvidence.movedAmbientIds.length === 2
       && residentMotionEvidence.ambientDirectionalTexture
       && residentMotionEvidence.ambientActivityCount === 4

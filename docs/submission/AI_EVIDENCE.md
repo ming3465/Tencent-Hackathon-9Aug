@@ -21,7 +21,7 @@ to declare its own work complete; the repository gate is the acceptance test.
 | CodeBuddy CLI 2.127.0 | Authored the first 10 Phase 1 files, including `matchEngine.ts`, which remains as the optional keepsake table | Exceeded its 50-turn limit. The gate found 2 TypeScript errors, 3 failing tests, 1 unused dependency, 4 audit findings, and a stale-timer race. A focused retry returned `429 Credits exhausted`. |
 | OpenCode | Corrected the Phase 1 defects and implemented the original top-down sandbox pivot | That sandbox state/scene architecture was superseded by the 2026-08-03 campaign upgrade. |
 | Claude Code (Opus 5) | Audio, reactive residents, lighting, procedural-art pass, Node CDP smoke harness, Pages workflow, and original deck | No human usability or accessibility outcome was inferred from automated checks. |
-| Codex (GPT-5) | `CampaignStateV1`, pure reducer, KampungMind, content registries, versioned save, four-tab quest Journal, circular estate map, room-fit interior camera, Estate/Interior scene architecture, original resident/environment art including tropical landscaping, landmark façades, 13 visual-novel portraits with three expressions, four-frame locomotion, a pure 12-resident silhouette/outfit registry, 14 approach-only details, responsive world scale, pond/movement feedback, deterministic day/evening ambient voice-leading, the Chapter 2 monsoon, 12 story clusters, 54 baked ground accents, eight ambient insects, building solidity, generated-title integration, campaign tests, full/demo browser campaigns, and refreshed artifacts/docs | Authored deterministic content and code-drawn visuals ahead of time and integrated one reviewed generated title asset; no runtime model or network path was added. |
+| Codex (GPT-5) | `CampaignStateV1`, pure reducer, KampungMind, content registries, versioned save, four-tab quest Journal, circular estate map, room-fit interior camera, Estate/Interior scene architecture, original resident/environment art including tropical landscaping, landmark façades, 13 visual-novel portraits with three expressions, four-frame locomotion, a pure 12-resident silhouette/outfit registry, 14 approach-only details, responsive world scale, tap-to-walk/nearby tap interaction, recoverable lazy loading, pond/movement feedback, deterministic day/evening ambient voice-leading, the Chapter 2 monsoon, 12 story clusters, 54 baked ground accents, eight ambient insects, building solidity, generated-title integration, three-quarter code-drawn ramp/garden/linkway consequence art, the official-source elder-led scam-awareness beat and persistent shop card, campaign and accessibility-contract tests, full/demo browser campaigns, and refreshed artifacts/docs | Authored deterministic content and code-drawn visuals ahead of time and integrated one reviewed generated title asset; no runtime model or network path was added. Automated compact-layout/touch evidence is not presented as a real-device or human accessibility pass. |
 | OpenAI image generation | Produced four original visual workflows from labelled project references: a neighbourhood style key, a targeted estate-density study, a production HDB-estate title panorama with a constrained cleanup edit, and a cast silhouette/gait study | Human review translated the neighbourhood, density, and cast studies into original code-drawn systems. The cast review accepted stepped anatomy, connected limbs, grounded feet, and readable outfit variation while rejecting costume-like treatments. For the title, review rejected pseudo-writing, constrained the edit to non-text pictograms, optimized the accepted source, and integrated it at runtime while keeping all interface text semantic. Prompts, accepted outputs, artifact IDs, decisions, uses, and hashes are preserved. None was Miora. |
 | Gemini CLI 0.53.1 | One real authoring invocation was attempted with `docs/prompts/gemini-kampungmind-authoring.txt` | Google authentication opened and the run was cancelled while blocked. It produced no draft; no Gemini text was reviewed or committed. We do not claim a completed Gemini pass. |
 
@@ -45,15 +45,20 @@ later” never closes a route. No line is generated at runtime.
 | Gate | Evidence |
 | --- | --- |
 | Strict TypeScript | `npm run typecheck` passes |
-| Unit tests | 75/75: 27 campaign, 31 optional matching, 17 audio |
-| Production build | 106.23 kB initial JS (32.29 kB gzip); 1,596.66 kB lazy campaign scene (374.83 kB gzip) |
+| Unit tests | 79/79: 27 campaign, 31 match, 17 audio, 4 accessibility |
+| Production build | HTML 84.76 kB (15.26 kB gzip); initial JS 114.37 kB (35.06 kB gzip); lazy campaign scene 1,609.14 kB (376.46 kB gzip) |
 | Dependency audit | 0 known vulnerabilities |
 | Production browser | 60/60 checks; complete full and demo campaigns in headless Chrome |
 
-The browser harness covers keyboard and touch doors, return positions,
+The browser harness covers keyboard and touch doors, ground tap-to-walk,
+nearby tap interaction, far-target follow, redirect and d-pad cancellation,
+collision stall, drag/long-press/multitouch rejection, stale-touch cleanup, a
+28 CSS px destination ring, 320×568/360×560/640×360 layouts, return
+positions,
 interiors, locked ordering, alternative resident routes, every chapter,
-autosave/Continue, confirmed Start Over, demo isolation, visible modals, 360px
-layout, 48px targets, circular-map movement, room-fit camera evidence,
+autosave/Continue, confirmed Start Over, demo isolation, visible modals, 48px
+targets, circular-map movement, room-fit camera evidence, recoverable lazy-load
+opening/slow/cancel/retry/failure paths and duplicate-start protection,
 four-tab Journal selection/tracking, generated terrain/landscape/façade evidence,
 reviewed title-art loading, code-drawn portrait
 dimensions/detail/named traits and neutral-to-thoughtful expression state,
@@ -68,7 +73,13 @@ reduced-motion stillness, Chapter 2
 rain/puddles/shelter/resident/cat/activity/laundry responses,
 desktop/mobile/reduced-motion weather captures, live obstacle counts, physical
 pond/storefront evidence, collision-preserving district travel, frame budgets,
-and console errors.
+Minah's complete official-source safety wording, two equivalent presentation
+choices, one atomic card-plus-clue outcome, keyboard activation of a different
+rendered layout in each route, saved layout, semantic Journal revisit,
+bidirectional partial/legacy-save repair, visible persistent shop card,
+authored exterior/interior ramp, garden-choice, and sheltered-linkway art,
+façade-alpha synchronization in both full and demo campaigns, and the absence
+of console errors.
 
 ## 5. Judge-openable artifacts
 
@@ -87,7 +98,8 @@ and console errors.
 | Campaign content and engine | `src/game/campaignContent.ts`, `src/game/kampungMind.ts` |
 | Code-drawn visual-novel portraits | `src/game/campaignPortrait.ts` |
 | Pure campaign reducer and save rules | `src/game/campaign.ts`, `src/game/campaignSave.ts` |
-| Tests | `src/game/__tests__/campaign.test.ts`, `matchEngine.test.ts`, `audio.test.ts` |
+| Consequence art | `src/game/consequenceArt.ts`, `src/game/campaignScene.ts` |
+| Tests | `src/game/__tests__/campaign.test.ts`, `matchEngine.test.ts`, `audio.test.ts`, `accessibilityContract.test.ts` |
 | Production browser harness | `scripts/browser-smoke.mjs` |
 | Claim guardrails | `docs/RESEARCH.md` |
 | Current game contract | `docs/GAME_DESIGN.md`, `docs/ACCESSIBILITY.md` |
@@ -111,8 +123,12 @@ workflow was a Miora run.
 ## 7. Known limitations
 
 - No human playtest has occurred.
-- No real-device touch pass has occurred.
-- No 200% zoom, reduced-motion, or human screen-reader pass is claimed.
+- No real-device touch pass has occurred; CDP touch automation is not a device
+  claim.
+- No human 200% zoom, reduced-motion, or screen-reader pass is claimed.
+- The checked-in 90-second review cut predates the latest loader, touch,
+  consequence-art, and 79-test build; it remains historical evidence and is
+  not called current-build footage.
 - The Phaser lazy chunk still triggers Vite’s standard 500 kB warning.
 - No completed Gemini authoring output exists; the authentication-blocked
   attempt is evidence of process honesty, not a content contribution.

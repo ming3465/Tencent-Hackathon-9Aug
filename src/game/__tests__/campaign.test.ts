@@ -185,6 +185,10 @@ describe("campaign ordering and alternatives", () => {
       clueId: "ben-clue-tools",
       npcId: "craftsman-tan",
     })).toBe(state);
+    expect(reduceCampaign(state, {
+      type: "publish-scam-check",
+      layoutId: "numbered-steps",
+    })).toBe(state);
   });
 
   it("requires Mr. Long's own account before helper routes count", () => {
@@ -228,12 +232,57 @@ describe("campaign ordering and alternatives", () => {
 
   it("builds Chapter 2 from two clues, an entered kitchen, and five invitees", () => {
     let state = reachChapter2();
+    const minahIntent = selectNpcIntent({ state, npcId: "auntie-minah" });
+    const minahChoices = minahIntent.choices ?? [];
+    expect(minahIntent.id).toBe("minah-ros-clue");
+    expect(minahIntent.lines.join(" ")).toContain("ScamShield at 1799");
+    expect(minahIntent.lines.join(" ")).toContain("one-time password");
+    expect(minahChoices).toHaveLength(2);
+    expect(
+      minahChoices.map((candidate) =>
+        candidate.events.find((event) => event.type === "publish-scam-check")
+      ),
+    ).toEqual([
+      { type: "publish-scam-check", layoutId: "numbered-steps" },
+      { type: "publish-scam-check", layoutId: "icons-and-words" },
+    ]);
+    expect(minahChoices.every((candidate) => candidate.events.length === 1)).toBe(
+      true,
+    );
     state = apply(
       state,
-      { type: "collect-clue", clueId: "ros-clue-minah", npcId: "auntie-minah" },
+      ...minahChoices[0].events,
       { type: "collect-clue", clueId: "ros-clue-seng", npcId: "uncle-seng" },
       { type: "visit-location", locationId: "grandma-ros-kitchen" },
     );
+    expect(state.objectives).toContain("scam-check-shared");
+    expect(state.objectives).toContain("ros-clue-minah");
+    expect(state.choices["scam-check-card"]).toBe("numbered-steps");
+    expect(state.npcMemories["auntie-minah"]).toContain(
+      "shared:scam-check:numbered-steps",
+    );
+    expect(state.npcMemories["auntie-minah"]).toContain(
+      "shared:ros-clue-minah",
+    );
+    const minahJournal = buildJournalView(state).entries.story.find(
+      (entry) => entry.questId === "grandma-ros-clues",
+    );
+    const safetyObjective = minahJournal?.objectives.find(
+      (objective) => objective.id === "scam-check-shared",
+    );
+    expect(safetyObjective?.complete).toBe(true);
+    expect(safetyObjective?.label).toContain("ScamShield at 1799");
+    expect(safetyObjective?.label).toContain("never share an OTP");
+    expect(safetyObjective?.progressText).toBe(
+      "Shop card: three large numbered steps",
+    );
+    expect(reduceCampaign(state, {
+      type: "publish-scam-check",
+      layoutId: "icons-and-words",
+    })).toBe(state);
+    const alternate = apply(reachChapter2(), ...minahChoices[1].events);
+    expect(alternate.choices["scam-check-card"]).toBe("icons-and-words");
+    expect(alternate.objectives).toContain("ros-clue-minah");
     for (const [, npcId] of REQUEST_ROUTES.slice(0, 4)) {
       state = reduceCampaign(state, { type: "invite-resident", npcId });
     }
@@ -617,6 +666,40 @@ describe("campaign saves", () => {
     const loaded = loadCampaign(storage, false);
     expect(loaded).toEqual(state);
     expect(isCampaignStateV1(loaded)).toBe(true);
+
+    const legacyState = reduceCampaign(state, {
+      type: "collect-clue",
+      clueId: "ros-clue-minah",
+      npcId: "auntie-minah",
+    });
+    storage.value = JSON.stringify(legacyState);
+    const migrated = loadCampaign(storage, false);
+    expect(migrated?.objectives).toContain("scam-check-shared");
+    expect(migrated?.choices["scam-check-card"]).toBe("numbered-steps");
+    expect(migrated?.npcMemories["auntie-minah"]).toContain(
+      "shared:scam-check:numbered-steps",
+    );
+    expect(migrated?.npcMemories["auntie-minah"]).toContain(
+      "shared:ros-clue-minah",
+    );
+    expect(migrated?.revision).toBe(legacyState.revision + 1);
+
+    const interruptedCardState = {
+      ...state,
+      objectives: [...state.objectives, "scam-check-shared"],
+      choices: { ...state.choices, "scam-check-card": "icons-and-words" },
+      npcMemories: {
+        ...state.npcMemories,
+        "auntie-minah": ["shared:scam-check:icons-and-words"],
+      },
+    } satisfies CampaignStateV1;
+    storage.value = JSON.stringify(interruptedCardState);
+    const repaired = loadCampaign(storage, false);
+    expect(repaired?.objectives).toContain("ros-clue-minah");
+    expect(repaired?.choices["scam-check-card"]).toBe("icons-and-words");
+    expect(repaired?.npcMemories["auntie-minah"]).toContain(
+      "shared:ros-clue-minah",
+    );
   });
 
   it("returns null for corrupt and wrong-version saves", () => {

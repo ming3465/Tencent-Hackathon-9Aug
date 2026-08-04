@@ -50,6 +50,32 @@ import type {
   CampaignMotionSnapshot,
 } from "./game/campaignScene.js";
 
+type CampaignSceneModule = typeof import("./game/campaignScene.js");
+type CampaignLoaderPhase = "idle" | "opening" | "slow" | "failed" | "ready";
+
+interface NetworkConnection {
+  readonly saveData?: boolean;
+  readonly effectiveType?: string;
+}
+
+interface CampaignLoaderSmokeControl {
+  prepareHeldLoad(): void;
+  releaseHeldLoad(): void;
+  failNextLoad(): void;
+  failNextSave(): void;
+  showSlowState(): void;
+  getSnapshot(): {
+    readonly phase: CampaignLoaderPhase;
+    readonly loading: boolean;
+    readonly attempt: number;
+    readonly starts: number;
+    readonly imports: number;
+    readonly cached: boolean;
+    readonly canvasCount: number;
+    readonly storageAvailable: boolean;
+  };
+}
+
 function byId<T extends HTMLElement>(id: string): T {
   const element = document.getElementById(id);
   if (!element) throw new Error(`Missing required element #${id}`);
@@ -64,6 +90,10 @@ const btnStartOver = byId<HTMLButtonElement>("btn-start-over");
 const btnReturnTitle = byId<HTMLButtonElement>("btn-return-title");
 const worldShell = byId<HTMLElement>("world-shell");
 const sandboxStage = byId<HTMLElement>("sandbox-stage");
+const campaignLoader = byId<HTMLElement>("campaign-loader");
+const campaignLoaderMessage = byId<HTMLElement>("campaign-loader-message");
+const btnCampaignLoadCancel = byId<HTMLButtonElement>("btn-campaign-load-cancel");
+const btnCampaignLoadRetry = byId<HTMLButtonElement>("btn-campaign-load-retry");
 const areaName = byId<HTMLElement>("area-name");
 const chapterLabel = byId<HTMLElement>("chapter-label");
 const liveRegion = byId<HTMLElement>("live-region");
@@ -75,9 +105,15 @@ const interactionPrompt = byId<HTMLElement>("interaction-prompt");
 const nearbyText = byId<HTMLElement>("nearby-text");
 const btnInteract = byId<HTMLButtonElement>("btn-interact");
 const btnTouchInteract = byId<HTMLButtonElement>("btn-touch-interact");
+const foundTouchControls = document.querySelector<HTMLElement>(".touch-controls");
+if (!foundTouchControls) throw new Error("Missing required .touch-controls");
+const touchControls: HTMLElement = foundTouchControls;
 
 const btnSound = byId<HTMLButtonElement>("btn-sound");
 const btnFullscreen = byId<HTMLButtonElement>("btn-fullscreen");
+const foundTopbarActions = document.querySelector<HTMLElement>(".topbar-actions");
+if (!foundTopbarActions) throw new Error("Missing required .topbar-actions");
+const topbarActions: HTMLElement = foundTopbarActions;
 const volumeMusic = byId<HTMLInputElement>("volume-music");
 const volumeSfx = byId<HTMLInputElement>("volume-sfx");
 
@@ -121,11 +157,74 @@ const audio = new KampungAudio(readStoredAudioSettings());
 const smokeWindow = window as Window & {
   __kampungSmoke?: {
     getMotionSnapshot: () => CampaignMotionSnapshot | null;
+    resetTouchInput: () => void;
+    setPlayerPosition: (x: number, y: number) => void;
   };
+  __kampungLoaderSmoke?: CampaignLoaderSmokeControl;
 };
 
+let campaignStorageAvailable = true;
+let campaignStorageWarningLogged = false;
+let storageWarningAnnounced = false;
+let smokeSaveFault = false;
+
+function noteCampaignStorageFailure(error: unknown): void {
+  campaignStorageAvailable = false;
+  if (campaignStorageWarningLogged) return;
+  campaignStorageWarningLogged = true;
+  console.warn("Campaign progress could not be stored", error);
+}
+
+function noteCampaignStorageSuccess(): void {
+  campaignStorageAvailable = true;
+  campaignStorageWarningLogged = false;
+  storageWarningAnnounced = false;
+}
+
+function loadCampaignSafely(
+  fallback: CampaignStateV1 | null = null,
+): CampaignStateV1 | null {
+  try {
+    const saved = loadCampaign(window.localStorage, DEMO_MODE);
+    if (!saved && fallback && !fallback.demo) {
+      saveCampaign(window.localStorage, fallback);
+    }
+    noteCampaignStorageSuccess();
+    return saved ?? fallback;
+  } catch (error) {
+    noteCampaignStorageFailure(error);
+    return fallback;
+  }
+}
+
+function saveCampaignSafely(state: CampaignStateV1): boolean {
+  try {
+    if (SMOKE_MODE && smokeSaveFault) {
+      smokeSaveFault = false;
+      throw new DOMException("Smoke campaign save failure", "QuotaExceededError");
+    }
+    const saved = saveCampaign(window.localStorage, state);
+    noteCampaignStorageSuccess();
+    return saved;
+  } catch (error) {
+    noteCampaignStorageFailure(error);
+    return false;
+  }
+}
+
+function clearCampaignSafely(): boolean {
+  try {
+    const cleared = clearCampaign(window.localStorage, DEMO_MODE);
+    noteCampaignStorageSuccess();
+    return cleared;
+  } catch (error) {
+    noteCampaignStorageFailure(error);
+    return false;
+  }
+}
+
 let campaignState = createCampaignState({ demo: DEMO_MODE });
-let savedCampaign = loadCampaign(window.localStorage, DEMO_MODE);
+let savedCampaign = loadCampaignSafely();
 let campaignHandle: CampaignGameHandle | null = null;
 let nearbyInteraction: WorldInteraction | null = null;
 let journalOpen = false;
@@ -134,6 +233,18 @@ let journalRenderedRevision = -1;
 let trackedQuestId: string | null = null;
 let trackedQuestTitle: string | null = null;
 const selectedJournalEntries: Partial<Record<JournalCategory, string>> = {};
+const destroyedCampaignHandles = new WeakSet<CampaignGameHandle>();
+let campaignScenePromise: Promise<CampaignSceneModule> | null = null;
+let campaignLoading = false;
+let campaignAttemptSequence = 0;
+let activeCampaignAttempt = 0;
+let campaignLoaderPhase: CampaignLoaderPhase = "idle";
+let campaignSlowTimer: ReturnType<typeof setTimeout> | null = null;
+let cancelScheduledCampaignPrefetch: (() => void) | null = null;
+let campaignStarts = 0;
+let campaignImports = 0;
+let smokeLoadFault: "none" | "hold" | "fail" = "none";
+let releaseHeldCampaignLoad: (() => void) | null = null;
 let announceTimer: ReturnType<typeof setTimeout> | null = null;
 let typeTimer: ReturnType<typeof setInterval> | null = null;
 let dialogueLines: readonly string[] = [];
@@ -168,6 +279,16 @@ function announce(message: string): void {
 }
 
 function focusWorld(): void {
+  if (
+    !screenSandbox.classList.contains("active")
+    || campaignLoading
+    || campaignLoaderPhase === "slow"
+    || campaignLoaderPhase === "failed"
+    || journalOpen
+    || dialogOverlay.classList.contains("active")
+  ) {
+    return;
+  }
   sandboxStage.focus();
   campaignHandle?.setControlsEnabled(true);
 }
@@ -240,6 +361,175 @@ function queueCampaignViewportResize(): void {
   });
 }
 
+function setCampaignLaunchButtonsDisabled(disabled: boolean): void {
+  btnStart.disabled = disabled;
+  btnContinue.disabled = disabled;
+  btnStartOver.disabled = disabled;
+}
+
+function clearCampaignSlowTimer(): void {
+  if (campaignSlowTimer === null) return;
+  clearTimeout(campaignSlowTimer);
+  campaignSlowTimer = null;
+}
+
+function renderCampaignLoader(phase: CampaignLoaderPhase): void {
+  campaignLoaderPhase = phase;
+  campaignLoader.dataset.phase = phase;
+  campaignLoader.hidden = phase === "idle" || phase === "ready";
+  const blocksWorldControls = phase === "opening" || phase === "slow" || phase === "failed";
+  for (const surface of [
+    sandboxStage,
+    estateMinimap,
+    interactionPrompt,
+    touchControls,
+    topbarActions,
+  ]) {
+    surface.toggleAttribute("inert", blocksWorldControls);
+  }
+  btnCampaignLoadCancel.hidden = phase !== "slow" && phase !== "failed";
+  btnCampaignLoadRetry.hidden = phase !== "failed";
+  if (phase === "opening") {
+    campaignLoaderMessage.textContent = "Opening the neighbourhood…";
+  } else if (phase === "slow") {
+    campaignLoaderMessage.textContent = "Still opening; you can go back to the title";
+  } else if (phase === "failed") {
+    campaignLoaderMessage.textContent =
+      "The estate could not open. Please try again or go back to the title.";
+  }
+}
+
+function showCampaignSlowState(attempt: number): void {
+  if (attempt !== activeCampaignAttempt || !campaignLoading) return;
+  renderCampaignLoader("slow");
+  announce("Still opening. You can go back to the title.");
+  setTimeout(() => {
+    if (attempt === activeCampaignAttempt && campaignLoading) {
+      btnCampaignLoadCancel.focus();
+    }
+  }, 0);
+}
+
+function isCurrentCampaignAttempt(attempt: number): boolean {
+  return attempt === activeCampaignAttempt
+    && screenSandbox.classList.contains("active");
+}
+
+function destroyCampaignHandle(handle: CampaignGameHandle | null): void {
+  if (!handle || destroyedCampaignHandles.has(handle)) return;
+  destroyedCampaignHandles.add(handle);
+  handle.game.destroy(true);
+}
+
+function importCampaignScene(): Promise<CampaignSceneModule> {
+  campaignImports += 1;
+  const fault = smokeLoadFault;
+  smokeLoadFault = "none";
+  if (SMOKE_MODE && fault === "fail") {
+    return Promise.reject(new Error("Smoke campaign loader import failure"));
+  }
+  if (SMOKE_MODE && fault === "hold") {
+    return new Promise<void>((resolve) => {
+      releaseHeldCampaignLoad = resolve;
+    }).then(() => import("./game/campaignScene.js"));
+  }
+  return import("./game/campaignScene.js");
+}
+
+function loadCampaignScene(): Promise<CampaignSceneModule> {
+  if (campaignScenePromise) return campaignScenePromise;
+  const cachedPromise = importCampaignScene().catch((error: unknown) => {
+    if (campaignScenePromise === cachedPromise) campaignScenePromise = null;
+    throw error;
+  });
+  campaignScenePromise = cachedPromise;
+  return cachedPromise;
+}
+
+function shouldPrefetchCampaignScene(): boolean {
+  const connection = (
+    navigator as Navigator & { readonly connection?: NetworkConnection }
+  ).connection;
+  const effectiveType = connection?.effectiveType?.toLowerCase();
+  return connection?.saveData !== true
+    && effectiveType !== "2g"
+    && effectiveType !== "slow-2g";
+}
+
+function scheduleCampaignScenePrefetch(): void {
+  if (!shouldPrefetchCampaignScene()) return;
+  const prefetch = (): void => {
+    cancelScheduledCampaignPrefetch = null;
+    void loadCampaignScene().catch(() => {
+      // Speculative failure is silent; loadCampaignScene clears its cache so
+      // an explicit Start or Continue can retry and report a useful message.
+    });
+  };
+  if (typeof window.requestIdleCallback === "function") {
+    const idleId = window.requestIdleCallback(prefetch, { timeout: 2500 });
+    cancelScheduledCampaignPrefetch = () => window.cancelIdleCallback(idleId);
+    return;
+  }
+  const timeoutId = window.setTimeout(prefetch, 1200);
+  cancelScheduledCampaignPrefetch = () => window.clearTimeout(timeoutId);
+}
+
+function prefetchCampaignSceneAfterTitleLoad(): void {
+  const schedule = (): void => {
+    const titleArt = document.querySelector<HTMLImageElement>(".title-art");
+    if (!titleArt || titleArt.complete) {
+      scheduleCampaignScenePrefetch();
+      return;
+    }
+    const afterTitleArt = (): void => scheduleCampaignScenePrefetch();
+    titleArt.addEventListener("load", afterTitleArt, { once: true });
+    titleArt.addEventListener("error", afterTitleArt, { once: true });
+  };
+  if (document.readyState === "complete") schedule();
+  else window.addEventListener("load", schedule, { once: true });
+}
+
+if (SMOKE_MODE) {
+  smokeWindow.__kampungLoaderSmoke = {
+    prepareHeldLoad(): void {
+      cancelScheduledCampaignPrefetch?.();
+      cancelScheduledCampaignPrefetch = null;
+      releaseHeldCampaignLoad?.();
+      releaseHeldCampaignLoad = null;
+      campaignScenePromise = null;
+      smokeLoadFault = "hold";
+    },
+    releaseHeldLoad(): void {
+      releaseHeldCampaignLoad?.();
+      releaseHeldCampaignLoad = null;
+    },
+    failNextLoad(): void {
+      cancelScheduledCampaignPrefetch?.();
+      cancelScheduledCampaignPrefetch = null;
+      campaignScenePromise = null;
+      smokeLoadFault = "fail";
+    },
+    failNextSave(): void {
+      smokeSaveFault = true;
+    },
+    showSlowState(): void {
+      showCampaignSlowState(activeCampaignAttempt);
+    },
+    getSnapshot() {
+      return {
+        phase: campaignLoaderPhase,
+        loading: campaignLoading,
+        attempt: activeCampaignAttempt,
+        starts: campaignStarts,
+        imports: campaignImports,
+        cached: campaignScenePromise !== null,
+        canvasCount: sandboxStage.querySelectorAll("canvas").length,
+        storageAvailable: campaignStorageAvailable,
+      };
+    },
+  };
+}
+
 function renderTitleActions(): void {
   const hasSave = savedCampaign !== null && !DEMO_MODE;
   btnStart.hidden = hasSave;
@@ -254,37 +544,88 @@ function renderTitleActions(): void {
 }
 
 async function startCampaign(state: CampaignStateV1): Promise<void> {
-  btnStart.disabled = true;
-  btnContinue.disabled = true;
-  audio.unlock();
-  campaignState = state;
-  saveCampaign(window.localStorage, campaignState);
-  if (!campaignState.demo) savedCampaign = campaignState;
-  renderCampaign();
-  showScreen("screen-sandbox");
-  sandboxStage.setAttribute("aria-busy", "true");
-  void enterGameFullscreen(false);
+  resetTouchInputState();
+  if (campaignLoading || campaignHandle) return;
+  campaignLoading = true;
+  campaignStarts += 1;
+  const attempt = ++campaignAttemptSequence;
+  activeCampaignAttempt = attempt;
+  setCampaignLaunchButtonsDisabled(true);
+  renderCampaignLoader("opening");
+  clearCampaignSlowTimer();
+  campaignSlowTimer = setTimeout(
+    () => showCampaignSlowState(attempt),
+    12_000,
+  );
+
+  let attemptHandle: CampaignGameHandle | null = null;
+  let pendingReadyLocation: LocationId | null = null;
+  let saveUnavailable = false;
+  const handleReady = (locationId: LocationId): void => {
+    if (!isCurrentCampaignAttempt(attempt) || campaignHandle !== attemptHandle) {
+      destroyCampaignHandle(attemptHandle);
+      return;
+    }
+    if (campaignLoading) {
+      campaignLoading = false;
+      clearCampaignSlowTimer();
+      renderCampaignLoader("ready");
+      setCampaignLaunchButtonsDisabled(false);
+    }
+    sandboxStage.setAttribute("aria-busy", "false");
+    setTimeout(() => {
+      if (isCurrentCampaignAttempt(attempt)) focusWorld();
+    }, 0);
+    audio.startAmbience();
+    announce(
+      `${NPC_BY_ID.get("voice")?.name ?? "The Voice"}: ${
+        locationId === "y-flat"
+          ? "Move when you are ready. Nothing here is timed."
+          : "Location ready."
+      }${
+        saveUnavailable
+          ? " Progress cannot be saved in this browser session."
+          : ""
+      }`,
+    );
+    if (saveUnavailable) storageWarningAnnounced = true;
+  };
 
   try {
-    const { createCampaignGame } = await import("./game/campaignScene.js");
-    campaignHandle = createCampaignGame(
+    audio.unlock();
+    campaignState = state;
+    const saved = saveCampaignSafely(campaignState);
+    saveUnavailable = !campaignState.demo && !saved;
+    if (saved && !campaignState.demo) savedCampaign = campaignState;
+    renderCampaign();
+    showScreen("screen-sandbox");
+    sandboxStage.setAttribute("aria-busy", "true");
+    void enterGameFullscreen(false);
+
+    const { createCampaignGame } = await loadCampaignScene();
+    if (!isCurrentCampaignAttempt(attempt)) return;
+    const createdHandle = createCampaignGame(
       "sandbox-stage",
       {
         onReady: (locationId) => {
-          sandboxStage.setAttribute("aria-busy", "false");
-          setTimeout(focusWorld, 0);
-          audio.startAmbience();
-          announce(
-            `${NPC_BY_ID.get("voice")?.name ?? "The Voice"}: ${
-              locationId === "y-flat"
-                ? "Move when you are ready. Nothing here is timed."
-                : "Location ready."
-            }`,
-          );
+          if (!attemptHandle) {
+            pendingReadyLocation = locationId;
+            return;
+          }
+          handleReady(locationId);
         },
-        onNearbyInteraction: updateNearbyPrompt,
-        onInteract: handleWorldInteraction,
+        onNearbyInteraction: (interaction) => {
+          if (isCurrentCampaignAttempt(attempt)) {
+            updateNearbyPrompt(interaction);
+          }
+        },
+        onInteract: (interaction) => {
+          if (isCurrentCampaignAttempt(attempt)) {
+            handleWorldInteraction(interaction);
+          }
+        },
         onLocationChange: (locationId, name) => {
+          if (!isCurrentCampaignAttempt(attempt)) return;
           areaName.textContent = name;
           worldShell.classList.toggle(
             "interior-framing",
@@ -295,6 +636,7 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
           announce(`${name}. Location changed.`);
         },
         onStep: (surface) => {
+          if (!isCurrentCampaignAttempt(attempt)) return;
           audio.playFootstep(surface);
           renderMinimap();
         },
@@ -306,20 +648,46 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
         reducedMotion: REDUCED_MOTION.matches,
       },
     );
+    attemptHandle = createdHandle;
+    if (!isCurrentCampaignAttempt(attempt)) {
+      destroyCampaignHandle(createdHandle);
+      return;
+    }
+    campaignHandle = createdHandle;
+    if (pendingReadyLocation !== null) {
+      const locationId = pendingReadyLocation;
+      pendingReadyLocation = null;
+      handleReady(locationId);
+    }
     if (SMOKE_MODE) {
       smokeWindow.__kampungSmoke = {
         getMotionSnapshot: () => campaignHandle?.getMotionSnapshot() ?? null,
+        resetTouchInput: resetTouchInputState,
+        setPlayerPosition: (x, y) => {
+          campaignHandle?.setPlayerPosition({ x, y });
+        },
       };
     }
     renderMinimap();
     queueCampaignViewportResize();
   } catch (error) {
+    if (attempt !== activeCampaignAttempt) {
+      destroyCampaignHandle(attemptHandle);
+      return;
+    }
     console.error(error);
-    announce("The estate could not open.");
-    returnToTitle();
-  } finally {
-    btnStart.disabled = false;
-    btnContinue.disabled = false;
+    destroyCampaignHandle(attemptHandle);
+    if (campaignHandle === attemptHandle) campaignHandle = null;
+    campaignLoading = false;
+    clearCampaignSlowTimer();
+    showScreen("screen-sandbox");
+    sandboxStage.setAttribute("aria-busy", "false");
+    renderCampaignLoader("failed");
+    setCampaignLaunchButtonsDisabled(false);
+    announce("The estate could not open. Try again or go back to the title.");
+    setTimeout(() => {
+      if (isCurrentCampaignAttempt(attempt)) btnCampaignLoadRetry.focus();
+    }, 0);
   }
 }
 
@@ -337,22 +705,31 @@ function startOver(): void {
     "Start Kampung SG again from Y's flat? Your current campaign save will be replaced.",
   );
   if (!confirmed) return;
-  clearCampaign(window.localStorage, DEMO_MODE);
+  clearCampaignSafely();
   savedCampaign = null;
   void startCampaign(createCampaignState({ demo: DEMO_MODE }));
 }
 
 function returnToTitle(): void {
+  resetTouchInputState();
+  activeCampaignAttempt = ++campaignAttemptSequence;
+  campaignLoading = false;
+  clearCampaignSlowTimer();
+  renderCampaignLoader("idle");
+  setCampaignLaunchButtonsDisabled(false);
   closeJournal(false);
   closeDialogue(false);
   updateNearbyPrompt(null);
   audio.stopAmbience();
-  campaignHandle?.game.destroy(true);
+  const handle = campaignHandle;
   campaignHandle = null;
+  destroyCampaignHandle(handle);
   delete smokeWindow.__kampungSmoke;
   sandboxStage.innerHTML = "";
   sandboxStage.setAttribute("aria-busy", "false");
-  savedCampaign = loadCampaign(window.localStorage, DEMO_MODE);
+  savedCampaign = loadCampaignSafely(
+    campaignState.demo ? null : campaignState,
+  );
   renderTitleActions();
   showScreen("screen-title");
   if (isGameFullscreen()) void document.exitFullscreen();
@@ -364,8 +741,8 @@ function dispatchCampaign(event: CampaignEvent): void {
   const next = reduceCampaign(campaignState, event);
   if (next === campaignState) return;
   campaignState = next;
-  saveCampaign(window.localStorage, campaignState);
-  if (!campaignState.demo) savedCampaign = campaignState;
+  const saved = saveCampaignSafely(campaignState);
+  if (saved && !campaignState.demo) savedCampaign = campaignState;
   campaignHandle?.setCampaignState(campaignState);
   renderCampaign();
   if (previousChapter !== campaignState.currentChapter) {
@@ -374,6 +751,12 @@ function dispatchCampaign(event: CampaignEvent): void {
       : CHAPTER_BY_ID.get(campaignState.currentChapter)?.title ?? "Next chapter";
     audio.play("activity-complete");
     announce(`${nextTitle} unlocked. The estate remembers what you changed.`);
+  }
+  if (!saved && !campaignState.demo && !storageWarningAnnounced) {
+    storageWarningAnnounced = true;
+    announce(
+      "This change is available now, but progress cannot be saved in this browser session.",
+    );
   }
 }
 
@@ -1092,7 +1475,7 @@ function mainStoryActions(): readonly JournalAction[] {
         : [{ label: "Visit Mr. Long", run: () => visitLocation("mr-long-flat") }];
     case "chapter-2": {
       const actions: JournalAction[] = [];
-      if (!campaignState.objectives.includes("ros-clue-minah")) {
+      if (!campaignState.objectives.includes("scam-check-shared")) {
         actions.push({ label: "Ask Auntie Minah", run: () => openNpc("auntie-minah") });
       }
       if (!campaignState.objectives.includes("ros-clue-seng")) {
@@ -1244,6 +1627,10 @@ btnStart.addEventListener("click", startNewCampaign);
 btnContinue.addEventListener("click", continueCampaign);
 btnStartOver.addEventListener("click", startOver);
 btnReturnTitle.addEventListener("click", returnToTitle);
+btnCampaignLoadCancel.addEventListener("click", returnToTitle);
+btnCampaignLoadRetry.addEventListener("click", () => {
+  void startCampaign(campaignState);
+});
 btnInteract.addEventListener("click", () =>
   nearbyInteraction ? handleWorldInteraction(nearbyInteraction) : campaignHandle?.tryInteract()
 );
@@ -1317,6 +1704,135 @@ const DIRECTION_VECTORS: Record<string, [number, number]> = {
 };
 const heldDirections = new Set<string>();
 
+interface StageTapCandidate {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  startedAt: number;
+  rejected: boolean;
+}
+
+const activeStagePointers = new Set<number>();
+let stageTapCandidate: StageTapCandidate | null = null;
+let touchGestureSerial = 0;
+const syntheticDirectionTimers = new Map<
+  string,
+  ReturnType<typeof setTimeout>
+>();
+
+function resetStageTapTracking(): void {
+  activeStagePointers.clear();
+  stageTapCandidate = null;
+}
+
+function resetTouchInputState(): void {
+  touchGestureSerial += 1;
+  resetStageTapTracking();
+  heldDirections.clear();
+  for (const timer of syntheticDirectionTimers.values()) clearTimeout(timer);
+  syntheticDirectionTimers.clear();
+  applyHeldDirections();
+}
+
+function isViewportTapPointer(event: PointerEvent): boolean {
+  return event.pointerType === "touch" || event.pointerType === "pen";
+}
+
+function rejectStageTapIfDragged(event: PointerEvent): void {
+  const candidate = stageTapCandidate;
+  if (!candidate || candidate.pointerId !== event.pointerId) return;
+  const dx = event.clientX - candidate.startX;
+  const dy = event.clientY - candidate.startY;
+  if (dx * dx + dy * dy > 12 * 12) candidate.rejected = true;
+}
+
+function viewportPointFromClient(
+  clientX: number,
+  clientY: number,
+): { x: number; y: number } | null {
+  const handle = campaignHandle;
+  if (!handle) return null;
+  const rect = handle.game.canvas.getBoundingClientRect();
+  if (
+    rect.width <= 0
+    || rect.height <= 0
+    || clientX < rect.left
+    || clientX > rect.right
+    || clientY < rect.top
+    || clientY > rect.bottom
+  ) {
+    return null;
+  }
+  return {
+    x: (clientX - rect.left) * (handle.game.scale.width / rect.width),
+    y: (clientY - rect.top) * (handle.game.scale.height / rect.height),
+  };
+}
+
+function finishStagePointer(event: PointerEvent, cancelled: boolean): void {
+  if (!isViewportTapPointer(event)) return;
+  rejectStageTapIfDragged(event);
+  activeStagePointers.delete(event.pointerId);
+  const candidate = stageTapCandidate;
+  if (!candidate || candidate.pointerId !== event.pointerId) return;
+  stageTapCandidate = null;
+  if (
+    cancelled
+    || candidate.rejected
+    || event.timeStamp - candidate.startedAt > 600
+  ) {
+    return;
+  }
+  const point = viewportPointFromClient(event.clientX, event.clientY);
+  if (!point) return;
+  campaignHandle?.handleViewportTap(point.x, point.y);
+}
+
+sandboxStage.addEventListener("pointerdown", (event) => {
+  if (!isViewportTapPointer(event)) return;
+  touchGestureSerial += 1;
+  const startsFreshGesture = activeStagePointers.size === 0;
+  if (
+    (event.isPrimary || startsFreshGesture)
+    && (stageTapCandidate === null || stageTapCandidate.rejected)
+  ) {
+    // A browser may omit one pointer-up after a multi-touch gesture, and some
+    // synthetic/assistive touch paths misreport a new sole contact as
+    // non-primary. With no active contact, this is a new gesture either way.
+    resetStageTapTracking();
+  }
+  activeStagePointers.add(event.pointerId);
+  if (activeStagePointers.size !== 1) {
+    if (stageTapCandidate) stageTapCandidate.rejected = true;
+    return;
+  }
+  if (event.button !== 0) return;
+  stageTapCandidate = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    startedAt: event.timeStamp,
+    rejected: false,
+  };
+});
+
+window.addEventListener("pointermove", rejectStageTapIfDragged);
+window.addEventListener("pointerup", (event) => finishStagePointer(event, false));
+window.addEventListener("pointercancel", (event) => finishStagePointer(event, true));
+const scheduleFinishedTouchCleanup = (event: TouchEvent): void => {
+  if (event.touches.length !== 0) return;
+  const gestureSerial = touchGestureSerial;
+  window.setTimeout(() => {
+    if (gestureSerial === touchGestureSerial) resetStageTapTracking();
+  }, 50);
+};
+window.addEventListener("touchend", scheduleFinishedTouchCleanup, { passive: true });
+window.addEventListener("touchcancel", scheduleFinishedTouchCleanup, { passive: true });
+window.addEventListener("blur", resetTouchInputState);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) resetTouchInputState();
+});
+
 function applyHeldDirections(): void {
   let x = 0;
   let y = 0;
@@ -1350,17 +1866,38 @@ for (const button of document.querySelectorAll<HTMLButtonElement>("[data-directi
   button.addEventListener("pointerup", stopMovement);
   button.addEventListener("pointercancel", stopMovement);
   button.addEventListener("lostpointercapture", stopMovement);
+  button.addEventListener("click", (event) => {
+    // Pointer input already has held-direction semantics above. A zero-detail
+    // click is keyboard or assistive-technology activation, so give it one
+    // short, deterministic movement pulse without duplicating touch movement.
+    if (event.detail !== 0) return;
+    heldDirections.add(direction);
+    applyHeldDirections();
+    const previousTimer = syntheticDirectionTimers.get(direction);
+    if (previousTimer) clearTimeout(previousTimer);
+    syntheticDirectionTimers.set(direction, setTimeout(() => {
+      syntheticDirectionTimers.delete(direction);
+      heldDirections.delete(direction);
+      applyHeldDirections();
+    }, 180));
+  });
 }
 
 document.addEventListener("focusin", (event) => {
   if (!campaignHandle) return;
   const target = event.target;
-  const isWorld = target === sandboxStage || target === campaignHandle.game.canvas;
+  const isTouchControl =
+    target instanceof Element && target.closest(".touch-controls") !== null;
+  const isWorld =
+    target === sandboxStage
+    || target === campaignHandle.game.canvas
+    || isTouchControl;
   setWorldControls(isWorld && !dialogOverlay.classList.contains("active") && !journalOpen);
 });
 
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
+  campaignHandle?.cancelTapNavigation();
   if (dialogOverlay.classList.contains("active")) closeDialogue();
   else if (journalOpen) closeJournal();
 });
@@ -1388,4 +1925,6 @@ renderCampaign();
 renderSoundControls();
 renderFullscreenControl();
 renderTitleActions();
+renderCampaignLoader("idle");
+prefetchCampaignSceneAfterTitleLoad();
 syncJournalLayout();

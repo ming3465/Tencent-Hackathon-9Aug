@@ -81,6 +81,8 @@ export interface CampaignStateV1 {
   revision: number;
 }
 
+export type ScamCheckCardLayout = "numbered-steps" | "icons-and-words";
+
 export type CampaignEvent =
   | { type: "visit-location"; locationId: LocationId }
   | { type: "complete-objective"; objectiveId: string }
@@ -92,6 +94,7 @@ export type CampaignEvent =
       effects: KampungMeters;
     }
   | { type: "collect-clue"; clueId: string; npcId: NpcId }
+  | { type: "publish-scam-check"; layoutId: ScamCheckCardLayout }
   | { type: "invite-resident"; npcId: NpcId }
   | { type: "choose-approach"; approachId: "sit-beside" | "bring-keepsake" }
   | { type: "bring-ben-to-workshop" }

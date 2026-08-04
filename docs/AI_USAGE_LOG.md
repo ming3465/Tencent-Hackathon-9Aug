@@ -2728,3 +2728,207 @@ AI-workflow caption that Codex caught during review.
   not submission-ready. No human narration/mix approval, CodeBuddy success or
   export, Miora run, human playtest, real-device/emulator/accessibility pass,
   public video/social post, or organiser submission is claimed.
+
+## 2026-08-04 — Elder-Led Check-Before-You-Act Consequence
+
+**Tools:** Codex (GPT-5) for research, implementation, review, automated
+verification, and evidence; the bundled Presentations and PDF workflows for
+the existing judge artifacts. This lane was limited to Auntie Minah's safety
+beat, its campaign/runtime evidence, and artifact synchronization. Concurrent
+repository screenshot and video changes were preserved and are not claimed by
+this lane.
+
+**Official-source boundary:**
+
+- The copy was checked against current official Singapore guidance: the SPF
+  phishing advisory describes urgent messages and malicious links and advises
+  verifying with the company directly; the SPF impersonation advisory says to
+  use official sources for separate verification and never disclose OTPs; and
+  ScamShield says to check before acting and lists its helpline as 1799.
+- The resulting authored message has Minah identify urgency and an unfamiliar
+  payment link, verify through the supplier number already in her own order
+  book or ScamShield at 1799, and never share a one-time password. It makes no
+  promise that a particular message is a scam or that the habit prevents loss.
+
+**Implemented and independently reviewed:**
+
+- Reworked Minah's existing mandatory Chapter 2 Ros clue into an elder-led
+  `Check Before You Act` beat. The player chooses only how her window card is
+  presented: three large numbered steps or icons with short words. Both are
+  equally valid, have no penalty, and preserve Minah as the expert.
+- One `publish-scam-check` reducer event now atomically stores the selected
+  layout, persistent `CHECK FIRST` shop-window card, Minah memory, and Ros clue.
+  It remains idempotent. Save loading repairs older clue-only states and
+  interrupted card-only states in either direction, retaining a valid saved
+  layout and defaulting only missing layouts to numbered steps.
+- Added a persistent semantic Journal objective containing the complete
+  PAUSE/CHECK/TELL habit and selected layout. The visual card is code-drawn,
+  uses scale-2 labels in both variants, and follows the provision-shop façade's
+  normal, animated-fade, reduced-motion, and recreation alpha paths.
+- The first rendered review found that the card was behind the façade overlay
+  and effectively invisible. It was moved to a standalone audited depth. A
+  separate code review then found missing semantic revisit detail,
+  one-layout-only coverage, one-way legacy migration, façade-alpha drift, and
+  a crash-consistency gap between card and clue events. All were corrected
+  before the final gate.
+- Two otherwise passing gate attempts failed at the mocked browser-fullscreen
+  exit because the harness assumed a fixed 140 ms transition. The harness now
+  waits for the explicit entered/exited state and records both detail objects.
+  An unchanged diagnostic run then passed. After final documentation and
+  artifact synchronization, one further run stopped at seven passes when its
+  prologue evidence-line wait expired even though dialogue and portrait state
+  had rendered; the identical private build passed 60/60 on immediate retry.
+  None of the three failed attempts is counted as a pass.
+
+**Isolated gate and visual evidence:**
+
+- To avoid racing shared `dist/` and `docs/screenshots/`, the gate used strict
+  `npm run typecheck`, 75/75 Vitest tests, a private Vite production build,
+  `npm audit` with 0 vulnerabilities, and the production browser harness with
+  private output paths. The final journey passed 60/60 checks across full and
+  demo campaigns.
+- The build is 81.69 kB HTML (14.79 kB gzip), 108.33 kB initial JavaScript
+  (32.96 kB gzip), and 1,598.55 kB lazy scene code (375.48 kB gzip). The final
+  run measured 9.70 ms resident-route p95, 10.00 ms monsoon p95, 9.30 ms active
+  p95 at 2.69 ms/frame main-thread work, and 10.20 ms p95 at 8.70 ms/frame under
+  4× CPU throttling.
+- Full mode rendered `icons-and-words`; demo mode rendered `numbered-steps`.
+  The harness reported the card visible at alpha 1, faded with its façade to
+  0.28, and restored to 1. The full-layout and occlusion captures in the
+  private `/tmp` evidence folder were inspected at full frame and had no card,
+  route-cue, or overflow regression.
+- `graphify update .` rebuilt 1,186 nodes, 2,157 edges, and 66 communities. It
+  retained the known fail-closed node, reported the same four zero-node local
+  JSON inputs, and warned that the 65 saved labels trail the changed topology;
+  no LLM relabel was claimed.
+
+**Artifact refresh:**
+
+- Updated the existing eight-slide deck source, its Minah and engineering
+  rasters, PPTX, and PDF. The final engineering slide uses 108.33 kB initial
+  JavaScript and the complete 81.69/14.79, 108.33/32.96, and
+  1,598.55/375.48 build figures.
+- The presentation workflow reported zero template-fidelity issues, no
+  overflow, preserved notes, no placeholders, and render-identical untouched
+  slides. The PDF workflow used a locally installed Poppler renderer and
+  inspected all eight fresh 1280×720 pages; metadata, encryption, JavaScript,
+  and form checks passed.
+- PPTX SHA-256:
+  `c8fa9b613fad76bd94318c744bb15560b180596a474bce3de3cc7250aef2c768`.
+  PDF SHA-256:
+  `9916f8a71ef803d51eb98c256b6bbef1f0d872f65c0dac6688950e6e56118ba7`.
+
+**Concurrency and claim boundary:**
+
+- Local `HEAD` contained a concurrent commit restoring a visible `Continue`
+  label, one commit ahead of `origin/main`. This working-tree lane retained the
+  accepted sole visual `>` cue, its `Continue dialogue` accessible name, and
+  52×52 target. No history was rewritten and nothing was committed, pushed, or
+  deployed.
+- This is official-source research, AI-assisted authored content/code, an
+  automated browser playthrough, and machine-rendered artifact inspection. It
+  is not a human or older-adult playtest, real-device/emulator check,
+  screen-reader or 200% zoom session, Miora/CodeBuddy run, generated-image run,
+  scam-prevention outcome, public release, or organiser submission.
+
+## 2026-08-04 — Integrated Consequence Art, Recoverable Loading, and Touch Navigation
+
+**Tools:** Codex (GPT-5) coordinated three implementation/review lanes, local
+TypeScript/Vitest/Vite/audit commands, the repository's dependency-free Chrome
+DevTools Protocol harness, Graphify, and the bundled Presentations/PDF
+workflows. The in-app browser bootstrap was attempted exactly as instructed but
+returned `Browser is not available: iab`; the existing real-Chrome CDP harness
+was therefore the local visual and interaction fallback.
+
+**Implementation and review:**
+
+- Preserved the concurrently dirty shared worktree by snapshotting its exact
+  state, then integrated reviewed commits in a private worktree. No existing
+  user changes were reset, stashed, overwritten, pushed, or deployed.
+- Added `src/game/consequenceArt.ts` and state-driven scene integration for a
+  three-quarter exterior ramp, matching interior ramp, raised-herb garden,
+  flower-and-shaded-seat garden, and pitched sheltered-linkway extension.
+  Independent review caught Phaser Container depth flattening; the final
+  objects stay on the scene display list so rails/roof layers can occlude the
+  player correctly. Stable smoke IDs prove pre-consequence absence, both
+  garden variants, both ramp locations, the shelter, and location-specific
+  absence. Collision and campaign rules were not changed by the art.
+- Added one cached lazy scene import, connection-aware idle prefetch after the
+  title image, Save-Data/2g suppression, atomic opening and 12-second slow
+  states, cancel/back, failed-import retry, rejected-cache recovery, stale
+  attempt guards, and full world/topbar focus isolation. Safe storage wrappers
+  keep play available with an announced in-memory fallback if browser storage
+  throws. Review caught unguarded later writes, incomplete focus isolation and
+  retry-state edge cases before the final gate.
+- Added short-viewport 100dvh reflow and height-aware interior zoom for
+  320×568, 360×560 and 640×360. Primary canvas taps walk, redirect, follow a
+  moving interaction, activate on arrival, cancel on keyboard/d-pad input, and
+  stop after collision stalls. Long press, drag and multitouch are rejected;
+  touch state clears on blur/visibility/title/start boundaries; the destination
+  ring remains 28 screen pixels; grouped d-pad buttons respond to synthesized
+  keyboard/assistive-technology clicks; and the visible Talk control keeps
+  world focus. A nearby prompt's text area now lets world taps pass through
+  while its actual Interact button remains clickable.
+- Preserved the user-authoritative dialogue contract: the only visible advance
+  text is `>`, with `aria-label="Continue dialogue"`, an exact 52×52 target,
+  and an enclosing 3 px outline plus 6 px outer ring. Four source-contract
+  tests now protect that cue, reduced-motion stillness and “Maybe later.”
+
+**Failed attempts retained:**
+
+- Two early loader-failure runs exposed that a one-shot storage fault could
+  leave the title without Continue; fallback loading now re-persists the valid
+  in-memory campaign when storage recovers.
+- Several 59/60 touch runs first exposed a blanket document keydown cancel,
+  then a visible prompt banner intercepting the NPC coordinate. Focused CDP
+  probes reproduced each event path before the runtime fixes.
+- The next 59/60 run passed every touch behavior but sampled the 200 ms Journal
+  transition before it settled and included variable travel time in the
+  collision-stall cutoff. The final harness waits for settled drawer geometry
+  and starts beside the known wall; it still asserts the real 650 ms no-progress
+  outcome. None of these failed runs is counted as a pass.
+
+**Final local evidence:**
+
+- Strict TypeScript passed.
+- Vitest passed **79/79**: campaign 27, match engine 31, audio 17,
+  accessibility contract 4.
+- The production build is **84.76 kB HTML (15.26 kB gzip), 114.37 kB initial
+  JavaScript (35.06 kB gzip), and 1,609.14 kB lazy scene (376.46 kB gzip)**.
+- `npm audit` reported zero known vulnerabilities.
+- The final production-browser journey passed **60/60** across full and demo
+  campaigns. Its final performance evidence was title-baseline p95 9.90 ms,
+  resident routes 10.10 ms, monsoon 9.90 ms, active movement 9.80 ms at
+  2.90 ms/frame main-thread work, and 4×-throttled movement 9.80 ms at
+  9.70 ms/frame.
+- Full-frame screenshots of the consequence scene, monsoon shelter, mobile
+  world, mobile dialogue and architecture were inspected. The ramp, garden,
+  shelter, 360 px world, and sole focused chevron remained legible and unclipped.
+- `graphify update .` rebuilt **1,174 nodes, 2,132 edges and 67 communities**.
+  It warned that three local JSON evidence files produced zero nodes; no LLM
+  semantic extraction or relabel was claimed.
+
+**Artifact refresh:**
+
+- Updated all eight deck rasters and the inherited one-image-per-slide PPTX via
+  artifact-tool. Template inspection, one-to-one frame-map validation,
+  template fidelity and overflow checks all passed with zero issues; all eight
+  rendered slides were inspected.
+- Rebuilt the raster PDF with ReportLab and rendered every page through
+  Poppler. It has eight unencrypted 1280×720 pages, the expected title/author/
+  subject metadata, and no form or JavaScript; the full montage was inspected.
+- PPTX SHA-256:
+  `96866ae2be84654ece784bcd1a62bb09be6fe4d01e544e9edd975d58caae1485`.
+  PDF SHA-256:
+  `62a8db9557196af6bddd267a7788795f185a9e7cf3aaa2fcf9e5ede1a4801735`.
+
+**Claim boundary:**
+
+- This is local automated and machine-rendered evidence, not a human or
+  older-adult playtest, real-phone/tablet result, screen-reader or 200% zoom
+  session, accessibility certification, Miora run, new CodeBuddy success,
+  social outcome, health outcome, public release, or organiser submission.
+- Nothing was pushed or deployed. The live GitHub Pages URL and the checked-in
+  90-second review cut predate this loader/touch/consequence-art build and must
+  not be presented as current-build evidence until an explicitly approved
+  release and media refresh occur.

@@ -60,7 +60,8 @@ npm run typecheck && npm test && npm run build && npm audit && npm run smoke
 
 `npm run smoke` is self-contained (builds, serves, drives headless Chrome
 through a full playthrough, writes screenshots to `docs/screenshots/`).
-Current truth: **75 unit tests, 60 smoke checks, 0 vulnerabilities.** If a doc
+Current truth: **79 unit tests, 60 smoke checks, 0 vulnerabilities.** The unit
+split is campaign 27, match engine 31, audio 17, and accessibility contract 4. If a doc
 or deck quotes different numbers after your change, update them — stale
 numbers are treated as defects.
 
@@ -103,6 +104,51 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-04 (Codex, integrated consequence-art/loader/touch polish)** —
+  Integrated three reviewed local lanes without disturbing the concurrently
+  dirty shared worktree: state-specific three-quarter exterior/interior ramps,
+  alternate raised-bed gardens and a pitched sheltered linkway; a cached,
+  connection-aware lazy loader with opening/slow/cancel/retry/race/storage
+  recovery; and 100dvh short-viewport tap navigation with target following,
+  redirect, manual cancellation, collision stall, lifecycle cleanup, a stable
+  28 px ring and keyboard/AT d-pad activation. Preserved the authoritative sole
+  visible `>` dialogue cue, `Continue dialogue` accessible name, exact 52×52
+  target and enclosing focus ring. Review and real-Chrome diagnostics also
+  fixed world-depth loss, loader focus/storage gaps, global-key cancellation,
+  a prompt banner intercepting canvas taps, and nondeterministic smoke setup.
+  The final local gate passed strict TypeScript, 79/79 tests (27 campaign, 31
+  match, 17 audio, 4 accessibility), 0 vulnerabilities and 60/60 full/demo
+  browser checks. Build: 84.76 kB HTML (15.26 gzip), 114.37 kB initial JS
+  (35.06 gzip), 1,609.14 kB lazy scene (376.46 gzip). The refreshed eight-slide
+  PPTX/PDF passed template fidelity, overflow, metadata and full-page visual
+  inspection. Graphify rebuilt 1,174 nodes / 2,132 edges / 67 communities with
+  three known zero-node JSON warnings. Nothing was pushed or deployed; the
+  public URL and checked-in review video remain earlier-build evidence. No
+  human/older-adult playtest, real-device, screen-reader/200%-zoom, Miora,
+  CodeBuddy-success, social-outcome or health claim.
+- **2026-08-04 (Codex, elder-led safety consequence lane)** — Reworked Auntie
+  Minah's mandatory Chapter 2 Ros clue into an official-source
+  check-before-you-act teaching beat: she identifies urgency and an unfamiliar
+  payment link, verifies through a separately held supplier contact or
+  ScamShield at 1799, and never shares an OTP. Two equal no-failure choices now
+  atomically save the Ros clue plus a numbered or icon-and-words card; the
+  selected code-drawn card persists in her shop window, follows façade
+  occlusion alpha, and remains available as complete semantic Journal text.
+  Partial and legacy saves repair the card/clue pair in either direction. An
+  independent review caught and drove fixes for hidden card depth, alpha drift,
+  semantic revisit detail, alternate-layout coverage, one-way migration, and
+  crash consistency. The isolated final gate passed strict TypeScript, 75/75
+  tests, 0 vulnerabilities, and 60/60 full/demo browser checks; build is 81.69
+  kB HTML / 108.33 kB initial JS / 1,598.55 kB lazy scene. Two earlier
+  fullscreen-exit failures and one later prologue-line wait miss were retained;
+  condition-based fullscreen waits and unchanged retries produced the final
+  passes. The refreshed eight-slide PPTX/PDF passed template fidelity, overflow,
+  metadata, and full-page render inspection. Graphify rebuilt 1,186 nodes /
+  2,157 edges / 66 communities with the known fail-closed, four-zero-node-JSON,
+  and stale-label warnings. The lane preserved concurrent screenshot/video
+  work and the sole accessible `>` cue; nothing was committed, pushed, or
+  deployed. No human/older-adult playtest, real-device, screen-reader/200%-zoom,
+  Miora, CodeBuddy, generated-image, or scam-outcome claim.
 - **2026-08-04 (Codex, release and Todo Tencent handoff)** — Pushed the
   cast-current game, review media, fail-closed submission tooling, and evidence
   to `main` at `f565521`. GitHub Pages run `30894019126` completed successfully;

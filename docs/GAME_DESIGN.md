@@ -48,11 +48,28 @@ walking speed. It never skips story content.
 | Pak Yusof | Inspect Mr. Long’s step and contribute directly |
 | Coach Meng | Arrange accessible community-centre seating |
 | Uncle Seng | Prepare a welcoming kopitiam morning table |
-| Auntie Minah | Organize a community ingredient shelf and share Ros clues |
+| Auntie Minah | Organize a community ingredient shelf, model a check-before-you-act safety habit, and share Ros clues |
 | Wei Ling | Complete a keepsake table and invite younger neighbours |
 
 A side request may be required for one resident’s assistance while remaining
 globally optional because another resident can fill the route.
+
+Minah's Ros clue is also an elder-led scam-awareness beat. She spots urgency
+and an unfamiliar payment link in a supplier message, then models checking the
+request through the number already in her own order book or ScamShield at 1799
+and never sharing an OTP. The player does not pass a scam quiz: both choices
+are presentation preferences, either three large numbered steps or icons with
+short words. Through one atomic campaign event, both collect the same clue,
+advance the chapter, record the chosen layout, and pin the corresponding
+code-drawn card in her shop window.
+The safety wording is grounded in the official sources recorded in
+`docs/RESEARCH.md`; it does not promise detection, prevention, or an outcome.
+The Chapter 2 Journal keeps the complete PAUSE, CHECK, TELL habit and chosen
+layout available as semantic text after the one-time conversation. Existing
+version-1 saves with either half of the Minah card/clue pair receive the missing
+objective and memories deterministically on load; clue-only saves use the
+numbered layout, while card-only saves retain their chosen layout. Completed or
+interrupted campaigns therefore cannot lose the consequence or its story gate.
 
 ## KampungMind
 
@@ -114,12 +131,25 @@ The exterior and interiors use the full available shell. Each 960×640 interior
 computes a room-fit zoom from both viewport dimensions, caps desktop at 1.08×,
 and centres any remaining horizontal or vertical margin around the room.
 Portrait phones retain a 0.56× readability floor instead of shrinking the
-player to an unusable size. Each location switch explicitly resizes the Phaser
-scale and active camera viewport after the shell changes; this prevents stale
+player to an unusable size; short landscape viewports cap that floor by the
+available vertical fit so the room is not clipped. At 320×568, 360×560, and
+640×360, the shell reflows within 100dvh so the stage, topbar, touch controls,
+and Journal remain usable without document overflow. Each location switch
+explicitly resizes the Phaser scale and active camera viewport after the shell
+changes; this prevents stale
 camera framing when returning to the estate. The exterior camera uses 1.32×
 zoom at 1180 px and wider, 1.22× from 760–1179 px, and 1× below 760 px. A
 request-animation-frame resize latch keeps the renderer and active camera in
 sync after responsive viewport changes.
+
+On touch screens, a short primary tap sets or redirects a straight-line walking
+destination; tapping an interaction follows its moving target and activates on
+arrival, or activates immediately when already nearby. Keyboard or
+directional-pad input, collision stalls, blur, visibility changes, and game transitions
+clear the pending destination. Long presses, drags, and multi-touch are rejected,
+the Canvas stage retains browser pinch/pan, and the grouped directional pad and
+Talk control reserve their own gestures. The destination ring remains 28 CSS
+pixels across camera zoom levels.
 
 A labelled browser-fullscreen control expands the game to the complete
 viewport. The document root is the fullscreen target so dialogue and Journal
@@ -194,6 +224,15 @@ ambient pad follows separate four-chord day and evening progressions. Three
 shared-tone voices and one quiet lead move by no more than a perfect fourth
 between adjacent chords, replacing unrelated random notes with a calm,
 deterministic musical identity.
+Completed routes add code-drawn consequence art without changing story or
+collision semantics. Mr. Long's route uses matching exterior and interior
+three-quarter ramps with rails, a tactile gold edge, shading, and contact
+shadows. The garden choice renders either two labelled raised herb beds with
+varied plants or two flower beds plus a shaded bench. The sheltered-route
+choice adds a five-post extension with a pitched teal roof, ground shadow, and
+striped shade bands. Each asset is location- and state-specific, so unrelated
+rooms and incomplete routes remain visually unchanged.
+
 Chapter 2 changes the same estate into a deterministic tropical monsoon rather
 than a separate or random map state. A fixed pool of 64 screen-space streaks,
 ten puddles with manually phased rings, wet path bands, a cool multiply tint,
@@ -247,9 +286,9 @@ portrait has neutral, thoughtful, and warm code-drawn expressions selected
 from dialogue position and choice state. The expression is decorative; the
 speaker heading, complete live-region line, progress text, choices, and
 controls remain the semantic conversation. A single visible `>` chevron
-replaces the former full-width Continue bar; its 52×52 transparent button keeps
-an accessible name and keyboard-focus underline while reduced motion removes
-the horizontal pulse.
+replaces the former full-width Continue bar; its exact 52×52 transparent button
+has `aria-label="Continue dialogue"` and an enclosing 3 px outline plus 6 px
+outer focus ring, while reduced motion removes the horizontal pulse.
 
 Four OpenAI image-generation workflows used current gameplay captures and
 project art as references. Two 2026-08-03 studies produced an original
@@ -287,12 +326,16 @@ cadence, and the camera uses a small deadzone. Canvas remains the renderer until
 a real-device comparison justifies changing it.
 
 The production build intentionally keeps Phaser and the complete campaign
-scene in one lazy chunk after the title screen. That chunk triggers Vite's
-generic 500 kB warning, but it is not part of the initial title interaction and
-avoids splitting tightly coupled scene textures and registries across more
-requests. The warning is accepted as a documented tradeoff until real-device
-profiling shows that another split improves time-to-play; it is not treated as
-proof of older-device performance.
+scene in one cached lazy chunk. After the title art settles, idle time prefetches
+that import unless Save-Data or a 2g/slow-2g effective connection is reported.
+Starting play shows an atomic polite opening status and inerts world/topbar
+actions; after 12 seconds a focused action can return to the title, while a
+failed import clears the cached rejection and exposes focused Try again and
+Back to title actions. Attempt tokens prevent retry/cancel races and late or
+duplicate Canvases. Browser-storage failure produces a warning but does not
+block play. The chunk still triggers Vite's generic 500 kB warning; keeping its
+tightly coupled textures and registries together remains an accepted tradeoff
+until real-device profiling justifies another split.
 
 The production smoke harness instantiates all 12 locations, snapshots resident
 routes to prove movement/attention/marker synchronization, samples all four
@@ -313,7 +356,16 @@ room-fit relationship, exercises the Journal's complete
 modal/focus/tab/tracking contract, verifies live minimap movement, verifies the
 desktop portrait/card geometry and a named NPC's profile traits, and captures
 the actual game, visual-novel card, circular map, and stacked Journal at 360
-px. Motion snapshots prove 1.32× wide-desktop and 1× mobile
+px. Short-viewport runs at 320×568, 360×560, and 640×360 prove 100dvh fit,
+usable controls and Journal, and no document overflow. Touch checks prove tap
+redirection, target following and activation, cancellation and gesture
+rejection, assistive-technology activation of the grouped directional pad,
+preserved stage pinch/pan, and the constant-size destination ring. Loader
+checks prove prefetch/cache behavior, connection-aware suppression, opening,
+slow, cancel, retry, stale-attempt, inert-state, and storage-recovery paths.
+Consequence snapshots prove the two ramp locations, both exclusive garden
+choices, the sheltered linkway extension, and absence outside the appropriate
+story/location states. Motion snapshots prove 1.32× wide-desktop and 1× mobile
 exterior framing, three pond rings with changing phase in normal motion, static
 pond phase, zero walking effects, and no player idle blink under reduced
 motion. Normal-motion snapshots prove the player's interaction-facing and

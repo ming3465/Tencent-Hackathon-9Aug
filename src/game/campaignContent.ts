@@ -299,9 +299,9 @@ export const QUESTS: readonly QuestDefinition[] = [
     id: "grandma-ros-clues",
     chapterId: "chapter-2",
     title: "Who Knows Grandma Ros?",
-    summary: "Collect two independent clues from people who know her routines.",
+    summary: "Learn Minah's safety-card habit and collect two independent clues from people who know Ros's routines.",
     optional: false,
-    objectiveIds: ["ros-clue-minah", "ros-clue-seng"],
+    objectiveIds: ["scam-check-shared", "ros-clue-minah", "ros-clue-seng"],
   },
   {
     id: "cooking-invitations",
@@ -1235,22 +1235,40 @@ addStoryIntent("auntie-minah", {
   id: "minah-ros-clue",
   npcId: "auntie-minah",
   kind: "clue",
-  title: "Who Knows Grandma Ros?",
+  title: "Check Before You Act",
   lines: [
-    "Ros still buys old ginger, the knobbly kind. She says smooth ginger has not worked hard enough.",
-    "Her kitchen is the corner unit. Knock twice; the first knock competes with the exhaust fan.",
+    "Ros still buys old ginger, the knobbly kind. Her kitchen is the corner unit; knock twice so the first knock can compete with the exhaust fan.",
+    "Before you go, look at this delivery message: ‘New supplier account—pay now through this link.’ The logo is familiar; the urgency and link are not.",
+    "I check before I act. I use the supplier number in my own order book, or call ScamShield at 1799. I never share a one-time password, or OTP.",
+    "I want that habit in the shop window. Which version will neighbours read fastest?",
   ],
   choices: [
     choice(
-      "remember-ros-shop-clue",
-      "Remember the ginger order and corner unit",
-      ["Minah circles the unit number on the back of a clean paper bag."],
-      [{ type: "collect-clue", clueId: "ros-clue-minah", npcId: "auntie-minah" }],
+      "numbered-scam-check",
+      "Use three large numbered steps",
+      [
+        "Good. PAUSE, CHECK, TELL—three large steps, visible from the path.",
+        "Minah pins up the card and circles Ros's unit number on a clean paper bag.",
+      ],
+      [
+        { type: "publish-scam-check", layoutId: "numbered-steps" },
+      ],
+    ),
+    choice(
+      "icon-scam-check",
+      "Use icons with short words",
+      [
+        "Good. A pause symbol, a shield, and two conversation cards sit above PAUSE, CHECK, TELL.",
+        "Minah pins up the card and circles Ros's unit number on a clean paper bag.",
+      ],
+      [
+        { type: "publish-scam-check", layoutId: "icons-and-words" },
+      ],
     ),
   ],
   eligibility: {
     chapters: ["chapter-2"],
-    forbiddenObjectives: ["ros-clue-minah"],
+    forbiddenObjectives: ["scam-check-shared"],
   },
   chapterRelevance: 12,
 });

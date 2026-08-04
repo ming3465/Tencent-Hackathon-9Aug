@@ -23,9 +23,13 @@ reproducible test.
   community garden, and shared noticeboard.
 - [x] Connects activities to practical Singapore conditions such as shade,
   rain, social space, and intergenerational neighbourhood life.
-- [x] Three human-reviewed OpenAI visual workflows are contemporary and
-  grounded: two studies have verified code-drawn activity/density results, and
-  the reviewed HDB-estate panorama is integrated into the playable title.
+- [x] Four human-reviewed OpenAI visual workflows are contemporary and
+  grounded: three studies have verified code-drawn activity, density, and cast
+  results, and the reviewed HDB-estate panorama is integrated into the
+  playable title.
+- [x] Auntie Minah contributes a Singapore-grounded safety habit: she models a
+  separate-channel check, cites ScamShield at 1799, and never asks the player
+  to prove, diagnose, or guarantee that a message is safe.
 - [ ] Final Miora assets look contemporary and grounded rather than like a
   tourist poster.
 - [x] Singapore ageing context and one-in-four-by-2030 source are cited in the
@@ -36,7 +40,11 @@ reproducible test.
 - [x] Supports one-avatar shared discussion around non-punitive choices.
 - [x] Provides a prologue, three sequential chapters, an ending, and revisitable
   optional resident routes.
-- [x] Gives resident choices persistent memories and visible world consequences.
+- [x] Gives resident choices persistent memories and visible world
+  consequences: code-drawn three-quarter ramps inside and outside, two garden
+  treatments, a sheltered linkway, and Minah's persistent shop-window card.
+- [x] The mandatory Minah beat asks only which accessible card layout neighbours
+  will read fastest; both choices advance and persist visibly in her shop.
 - [x] Keeps free exploration available after The Last Door.
 - [ ] Human playtesting shows whether players understand resident contribution.
 - [ ] At least one consented older-adult perspective is included if feasible.
@@ -117,9 +125,9 @@ Miora-specific before-and-after pipeline.
 ### Completeness and Interactivity
 
 - [x] Title-to-prologue-to-three-chapters-to-ending loop works.
-- [x] Phaser world, camera, collision, keyboard, touch, enterable locations,
-  residents, Journal, choices, meters, autosave, and free exploration are
-  implemented.
+- [x] Phaser world, camera, collision, keyboard, d-pad and tap navigation,
+  enterable locations, residents, Journal, choices, meters, autosave, and free
+  exploration are implemented.
 - [x] Any 3 distinct helper routes and any 5 invitees advance the full campaign.
 - [x] Journal shortcuts allow non-spatial completion.
 - [x] Resident choices visibly alter the procedural world.
@@ -127,10 +135,15 @@ Miora-specific before-and-after pipeline.
 ### Technical Execution
 
 - [x] Strict TypeScript passes.
-- [x] Seventy-five domain tests pass.
-- [x] Sixty production-browser checks drive complete full and demo campaigns.
+- [x] 79/79 tests pass: 27 campaign, 31 match, 17 audio, and 4 accessibility.
+- [x] 60/60 production-browser checks drive complete full and demo campaigns.
 - [x] Dependency audit has zero known vulnerabilities.
-- [x] Phaser is lazy-loaded after the title screen.
+- [x] Phaser is lazy-loaded after the title screen with visible opening and
+  slow states, cancellation, retry after failure, focus restoration, and
+  duplicate-start protection covered by browser automation.
+- [x] Latest verified production build is HTML 84.76 kB (15.26 kB gzip),
+  initial JS 114.37 kB (35.06 kB gzip), and lazy campaign scene 1,609.14 kB
+  (376.46 kB gzip).
 - [x] No backend or network dependency is required to play.
 - [x] The Phaser bundle-size warning is accepted or reduced with documented
   reasoning.
@@ -139,7 +152,10 @@ Miora-specific before-and-after pipeline.
 
 - [x] Semantic HTML handles dialogue, Journal, meters, memory cards, and ending.
 - [x] Focus enters and exits overlays correctly in automated checks.
-- [x] Mobile layout has no horizontal overflow and uses 48px targets.
+- [x] Automated compact-layout coverage at 320×568, 360×560, and 640×360 has
+  no horizontal overflow, retains 48px targets, and exercises tap-to-walk,
+  nearby tap interaction, d-pad cancellation, and the 28 CSS px destination
+  ring.
 - [x] Reduced-motion support exists.
 - [ ] Keyboard-only human playthrough passes.
 - [ ] Real phone and tablet playthroughs pass.
@@ -150,14 +166,19 @@ Miora-specific before-and-after pipeline.
 ### Current Risk
 
 The complete campaign is demo-ready, has three human-curated visual-direction
-translations, and ships one reviewed generated title asset. Miora-specific
-production art, real-device performance, and human accessibility checks remain
-higher priority than adding more systems.
+translations, ships one reviewed generated title asset, and uses authored
+code-drawn consequence art. Loader and touch behavior are verified in
+automation only; Miora-specific production art, real-device performance, and
+human accessibility checks remain higher priority than adding more systems.
 
 ## Social Media Bonus - Up to 5 Points
 
-- [x] Reproducible 90-second captioned review cut, indexed current-build
-  gameplay B-roll, AI/engineering/integrity cards, and QR end slate are ready.
+- [x] Reproducible 90-second captioned review cut, indexed gameplay B-roll,
+  AI/engineering/integrity cards, and QR end slate are preserved. The cut
+  predates the latest loader, touch, consequence-art, and 79-test build, so it
+  is an earlier-build review artifact rather than current-build evidence.
+- [ ] Recapture or explicitly compare and approve every gameplay and terminal
+  shot needed for a current-build final video.
 - [ ] Final game link, short video, and approved screenshots are ready.
 - [ ] Post copy accurately describes CodeBuddy and Miora use.
 - [ ] Organizer-required hashtags are included.
@@ -173,8 +194,9 @@ higher priority than adding more systems.
 - [ ] Complete at least one documented human playtest round.
 - [x] Deploy the public build and verify the live title/game assets.
 - [x] Finish and validate the eight-slide PPTX and eight-page PDF.
-- [ ] Add human narration and an ear-checked sound mix to the review cut,
-      approve and publish it, then save the social-post timestamps.
+- [ ] Refresh the review cut with verified current-build footage, add human
+      narration and an ear-checked sound mix, approve and publish it, then save
+      the social-post timestamps.
 - [x] Add a fail-closed backup-package builder that validates exact filenames,
       deck/media structure, hashes, public links, human approvals, repository
       state, and the complete release gate without treating optional score

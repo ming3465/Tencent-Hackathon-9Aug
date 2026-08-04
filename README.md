@@ -32,19 +32,29 @@ hallucination path.
   Y, Mr. Long, Grandma Ros, Ben, a craftsman, the community centre, kopitiam,
   provision shop, hawker centre, and prayer hall
 - Eight resident-led optional routes; “Maybe later” never closes a route
-- Chapter-persistent consequences including a ramp, garden choice, sheltered
-  route, prepared kitchen, active workshop, gathered residents, and warmer light
+- Chapter-persistent consequences including three-quarter exterior and interior
+  ramps with rails and tactile edges; either labelled raised herb beds or
+  flower beds with a shaded seat; a pitched-teal-roof sheltered-route extension;
+  a prepared kitchen, active workshop, gathered residents, and warmer light
 - A deterministic Chapter 2 monsoon with wet paths, ten puddles, shelter-aware
   rain, stored laundry, sheltered cats, and previously helped residents gathering
   under cover; reduced motion keeps the overcast scene but removes falling rain
   and ripple animation
 - Versioned autosave, Continue, confirmed Start Over, and corrupt-save fallback
+- A visible, accessible campaign loader backed by one cached lazy import: idle
+  prefetch begins after the title image settles unless Save-Data or a 2g-class
+  connection is reported; slow loads offer a focused return to the title,
+  failures offer focused retry/back actions, and storage failure warns without
+  blocking play
 - A quest-book Journal, opened only on request, with Story, Requests, People,
   and Places tabs; selected-quest detail, objective checklists, proportional
   progress, tracking, and context actions remain available without a timer
 - A circular code-drawn estate minimap with seven landmark anchors, the current
   indoor building, live outdoor player movement, and a direct Places shortcut
-- WASD, arrow-key, `E`, Space, visible buttons, and touch controls
+- WASD, arrow-key, `E`, Space, visible buttons, and touch controls; taps can
+  redirect a straight-line walk or follow an interaction target, while drag,
+  long-press, multi-touch, manual movement, collision stalls, blur, and
+  visibility changes cancel or reject stale touch navigation
 - Equivalent Journal actions for every meaningful world interaction
 - Surface-aware runtime Web Audio footsteps for grass, estate paving, and
   interiors; one reusable synthesized-noise buffer and no audio files ship.
@@ -53,7 +63,8 @@ hallucination path.
 - Visual-novel conversations with 13 unique code-drawn bust portraits,
   resident-specific hair, build, age lines, accessories, and community-role
   motifs; neutral, thoughtful, and warm expression variants; and a sole
-  visible `>` advance chevron with an accessible 52×52 control. A separate
+  visible `>` advance chevron whose exact 52×52 control has
+  `aria-label="Continue dialogue"` and an enclosing focus ring. A separate
   estate portrait supports object and place narration
 - A reviewed OpenAI-assisted 1668×943 HDB-estate title panorama, optimized to
   WebP after a documented first-pass rejection and constrained pseudo-writing
@@ -109,8 +120,8 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | Gate | Result |
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
-| `npm test` | 75 tests across campaign, audio, and optional matching |
-| `npm run build` | 106.23 kB initial JS (32.29 kB gzip); 1,596.66 kB lazy scene (374.83 kB gzip) |
+| `npm test` | 79/79: 27 campaign, 31 match-engine, 17 audio, and 4 accessibility-contract tests |
+| `npm run build` | 84.76 kB HTML (15.26 kB gzip); 114.37 kB initial JS (35.06 kB gzip); 1,609.14 kB lazy scene (376.46 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
 | `npm run smoke` | 60/60 production-browser checks |
 
@@ -119,9 +130,13 @@ JavaScript, instantiates all 12 locations, proves resident route movement,
 four-frame player/resident walks, deterministic player idle blinking,
 player-to-interaction facing, marker synchronization, one nearest-target label
 plate, a 12-resident cast registry spanning five hair and five outfit
-silhouettes, the reviewed title image, the accessible visual-novel chevron, and
-portrait expression changes,
-cat movement, four two-frame community activity vignettes, laundry animation,
+silhouettes, the reviewed title image, and the dialogue contract's sole visible
+`>`, exact 52×52 target, accessible name, enclosing focus ring, and stillness
+under reduced motion. It also verifies the loader's cached prefetch,
+connection-aware skip, opening and slow statuses, retry, cancellation,
+stale-attempt suppression, and storage-failure recovery. The campaign checks
+then continue through portrait expression changes, cat movement, four
+two-frame community activity vignettes, laundry animation,
 reduced-motion stillness, exterior wake-up, and physical travel to the east and
 south. It also physically opens one of 14 approach-only estate details with
 keyboard and touch evidence, then samples the generated terrain and reusable
@@ -161,9 +176,19 @@ physical east/south travel samples.
 The visual-novel check measures a 238×325 px code-drawn desktop bust inside a
 940 px card, verifies 41 drawn primitives and Mr. Long's distinct profile
 traits, and proves the responsive 88×120 px portrait remains inside a 360 px
-viewport. The 360px path enters the game, exposes touch controls and the
-room-aware map, opens both dialogue and the full-width stacked Journal, checks
-48px targets and overflow, and captures all three states. The harness profiles
+viewport. Short-viewport checks at 320×568, 360×560, and 640×360 keep the
+100dvh shell, stage, topbar, touch controls, and Journal usable without document
+overflow. Touch checks cover redirectable tap-to-walk, nearby and followed
+interaction taps, manual cancellation, collision-stall cleanup, rejection of
+drag/long-press/multi-touch gestures, assistive-technology activation of the
+grouped directional pad, preserved browser pinch/pan on the stage, and a
+constant 28 px destination ring across zoom levels. The 360px path also opens
+dialogue and the full-width stacked Journal, checks 48px targets and overflow,
+and captures all three states. Consequence snapshots prove the exterior ramp,
+the interior-only ramp in Mr. Long's flat, both mutually exclusive raised-bed
+garden designs, and the five-post pitched-roof shelter extension, including
+location-specific absence before or outside their authored states. The harness
+profiles
 120 frames during resident and player movement and repeats the player sample
 under a 4× CDP CPU throttle. Fixed cadence budgets remain 28 ms normal and
 34 ms throttled. If the same-run title screen is itself capped slower, game p95

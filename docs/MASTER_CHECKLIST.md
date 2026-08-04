@@ -36,13 +36,15 @@ areas, but every required responsibility must appear here with an owner.
 | Project name `Kampung SG` | SHARED | DONE | Used across game and documentation |
 | Top-down neighbourhood sandbox direction | SHARED | DONE | `docs/GAME_DESIGN.md` |
 | Local playable vertical slice | OPENCODE | DONE | `http://127.0.0.1:5173/` while server runs |
-| Keyboard and touch movement | OPENCODE | DONE | Production-browser smoke check |
+| Keyboard and touch movement | OPENCODE | DONE | Keyboard, d-pad, tap-to-walk, nearby tap interaction, cancellation, and short-viewport behavior are covered by production-browser smoke; the real-phone pass remains open below |
+| Recoverable campaign loader | OPENCODE | DONE | The lazy scene has opening, slow, cancel, retry, and back-to-title states with focus/control blocking; production-browser smoke covers recovery, but real-device startup remains unverified |
 | Five-part campaign and enterable estate | OPENCODE | DONE | Current game build and campaign smoke |
-| Eight resident routes and visible consequences | OPENCODE | DONE | Current build and screenshots |
+| Eight resident routes and visible consequences | OPENCODE | DONE | Current code-drawn consequence art includes three-quarter exterior/interior ramps, both garden-choice treatments, a sheltered linkway, and the persistent shop-window card |
 | Optional memory-table activity | OPENCODE | DONE | Current build and matching tests |
 | KampungMind authored memory/intent engine | OPENCODE | DONE | `campaignContent.ts`, `kampungMind.ts`, campaign tests |
-| Automated tests | OPENCODE | DONE | 75 tests passing |
-| Production build | OPENCODE | DONE | Vite build passes |
+| Automated tests | OPENCODE | DONE | 79/79 passing: 27 campaign, 31 match, 17 audio, 4 accessibility |
+| Production build | OPENCODE | DONE | Latest verified Vite build: HTML 84.76 kB (15.26 kB gzip), initial JS 114.37 kB (35.06 kB gzip), lazy campaign scene 1,609.14 kB (376.46 kB gzip) |
+| Production-browser regression | OPENCODE | DONE | 60/60 smoke checks pass across the full and demo campaigns |
 | Dependency security audit | OPENCODE | DONE | Zero known vulnerabilities |
 | CodeBuddy initial implementation evidence | CODEBUDDY | DONE | `docs/AI_USAGE_LOG.md` |
 | Additional CodeBuddy work | CODEBUDDY | BLOCKED | Credits currently exhausted or pending |
@@ -59,7 +61,7 @@ areas, but every required responsibility must appear here with an owner.
 | Public game URL | SHARED | OPEN | Deploy only after explicit user approval |
 | Human playtesting | SHARED | OPEN | Use `docs/PLAYTEST_PROTOCOL.md` |
 | Final deck | SHARED | OPEN | Outline exists; final evidence still pending |
-| Final demo video | SHARED | OPEN | Script exists; final art and deployment pending |
+| Final demo video | SHARED | OPEN | A 90-second review cut exists, but it predates the latest loader, touch, and consequence-art polish and is not current-build proof; current footage, human narration/mix, approval, and upload remain open |
 | Social bonus post | USER | OPEN | Optional and requires public-post approval |
 | Git repository initialized | OPENCODE | DONE | Local `.git` exists |
 | First Git commit | USER | NEEDS USER | User must explicitly request a commit |
@@ -175,14 +177,15 @@ details in this document or the repository.
 
 - [x] Maintain the Phaser sandbox architecture.
 - [x] Keep progression and matching logic independent and testable.
-- [x] Maintain keyboard, touch, and Journal interaction paths.
+- [x] Maintain keyboard, d-pad, tap-to-walk, nearby tap interaction, and Journal paths.
 - [x] Maintain semantic dialogue, meters, memory cards, and ending UI.
 - [x] Fix reproduced root causes rather than hiding symptoms.
 - [x] Keep Miora art replaceable without rewriting collision or game rules.
 - [x] Keep the game playable without network services.
-- [ ] Add centralized audio, mute, and volume behavior.
+- [x] Maintain centralized audio, mute, and volume behavior.
 - [ ] Add final Miora assets and preserve procedural fallbacks during review.
-- [ ] Optimize final load behavior after real assets are integrated.
+- [x] Provide an accessible recoverable lazy-loader with slow, cancel, retry,
+      and back-to-title paths.
 - [ ] Fix all critical and repeated high-severity playtest findings.
 
 ### Testing and Quality
@@ -191,11 +194,13 @@ details in this document or the repository.
 - [x] Maintain deterministic unit tests.
 - [x] Maintain production-browser keyboard and touch smoke coverage.
 - [x] Run production builds and dependency audits.
-- [x] Check 360px overflow and minimum touch-target size.
+- [x] Check 320×568, 360×560, and 640×360 automated layout behavior and
+      minimum touch-target size.
 - [ ] Check final phone, tablet, laptop, and wide desktop layouts.
 - [ ] Check final Miora assets at actual display scale.
 - [ ] Check screen-reader announcements with human assistance.
-- [ ] Check audio behavior, muting, and interruption recovery.
+- [ ] Check audio behavior, muting, and interruption recovery by ear on real
+      devices; automated audio behavior is covered by 17 tests.
 - [ ] Run the complete regression suite after every final asset batch.
 - [ ] Produce a final QA report with known limitations.
 
@@ -427,9 +432,13 @@ Replace `[Team Name]` before export.
 - Miora prompts, IDs or links, generation dates, selected variations, and
   rejected issues.
 - Miora procedural-before and integrated-after screenshots.
-- Test output showing 42 or more passing tests.
-- Production build and audit output.
-- Browser smoke output covering keyboard and touch.
+- Test output showing the current 79/79 gate (27 campaign, 31 match,
+  17 audio, and 4 accessibility tests). The earlier 42-test target
+  remains historical planning context, not the current release claim.
+- Production build and audit output, including HTML 84.76/15.26 kB gzip,
+  initial JS 114.37/35.06 kB gzip, and lazy scene 1,609.14/376.46 kB gzip.
+- Browser smoke output showing 60/60 checks, including keyboard, tap
+  navigation, compact layouts, loader recovery, and visible consequence art.
 - Manual phone, tablet, keyboard, zoom, and screen-reader notes.
 - Anonymous playtest protocol, observations, and changes.
 - Research sources and prohibited-claim policy.
@@ -497,9 +506,10 @@ The project is ready to submit only when every statement below is true:
 
 ## Immediate OpenCode Actions
 
-- [ ] Add audio architecture without new dependencies only after prioritization
-  or delegate it to CodeBuddy when credits arrive.
-- [ ] Prepare the bounded CodeBuddy audio/settings prompt.
+- [x] Keep the dependency-free audio/settings architecture covered by its
+      17-test suite.
+- [ ] Refresh the review-video gameplay and verification shots from the latest
+      loader/touch/consequence-art build before calling any video current.
 - [ ] Prepare the first Miora style-key prompt for direct use.
 - [ ] Run manual-copy and interaction review with user feedback.
 - [ ] Integrate and verify assets immediately after each approved Miora batch.

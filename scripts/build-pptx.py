@@ -37,10 +37,15 @@ NOTES = [
     "rejected direct runtime use and translated its strongest idea into four "
     "verified code-drawn activity vignettes. We treat AI output as a pull "
     "request, not a deliverable, and we do not relabel this as Miora.",
-    "Strict TypeScript, 75 unit tests, 60 production-browser checks and zero "
-    "known vulnerabilities support the current build. KampungMind and every "
-    "save remain in the browser: no account, backend, analytics or personal "
-    "data. Audio is synthesized at runtime.",
+    "Strict TypeScript, 79 unit tests (27 campaign, 31 match, 17 audio and 4 "
+    "accessibility), 60 production-browser checks and zero known "
+    "vulnerabilities support the current build. The private build is 84.76 kB "
+    "HTML (15.26 kB gzip), 114.37 kB initial JavaScript (35.06 kB gzip), and "
+    "1,609.14 kB lazy scene code (376.46 kB gzip). Connection-aware idle "
+    "prefetch follows the title art; Start reuses one cached load with "
+    "cancel/retry recovery. KampungMind and every save remain in the browser: "
+    "no account, backend, analytics or personal data. Audio is synthesized at "
+    "runtime.",
     "We separate software evidence from impact claims. The campaign, "
     "persistence, inputs and browser paths are automated; human playtesting, "
     "real-device accessibility and any social outcome are not claimed. "

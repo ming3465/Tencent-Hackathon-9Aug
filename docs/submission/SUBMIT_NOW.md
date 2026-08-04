@@ -22,9 +22,9 @@
 
 | # | Required | Status |
 | --- | --- | --- |
-| 1 | **Game Web Link** | ✅ https://ming3465.github.io/Tencent-Hackathon-9Aug/ — auto-deploys from `main`. Judge path: append `?demo=1` (see `docs/DEMO_MODE.md`). |
+| 1 | **Game Web Link** | ⚠️ https://ming3465.github.io/Tencent-Hackathon-9Aug/ is live, but this latest local loader/touch/consequence-art pass was not pushed or deployed. After explicit release approval, deploy and verify both the full route and `?demo=1` logged out (see `docs/DEMO_MODE.md`). |
 | 2 | **Project Introduction Deck (PPT)** | ✅ `docs/deck/Kampung SG-Project Introduction Deck-TheTwoGuys.pptx` + `.pdf`, refreshed for the five-part campaign and KampungMind. Re-export after any later count or screenshot change. |
-| 3 | **Game Demo Video** | ⚠️ **HUMAN FINISHING REMAINS.** The current cast-and-three-quarter-depth build has 63.1 s of indexed silent B-roll plus a reproducible, open-captioned **90.0 s narration-ready review cut** at `docs/video/kampung-sg-demo-review.mp4`. Its exact 14-beat sources and claim boundaries are in `demo-review-beats.json`; regenerate with `npm run compose:video`. The AI-receipts montage, engineering/integrity cards, and QR end slate are already present. **Still required:** human voice-over, an ear-checked sound mix, final approval, rename to `Kampung SG-Game Demo Video-TheTwoGuys.mp4`, upload, and logged-out link check. The checked-in MP4 is not the final submission video. |
+| 3 | **Game Demo Video** | ⚠️ **CURRENT-BUILD REFRESH AND HUMAN FINISHING REMAIN.** The preserved artifact set contains 63.1 s of indexed silent B-roll plus a reproducible, open-captioned **90.0 s narration-ready review cut** at `docs/video/kampung-sg-demo-review.mp4`. Those durations remain valid historical artifact facts, but the footage predates the latest recoverable loader, tap-navigation/mobile, consequence-art, and 79-test build. It is **not current-build footage**. Its exact 14-beat sources and claim boundaries are in `demo-review-beats.json`; regenerate with `npm run compose:video` after recapturing affected shots or explicitly comparing and approving unchanged sources. The AI-receipts montage, engineering/integrity cards, and QR end slate are already present. **Still required:** current terminal/gameplay evidence, human voice-over, an ear-checked sound mix, final approval, rename to `Kampung SG-Game Demo Video-TheTwoGuys.mp4`, upload, and logged-out link check. The checked-in MP4 is not the final submission video. |
 | + | Social bonus (+5) | ❌ Copy ready in `docs/submission/SOCIAL_POST.md`. Confirmed hashtags: `#CodeBuddy #腾讯云黑客松` (+ event tags) on Xiaohongshu / YouTube / X. Post before submission, screenshot each. |
 
 ## Fail-closed backup package
@@ -65,7 +65,7 @@ requirements.
 | # | Action | Time | Notes |
 | --- | --- | --- | --- |
 | U1 | **One genuine CodeBuddy pass + export the chat history.** | 1–2 h | The published mainland rules list CodeBuddy chat history as a submission artifact; our only artifact today is the documented *failure*. The age-signalling task has now shipped, so choose a genuinely open, tightly scoped Todo Tencent item rather than rerunning `docs/prompts/codebuddy-age-signal.txt`. Keep the failure log too — the story is "what worked, what didn't, both documented". |
-| U2 | **Finish the demo video** (captioned review cut ready). | 1–2 h | Start from `docs/video/kampung-sg-demo-review.mp4`; the visual edit, open captions, AI receipts, integrity card, and QR end slate are already assembled. Record the human voice-over, add and verify the final sound mix by ear, confirm every spoken line still matches its open caption, obtain team approval, export with the required filename, and upload early. The indexed B-roll remains available if a shot must be replaced. **Do not describe the machine-captured clips as a played session.** |
+| U2 | **Refresh and finish the demo video** (historical captioned review cut ready). | 1–2 h | Start from `docs/video/kampung-sg-demo-review.mp4` as an edit reference, not current-build proof. Recapture the loader/touch/consequence and 79-test terminal evidence, or explicitly compare and approve each unchanged source. The open captions, AI receipts, integrity card, and QR end slate are already assembled. Record the human voice-over, add and verify the final sound mix by ear, confirm every spoken line still matches its open caption, obtain team approval, export with the required filename, and upload early. **Do not describe the machine-captured clips as a played session or a real-device touch test.** |
 | U3 | **Playtest with 3–5 real older adults** (a grandparent counts). | half day | Consent script in `docs/PLAYTEST_PROTOCOL.md`. Capture: short quotes, one photo (with consent), one design change made from feedback. Quotes about fun/recognition only — never anything medical. |
 | U4 | **Miora key art** (miora.design, 1,000 free credits on signup). | 1 h | Still Miora-specific and still open. Four auditable OpenAI visual workflows now cover three human-curated code translations and one reviewed playable title asset; none is Miora. Use the prepared Miora prompt for poster/social/deck output and log the real run. Feeds U5. |
 | U5 | **Social posts** on all three platforms with the confirmed hashtags. | 1 h | Before submission. While there, spend 15 min scanning the hashtags for rival entries — free competitor intel. |
@@ -75,16 +75,22 @@ requirements.
 ## AI-agent actions before the window
 
 - [x] Capture clean gameplay B-roll and generate the reproducible 90-second
-      captioned review cut with source provenance and claim boundaries.
+      captioned earlier-build review cut with source provenance and claim
+      boundaries.
+- [ ] Refresh or explicitly approve the gameplay and terminal sources against
+      the latest loader, touch, consequence-art, and 79-test build.
 - [x] Add a fail-closed review/final backup builder with exact filenames,
       media/deck/link/hash checks, an untracked human-approval record, and
       explicit scoring-risk warnings.
-- [ ] Prepare deck re-export the day of submission (numbers drift; see below).
+- [x] Refresh the deck/PDF for the 2026-08-04 implementation drift; repeat the
+      fail-closed re-export on submission day if any source or metric changes.
 - [ ] Add playtest evidence slide once U3 happens (quotes + the one change).
 - [ ] Add the "rules verbatim" AI-compliance line to the deck if not already
       present after the handbook is read (see playbook §2 action 9).
-- [ ] Density pass on the judge path (IMPROVEMENTS P1) if time remains after
-      the video exists — never instead of it.
+- [x] Complete the judge-path interaction-density and elder-led scam-awareness
+      pass: 14 approach details, four ambient activities, Minah's mandatory
+      check-before-you-act beat, and its persistent shop-window card now ship.
+      The optional keepsake-table rehome and proximity bubbles are not claimed.
 
 ## Final re-verification (run on submission day, before export)
 
@@ -93,18 +99,28 @@ npm run typecheck && npm test && npm run build && npm audit && npm run smoke
 ```
 
 Then grep the deck source and submission docs for stale numbers (test count,
-smoke-check count, bundle size) and re-export:
+smoke-check count, bundle size), recapture all eight HTML slides, and re-export
+through the existing-deck Presentations workflow:
 
 ```bash
-node scripts/capture-deck.mjs && <venv>/bin/python scripts/build-pptx.py
-# + Chrome --headless --print-to-pdf for the PDF (see git history for the exact command)
+node scripts/capture-deck.mjs
+# Import the existing PPTX with artifact-tool, replace only its eight inherited
+# full-frame images, preserve notes/layout/master, and run template fidelity +
+# overflow + full-slide render checks. scripts/build-pptx.py is legacy only.
+# Rebuild the raster PDF and render all eight pages with Poppler for inspection.
 ```
 
-Current truth as of 2026-08-04: **75 tests · 60 smoke checks · 0 vulnerabilities**.
+Current truth as of 2026-08-04: **79/79 tests (27 campaign · 31 match ·
+17 audio · 4 accessibility) · 60/60 smoke checks · 0
+vulnerabilities**. Latest verified production build: **HTML 84.76 kB (15.26
+kB gzip) · initial JS 114.37 kB (35.06 kB gzip) · lazy campaign scene
+1,609.14 kB (376.46 kB gzip)**.
 If those numbers appear anywhere as something else, fix before submitting.
 
 ## Claim boundaries (unchanged, non-negotiable)
 
 No medical/cognitive/dementia claims. No invented playtests, users, metrics, or
 AI-tool runs. Demo mode is a pacing device — never claim the full game is
-3 minutes. The CodeBuddy failure stays documented; honesty is the strategy.
+3 minutes. Automated touch checks do not equal a real-device pass, and the
+checked-in review cut does not represent the latest build. The CodeBuddy
+failure stays documented; honesty is the strategy.

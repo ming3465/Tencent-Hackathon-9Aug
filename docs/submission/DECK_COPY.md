@@ -37,16 +37,20 @@ Enter → Listen → Remember.
 
 ## Slide 4 — Eight routes. One private KampungMind
 
-Aunty Mei brings garden expertise, Uncle Ravi creates a welcoming
-noticeboard event, and Mdm Siti maps the sheltered route from daily experience.
-Five more authored routes remain revisitable.
+Auntie Minah brings everyday scam-safety expertise, Uncle Ravi creates a
+welcoming noticeboard event, and Mdm Siti maps the sheltered route from daily
+experience. Five more authored routes remain revisitable.
 
 - Personality, role, expertise, knowledge, and memory rules per NPC
-- Authored greetings, clues, requests, reminders, and reflections
-- Deterministic scoring; stable IDs break ties; no runtime generation
+- Numbered steps or icons + words: both advance; no test or penalty
+- The selected `CHECK FIRST` card stays in Minah's shop window
 
-> “A full table begins with one invitation that does not test anybody.”
-> — Uncle Ravi, in-game authored reflection
+> “I check before I act. I use the supplier number in my own order book, or call
+> ScamShield at 1799.”
+> — Auntie Minah, in-game authored safety habit
+
+Source: official ScamShield and Singapore Police Force scam-safety guidance;
+the public repository preserves the citations and authored implementation.
 
 ## Slide 5 — How AI built this, honestly
 
@@ -65,27 +69,34 @@ workflow rejected pseudo-writing, constrained the cleanup to non-text
 pictograms, optimized the accepted image, and integrated it into the playable
 title while keeping interface text semantic. None is claimed as Miora.
 
-**Verified after:** strict TypeScript, 75/75 tests, 0 vulnerabilities, 60/60
+**Verified after:** strict TypeScript, 79/79 tests, 0 vulnerabilities, 60/60
 production-browser checks.
 
 ## Slide 6 — Fast, private, tested, no backend
 
-**75 tests · 0 vulnerabilities · 106.23 kB initial JavaScript · 0 bytes
+**79 tests · 0 vulnerabilities · 114.37 kB initial JavaScript · 0 bytes
 collected**
 
 - Vite + strict TypeScript + Phaser 3
-- Lazy-loaded game scene
+- 27 campaign, 31 match, 17 audio, and 4 accessibility tests
+- Connection-aware idle prefetch after title art; Start reuses one cached scene
+  load and offers cancel/retry recovery
 - 60-check full/demo production-browser campaign
-- Keyboard, touch, and Journal completion routes; circular map opens Places
+- Keyboard, touch controls, tap-to-walk/approach, and Journal completion routes;
+  circular map opens Places
 - No account, analytics, backend, or personal data
 - Runtime-synthesized audio; zero audio files
 - KampungMind uses authored text and deterministic code offline
+
+Current private build: 84.76 kB HTML (15.26 kB gzip), 114.37 kB initial
+JavaScript (35.06 kB gzip), and 1,609.14 kB lazy scene (376.46 kB gzip).
 
 ## Slide 7 — What we tested. What we will not claim
 
 Supported:
 
-- Strict TypeScript, 75 tests, 0 vulnerabilities
+- Strict TypeScript, 79 tests (27 campaign, 31 match, 17 audio, and 4
+  accessibility), 0 vulnerabilities
 - 60/60 production-browser checks
 - Keyboard/touch entry, focus return, and correct return doors
 - Versioned autosave, Continue, Start Over, and demo isolation

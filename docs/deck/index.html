@@ -402,9 +402,9 @@
       <h1>Eight routes. One private KampungMind.</h1>
       <div class="cards">
         <div class="card">
-          <p class="role">Community Garden</p>
-          <h3>Aunty Mei</h3>
-          <p>Tropical herb care. She decides what the estate grows, and teaches younger neighbours when to harvest.</p>
+          <p class="role">Provision Shop</p>
+          <h3>Auntie Minah</h3>
+          <p>Everyday scam-safety expert. She teaches neighbours to pause, verify through a trusted source, and never share an OTP.</p>
         </div>
         <div class="card">
           <p class="role">Void-Deck Noticeboard</p>
@@ -426,12 +426,12 @@
         <div>
           <ul style="margin-bottom: 0">
             <li>Personality, role, expertise, knowledge and memory rules per NPC</li>
-            <li>Authored greetings, clues, requests, reminders and reflections</li>
-            <li>Deterministic scoring; stable IDs break ties; no runtime generation</li>
+            <li>Numbered steps or icons + words: both advance; no test or penalty</li>
+            <li>The selected CHECK FIRST card stays in Minah's shop window</li>
           </ul>
           <div class="callout">
-            &ldquo;A full table begins with one invitation that does not test anybody.&rdquo;
-            <br /><b style="font-size: 14px">&mdash; Uncle Ravi, remembered reflection. In-game, verbatim.</b>
+            &ldquo;I check before I act. I use the supplier number in my own order book, or call ScamShield at 1799.&rdquo;
+            <br /><b style="font-size: 14px">&mdash; Auntie Minah, in-game habit. Official guidance sourced in the public repo.</b>
           </div>
         </div>
       </div>
@@ -458,7 +458,7 @@
           <td><strong>CodeBuddy CLI 2.127.0</strong> authored the first 10 files, including the match engine that still ships today</td>
           <td>Overran its 50-turn limit. <strong>2 TypeScript errors &middot; 3 failing tests &middot; 1 unused dependency &middot; 4 audit findings &middot; 1 stale-timer race</strong></td>
           <td>Rewrote tests off an invalid constant-RNG shuffle assumption; added session-aware timer cancellation</td>
-          <td><strong>tsc clean &middot; 75/75 tests &middot; 0 vulnerabilities &middot; 60/60 browser smoke</strong></td>
+          <td><strong>tsc clean &middot; 79/79 tests &middot; 0 vulnerabilities &middot; 60/60 browser smoke</strong></td>
         </tr>
       </table>
       <div class="callout">
@@ -501,25 +501,25 @@
       <span class="kicker">Engineering</span>
       <h1>Fast, private, tested, no backend.</h1>
       <div class="stats">
-        <div class="stat"><b>75</b><span>Passing tests</span></div>
+        <div class="stat"><b>79</b><span>Passing tests</span></div>
         <div class="stat"><b>0</b><span>Vulnerabilities</span></div>
-        <div class="stat"><b>106 kB</b><span>Initial JavaScript</span></div>
+        <div class="stat"><b>114.37 kB</b><span>Initial JavaScript</span></div>
         <div class="stat"><b>0</b><span>Bytes collected</span></div>
       </div>
       <div class="split engineering-body">
         <ul>
-          <li>Vite + TypeScript + Phaser 3, strict mode throughout</li>
-          <li>Engine lazy-loads only after &ldquo;Begin&rdquo; &mdash; matters on an older phone</li>
+          <li>Vite + strict TypeScript + Phaser 3 &middot; 27 campaign, 31 match, 17 audio, 4 accessibility tests</li>
+          <li>Connection-aware idle prefetch after title art &middot; cached Start with cancel/retry recovery</li>
           <li>60-check Chrome DevTools smoke test drives full and demo campaigns</li>
-          <li>Keyboard, touch, or Journal shortcuts; circular map opens Places</li>
+          <li>Keyboard, touch controls, tap-to-walk/approach, or Journal; circular map opens Places</li>
           <li>No account, no analytics, no backend, no personal data</li>
           <li><b>All audio synthesised at runtime &mdash; zero audio files shipped</b></li>
         </ul>
         <img class="shot" src="../screenshots/09-mobile-360.png" alt="Kampung SG at a 360px mobile viewport" />
       </div>
       <div class="callout engineering-callout">
-        <b>KampungMind stays private and offline.</b> Dialogue is authored ahead of time and selected
-        by deterministic, unit-tested code &mdash; zero network calls, API cost or runtime hallucination.
+        <b>Current private build:</b> 84.76 kB HTML (15.26 gzip) &middot; 114.37 kB initial JS
+        (35.06 gzip) &middot; 1,609.14 kB lazy scene (376.46 gzip). KampungMind stays offline.
       </div>
       <p class="brandmark">KAMPUNG SG &middot; THETWOGUYS</p>
       <p class="slide-num">06</p>
@@ -533,7 +533,7 @@
         <div class="col support">
           <h3>What we can support</h3>
           <ul>
-            <li>Strict TypeScript, 75 passing tests, 0 vulnerabilities</li>
+            <li>Strict TypeScript, 79 passing tests, 0 vulnerabilities</li>
             <li>60/60 production-browser checks across full and demo campaigns</li>
             <li>Keyboard and touch entry, focus return and correct return doors</li>
             <li>No data collection, no account, no network dependency</li>
@@ -557,7 +557,7 @@
       </div>
       <p style="margin-top: 16px; font-size: 14px; color: var(--ink-soft)">
         Claim guardrails: <b>docs/RESEARCH.md</b>, written before any code &middot; Full AI record:
-        <b>docs/AI_USAGE_LOG.md</b> &middot; Everything cited here is in the public repo
+        <b>docs/AI_USAGE_LOG.md</b> &middot; Everything cited here is preserved in the project source
       </p>
       <p class="brandmark">KAMPUNG SG &middot; THETWOGUYS</p>
       <p class="slide-num">07</p>

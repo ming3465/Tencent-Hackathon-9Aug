@@ -1,6 +1,9 @@
 # Campaign QA Checklist
 
-## Automated unit coverage — 75 passing
+## Automated unit coverage — 79/79 passing
+
+The total comprises 27 campaign, 31 match-engine, 17 audio, and 4
+accessibility-contract tests.
 
 - [x] Chapter ordering and future-event rejection
 - [x] Full and demo thresholds
@@ -9,6 +12,11 @@
 - [x] Idempotent events and bounded meters
 - [x] KampungMind intent eligibility, scoring, stable ties, and memory reactions
 - [x] Campaign content references and location graph integrity
+- [x] Minah's Chapter 2 safety beat exposes official-source wording, two
+      equivalent card-layout choices, one atomic card-plus-clue outcome,
+      idempotent persistence, a semantic Journal objective/layout note,
+      bidirectional partial/legacy-save repair, and safe rejection before the
+      chapter unlocks
 - [x] Journal view grouping, threshold-aware objective progress, spoiler-free
       future entries, and default active selection
 - [x] All map anchors project inside the circular overview and Block 9 homes
@@ -21,18 +29,37 @@
 - [x] Versioned saves, corrupt-save fallback, Start Over, and demo isolation
 - [x] Optional keepsake matching, audio rules, and bounded four-chord
       day/evening voice-leading
+- [x] Dialogue source contract keeps the sole visible `>` advance text,
+      `aria-label="Continue dialogue"`, exact 52×52 target, enclosing focus
+      ring, reduced-motion pulse removal, and the “Maybe later” route
 
-## Production-browser smoke — 60 passing
+## Production-browser smoke — 60/60 passing
 
 - [x] Production bundle creates exactly one Phaser Canvas
+- [x] Production build measures 84.76 kB HTML (15.26 kB gzip), 114.37 kB
+      initial JavaScript (35.06 kB gzip), and a 1,609.14 kB lazy scene
+      (376.46 kB gzip)
 - [x] Reviewed 1668×943 WebP title artwork loads without desktop overflow
+- [x] Cached idle campaign prefetch runs after title-art settlement, skips
+      Save-Data and 2g-class connections, reports opening and 12-second slow
+      states, supports cancel/back and failed-import retry, suppresses stale or
+      duplicate Canvas creation, and survives rejected browser storage
 - [x] Prologue Voice, authored-line progression, sole visible `>` chevron with
-      an accessible name and 48 px target, 238×325 px desktop portrait in a
-      940 px card, expression changes, choice, and focus
+      `aria-label="Continue dialogue"`, an exact 52×52 target and enclosing
+      focus ring, 238×325 px desktop portrait in a 940 px card, expression
+      changes, choice, and reduced-motion stillness
 - [x] Keyboard and touch entry/exit with correct return positions
 - [x] Mr. Long, Grandma Ros, Ben, and craftsman interiors
 - [x] Locked progression and two independent clue gates
+- [x] Full and demo routes read Minah's complete check-before-you-act beat,
+      expose two no-failure presentation choices, keyboard-activate and render
+      one layout each, revisit the semantic Journal note, retain the chosen
+      shop-window card, and synchronize its alpha with the Minah façade fade
 - [x] Full 3-helper and 5-attendee route
+- [x] Consequence art is state- and location-specific: matching exterior and
+      interior three-quarter ramps include rails/tactile edges; herb and
+      flower-plus-shaded-seat gardens remain mutually exclusive; and the
+      five-post pitched-teal-roof sheltered extension appears only when earned
 - [x] Complete Chapter 3 supportive approach and no-failure weaving
 - [x] Ending and post-story free exploration
 - [x] Reload/Continue, confirmed Start Over, and valid versioned save
@@ -124,6 +151,14 @@
 - [x] Scheduler-capped runs stay within 3 ms of the same-run title baseline
       and within 8/20 ms per-frame main-thread budgets
 - [x] Desktop and 360px overflow, 48px targets, and console errors
+- [x] 320×568, 360×560, and 640×360 layouts keep the 100dvh shell, stage,
+      topbar, touch controls, and Journal usable without document overflow;
+      short-landscape interior zoom remains vertically fitted
+- [x] Touch navigation redirects walking, follows and activates moving targets,
+      cancels on manual input or collision, rejects drag/long-press/multi-touch,
+      preserves browser pinch/pan, supports grouped directional-pad activation
+      from keyboard/assistive-technology clicks, keeps Talk usable, and holds a
+      28 px destination ring across zoom levels
 - [x] Pressing Sound restores world focus and keyboard movement; full-screen
       entry fills the viewport and exit moves focus to Sound controls
 - [x] The 360px path enters gameplay with touch controls and verifies/captures

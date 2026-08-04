@@ -67,6 +67,7 @@ const OBJECTIVE_LABELS: Readonly<Record<string, string>> = {
   "left-y-flat": "Use the first open door",
   "mr-long-step-seen": "Hear Mr. Long describe the broken step",
   "mr-long-outside": "Welcome Mr. Long outside",
+  "scam-check-shared": "Use Minah's PAUSE, CHECK, TELL habit: verify separately or call ScamShield at 1799; never share an OTP",
   "ros-clue-minah": "Ask Auntie Minah about Grandma Ros",
   "ros-clue-seng": "Ask Uncle Seng about Grandma Ros",
   "grandma-kitchen-open": "Enter Grandma Ros's kitchen",
@@ -87,10 +88,19 @@ function authoredObjective(
   state: CampaignStateV1,
   objectiveId: string,
 ): JournalObjectiveView {
+  const scamCardLayout = state.choices["scam-check-card"];
   return {
     id: objectiveId,
     label: OBJECTIVE_LABELS[objectiveId] ?? "Continue this shared task",
     complete: hasObjective(state, objectiveId),
+    progressText:
+      objectiveId === "scam-check-shared"
+      && (scamCardLayout === "numbered-steps"
+        || scamCardLayout === "icons-and-words")
+        ? scamCardLayout === "numbered-steps"
+          ? "Shop card: three large numbered steps"
+          : "Shop card: large icons with short words"
+        : undefined,
   };
 }
 

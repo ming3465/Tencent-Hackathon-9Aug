@@ -6,10 +6,9 @@ import html from "../../../index.html?raw";
  * Guards the accessibility promises the deck and docs/ACCESSIBILITY.md make.
  *
  * These live as unit tests rather than only as browser-smoke assertions because
- * the shipped markup has silently regressed before: the dialogue's primary
- * action was replaced by an icon-only ">" chevron, and the smoke assertion was
- * changed at the same time to require the regression. A cheap `npm test` check
- * makes any repeat turn the gate red instead of shipping.
+ * the user-approved visual-novel cue has repeatedly been replaced by a visible
+ * word. The intended contract is a sole visible `>` with an explicit accessible
+ * name and a large target; changing that decision should make the gate red.
  */
 const buttonMarkup = (id: string): string => {
   const start = html.indexOf(`id="${id}"`);
@@ -21,31 +20,43 @@ const buttonMarkup = (id: string): string => {
 
 const visibleText = (markup: string): string =>
   markup
-    // Drop decorative spans; they are hidden from assistive tech and may hold
-    // only a glyph.
-    .replace(/<span[^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/span>/g, "")
     .replace(/<[^>]+>/g, "")
+    .replace(/&gt;/g, ">")
     .replace(/&[a-z]+;/g, "")
     .trim();
 
+const cssRule = (selector: string): string => {
+  const start = html.indexOf(`${selector} {`);
+  expect(start, `${selector} is missing from index.html`).toBeGreaterThan(-1);
+  const close = html.indexOf("\n      }", start);
+  return html.slice(start, close + "\n      }".length);
+};
+
 describe("dialogue accessibility contract", () => {
-  it("gives the primary advance control a visible word, not just a glyph", () => {
+  it("keeps the primary advance control visually to the sole > cue", () => {
     const markup = buttonMarkup("btn-dialog-advance");
-    expect(visibleText(markup).toLowerCase()).toContain("continue");
+    expect(visibleText(markup)).toBe(">");
+    expect(markup).not.toMatch(/>\s*Continue/i);
   });
 
-  it("does not override the advance control's name with aria-label", () => {
-    // A visible label plus aria-label lets the two drift apart, and breaks
-    // speech-control users who say what they see.
-    expect(buttonMarkup("btn-dialog-advance")).not.toMatch(/aria-label=/);
+  it("names the glyph-only control for assistive technology", () => {
+    expect(buttonMarkup("btn-dialog-advance")).toMatch(
+      /aria-label="Continue dialogue"/,
+    );
   });
 
-  it("keeps a visible word on the decline control", () => {
-    expect(visibleText(buttonMarkup("btn-dialog-close")).length).toBeGreaterThan(3);
+  it("keeps a 52px target with an enclosing keyboard focus indicator", () => {
+    const advance = cssRule(".dialog-advance");
+    const focus = cssRule(".dialog-advance:focus-visible");
+    expect(advance).toMatch(/width:\s*52px/);
+    expect(advance).toMatch(/height:\s*52px/);
+    expect(focus).toMatch(/outline:\s*3px solid/);
+    expect(focus).toMatch(/box-shadow:\s*0 0 0 6px/);
   });
 
-  it("animates only the chevron so reduced motion can still it", () => {
+  it("keeps Maybe later visible and stills the cue for reduced motion", () => {
+    expect(visibleText(buttonMarkup("btn-dialog-close"))).toMatch(/Maybe later/i);
     const reduced = html.slice(html.indexOf("prefers-reduced-motion"));
-    expect(reduced).toMatch(/\.dialog-advance-chevron\s*\{\s*animation:\s*none/);
+    expect(reduced).toMatch(/\.dialog-advance\s*\{\s*animation:\s*none/);
   });
 });
