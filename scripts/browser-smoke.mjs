@@ -656,8 +656,15 @@ try {
         && (await page.eval(`
           (() => {
             const button = document.getElementById("btn-dialog-advance");
-            return button?.textContent.trim() === ">"
-              && button.getAttribute("aria-label") === "Continue dialogue"
+            // The primary action must carry a visible word, not just a
+            // chevron, and its accessible name must come from that word.
+            if (!button) return false;
+            const chevron = button.querySelector("[aria-hidden='true']");
+            const visibleWord = button.textContent
+              .replace(chevron?.textContent ?? "", "")
+              .trim();
+            return /continue/i.test(visibleWord)
+              && !button.hasAttribute("aria-label")
               && button.getBoundingClientRect().width >= 48
               && button.getBoundingClientRect().height >= 48;
           })()

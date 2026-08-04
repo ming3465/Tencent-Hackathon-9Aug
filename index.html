@@ -1236,37 +1236,47 @@
        * Visual-novel advance cue: the visible control is intentionally only
        * ">", while the button retains an accessible name and a 52 px target.
        */
+      /*
+       * The primary action of the whole game. It carries a visible word, not
+       * just a chevron: this audience is the reason the project exists, and an
+       * icon-only primary control is what the accessibility contract rules out.
+       * Only the chevron animates.
+       */
       .dialog-advance {
         display: none;
         align-items: center;
         justify-content: center;
-        width: 52px;
-        height: 52px;
-        margin: 0.3rem 0 0 auto;
-        padding: 0;
-        color: var(--ink);
-        background: transparent;
-        border: 0;
-        border-radius: 4px;
-        box-shadow: none;
-        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-        font-size: 2.15rem;
-        font-weight: 900;
+        gap: 0.45rem;
+        min-width: 176px;
+        min-height: 52px;
+        margin: 0.7rem 0 0 auto;
+        padding: 0.6rem 1.35rem;
+        color: var(--cream);
+        background: var(--ink);
+        border: 3px solid var(--ink);
+        border-radius: 12px;
+        box-shadow: 4px 4px 0 var(--gold);
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.1;
+      }
+
+      .dialog-advance-chevron {
+        font-size: 1.35rem;
         line-height: 1;
-        text-shadow: 2px 2px 0 var(--gold);
         animation: dialogue-chevron 1.15s ease-in-out infinite;
       }
 
-      .dialog-advance.visible { display: flex; }
+      .dialog-advance.visible { display: inline-flex; }
 
       .dialog-advance:hover {
-        transform: translateX(3px);
-        box-shadow: none;
+        transform: translate(-1px, -1px);
+        box-shadow: 6px 6px 0 var(--gold);
       }
 
       .dialog-advance:focus-visible {
-        outline: 0;
-        box-shadow: 0 4px 0 var(--gold);
+        outline: 3px solid var(--gold);
+        outline-offset: 3px;
       }
 
       @keyframes dialogue-chevron {
@@ -1289,7 +1299,7 @@
 
       @media (prefers-reduced-motion: reduce) {
         .dialog-text.typing::after { animation: none; opacity: 1; }
-        .dialog-advance { animation: none; }
+        .dialog-advance-chevron { animation: none; }
         .dialog-advance:hover { transform: none; }
         .dialog-portrait svg { animation: none; }
         #dialog-overlay.active .dialog-portrait { animation: none; }
@@ -2866,13 +2876,8 @@
                 <p id="dialog-text-a11y" class="visually-hidden" aria-live="polite"></p>
               </div>
 
-              <button
-                id="btn-dialog-advance"
-                class="dialog-advance"
-                type="button"
-                aria-label="Continue dialogue"
-              >
-                <span aria-hidden="true">&gt;</span>
+              <button id="btn-dialog-advance" class="dialog-advance" type="button">
+                Continue<span class="dialog-advance-chevron" aria-hidden="true">&rsaquo;</span>
               </button>
 
               <div id="dialog-choices" class="dialog-choices"></div>
