@@ -116,12 +116,16 @@ finish a work session.
   manifest. All 14 midpoint frames were inspected; captions, crops, current
   façade art, deck evidence, and QR remained readable. The full gate passed
   strict TypeScript, 75 tests, the 81.69/106.23/1,591.09 kB build, 0
-  vulnerabilities, and 60/60 browser checks. Graphify rebuilt to 1,135 nodes /
-  2,044 edges / 60 communities with the known fail-closed, zero-node-JSON, and
-  stale-label warnings. The review cut is not the final submission video:
-  human voice-over, an ear-checked mix, team approval, required filename,
-  upload, and logged-out link verification remain open, as do playtests, real
-  devices, screen reader, 200% zoom, Miora, and social publishing.
+  vulnerabilities, and 60/60 browser checks. A later detached verification
+  missed the second demo dialogue-open event (34 pass / 5 dependent failures);
+  no source changed and its immediate unchanged retry passed 60/60, so both
+  outcomes are logged rather than hiding the scheduler miss. Graphify rebuilt
+  to 1,135 nodes / 2,044 edges / 60 communities with the known fail-closed,
+  zero-node-JSON, and stale-label warnings. The review cut is not the final
+  submission video: human voice-over, an ear-checked mix, team approval,
+  required filename, upload, and logged-out link verification remain open, as
+  do playtests, real devices, screen reader, 200% zoom, Miora, and social
+  publishing.
 - **2026-08-04 (Codex, exterior projection lane)** — Replaced the remaining
   flat-card treatment on all eight major exterior structures with one audited
   shallow three-quarter contract: hipped or sawtooth roof planes and seams,

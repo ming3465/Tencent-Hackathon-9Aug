@@ -2500,6 +2500,12 @@ projection lane stabilized.
   seven recesses, two roof styles, 95 obstacles, zero layout issues, and
   retained keyboard, touch, 360 px, reduced-motion, monsoon, focus, and
   campaign coverage.
+- A later detached-worktree verification of commit `b73e9b3` passed the fast
+  gates but missed the second journey's demo dialogue-open event; that single
+  scheduling miss caused five dependent checks to stop at 34 passes / 5
+  failures. No source changed. The immediate unchanged retry completed 60/60,
+  matching the earlier passing full gate. Both outcomes are retained here;
+  the failed run is not relabelled as a product pass.
 - `graphify update .` rebuilt the local knowledge graph to 1,135 nodes, 2,044
   edges, and 60 communities. It retained the known fail-closed node, reported
   the local settings and two video-timeline JSON files as zero-node inputs,
