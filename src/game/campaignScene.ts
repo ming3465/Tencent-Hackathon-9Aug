@@ -4148,12 +4148,15 @@ export class InteriorScene extends WalkableScene {
   }
 
   private drawYFlat(): void {
-    this.addRug(480, 385, 430, 205, 0x718b86);
-    const sofa = this.addFurnitureBlock(250, 327, 310, 118, 0x71817e);
+    // Warm floor, cool sofa, rust rug. The room previously used two
+    // desaturated grey-greens a few values apart, which read as one flat mass.
+    const sofaFill = 0x4f7d70;
+    this.addRug(480, 385, 430, 205, 0xa85c42);
+    const sofa = this.addFurnitureBlock(250, 327, 310, 118, sofaFill);
     sofa
-      .fillStyle(darkenColour(0x71817e, 0.18))
+      .fillStyle(darkenColour(sofaFill, 0.18))
       .fillRect(111, 275, 278, 34)
-      .fillStyle(lightenColour(0x71817e, 0.16))
+      .fillStyle(lightenColour(sofaFill, 0.16))
       .fillRect(127, 245, 92, 42)
       .fillRect(234, 245, 92, 42)
       .fillStyle(NIGHT)
@@ -4322,10 +4325,13 @@ export class InteriorScene extends WalkableScene {
   }
 
   private drawBenFlat(): void {
-    this.addRug(470, 390, 420, 190, 0x697891);
-    const sofa = this.addFurnitureBlock(250, 338, 320, 130, 0x8393a8);
+    // Ben's room stays the quiet, cool one, but a warm rug under a saturated
+    // blue sofa keeps it cosy instead of washed out.
+    const benSofa = 0x5c7396;
+    this.addRug(470, 390, 420, 190, 0x8a6a52);
+    const sofa = this.addFurnitureBlock(250, 338, 320, 130, benSofa);
     sofa
-      .fillStyle(lightenColour(0x8393a8, 0.16))
+      .fillStyle(lightenColour(benSofa, 0.16))
       .fillRect(115, 238, 115, 54)
       .fillRect(242, 238, 115, 54)
       .fillStyle(NIGHT)
@@ -4408,7 +4414,7 @@ export class InteriorScene extends WalkableScene {
       .fillRect(386, 170, 188, 24)
       .fillStyle(CORAL)
       .fillRect(397, 177, 166, 5);
-    this.addRug(480, 405, 700, 260, 0x86aa9a);
+    this.addRug(480, 405, 700, 260, 0x5f9a86);
     for (let chair = 0; chair < 8; chair += 1) {
       const x = 160 + (chair % 4) * 180;
       const y = 350 + Math.floor(chair / 4) * 135;
