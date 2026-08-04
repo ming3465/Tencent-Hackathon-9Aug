@@ -34,7 +34,9 @@ import { selectNpcIntent } from "../kampungMind.js";
 import {
   auditEstateLayout,
   ESTATE_BICYCLE_RACKS,
+  ESTATE_BUILDING_COLLISION_ZONES,
   ESTATE_BUILDING_VISUAL_ZONES,
+  ESTATE_ENTRANCES,
   ESTATE_VEHICLE_LANES,
   ESTATE_VEHICLE_ROUTES,
   getOccludingBuildingIds,
@@ -395,6 +397,23 @@ describe("campaign registries", () => {
     expect(ESTATE_VEHICLE_LANES).toHaveLength(0);
     expect(ESTATE_VEHICLE_ROUTES).toHaveLength(0);
     expect(ESTATE_BUILDING_VISUAL_ZONES).toHaveLength(8);
+    expect(ESTATE_BUILDING_COLLISION_ZONES).toHaveLength(14);
+    expect(
+      ESTATE_ENTRANCES.map((entrance) => [
+        entrance.id,
+        entrance.buildingId,
+        entrance.x,
+        entrance.y,
+      ]),
+    ).toEqual([
+      ["block-9-lobby", "block-9", 650, 292],
+      ["hawker-door", "hawker-centre", 1460, 270],
+      ["kopitiam-door", "kopitiam", 1714, 264],
+      ["shop-door", "provision-shop", 2260, 274],
+      ["cc-door", "community-centre", 2200, 1155],
+      ["hall-door", "prayer-hall", 2050, 1505],
+      ["workshop-door", "craftsman-workshop", 1120, 1358],
+    ]);
     expect(ESTATE_MAP_LANDMARKS).toHaveLength(7);
     for (const location of LOCATIONS) {
       const point = getEstateMapPosition(location.id);

@@ -62,6 +62,9 @@ helper and invitee thresholds change.
 The circular map, room-fit interior camera, and four-tab quest Journal are also
 identical in full and demo modes; threshold-aware Journal progress simply reads
 the active campaign state's 3/5 or 2/2 requirements.
+The main-character guide triangle, audited exterior door alignment, Sound
+focus restoration, and browser-fullscreen/Escape flow are likewise shared
+unchanged.
 
 ## Change log
 
@@ -72,3 +75,4 @@ the active campaign state's 3/5 or 2/2 requirements.
 | 2026-08-03 | Confirmed the visual/runtime pass is shared unchanged by full and demo modes. |
 | 2026-08-03 | Confirmed Chapter 2 monsoon content and accessibility behavior are shared unchanged. |
 | 2026-08-03 | Confirmed the circular map, room-fit interiors, and quest-book Journal are shared unchanged. |
+| 2026-08-04 | Confirmed the player guide, aligned entrances, sound focus, and full-screen flow are shared unchanged. |

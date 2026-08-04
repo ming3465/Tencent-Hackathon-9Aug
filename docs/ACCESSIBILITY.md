@@ -10,6 +10,11 @@ product requirements, not optional polish.
 - Prevent movement-key browser scrolling and stop world movement while an
   overlay owns focus.
 - Restore focus to the world after dialogue and after the Journal closes.
+- Return focus to the world after the topbar Sound toggle so WASD and arrow
+  movement resume without an extra canvas click.
+- Offer a labelled full-screen control. Entering full screen keeps focus on
+  the world; leaving with Escape restores the topbar and moves focus to Sound,
+  next to Journal-based Music and Effects controls.
 - Use a transition latch so the entry key cannot immediately trigger an exit.
 - Show a nearby prompt with a text label and non-colour marker.
 - Provide an equivalent Journal action for every meaningful NPC, door, exit,
@@ -62,6 +67,10 @@ product requirements, not optional polish.
   margins. Preserve a 0.56× phone readability floor while exposing more of the
   room than the former 1× crop.
 - Keep characters and interaction markers legible on grass, paths, and rooms.
+- Keep a high-contrast downward triangle directly above the main character in
+  every location. It is a visual guide only; player position and interaction
+  meaning remain available through the nearby prompt, location label, map,
+  and Journal.
 - Keep inactive story, NPC, and door interaction markers visible as a
   non-colour `!`/door cue, and reveal the plain-language target label when it
   is nearest. Low-priority flavour details reveal their same ring, icon, label,
@@ -125,7 +134,7 @@ The code-drawn landmark names, awnings, glazing, and structural details are
 decorative reinforcement rather than the only route to meaning. Visible
 runtime door prompts, location announcements, and equivalent Journal actions
 remain the semantic path. The harness samples façade value/edge structure,
-counts 93 live obstacle bodies, confirms all three solid bicycle bays remain
+counts 95 live obstacle bodies, confirms all three solid bicycle bays remain
 outside pedestrian spines and building footprints, and physically proves the
 Minah storefront is
 solid while deliberate doorway gaps and both far-district routes remain open.
@@ -138,6 +147,10 @@ NPC's deterministic portrait traits, and proves the responsive 88×120 px
 portrait, complete text, and controls remain inside the 360 px viewport. The
 portrait itself remains hidden from assistive technology; no dialogue
 information depends on its colours, motif, age lines, or accessory.
+The same run toggles Sound, confirms focus returns to the world, and proves
+movement resumes. It verifies the main-character triangle follows the player
+above the sprite, then exercises full-screen entry, full-viewport geometry,
+the visible Escape hint, full-screen exit, and focus placement on Sound.
 
 ## Manual checks still required
 

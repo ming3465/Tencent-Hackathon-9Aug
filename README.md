@@ -79,7 +79,10 @@ hallucination path.
   framing uses 1.32× on wide desktop, 1.22× on tablet, and 1× on mobile;
   interiors use the full shell, a room-fit zoom, and balanced camera margins
   instead of cutting the room against one edge; district dressing includes a tray-return station,
-  provision crates, mosaic dragon playground, and exercise corner. The current
+  provision crates, mosaic dragon playground, and exercise corner. A persistent
+  downward guide triangle keeps the main character readable in every room and
+  district. Seven exterior entrances now share one audited doorway registry
+  with their art, interaction points, and collision gaps. The current
   runtime remains code-drawn after two generated visual-direction studies were
   reviewed and selectively translated rather than copied into the scene
 - No timer, failure state, energy system, account, analytics, personal-data
@@ -94,7 +97,7 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
 | `npm test` | 75 tests across campaign, audio, and optional matching |
-| `npm run build` | 94.75 kB initial JS (29.37 kB gzip); 1,582.14 kB lazy scene (370.77 kB gzip) |
+| `npm run build` | 98.71 kB initial JS (30.42 kB gzip); 1,581.99 kB lazy scene (370.64 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
 | `npm run smoke` | 60/60 production-browser checks |
 
@@ -110,8 +113,8 @@ the documented pass found 11 grass colours, 26 path colours, 27 path-edge
 transitions, and 41 placed landscape objects across four forms and 44 sampled
 foliage colours. The same snapshot found 88 exterior props across 22 texture
 forms, including 12 story clusters across six forms, plus 54 baked drain/leaf
-accents. A generated-façade sample found 55 colours, 218 edge transitions, and
-26.1% dark pixels; the scene exposed 93 obstacle bodies, and a real northward
+accents. A generated-façade sample found 56 colours, 226 edge transitions, and
+25.4% dark pixels; the scene exposed 95 obstacle bodies, and a real northward
 movement sample stopped at the solid Minah storefront
 (about `y=396` to `y=253`) while the east/south travel routes remained open.
 The same snapshot proved three bicycle bays, zero motor-vehicle routes, and
@@ -120,6 +123,9 @@ layers fade at a solid façade and restore after the player steps away. It also
 proves 1.32× wide-desktop and 1× mobile exterior framing, three animated pond
 rings, pooled walking feedback, all eight two-frame butterflies/dragonflies,
 and reduced-motion stillness for those systems.
+The same journey presses Sound, verifies focus returns to the world, and
+proves movement resumes. It also exercises the full-screen viewport state,
+exit contract, and Sound-button focus after leaving full screen.
 Chapter 2 weather samples prove a fixed 64-streak pool with intentionally
 culled desktop/mobile density, ten animated puddle rings, dry shelter masks,
 three helped residents and both cats under cover, and stored activity tools

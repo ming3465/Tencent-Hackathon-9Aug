@@ -23,7 +23,9 @@ import {
   BICYCLE_COLLISION_WIDTH,
   BUILDING_OCCLUSION_FADE_ALPHA,
   ESTATE_BICYCLE_RACKS,
+  ESTATE_BUILDING_COLLISION_ZONES,
   ESTATE_BUILDING_VISUAL_ZONES,
+  ESTATE_ENTRANCES,
   ESTATE_VEHICLE_ROUTES,
   getOccludingBuildingIds,
   type EstateRect,
@@ -322,9 +324,18 @@ export interface CampaignBuildingOcclusionSnapshot {
   faded: boolean;
 }
 
+export interface CampaignPlayerGuideSnapshot {
+  x: number;
+  y: number;
+  tipY: number;
+  visible: boolean;
+  depth: number;
+}
+
 export interface CampaignMotionSnapshot {
   locationId: LocationId;
   player: SpawnPoint;
+  playerGuide: CampaignPlayerGuideSnapshot;
   playerTextureKey: string;
   cameraZoom: number;
   obstacleCount: number;
@@ -380,6 +391,7 @@ abstract class WalkableScene extends Phaser.Scene {
   protected locationId: LocationId;
   protected player!: Phaser.Physics.Arcade.Sprite;
   protected playerShadow!: Phaser.GameObjects.Ellipse;
+  private playerGuide!: Phaser.GameObjects.Graphics;
   protected obstacles: Phaser.GameObjects.GameObject[] = [];
   protected interactions: WorldInteraction[] = [];
   protected consequences?: Phaser.GameObjects.Container;
@@ -438,6 +450,18 @@ abstract class WalkableScene extends Phaser.Scene {
     this.player = this.physics.add
       .sprite(spawn.x, spawn.y, this.playerTextureKey)
       .setDepth(depthFor(spawn.y, 3));
+    this.playerGuide = this.add
+      .graphics()
+      .fillStyle(NIGHT, 0.28)
+      .fillTriangle(-9, -56, 15, -56, 3, -37)
+      .fillStyle(INK)
+      .fillTriangle(-13, -61, 13, -61, 0, -39)
+      .fillStyle(CREAM)
+      .fillTriangle(-9, -58, 9, -58, 0, -43)
+      .fillStyle(GOLD)
+      .fillTriangle(-7, -56, 7, -56, 0, -45)
+      .setPosition(spawn.x, spawn.y)
+      .setDepth(100_300);
     this.player.setCollideWorldBounds(true);
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     body.setSize(22, 18).setOffset(9, 35);
@@ -474,6 +498,8 @@ abstract class WalkableScene extends Phaser.Scene {
       .setPosition(this.player.x, this.player.y + 23)
       .setDepth(depthFor(this.player.y, 1));
     this.player.setDepth(depthFor(this.player.y, 3));
+    const guideBob = this.reducedMotion ? 0 : Math.sin(time / 260) * 2;
+    this.playerGuide.setPosition(this.player.x, this.player.y + guideBob);
 
     if (!this.controlsEnabled) {
       this.player.setVelocity(0, 0);
@@ -582,6 +608,13 @@ abstract class WalkableScene extends Phaser.Scene {
     return {
       locationId: this.locationId,
       player: this.getPlayerPosition(),
+      playerGuide: {
+        x: this.playerGuide.x,
+        y: this.playerGuide.y,
+        tipY: this.playerGuide.y - 39,
+        visible: this.playerGuide.visible,
+        depth: this.playerGuide.depth,
+      },
       playerTextureKey: this.player.texture.key,
       cameraZoom: this.cameras.main.zoom,
       obstacleCount: this.obstacles.length,
@@ -644,6 +677,7 @@ abstract class WalkableScene extends Phaser.Scene {
 
   setPlayerPosition(spawn: SpawnPoint): void {
     this.player?.setPosition(spawn.x, spawn.y);
+    this.playerGuide?.setPosition(spawn.x, spawn.y);
     this.readyForInteractionAt = this.time.now + TRANSITION_LATCH_MS;
     this.updateNearbyInteraction(true);
   }
@@ -1510,42 +1544,6 @@ const ESTATE_LEAF_PATCHES: readonly [
   [2260, 980, 0],
 ];
 
-const ESTATE_DOORS: readonly [
-  string,
-  string,
-  LocationId,
-  number,
-  number,
-][] = [
-  ["block-9-lobby", "Enter Block 9 lobby", "hdb-corridor", 650, 260],
-  ["hawker-door", "Enter the hawker centre", "hawker-centre", 1260, 270],
-  ["kopitiam-door", "Enter the kopitiam", "kopitiam", 1710, 270],
-  ["shop-door", "Enter Minah's provision shop", "provision-shop", 2260, 300],
-  ["cc-door", "Enter the community centre", "community-centre", 2200, 1030],
-  ["hall-door", "Enter the prayer hall", "prayer-hall", 2050, 1350],
-  ["workshop-door", "Enter the craftsman's workshop", "craftsman-workshop", 1120, 1370],
-];
-
-const ESTATE_BUILDING_COLLISIONS: readonly [
-  number,
-  number,
-  number,
-  number,
-][] = [
-  [78, 68, 766, 142],
-  [1300, 85, 300, 165],
-  [1610, 65, 65, 185],
-  [1745, 65, 225, 185],
-  [1980, 90, 245, 170],
-  [2295, 90, 105, 170],
-  [1924, 892, 241, 250],
-  [2235, 892, 201, 250],
-  [1924, 1292, 91, 200],
-  [2085, 1292, 281, 200],
-  [1364, 1272, 422, 190],
-  [930, 1150, 330, 210],
-];
-
 const ESTATE_POND_COLLISIONS: readonly [
   number,
   number,
@@ -1555,16 +1553,6 @@ const ESTATE_POND_COLLISIONS: readonly [
   [58, 660, 224, 70],
   [88, 730, 164, 24],
 ];
-
-const BUILDING_ID_BY_DOOR_LOCATION: Partial<Record<LocationId, string>> = {
-  "hdb-corridor": "block-9",
-  "hawker-centre": "hawker-centre",
-  kopitiam: "kopitiam",
-  "provision-shop": "provision-shop",
-  "community-centre": "community-centre",
-  "prayer-hall": "prayer-hall",
-  "craftsman-workshop": "craftsman-workshop",
-};
 
 export class EstateScene extends WalkableScene {
   private eveningLight?: Phaser.GameObjects.Rectangle;
@@ -1623,8 +1611,8 @@ export class EstateScene extends WalkableScene {
     ensureCampaignArtTextures(this);
     this.createBakedExteriorTiles();
     this.createBuildingOcclusionLayers();
-    for (const [x, y, width, height] of ESTATE_BUILDING_COLLISIONS) {
-      this.addObstacle(x, y, width, height);
+    for (const zone of ESTATE_BUILDING_COLLISION_ZONES) {
+      this.addObstacle(zone.x, zone.y, zone.width, zone.height);
     }
     for (const [x, y, width, height] of ESTATE_POND_COLLISIONS) {
       this.addObstacle(x, y, width, height);
@@ -1640,27 +1628,29 @@ export class EstateScene extends WalkableScene {
         ESTATE_NPC_ROUTES[npcId] ?? [],
       );
     }
-    for (const [id, label, targetLocationId, x, y] of ESTATE_DOORS) {
-      const building = this.buildingForDoor(targetLocationId);
+    for (const entrance of ESTATE_ENTRANCES) {
+      const building = ESTATE_BUILDING_VISUAL_ZONES.find(
+        (candidate) => candidate.id === entrance.buildingId,
+      );
       const doorDepth = building
         ? depthFor(building.y + building.height, 2)
-        : depthFor(y, 1);
+        : depthFor(entrance.y, 1);
       this.addDoorVisual(
-        x,
-        y,
-        56,
-        78,
-        targetLocationId === "hdb-corridor" ? "BLK 9" : "OPEN",
+        entrance.x,
+        entrance.y,
+        entrance.width,
+        entrance.height,
+        entrance.placard,
         doorDepth,
       );
       this.interactions.push({
         kind: "door",
-        id,
-        label,
+        id: entrance.id,
+        label: entrance.label,
         shortLabel: "Enter",
-        targetLocationId,
-        x,
-        y,
+        targetLocationId: entrance.targetLocationId,
+        x: entrance.x,
+        y: entrance.y,
       });
     }
     for (const detail of ESTATE_FLAVOUR_INTERACTIONS) {
@@ -2153,13 +2143,6 @@ export class EstateScene extends WalkableScene {
     });
   }
 
-  private buildingForDoor(locationId: LocationId): EstateRect | undefined {
-    const buildingId = BUILDING_ID_BY_DOOR_LOCATION[locationId];
-    return ESTATE_BUILDING_VISUAL_ZONES.find(
-      (building) => building.id === buildingId,
-    );
-  }
-
   private updateBuildingOcclusion(): void {
     if (!this.player) return;
     const occludingIds = new Set(
@@ -2215,6 +2198,7 @@ export class EstateScene extends WalkableScene {
           .fillRect(x + 5, 142, 50, 3);
       }
       for (let column = 0; column < 6; column += 1) {
+        if (column === 4) continue;
         const x = 105 + column * 139;
         graphics
           .fillStyle(CREAM)
@@ -2299,8 +2283,8 @@ export class EstateScene extends WalkableScene {
         .fillStyle(lightenColour(CORAL, 0.2))
         .fillRect(18, 74, 304, 4);
       drawPixelSign(graphics, "HAWKER", 170, 96, 3, CORAL);
-      for (let stall = 0; stall < 3; stall += 1) {
-        const x = 35 + stall * 91;
+      for (let stall = 0; stall < 2; stall += 1) {
+        const x = 35 + stall * 182;
         graphics
           .fillStyle(INK)
           .fillRect(x, 143, 74, 120)
@@ -2320,6 +2304,17 @@ export class EstateScene extends WalkableScene {
           .fillRect(x + 5, 232, 64, 3);
         drawPixelText(graphics, String(stall + 1), x + 31, 153, 3, CREAM);
       }
+      graphics
+        .fillStyle(INK)
+        .fillRect(136, 143, 90, 120)
+        .fillStyle(NIGHT)
+        .fillRect(142, 149, 78, 114)
+        .fillStyle(0x79a7b3)
+        .fillRect(148, 158, 66, 92)
+        .fillStyle(CREAM, 0.52)
+        .fillRect(153, 163, 22, 81)
+        .fillStyle(INK)
+        .fillRect(179, 154, 5, 102);
       graphics
         .fillStyle(INK)
         .fillRect(28, 260, 284, 8)

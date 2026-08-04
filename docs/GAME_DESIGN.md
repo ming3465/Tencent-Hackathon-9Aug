@@ -121,6 +121,13 @@ zoom at 1180 px and wider, 1.22× from 760–1179 px, and 1× below 760 px. A
 request-animation-frame resize latch keeps the renderer and active camera in
 sync after responsive viewport changes.
 
+A labelled browser-fullscreen control expands the game to the complete
+viewport. The document root is the fullscreen target so dialogue and Journal
+overlays remain valid descendants. Fullscreen hides the topbar for an
+uninterrupted world view and shows an Escape hint; leaving fullscreen restores
+the topbar and focuses Sound, while toggling Sound returns focus to the world
+so movement resumes immediately.
+
 A circular, code-drawn estate map sits inside the world HUD. Seven landmark
 anchors follow the same doorway coordinates as the playable exterior. Outdoors,
 the player marker projects the live 2560×1600 position into the map; indoors,
@@ -138,7 +145,10 @@ it does not mean copying another game’s art, characters, tiles, maps, systems,
 or branding.
 
 The player has down, up, and side-facing four-frame walks (side frames flip for
-left/right). Resident sprites vary build, height, hair, skin tone, posture, and
+left/right). A persistent gold-and-cream downward triangle follows above the
+player at a fixed high depth so the protagonist stays readable through dense
+props and softened façades; reduced motion removes its subtle bob. Resident
+sprites vary build, height, hair, skin tone, posture, and
 everyday accessories. Each resident has directional four-frame walks and a
 short deterministic estate route. Residents pause, face the nearby player, and
 blink on authored schedules; their interaction coordinates and non-colour
@@ -184,9 +194,11 @@ four reusable generated textures to plant building and path edges without
 closing travel routes. Named landmarks no longer share generic block fronts:
 the Hawker Centre, Kopitiam, Minah's shop, Community Centre, Prayer Hall,
 Workshop, and Block 12 have distinct roofs, awnings, glazing, counters, lattice,
-tools, thresholds, and code-drawn pixel signs. Twelve building collision shells
-make the architecture physically solid while leaving intentional gaps aligned
-with usable doors. Three bicycle racks use centralized outdoor-verge
+tools, thresholds, and code-drawn pixel signs. Seven exterior entrances share
+one registry for their code-drawn door, prompt point, named building, and
+placard. Fourteen building collision zones make the architecture physically
+solid while leaving explicit audited gaps aligned with those usable doors.
+Three bicycle racks use centralized outdoor-verge
 placements, marked concrete bays, and solid collision. Their ground footprints
 are checked against the larger visual bounds of all eight exterior buildings
 and both pedestrian crossings/spines. Because this campaign estate contains no
@@ -240,7 +252,7 @@ palette, samples the generated grass/path texture for material and edge
 variation, counts the four generated landscape forms and their sampled colours,
 counts 88 exterior props, 12 story-cluster placements across six forms, and 54
 baked ground accents, samples a generated landmark façade for colour, edge,
-and dark-value structure, counts 93 live obstacle bodies, proves three
+and dark-value structure, counts 95 live obstacle bodies, proves three
 building/path-safe bicycle bays and zero roadless motor routes, proves all
 eight façade layers fade and restore at a physical building stop, physically pushes
 the player into a solid storefront, physically walks to a pond capture, and
@@ -271,7 +283,9 @@ The later world-scale evidence run measured 9.00 ms title p95, 8.90 ms
 resident-route p95, and 9.10 ms active p95 with 2.43 ms/frame work; the 4×
 sample measured 9.20 ms p95 with 8.18 ms/frame work. It exposed 1.32× exterior
 zoom, two visible pooled puffs, three pond rings, and 78 obstacle bodies before
-the later story-cluster collision pass increased that count to 90.
+the story-cluster pass increased that count to 90, solid bicycle bays raised
+it to 93, and audited hawker/workshop doorway gaps split the final shells into
+95 bodies.
 Repeated activity-vignette evidence runs remained inside the configured
 cadence and main-thread budgets on both normal and 4×-throttled samples. They
 proved the fixed 64-streak pool, intentionally culled but legible desktop and
@@ -279,7 +293,7 @@ mobile density, dry shelter regions, and stored activity tools without turning
 animation-phase-dependent visible-streak counts into a product claim.
 It rendered the desktop bust at 238×325 px with 41 drawn primitives inside a
 940 px card and the mobile bust at 88×120 px without horizontal overflow.
-Its façade sample contained 55 colours, 218 edge transitions, and 26.1% dark
+The current façade sample contains 56 colours, 226 edge transitions, and 25.4% dark
 pixels; a real storefront collision moved the player from about `y=396` to
 `y=253` before stopping outside the wall.
 An earlier host-capped 30 Hz run remains logged as evidence that calibration

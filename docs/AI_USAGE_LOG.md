@@ -1893,3 +1893,86 @@ the Codex built-in OpenAI image-generation tool.
 - No runtime model, backend, account, analytics, data collection, timer,
   failure state, energy system, copied art, or new shipped image asset was
   introduced. No deployment had occurred at the time of this log entry.
+
+## 2026-08-04 - Player Guide, Audited Entrances, and Fullscreen Controls
+
+**AI-assisted implementation:**
+
+- The user asked Codex to make the main character easier to find with a
+  downward-pointing triangle, realign the exterior estate doors, repair the
+  Sound-button focus loss that stopped WASD movement, and make gameplay fill
+  the screen while keeping Sound and volume controls reachable after Escape.
+- Added a persistent code-drawn player guide to the shared walkable-scene
+  foundation. Its ink, cream, and gold downward triangle follows the player in
+  every exterior and interior location, stays above the sprite at a fixed HUD
+  depth, bobs subtly in normal motion, and remains still under reduced motion.
+- Centralized all seven exterior entrances in `estateLayout.ts`, including
+  their façade owner, interaction point, threshold, placard, and target
+  location. Fourteen building collision zones now share those doorway gaps.
+  The layout audit rejects duplicate destinations, doors outside their visual
+  building, missing threshold alignment, or collision shells that block an
+  entrance.
+- Moved the Block 9 lobby entrance onto its painted threshold and removed the
+  overlapping void-deck column. Rebuilt the hawker frontage around a centred
+  glazed `ENTRY`; aligned the provision shop, community centre, prayer hall,
+  and workshop interactions with their code-drawn doors.
+- The Sound button now returns focus to the game stage on the next task, so
+  keyboard movement resumes immediately. Added a browser-fullscreen control
+  and a start-time fullscreen attempt from the initiating user gesture.
+  Fullscreen targets the document element so dialogue and Journal overlays
+  remain visible; Escape exits fullscreen, disables stray movement, focuses
+  Sound, and announces that Sound and Journal controls are available.
+- Added compact but fully labelled top-bar controls so Sound, Expand, Journal,
+  and Title remain visible at desktop and 360 px widths. The first refreshed
+  screenshot exposed desktop clipping after adding the fourth button; Codex
+  corrected the responsive labels and repeated the complete browser journey.
+- Extended the existing campaign registry test without inflating the count.
+  The existing 60-check smoke journey now verifies the guide's position and
+  depth, Sound focus restoration plus real movement, fullscreen entry geometry,
+  Escape exit state, and post-exit Sound focus.
+
+**Verification and visual review:**
+
+- The complete repository gate passed: strict TypeScript, all 75 unit tests,
+  the production build, `npm audit` with 0 vulnerabilities, and all 60
+  production-browser checks across the full and accelerated-demo campaigns.
+- The current build is 98.71 kB initial JavaScript (30.42 kB gzip) and
+  1,581.99 kB lazy campaign/Phaser code (370.64 kB gzip).
+- Browser evidence reported
+  `sound-focus={"focus":true,"movement":true,"guide":true}` and
+  `fullscreen={"control":true,"entered":true,"exited":true}`. It also found
+  seven aligned entrance destinations, 14 building collision zones, 95 total
+  obstacle bodies, 56 façade colours, 226 façade edges, 25.4% dark pixels, and
+  zero layout issues.
+- Codex visually inspected the refreshed desktop, 360 px, hawker/kopitiam, and
+  south-estate captures. The triangle is clear without covering the character;
+  all four mobile controls fit; the bicycle remains on its outdoor rack; and
+  the visible estate doors meet their façade thresholds.
+- The in-app Browser connector was unavailable in this session
+  (`Browser is not available: iab`). Codex therefore used the repository's
+  self-contained production Chrome journey and its captured evidence instead
+  of claiming an in-app-browser pass.
+- Graphify rebuilt locally to 1,041 nodes, 1,868 edges, and 59 communities. It
+  retained the existing one fail-closed node and reported 24 hub-based
+  community renames; no semantic relabel was claimed.
+
+**Judge-artifact synchronization:**
+
+- Recaptured all eight HTML deck slides after the responsive correction, then
+  replaced only the inherited full-slide images in the existing PowerPoint
+  template. The artifact-tool export retained eight slides and all eight
+  speaker-note records.
+- Template fidelity passed with zero issues and the PowerPoint overflow test
+  passed. Codex visually inspected the full eight-slide montage.
+- Regenerated the matching PDF from the verified final slide renders. PyMuPDF
+  confirmed eight unencrypted 1280x720 pages with the intended title, author,
+  and subject metadata; the rendered PDF montage was visually inspected.
+
+**Claim boundary:**
+
+- This was AI-assisted implementation, automated production-browser evidence,
+  and human inspection of rendered captures. It was not a human playtest,
+  screen-reader session, 200% zoom pass, or real-device touch test.
+- No runtime model, backend, account, analytics, data collection, timer,
+  failure state, energy system, copied art, or new shipped in-game image asset
+  was introduced. No deployment had occurred at the time of this entry.

@@ -618,6 +618,19 @@
         font-size: 0.78rem;
       }
 
+      @media (max-width: 1500px) {
+        .icon-button {
+          min-width: 64px;
+          padding-inline: 0.55rem;
+          font-size: 0;
+        }
+
+        .icon-button::after {
+          content: attr(data-short-label);
+          font-size: 0.72rem;
+        }
+      }
+
       .game-layout {
         width: min(1720px, 100%);
         margin: 0 auto;
@@ -640,6 +653,34 @@
         margin-inline: 0;
       }
 
+      html.game-fullscreen #screen-sandbox {
+        padding: 0;
+      }
+
+      html.game-fullscreen .topbar {
+        display: none;
+      }
+
+      html.game-fullscreen .game-layout {
+        width: 100%;
+        max-width: none;
+      }
+
+      html.game-fullscreen .world-shell,
+      .world-shell.fullscreen-active {
+        width: 100vw;
+        height: 100vh;
+        min-height: 0;
+        max-height: none;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      html::backdrop {
+        background: var(--night);
+      }
+
       #sandbox-stage {
         width: 100%;
         height: 100%;
@@ -653,6 +694,37 @@
 
       #sandbox-stage:focus-visible {
         outline-offset: -8px;
+      }
+
+      .fullscreen-hint {
+        position: absolute;
+        top: 0.9rem;
+        left: 50%;
+        z-index: 5;
+        display: none;
+        margin: 0;
+        padding: 0.38rem 0.62rem;
+        color: var(--cream);
+        background: rgba(16, 46, 59, 0.88);
+        border: 2px solid var(--gold);
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 900;
+        pointer-events: none;
+        transform: translateX(-50%);
+      }
+
+      html.game-fullscreen .fullscreen-hint,
+      .world-shell.fullscreen-active .fullscreen-hint {
+        display: block;
+      }
+
+      .fullscreen-hint kbd {
+        min-width: 2.4rem;
+        margin-right: 0.28rem;
+        color: var(--night);
+        background: var(--cream);
+        border-color: var(--gold);
       }
 
       .area-chip {
@@ -1466,10 +1538,16 @@
         .brand-lockup strong { font-size: 1.15rem; }
         .topbar-actions { gap: 0.3rem; }
         .icon-button {
+          width: 48px;
+          min-width: 48px;
           min-height: 48px;
           padding: 0.4rem 0.38rem;
-          font-size: 0.7rem;
+          font-size: 0;
           line-height: 1.05;
+        }
+
+        .icon-button::after {
+          font-size: 0.68rem;
         }
         .meter-label { font-size: 0.74rem; }
 
@@ -2540,6 +2618,26 @@
         }
       }
 
+      @media (max-width: 380px) {
+        .topbar {
+          grid-template-columns: 1fr;
+        }
+
+        .brand-lockup {
+          display: none;
+        }
+
+        .topbar-actions {
+          justify-content: space-between;
+        }
+
+        .fullscreen-hint {
+          top: 4.1rem;
+          max-width: calc(100% - 8rem);
+          text-align: center;
+        }
+      }
+
       @media (max-width: 680px) {
         .title-actions {
           align-items: stretch;
@@ -2627,9 +2725,10 @@
           </div>
 
           <div class="topbar-actions">
-            <button id="btn-sound" class="icon-button" type="button" aria-pressed="false">Sound on</button>
-            <button id="btn-journal" class="icon-button" type="button" aria-expanded="false" aria-controls="journal-panel">Journal</button>
-            <button id="btn-return-title" class="icon-button" type="button">Back to title</button>
+            <button id="btn-sound" class="icon-button" type="button" aria-label="Toggle sound; sound is on" aria-pressed="false" data-short-label="Sound">Sound on</button>
+            <button id="btn-fullscreen" class="icon-button" type="button" aria-label="Enter full screen" aria-pressed="false" data-short-label="Expand">Full screen</button>
+            <button id="btn-journal" class="icon-button" type="button" aria-expanded="false" aria-controls="journal-panel" data-short-label="Journal">Journal</button>
+            <button id="btn-return-title" class="icon-button" type="button" data-short-label="Title">Back to title</button>
           </div>
         </header>
 
@@ -2637,6 +2736,7 @@
           <div id="world-shell" class="world-shell">
             <div id="sandbox-stage" tabindex="0" aria-label="Top-down neighbourhood. Use WASD or arrow keys to move, E or Space to interact, and hold Shift to move faster."></div>
             <p id="area-name" class="area-chip">Community Court</p>
+            <p class="fullscreen-hint" aria-hidden="true"><kbd>Esc</kbd> for sound &amp; volume</p>
 
             <button id="estate-minimap" class="estate-minimap" type="button" aria-label="Circular estate map. You are at Y's Flat. Open Places in the Journal.">
               <span class="minimap-disc" aria-hidden="true">

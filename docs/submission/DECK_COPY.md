@@ -68,7 +68,7 @@ production-browser checks.
 
 ## Slide 6 — Fast, private, tested, no backend
 
-**75 tests · 0 vulnerabilities · 94.75 kB initial JavaScript · 0 bytes
+**75 tests · 0 vulnerabilities · 98.71 kB initial JavaScript · 0 bytes
 collected**
 
 - Vite + strict TypeScript + Phaser 3

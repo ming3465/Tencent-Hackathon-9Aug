@@ -89,9 +89,14 @@
 - [x] All eight exterior building crops remain opaque at rest, soften while
       covering the player at a physical façade stop, restore after departure,
       and switch instantly under reduced motion
+- [x] All seven exterior entrance visuals, prompts, thresholds, and collision
+      gaps resolve from one audited registry; no doorway sits outside or high
+      inside its named façade
+- [x] The persistent downward guide triangle follows the player in rooms and
+      outdoors and remains above façade-occlusion layers
 - [x] Generated landmark façade exposes at least 20 colours, 180 edge
-      transitions, and 8% dark pixels (documented pass: 55 / 218 / 26.1%)
-- [x] All 93 obstacle bodies instantiate; a real northward movement sample
+      transitions, and 8% dark pixels (documented pass: 56 / 226 / 25.4%)
+- [x] All 95 obstacle bodies instantiate; a real northward movement sample
       stops at the Minah storefront (about `y=396` to `y=253`) while east/south
       travel remains reachable
 - [x] Mr. Long's runtime portrait exposes his stable ID, cane, side-part, and
@@ -103,6 +108,8 @@
 - [x] Scheduler-capped runs stay within 3 ms of the same-run title baseline
       and within 8/20 ms per-frame main-thread budgets
 - [x] Desktop and 360px overflow, 48px targets, and console errors
+- [x] Pressing Sound restores world focus and keyboard movement; full-screen
+      entry fills the viewport and exit moves focus to Sound controls
 - [x] The 360px path enters gameplay with touch controls and verifies/captures
       the world and circular map, an in-bounds 88×120 px visual-novel portrait,
       and the full-width stacked Journal

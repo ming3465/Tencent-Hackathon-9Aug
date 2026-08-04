@@ -78,6 +78,22 @@ numbers are treated as defects.
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-04** — Added a persistent code-drawn downward guide triangle above
+  the main character across all locations. Centralized seven exterior
+  entrances and 14 building collision zones in `estateLayout.ts`; realigned
+  Block 9, hawker, kopitiam, provision, community-centre, prayer-hall, and
+  workshop thresholds, removed the Block 9 pillar overlap, and rebuilt the
+  hawker frontage around its centred entry. Sound now restores world focus and
+  WASD/arrow movement. Browser fullscreen fills the viewport; Escape exits,
+  prevents stray movement, and focuses Sound so volume controls remain
+  available. Responsive labels keep all four top-bar controls visible at
+  desktop and 360 px. Verification passed 75 tests, 60/60 browser checks and
+  0 vulnerabilities; build is 98.71 kB initial (30.42 kB gzip) / 1,581.99 kB
+  lazy (370.64 kB gzip). The eight-slide PPTX and eight-page PDF were refreshed
+  and passed template-fidelity, overflow, metadata, and visual checks. Graphify
+  rebuilt to 1,041 nodes / 1,868 edges / 59 communities, retaining the known
+  fail-closed node and reporting 24 hub-based community renames. No real-device
+  or human-playtest claim; deployment had not occurred at session-log time.
 - **2026-08-03** — Added a circular code-drawn estate map with seven real
   landmark anchors, live exterior player movement, indoor building state, and
   a direct Places shortcut. Rebuilt the Journal as a four-tab quest book with

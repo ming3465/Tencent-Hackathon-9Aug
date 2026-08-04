@@ -1646,6 +1646,111 @@ try {
   const backdropClosedJournal = await page.eval(
     `!document.getElementById("journal-panel").classList.contains("open")`
   );
+  const beforeSoundMovement = await page.eval(
+    `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
+  );
+  await page.eval(`document.getElementById("btn-sound").click()`);
+  await sleep(100);
+  const soundReturnedFocus = await page.eval(
+    `document.activeElement?.id === "sandbox-stage"`
+  );
+  await page.key("keyDown", "ArrowLeft", "ArrowLeft", 37);
+  await sleep(240);
+  await page.key("keyUp", "ArrowLeft", "ArrowLeft", 37);
+  await sleep(100);
+  const afterSoundMovement = await page.eval(
+    `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
+  );
+  await page.eval(`document.getElementById("btn-sound").click()`);
+  await sleep(100);
+  const soundFocusEvidence = {
+    focus: soundReturnedFocus,
+    movement:
+      beforeSoundMovement
+      && afterSoundMovement
+      && beforeSoundMovement.player.x - afterSoundMovement.player.x >= 18,
+    guide:
+      afterSoundMovement
+      && afterSoundMovement.playerGuide.visible
+      && Math.abs(
+        afterSoundMovement.playerGuide.x - afterSoundMovement.player.x
+      ) <= 1
+      && afterSoundMovement.playerGuide.tipY
+        <= afterSoundMovement.player.y - 35
+      && afterSoundMovement.playerGuide.depth >= 100_000,
+  };
+  await page.eval(`
+    (() => {
+      const root = document.documentElement;
+      window.__kampungFullscreenMock = { element: null };
+      Object.defineProperty(document, "fullscreenElement", {
+        configurable: true,
+        get: () => window.__kampungFullscreenMock.element,
+      });
+      root.requestFullscreen = async () => {
+        window.__kampungFullscreenMock.element = root;
+        document.dispatchEvent(new Event("fullscreenchange"));
+      };
+      document.exitFullscreen = async () => {
+        window.__kampungFullscreenMock.element = null;
+        document.dispatchEvent(new Event("fullscreenchange"));
+      };
+    })()
+  `);
+  await page.eval(`document.getElementById("btn-fullscreen").click()`);
+  await sleep(140);
+  const enteredFullscreen = await page.eval(`
+    (() => ({
+      active:
+        document.fullscreenElement === document.documentElement
+        && document.documentElement.classList.contains("game-fullscreen")
+        && document.getElementById("world-shell").classList.contains("fullscreen-active"),
+      pressed:
+        document.getElementById("btn-fullscreen").getAttribute("aria-pressed"),
+      focus: document.activeElement?.id,
+      hint:
+        getComputedStyle(document.querySelector(".fullscreen-hint")).display,
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      shell: (() => {
+        const rect = document.getElementById("world-shell").getBoundingClientRect();
+        return { width: rect.width, height: rect.height };
+      })(),
+    }))()
+  `);
+  await page.eval(`document.exitFullscreen()`);
+  await sleep(140);
+  const exitedFullscreen = await page.eval(`
+    (() => ({
+      active:
+        document.fullscreenElement === null
+        && !document.documentElement.classList.contains("game-fullscreen")
+        && !document.getElementById("world-shell").classList.contains("fullscreen-active"),
+      pressed:
+        document.getElementById("btn-fullscreen").getAttribute("aria-pressed"),
+      focus: document.activeElement?.id,
+    }))()
+  `);
+  await page.eval(`
+    delete document.documentElement.requestFullscreen;
+    delete document.exitFullscreen;
+    delete document.fullscreenElement;
+    delete window.__kampungFullscreenMock;
+    document.getElementById("sandbox-stage").focus();
+  `);
+  const fullscreenEvidence = {
+    control: await page.eval(`!!document.getElementById("btn-fullscreen")`),
+    entered:
+      enteredFullscreen.active
+      && enteredFullscreen.pressed === "true"
+      && enteredFullscreen.focus === "sandbox-stage"
+      && enteredFullscreen.hint === "block"
+      && enteredFullscreen.shell.width >= enteredFullscreen.viewport.width - 1
+      && enteredFullscreen.shell.height >= enteredFullscreen.viewport.height - 1,
+    exited:
+      exitedFullscreen.active
+      && exitedFullscreen.pressed === "false"
+      && exitedFullscreen.focus === "btn-sound",
+  };
   const journalDrawerEvidence = {
     worldFirstLayout: gameLayoutWidth >= browserWidth * 0.9,
     spaciousInterior:
@@ -1683,6 +1788,14 @@ try {
       && escapedJournal.inert
       && escapedJournal.focus === "sandbox-stage",
     backdropClosed: backdropClosedJournal,
+    soundFocus:
+      soundFocusEvidence.focus
+      && soundFocusEvidence.movement
+      && soundFocusEvidence.guide,
+    fullscreen:
+      fullscreenEvidence.control
+      && fullscreenEvidence.entered
+      && fullscreenEvidence.exited,
   };
   diagnostics.push(
     `  UI  room=${closedWorldWidth.toFixed(0)}px; ` +
@@ -1696,7 +1809,9 @@ try {
       `journal-open=${journalDrawerEvidence.opened}; ` +
       `focus-wrap=${journalDrawerEvidence.focusWrapped}; ` +
       `escape=${journalDrawerEvidence.escaped}; ` +
-      `backdrop=${journalDrawerEvidence.backdropClosed}`
+      `backdrop=${journalDrawerEvidence.backdropClosed}; ` +
+      `sound-focus=${JSON.stringify(soundFocusEvidence)}; ` +
+      `fullscreen=${JSON.stringify(fullscreenEvidence)}`
   );
   check(
     "World reports ready with sound and dynamic Journal controls",

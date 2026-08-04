@@ -1,3 +1,5 @@
+import type { LocationId } from "./campaignTypes.js";
+
 export interface EstateRect {
   id: string;
   x: number;
@@ -23,6 +25,18 @@ export interface EstateVehicleRouteDefinition {
   }[];
 }
 
+export interface EstateEntranceDefinition {
+  id: string;
+  label: string;
+  targetLocationId: LocationId;
+  buildingId: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  placard: string;
+}
+
 export const ESTATE_WORLD_BOUNDS: EstateRect = {
   id: "estate-world",
   x: 0,
@@ -44,6 +58,111 @@ export const ESTATE_BUILDING_VISUAL_ZONES: readonly EstateRect[] = [
   { id: "craftsman-workshop", x: 920, y: 1108, width: 350, height: 252 },
   { id: "block-12", x: 1354, y: 1254, width: 442, height: 230 },
   { id: "prayer-hall", x: 1914, y: 1274, width: 462, height: 238 },
+];
+
+/**
+ * Each entry point is the centre of its code-drawn doorway at the threshold.
+ * Art, interaction markers, and collision gaps all consume this registry so
+ * an entrance cannot silently drift away from its building again.
+ */
+export const ESTATE_ENTRANCES: readonly EstateEntranceDefinition[] = [
+  {
+    id: "block-9-lobby",
+    label: "Enter Block 9 lobby",
+    targetLocationId: "hdb-corridor",
+    buildingId: "block-9",
+    x: 650,
+    y: 292,
+    width: 56,
+    height: 78,
+    placard: "BLK 9",
+  },
+  {
+    id: "hawker-door",
+    label: "Enter the hawker centre",
+    targetLocationId: "hawker-centre",
+    buildingId: "hawker-centre",
+    x: 1460,
+    y: 270,
+    width: 56,
+    height: 78,
+    placard: "ENTRY",
+  },
+  {
+    id: "kopitiam-door",
+    label: "Enter the kopitiam",
+    targetLocationId: "kopitiam",
+    buildingId: "kopitiam",
+    x: 1714,
+    y: 264,
+    width: 56,
+    height: 78,
+    placard: "KOPI",
+  },
+  {
+    id: "shop-door",
+    label: "Enter Minah's provision shop",
+    targetLocationId: "provision-shop",
+    buildingId: "provision-shop",
+    x: 2260,
+    y: 274,
+    width: 56,
+    height: 78,
+    placard: "MINAH",
+  },
+  {
+    id: "cc-door",
+    label: "Enter the community centre",
+    targetLocationId: "community-centre",
+    buildingId: "community-centre",
+    x: 2200,
+    y: 1155,
+    width: 56,
+    height: 78,
+    placard: "CC",
+  },
+  {
+    id: "hall-door",
+    label: "Enter the prayer hall",
+    targetLocationId: "prayer-hall",
+    buildingId: "prayer-hall",
+    x: 2050,
+    y: 1505,
+    width: 56,
+    height: 78,
+    placard: "WELCOME",
+  },
+  {
+    id: "workshop-door",
+    label: "Enter the craftsman's workshop",
+    targetLocationId: "craftsman-workshop",
+    buildingId: "craftsman-workshop",
+    x: 1120,
+    y: 1358,
+    width: 56,
+    height: 78,
+    placard: "OPEN",
+  },
+];
+
+/**
+ * Solid façade shells leave explicit doorway gaps around ESTATE_ENTRANCES.
+ */
+export const ESTATE_BUILDING_COLLISION_ZONES: readonly EstateRect[] = [
+  { id: "block-9-shell", x: 78, y: 68, width: 766, height: 142 },
+  { id: "hawker-left-shell", x: 1300, y: 85, width: 120, height: 165 },
+  { id: "hawker-right-shell", x: 1500, y: 85, width: 100, height: 165 },
+  { id: "kopitiam-left-shell", x: 1610, y: 65, width: 65, height: 185 },
+  { id: "kopitiam-right-shell", x: 1745, y: 65, width: 225, height: 185 },
+  { id: "provision-left-shell", x: 1980, y: 90, width: 245, height: 170 },
+  { id: "provision-right-shell", x: 2295, y: 90, width: 105, height: 170 },
+  { id: "community-left-shell", x: 1924, y: 892, width: 241, height: 250 },
+  { id: "community-right-shell", x: 2235, y: 892, width: 201, height: 250 },
+  { id: "prayer-left-shell", x: 1924, y: 1292, width: 91, height: 200 },
+  { id: "prayer-right-shell", x: 2085, y: 1292, width: 281, height: 200 },
+  { id: "block-12-shell", x: 1364, y: 1272, width: 422, height: 190 },
+  { id: "workshop-left-shell", x: 930, y: 1150, width: 154, height: 210 },
+  { id: "workshop-right-shell", x: 1156, y: 1150, width: 104, height: 210 },
 ];
 
 export const ESTATE_PEDESTRIAN_ZONES: readonly EstateRect[] = [
@@ -159,6 +278,48 @@ export function auditEstateLayout(): readonly string[] {
   const issues: string[] = [];
   const seenRackIds = new Set<string>();
   const seenInteractionIds = new Set<string>();
+  const seenEntranceIds = new Set<string>();
+  const seenEntranceLocations = new Set<LocationId>();
+
+  for (const entrance of ESTATE_ENTRANCES) {
+    if (seenEntranceIds.has(entrance.id)) {
+      issues.push(`Duplicate estate entrance ID: ${entrance.id}`);
+    }
+    seenEntranceIds.add(entrance.id);
+    if (seenEntranceLocations.has(entrance.targetLocationId)) {
+      issues.push(
+        `Duplicate estate entrance location: ${entrance.targetLocationId}`,
+      );
+    }
+    seenEntranceLocations.add(entrance.targetLocationId);
+
+    const building = ESTATE_BUILDING_VISUAL_ZONES.find(
+      (candidate) => candidate.id === entrance.buildingId,
+    );
+    if (!building) {
+      issues.push(`${entrance.id} references missing ${entrance.buildingId}`);
+      continue;
+    }
+    const doorBounds: EstateRect = {
+      id: `${entrance.id}-opening`,
+      x: entrance.x - entrance.width / 2,
+      y: entrance.y - entrance.height,
+      width: entrance.width,
+      height: entrance.height,
+    };
+    if (!rectangleContains(building, doorBounds)) {
+      issues.push(`${entrance.id} is outside ${building.id}`);
+    }
+    const buildingBottom = building.y + building.height;
+    if (Math.abs(entrance.y - buildingBottom) > 12) {
+      issues.push(`${entrance.id} misses ${building.id}'s threshold`);
+    }
+    for (const shell of ESTATE_BUILDING_COLLISION_ZONES) {
+      if (rectanglesOverlap(doorBounds, shell)) {
+        issues.push(`${shell.id} blocks ${entrance.id}`);
+      }
+    }
+  }
 
   for (const rack of ESTATE_BICYCLE_RACKS) {
     if (seenRackIds.has(rack.id)) {

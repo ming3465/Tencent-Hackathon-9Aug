@@ -73,6 +73,7 @@ const btnInteract = byId<HTMLButtonElement>("btn-interact");
 const btnTouchInteract = byId<HTMLButtonElement>("btn-touch-interact");
 
 const btnSound = byId<HTMLButtonElement>("btn-sound");
+const btnFullscreen = byId<HTMLButtonElement>("btn-fullscreen");
 const volumeMusic = byId<HTMLInputElement>("volume-music");
 const volumeSfx = byId<HTMLInputElement>("volume-sfx");
 
@@ -160,6 +161,54 @@ function setWorldControls(enabled: boolean): void {
   campaignHandle?.setControlsEnabled(enabled);
 }
 
+function isGameFullscreen(): boolean {
+  return document.fullscreenElement === document.documentElement;
+}
+
+function renderFullscreenControl(): void {
+  const active = isGameFullscreen();
+  document.documentElement.classList.toggle("game-fullscreen", active);
+  worldShell.classList.toggle("fullscreen-active", active);
+  btnFullscreen.setAttribute("aria-pressed", String(active));
+  btnFullscreen.setAttribute(
+    "aria-label",
+    active ? "Exit full screen" : "Enter full screen",
+  );
+  btnFullscreen.dataset.shortLabel = active ? "Exit" : "Expand";
+  btnFullscreen.textContent = active ? "Exit full screen" : "Full screen";
+}
+
+async function enterGameFullscreen(reportFailure = true): Promise<void> {
+  const root = document.documentElement;
+  if (typeof root.requestFullscreen !== "function") {
+    if (reportFailure) {
+      announce("Full screen is not available in this browser.");
+      focusWorld();
+    }
+    return;
+  }
+  try {
+    await root.requestFullscreen();
+  } catch {
+    if (reportFailure) {
+      announce("Full screen was blocked. The game remains ready to play.");
+      focusWorld();
+    }
+  }
+}
+
+async function toggleGameFullscreen(): Promise<void> {
+  if (isGameFullscreen()) {
+    try {
+      await document.exitFullscreen();
+    } catch {
+      announce("Use Escape to leave full screen.");
+    }
+    return;
+  }
+  await enterGameFullscreen();
+}
+
 let viewportResizeFrame: number | null = null;
 
 function queueCampaignViewportResize(): void {
@@ -199,6 +248,7 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
   renderCampaign();
   showScreen("screen-sandbox");
   sandboxStage.setAttribute("aria-busy", "true");
+  void enterGameFullscreen(false);
 
   try {
     const { createCampaignGame } = await import("./game/campaignScene.js");
@@ -290,6 +340,7 @@ function returnToTitle(): void {
   savedCampaign = loadCampaign(window.localStorage, DEMO_MODE);
   renderTitleActions();
   showScreen("screen-title");
+  if (isGameFullscreen()) void document.exitFullscreen();
   (savedCampaign ? btnContinue : btnStart).focus();
 }
 
@@ -1111,6 +1162,11 @@ function trapJournalFocus(event: KeyboardEvent): void {
 function renderSoundControls(): void {
   const settings = audio.getSettings();
   btnSound.setAttribute("aria-pressed", String(settings.muted));
+  btnSound.setAttribute(
+    "aria-label",
+    settings.muted ? "Turn sound on" : "Mute sound",
+  );
+  btnSound.dataset.shortLabel = settings.muted ? "Muted" : "Sound";
   btnSound.textContent = settings.muted ? "Sound off" : "Sound on";
   volumeMusic.value = String(Math.round(settings.music * 100));
   volumeSfx.value = String(Math.round(settings.sfx * 100));
@@ -1130,6 +1186,10 @@ btnSound.addEventListener("click", () => {
   audio.setMuted(!audio.getSettings().muted);
   renderSoundControls();
   announce(audio.getSettings().muted ? "Sound muted." : "Sound on.");
+  setTimeout(focusWorld, 0);
+});
+btnFullscreen.addEventListener("click", () => {
+  void toggleGameFullscreen();
 });
 volumeMusic.addEventListener("input", () => {
   audio.unlock();
@@ -1238,9 +1298,26 @@ document.addEventListener("keydown", (event) => {
 });
 
 window.addEventListener("resize", queueCampaignViewportResize);
+document.addEventListener("fullscreenchange", () => {
+  const active = isGameFullscreen();
+  renderFullscreenControl();
+  queueCampaignViewportResize();
+  if (!campaignHandle || !screenSandbox.classList.contains("active")) return;
+  if (active) {
+    setTimeout(focusWorld, 0);
+    announce("Full screen. Press Escape for sound and volume controls.");
+    return;
+  }
+  setWorldControls(false);
+  setTimeout(() => {
+    btnSound.focus();
+    announce("Full screen closed. Sound and Journal controls are available.");
+  }, 0);
+});
 
 showScreen("screen-title");
 renderCampaign();
 renderSoundControls();
+renderFullscreenControl();
 renderTitleActions();
 syncJournalLayout();
