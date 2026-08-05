@@ -1138,6 +1138,36 @@ function createTreeTextures(scene: Phaser.Scene): void {
       .fillRect(31, 69, 37, 14)
       .fillRect(72, 75, 45, 21)
       .fillRect(119, 66, 29, 16);
+    const rainTreeMottle: readonly [number, number, number, number, number][] = [
+      [24, 51, 14, 7, 0x91c276],
+      [42, 34, 16, 8, 0x72a466],
+      [63, 21, 13, 7, 0x91c276],
+      [82, 33, 18, 8, 0x72a466],
+      [105, 19, 15, 7, 0x80b36c],
+      [128, 34, 15, 8, 0x91c276],
+      [145, 53, 12, 7, 0x72a466],
+      [38, 63, 12, 6, 0x80b36c],
+      [60, 54, 16, 7, 0x91c276],
+      [91, 58, 14, 6, 0x72a466],
+      [116, 52, 17, 7, 0x80b36c],
+      [53, 77, 14, 6, 0x4f8052],
+      [88, 83, 16, 6, 0x4f8052],
+      [126, 72, 13, 7, 0x72a466],
+    ];
+    for (const [x, y, width, height, colour] of rainTreeMottle) {
+      graphics
+        .fillStyle(colour)
+        .fillRect(x, y, width, height)
+        .fillStyle(lightenColour(colour, 0.13))
+        .fillRect(x + 3, y - 2, Math.max(4, width - 7), 3);
+    }
+    for (const [x, y] of [[30, 44], [54, 29], [75, 45], [99, 27], [123, 45], [148, 61], [68, 69], [108, 74]] as const) {
+      graphics
+        .fillStyle(PALETTE.cream, 0.78)
+        .fillRect(x, y, 3, 3)
+        .fillStyle(PALETTE.gold, 0.7)
+        .fillRect(x + 1, y + 1, 2, 2);
+    }
   });
 
   makeTexture(scene, "tree-palm", 140, 178, (graphics) => {
@@ -1196,6 +1226,13 @@ function createTreeTextures(scene: Phaser.Scene): void {
       .fillStyle(0x755238)
       .fillRect(59, 57, 8, 8)
       .fillRect(72, 58, 8, 8);
+    for (const [x, y, width] of [[18, 31, 25], [31, 15, 21], [54, 7, 17], [79, 12, 20], [98, 27, 25], [93, 55, 21]] as const) {
+      graphics
+        .fillStyle(0x92bd74, 0.8)
+        .fillRect(x, y, width, 3)
+        .fillStyle(PALETTE.cream, 0.34)
+        .fillRect(x + 3, y, Math.max(3, width - 9), 1);
+    }
   });
 
   makeTexture(scene, "tree-frangipani", 138, 136, (graphics) => {
@@ -1282,6 +1319,11 @@ function createTreeTextures(scene: Phaser.Scene): void {
       [52, 58],
       [82, 61],
       [113, 65],
+      [25, 57],
+      [45, 24],
+      [73, 18],
+      [99, 38],
+      [69, 72],
     ];
     for (const [x, y] of flowers) {
       graphics
@@ -1705,11 +1747,11 @@ function createPropTextures(scene: Phaser.Scene): void {
     }
   });
 
-  makeTexture(scene, "prop-bike-planters", 196, 96, (graphics) => {
+  makeTexture(scene, "prop-bike-planters", 220, 96, (graphics) => {
     graphics
       .fillStyle(PALETTE.night, 0.2)
-      .fillEllipse(98, 88, 182, 13);
-    for (const x of [18, 150]) {
+      .fillEllipse(110, 88, 206, 13);
+    for (const x of [8, 182]) {
       drawPixelBlock(graphics, x, 55, 30, 30, PALETTE.coral, 3, false);
       graphics
         .fillStyle(PALETTE.ink)
@@ -1746,8 +1788,8 @@ function createPropTextures(scene: Phaser.Scene): void {
         .lineBetween(left + 22, 67, left + 58, 67)
         .lineBetween(left + 44, 39, left + 75, 67);
     };
-    bicycle(35, PALETTE.gold, 0);
-    bicycle(76, PALETTE.teal, 4);
+    bicycle(22, PALETTE.gold, 0);
+    bicycle(100, PALETTE.teal, 4);
   });
 
   makeTexture(scene, "prop-maintenance-trolley", 118, 104, (graphics) => {
@@ -1864,10 +1906,21 @@ function createPropTextures(scene: Phaser.Scene): void {
       .fillRect(11, 15, 204, 18)
       .fillRect(18, 31, 9, 83)
       .fillRect(199, 31, 9, 83)
-      .fillStyle(PALETTE.teal)
+      .fillStyle(0x35633f)
       .fillRect(16, 19, 194, 9)
-      .fillStyle(lightenColour(PALETTE.teal, 0.22))
-      .fillRect(16, 19, 194, 3)
+      .fillStyle(0x5f9a58)
+      .fillRect(16, 15, 194, 10)
+      .fillStyle(0x80b36c)
+      .fillRect(22, 11, 35, 9)
+      .fillRect(51, 8, 43, 11)
+      .fillRect(89, 12, 39, 9)
+      .fillRect(121, 7, 47, 12)
+      .fillRect(162, 11, 39, 9)
+      .fillStyle(lightenColour(0x80b36c, 0.16))
+      .fillRect(29, 10, 19, 4)
+      .fillRect(59, 7, 23, 4)
+      .fillRect(130, 6, 26, 4)
+      .fillRect(172, 10, 18, 4)
       .fillStyle(PALETTE.ink)
       .fillRect(52, 76, 122, 14)
       .fillRect(58, 90, 8, 23)
@@ -1880,6 +1933,25 @@ function createPropTextures(scene: Phaser.Scene): void {
       .fillStyle(PALETTE.coral)
       .fillRect(12, 94, 42, 18)
       .fillRect(172, 94, 42, 18);
+    const sitters: readonly [number, number, number, number][] = [
+      [83, 54, 0xbd895d, PALETTE.coral],
+      [134, 53, 0xd6a177, PALETTE.teal],
+    ];
+    for (const [x, y, skin, shirt] of sitters) {
+      graphics
+        .fillStyle(PALETTE.ink)
+        .fillRect(x - 9, y, 18, 18)
+        .fillStyle(skin)
+        .fillRect(x - 6, y + 3, 12, 12)
+        .fillStyle(0xa9a39b)
+        .fillRect(x - 8, y, 16, 6)
+        .fillStyle(PALETTE.ink)
+        .fillRect(x - 11, y + 18, 22, 24)
+        .fillRect(x - 12, y + 39, 10, 6)
+        .fillRect(x + 2, y + 39, 10, 6)
+        .fillStyle(shirt)
+        .fillRect(x - 8, y + 21, 16, 17);
+    }
     for (const [baseX, flip] of [[26, 1], [189, -1]] as const) {
       graphics
         .fillStyle(PALETTE.ink)
@@ -1891,6 +1963,108 @@ function createPropTextures(scene: Phaser.Scene): void {
         .fillStyle(lightenColour(PALETTE.green, 0.2))
         .fillRect(baseX - 7, 51, 17, 5)
         .fillRect(baseX + flip * 4, 61, 17, 5);
+    }
+  });
+
+  makeTexture(scene, "prop-courtyard-planter-bed", 380, 105, (graphics) => {
+    drawShearedShadow(graphics, 12, 92, 345, 8, 14);
+    graphics
+      .fillStyle(0x78a55d)
+      .fillRect(9, 18, 362, 77)
+      .fillStyle(darkenColour(PALETTE.grass, 0.08), 0.72)
+      .fillRect(18, 30, 344, 6)
+      .fillRect(18, 75, 344, 4)
+      .fillStyle(0x6d4f38)
+      .fillRect(18, 20, 344, 9)
+      .fillStyle(PALETTE.ink)
+      .fillRect(3, 8, 374, 20)
+      .fillRect(3, 22, 17, 78)
+      .fillRect(360, 22, 17, 78)
+      .fillRect(3, 84, 374, 16)
+      .fillStyle(PALETTE.concreteEdge)
+      .fillRect(8, 13, 364, 10)
+      .fillRect(8, 24, 8, 70)
+      .fillRect(364, 24, 8, 70)
+      .fillRect(8, 89, 364, 6)
+      .fillStyle(lightenColour(PALETTE.concreteEdge, 0.22))
+      .fillRect(10, 13, 360, 3)
+      .fillRect(10, 89, 360, 2)
+      .fillRect(8, 26, 3, 56)
+      .fillStyle(darkenColour(PALETTE.concreteEdge, 0.14))
+      .fillRect(369, 26, 3, 62)
+      .fillRect(11, 94, 358, 2);
+
+    const planting: readonly [number, number, number][] = [
+      [33, 20, PALETTE.coral],
+      [58, 17, PALETTE.cream],
+      [85, 20, PALETTE.gold],
+      [116, 16, PALETTE.purple],
+      [149, 20, PALETTE.coral],
+      [184, 17, PALETTE.cream],
+      [218, 20, PALETTE.gold],
+      [252, 16, PALETTE.coral],
+      [288, 20, PALETTE.purple],
+      [323, 17, PALETTE.cream],
+      [347, 20, PALETTE.gold],
+    ];
+    for (const [x, y, flower] of planting) {
+      graphics
+        .fillStyle(PALETTE.green)
+        .fillRect(x, y, 3, 15)
+        .fillRect(x - 5, y + 8, 13, 3)
+        .fillStyle(flower)
+        .fillRect(x - 4, y - 2, 11, 5)
+        .fillRect(x - 1, y - 5, 5, 11)
+        .fillStyle(PALETTE.gold)
+        .fillRect(x + 1, y, 2, 2);
+    }
+    for (let x = 35; x < 350; x += 49) {
+      graphics
+        .fillStyle(lightenColour(PALETTE.grass, 0.14), 0.72)
+        .fillRect(x, 45 + (x % 3) * 5, 13, 4)
+        .fillStyle(PALETTE.grassDark, 0.65)
+        .fillRect(x + 7, 62 + (x % 4) * 3, 2, 7)
+        .fillRect(x + 11, 65 + (x % 4) * 3, 2, 4);
+    }
+  });
+
+  makeTexture(scene, "prop-service-courtyard-bay", 330, 105, (graphics) => {
+    drawShearedShadow(graphics, 12, 91, 298, 8, 13);
+    graphics
+      .fillStyle(PALETTE.ink)
+      .fillRect(4, 24, 322, 73)
+      .fillStyle(PALETTE.sand)
+      .fillRect(10, 30, 310, 61)
+      .fillStyle(lightenColour(PALETTE.sand, 0.12))
+      .fillRect(10, 30, 310, 3)
+      .fillStyle(darkenColour(PALETTE.sand, 0.1), 0.5)
+      .fillRect(10, 61, 310, 2);
+    for (let x = 24; x < 315; x += 48) {
+      graphics
+        .fillStyle(darkenColour(PALETTE.sand, 0.08), 0.55)
+        .fillRect(x, 32, 2, 57);
+    }
+    graphics
+      .fillStyle(PALETTE.ink)
+      .fillRect(15, 8, 8, 55)
+      .fillRect(307, 8, 8, 55)
+      .fillRect(17, 12, 294, 8)
+      .fillStyle(darkenColour(PALETTE.teal, 0.08))
+      .fillRect(19, 14, 290, 3);
+    for (let x = 42; x < 306; x += 44) {
+      graphics
+        .fillStyle(PALETTE.ink)
+        .fillRect(x, 17, 5, 43)
+        .fillStyle(0x5f7f82)
+        .fillRect(x + 2, 20, 2, 37);
+    }
+    graphics
+      .fillStyle(PALETTE.ink)
+      .fillRect(245, 78, 57, 12)
+      .fillStyle(darkenColour(PALETTE.concreteEdge, 0.22))
+      .fillRect(250, 81, 47, 6);
+    for (let x = 253; x < 297; x += 8) {
+      graphics.fillStyle(PALETTE.ink).fillRect(x, 82, 3, 4);
     }
   });
 
@@ -2122,6 +2296,44 @@ function drawAmbientKopitiam(
     .fillRect(79, 24 - steamLift, 3, 6);
 }
 
+function drawAmbientChessPlayers(
+  graphics: Phaser.GameObjects.Graphics,
+  frame: 0 | 1,
+): void {
+  const players: readonly [number, number, number, number, -1 | 1][] = [
+    [14, 25, 0xbd895d, PALETTE.teal, 1],
+    [124, 25, 0xd6a177, PALETTE.coral, -1],
+    [69, 48, 0xa8703f, PALETTE.purple, 1],
+  ];
+  graphics.fillStyle(PALETTE.night, 0.15).fillEllipse(80, 84, 148, 10);
+  for (const [x, y, skin, shirt, facing] of players) {
+    graphics
+      .fillStyle(PALETTE.ink)
+      .fillRect(x, y, 24, 21)
+      .fillStyle(skin)
+      .fillRect(x + 4, y + 4, 16, 14)
+      .fillStyle(0xa9a39b)
+      .fillRect(x + 2, y, 20, 7)
+      .fillStyle(PALETTE.ink)
+      .fillRect(x - 2, y + 21, 29, 31)
+      .fillRect(x, y + 49, 9, 9)
+      .fillRect(x + 17, y + 49, 9, 9)
+      .fillStyle(shirt)
+      .fillRect(x + 2, y + 25, 21, 21);
+    const handX = x + (facing === 1 ? 31 + frame * 3 : -7 - frame * 3);
+    graphics
+      .lineStyle(6, PALETTE.ink)
+      .lineBetween(x + (facing === 1 ? 22 : 2), y + 31, handX, y + 37 - frame * 2)
+      .lineStyle(3, skin)
+      .lineBetween(x + (facing === 1 ? 22 : 2), y + 31, handX, y + 37 - frame * 2);
+  }
+  graphics
+    .fillStyle(PALETTE.cream)
+    .fillRect(73 + frame * 3, 39 - frame * 2, 4, 4)
+    .fillStyle(PALETTE.ink)
+    .fillRect(79 - frame * 2, 40 + frame * 2, 4, 4);
+}
+
 function createAmbientTextures(scene: Phaser.Scene): void {
   const flutter: readonly [string, number, number][] = [
     ["butterfly-gold", PALETTE.gold, PALETTE.coral],
@@ -2254,6 +2466,9 @@ function createAmbientTextures(scene: Phaser.Scene): void {
     });
     makeTexture(scene, `ambient-task-kopitiam-${frame}`, 140, 78, (graphics) => {
       drawAmbientKopitiam(graphics, frame);
+    });
+    makeTexture(scene, `ambient-task-chess-${frame}`, 160, 92, (graphics) => {
+      drawAmbientChessPlayers(graphics, frame);
     });
   }
 }

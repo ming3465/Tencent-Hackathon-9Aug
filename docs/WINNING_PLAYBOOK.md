@@ -85,7 +85,7 @@ Must not break: no-medical-claims rule. Quotes about recognition, fun, and place
 What: 12–15 zero-consequence one-liner interactions near the judge path (laundry poles, void-deck cat, kopitiam kettle, mahjong table); proximity speech bubbles from the 5 ambient neighbours; rehome the memory-match as an opt-in void-deck table game ("Auntie waves you over"); add ONE scam-awareness dialogue beat where an elder *teaches the player* to spot a scam.
 Why: "Emptiness is fixed by interaction density, not geometry" (Wholesome Games / A Short Hike postmortem); rehoming kills the "recycled feature" incoherence for zero new code; the scam beat touches "game security systems" (a named qualifying AI area), rhymes with May's winner Auntie AI, and delivers the "elder SOLVING something" moment the critique literature demands.
 Must not break: no failure state (the table game must be unloseable-cozy), tests, and the demo path length (density goes *on* the judge path, not beyond it).
-What shipped: 14 approach-only details, four ambient community activities, and
+What shipped: 14 approach-only details, five ambient community activities, and
 one mandatory Minah beat in which she models a separate-channel check and asks
 the player only how to present the habit. Both large-print layouts advance and
 leave a persistent shop-window card. Proximity speech bubbles and rehoming the

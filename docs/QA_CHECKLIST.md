@@ -99,12 +99,12 @@ accessibility-contract, and 8 world-layout/door/pause tests.
 - [x] Chapter 2 exposes a fixed 64-streak rain pool, ten animated puddle rings,
       wet surfaces, and dry original/restored shelter masks
 - [x] Three previously helped residents and both cats gather under cover while
-      all four activity vignettes, all eight ambient insects, and seven laundry
+      all five activity vignettes, all eight ambient insects, and seven laundry
       lines are stored during the monsoon
 - [x] The 360px weather capture retains at least 18 visible streaks without
       overflow (documented density-evidence pass: 26)
 - [x] Residents, cats, laundry, pond phase, and walking puffs remain static or
-      hidden under emulated reduced motion; all four activity vignettes and
+      hidden under emulated reduced motion; all five activity vignettes and
       eight ambient insects hold a static first frame; player idle blinking is
       disabled
 - [x] Reduced-motion monsoon keeps the overcast/wet story state while falling
@@ -125,15 +125,15 @@ accessibility-contract, and 8 world-layout/door/pause tests.
 - [x] The circular map exposes seven anchors, highlights one current indoor
       landmark, opens Places, remains in bounds at 360px, and follows physical
       east/south player movement
-- [x] Exterior camera reports 1.32× at wide desktop and 1× at 360px mobile
+- [x] Exterior camera reports 0.94× at wide desktop and 0.84× at 360px mobile
 - [x] Player movement physically reaches and captures the layered pond before
       continuing through the open east/south travel spine
 - [x] Keyboard movement physically reaches the eastern and southern districts
 - [x] Generated terrain exposes at least 3 grass colours, 6 path colours, and
-      12 path-edge transitions (documented pass: 11 / 26 / 27)
+      12 path-edge transitions (documented pass: 14 / 36 / 64)
 - [x] All 41 collision-aware landscape objects instantiate across four
       generated forms with at least 12 foliage colours (documented pass: 44)
-- [x] All 88 exterior props instantiate across 22 generated forms, including
+- [x] All 90 exterior props instantiate across 24 generated forms, including
       12 collision-aware story clusters across six forms; 54 baked drain/leaf
       accents add surface detail without adding per-frame objects
 - [x] All three bicycle racks occupy marked outdoor verge bays, with zero

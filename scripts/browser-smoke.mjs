@@ -1680,7 +1680,7 @@ try {
       ambientActivitiesStill:
         before.ambientActivityTick === 0
         && after.ambientActivityTick === 0
-        && before.ambientActivities.length === 4
+        && before.ambientActivities.length === 5
         && after.ambientActivities.every((activity) => {
           const starting = before.ambientActivities.find(
             (candidate) => candidate.id === activity.id
@@ -1839,8 +1839,8 @@ try {
       monsoonWeatherEvidence.mobile =
         mobileWeather.active
         && mobileWeather.rain >= 18
-        && mobileWeather.zoom >= 0.99
-        && mobileWeather.zoom <= 1.01
+        && mobileWeather.zoom >= 0.83
+        && mobileWeather.zoom <= 0.85
         && !mobileWeather.overflow;
       diagnostics.push(
         `  RAIN  active=${monsoonWeatherEvidence.active}; ` +
@@ -3814,9 +3814,9 @@ try {
       && consequenceArtEvidence.flowers.shelteredRoute === null
       && residentMotionEvidence.movedAmbientIds.length === 2
       && residentMotionEvidence.ambientDirectionalTexture
-      && residentMotionEvidence.ambientActivityCount === 4
-      && residentMotionEvidence.visibleAmbientActivityCount === 4
-      && residentMotionEvidence.ambientActivityTwoFrameIds.length === 4
+      && residentMotionEvidence.ambientActivityCount === 5
+      && residentMotionEvidence.visibleAmbientActivityCount === 5
+      && residentMotionEvidence.ambientActivityTwoFrameIds.length === 5
       && residentMotionEvidence.ambientActivitiesAnimated
       && residentMotionEvidence.ambientFlutterCount === 8
       && residentMotionEvidence.visibleAmbientFlutterCount === 8
@@ -3824,7 +3824,8 @@ try {
       && residentMotionEvidence.ambientFlutterTwoFrameIds.length === 8
       && residentMotionEvidence.ambientFlutterAnimated
       && residentMotionEvidence.laundryChanged
-      && residentMotionEvidence.cameraZoom >= 1.3
+      && residentMotionEvidence.cameraZoom >= 0.9
+      && residentMotionEvidence.cameraZoom <= 1
       && residentMotionEvidence.pondRippleCount === 3
       && residentMotionEvidence.pondAnimated
       && reducedMotionEvidence
@@ -3904,7 +3905,8 @@ try {
       && facadeCollisionEvidence.restored
       && facadeCollisionEvidence.obstacleCount >= 90
       && worldFeelEvidence
-      && worldFeelEvidence.cameraZoom >= 1.3
+      && worldFeelEvidence.cameraZoom >= 0.9
+      && worldFeelEvidence.cameraZoom <= 1
       && worldFeelEvidence.visibleStepPuffs >= 1
       && worldFeelEvidence.activeStepSurfaces.includes(
         worldFeelEvidence.movementSurface

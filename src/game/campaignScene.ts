@@ -1986,6 +1986,12 @@ const ESTATE_AMBIENT_ACTIVITIES: readonly {
   y: number;
 }[] = [
   {
+    id: "courtyard-chess-players",
+    texture: "ambient-task-chess",
+    x: 790,
+    y: 735,
+  },
+  {
     id: "void-deck-sweeper",
     texture: "ambient-task-sweeper",
     x: 515,
@@ -2181,13 +2187,13 @@ const ESTATE_STORY_CLUSTERS: readonly [
   number,
   number,
 ][] = [
-  ["prop-chess-table", 390, 885, 130, 20],
+  ["prop-chess-table", 790, 735, 130, 20],
   ["prop-chess-table", 1580, 840, 130, 20],
-  ["prop-bike-planters", 850, 880, 165, 22],
+  ["prop-bike-planters", 970, 735, 165, 22],
   ["prop-bike-planters", 2220, 760, 165, 22],
-  ["prop-maintenance-trolley", 900, 520, 88, 18],
+  ["prop-maintenance-trolley", 1490, 735, 88, 18],
   ["prop-maintenance-trolley", 2460, 820, 88, 18],
-  ["prop-utility-service", 1160, 520, 125, 18],
+  ["prop-utility-service", 1625, 735, 125, 18],
   ["prop-utility-service", 1150, 1060, 125, 18],
   ["prop-chair-stack", 530, 325, 105, 18],
   ["prop-chair-stack", 1580, 325, 105, 18],
@@ -2322,9 +2328,13 @@ export class EstateScene extends WalkableScene {
   }
 
   protected cameraZoomForViewport(width: number): number {
-    if (width >= 1180) return 1.32;
-    if (width >= 760) return 1.22;
-    return 1;
+    // The estate is composed as a lived-in courtyard, so preserve enough
+    // environmental context to read neighbouring thresholds and story
+    // clusters together. Interior rooms retain their separate fit-to-room
+    // camera contract.
+    if (width >= 1180) return 0.94;
+    if (width >= 760) return 0.9;
+    return 0.84;
   }
 
   create(data: SceneStartData = {}): void {
@@ -3119,6 +3129,41 @@ export class EstateScene extends WalkableScene {
         .setOrigin(0.5, 1)
         .setDepth(depthFor(y, 3));
       this.landscapeSprites.push(sprite);
+      this.exteriorPropSprites.push(sprite);
+    }
+
+    const courtyardBackdrops: readonly [
+      string,
+      number,
+      number,
+      readonly [number, number, number, number][],
+    ][] = [
+      [
+        "prop-courtyard-planter-bed",
+        890,
+        750,
+        [
+          [700, 653, 380, 18],
+          [700, 671, 18, 79],
+          [1062, 671, 18, 79],
+          [700, 734, 380, 16],
+        ],
+      ],
+      [
+        "prop-service-courtyard-bay",
+        1570,
+        750,
+        [[1419, 658, 302, 17]],
+      ],
+    ];
+    for (const [texture, x, y, colliders] of courtyardBackdrops) {
+      for (const [left, top, width, height] of colliders) {
+        this.addObstacle(left, top, width, height);
+      }
+      const sprite = this.add
+        .sprite(x, y, texture)
+        .setOrigin(0.5, 1)
+        .setDepth(depthFor(700, 2));
       this.exteriorPropSprites.push(sprite);
     }
 

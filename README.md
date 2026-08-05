@@ -92,9 +92,10 @@ hallucination path.
   under reduced motion;
   residents follow short authored routes and stop to face a nearby player;
   baked flower clusters, fluttering HDB laundry, and deterministic community
-  cats keep the exterior alive; four two-frame activity vignettes show
-  neighbours sweeping the void deck, discussing the noticeboard, tending the
-  garden, and talking at the kopitiam; 12 collision-aware story clusters reuse
+  cats keep the exterior alive; five two-frame activity vignettes show
+  neighbours playing courtyard chess, sweeping the void deck, discussing the
+  noticeboard, tending the garden, and talking at the kopitiam; 12
+  collision-aware story clusters reuse
   six code-drawn forms for chess seating, bicycle planters, maintenance,
   utilities, stacked chairs, and shaded seating; 26 drain grates and 28 leaf
   patches add baked ground detail; eight deterministic butterflies and
@@ -102,7 +103,8 @@ hallucination path.
   lily pads and three deterministic ripple rings, while a six-slot pool
   provides surface-coloured dust and leaf flecks without per-step allocation;
   adaptive exterior
-  framing uses 1.32× on wide desktop, 1.22× on tablet, and 1× on mobile;
+  framing uses 0.94× on wide desktop, 0.9× on tablet, and 0.84× on mobile so
+  adjacent thresholds and courtyard clusters read together;
   interiors use the full shell, a room-fit zoom, and balanced camera margins
   instead of cutting the room against one edge; district dressing includes a tray-return station,
   provision crates, mosaic dragon playground, and exercise corner. A persistent
@@ -126,7 +128,7 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
 | `npm test` | 90/90: 30 campaign, 31 match-engine, 17 audio, 4 accessibility-contract, and 8 world-layout/door/pause tests |
-| `npm run build` | 93.04 kB HTML (16.28 kB gzip); 135.02 kB initial JS (39.95 kB gzip); 1,602.10 kB lazy scene (374.15 kB gzip) |
+| `npm run build` | 93.04 kB HTML (16.28 kB gzip); 135.02 kB initial JS (39.95 kB gzip); 1,609.34 kB lazy scene (376.36 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
 | `npm run smoke` | 60/60 production-browser checks in default WebGL and forced Canvas fallback |
 
@@ -140,24 +142,25 @@ silhouettes, the reviewed title image, and the dialogue contract's sole visible
 under reduced motion. It also verifies the loader's cached prefetch,
 connection-aware skip, opening and slow statuses, retry, cancellation,
 stale-attempt suppression, and storage-failure recovery. The campaign checks
-then continue through portrait expression changes, cat movement, four
+then continue through portrait expression changes, cat movement, five
 two-frame community activity vignettes, laundry animation,
 reduced-motion stillness, exterior wake-up, and physical travel to the east and
 south. It also physically opens one of 14 approach-only estate details with
 keyboard and touch evidence, then samples the generated terrain and reusable
 landscape textures;
-the documented pass found 11 grass colours, 26 path colours, 27 path-edge
+the documented pass found 14 grass colours, 36 path colours, 64 path-edge
 transitions, and 41 placed landscape objects across four forms and 44 sampled
-foliage colours. The same snapshot found 88 exterior props across 22 texture
+foliage colours. The same snapshot found 90 exterior props across 24 texture
 forms, including 12 story clusters across six forms, plus 54 baked drain/leaf
-accents. A generated-façade sample found 56 colours, 226 edge transitions, and
-25.4% dark pixels; the scene exposed 95 obstacle bodies, and a real northward
+accents. A generated-façade sample found 285 colours, 632 edge transitions, and
+35.4% dark pixels; the scene exposed 129 obstacle bodies after persistent
+consequences, and a real northward
 movement sample stopped at the solid Minah storefront
-(about `y=396` to `y=253`) while the east/south travel routes remained open.
+(about `y=400` to `y=335`) while the east/south travel routes remained open.
 The same snapshot proved three bicycle bays, zero motor-vehicle routes, and
 zero semantic layout issues. It also proved eight localized building-occlusion
 layers fade at a solid façade and restore after the player steps away. It also
-proves 1.32× wide-desktop and 1× mobile exterior framing, three animated pond
+proves 0.94× wide-desktop and 0.84× mobile exterior framing, three animated pond
 rings, pooled walking feedback, all eight two-frame butterflies/dragonflies,
 and reduced-motion stillness for those systems. It separately walks on grass
 and estate paving to prove that the pooled visual effects and terrain

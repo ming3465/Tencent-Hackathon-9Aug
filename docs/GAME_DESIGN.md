@@ -143,8 +143,9 @@ available vertical fit so the room is not clipped. At 320×568, 360×560, and
 and Journal remain usable without document overflow. Each location switch
 explicitly resizes the Phaser scale and active camera viewport after the shell
 changes; this prevents stale
-camera framing when returning to the estate. The exterior camera uses 1.32×
-zoom at 1180 px and wider, 1.22× from 760–1179 px, and 1× below 760 px. A
+camera framing when returning to the estate. The exterior camera uses 0.94×
+zoom at 1180 px and wider, 0.9× from 760–1179 px, and 0.84× below 760 px so
+neighbouring thresholds and courtyard routines remain visible together. A
 request-animation-frame resize latch keeps the renderer and active camera in
 sync after responsive viewport changes.
 
@@ -214,10 +215,11 @@ path joints, three tree silhouettes, benches, lamps, bins, bicycles, planters,
 counters, shelves, tools, tables, and room-specific floors are drawn in code.
 Twenty-three hand-placed flower clusters are baked into the four exterior
 textures. Seven code-drawn laundry lines and two community cats use
-deterministic two-frame motion. Four additional two-frame vignettes show a
-neighbour sweeping the void deck, two neighbours discussing the noticeboard,
-an older garden steward tending a bed, and regulars talking at a kopitiam
-table. Six reusable code-drawn story-cluster forms—chess seating, bicycle
+deterministic two-frame motion. Five additional two-frame vignettes show
+neighbours playing courtyard chess, a neighbour sweeping the void deck, two
+neighbours discussing the noticeboard, an older garden steward tending a bed,
+and regulars talking at a kopitiam table. Six reusable code-drawn story-cluster
+forms—chess seating, bicycle
 planters, a maintenance trolley, a utility service point, stacked community
 chairs, and shaded seating—appear in 12 collision-aware placements beside
 paths and thresholds. Twenty-six drain grates and 28 leaf patches are baked
@@ -369,13 +371,14 @@ until real-device profiling justifies another split.
 
 The production smoke harness instantiates all 12 locations, snapshots resident
 routes to prove movement/attention/marker synchronization, samples all four
-player and resident walk frames, proves both cats, four activity vignettes, and
+player and resident walk frames, proves both cats, five activity vignettes, and
 laundry animate, proves all eight butterflies/dragonflies move and expose both
 frames, and repeats that scene under emulated reduced motion to prove every
 ambient system stays still. It verifies a woken exterior has a diverse rendered
 palette, samples the generated grass/path texture for material and edge
 variation, counts the four generated landscape forms and their sampled colours,
-counts 88 exterior props, 12 story-cluster placements across six forms, and 54
+counts 90 exterior props across 24 forms, 12 story-cluster placements across
+six forms, and 54
 baked ground accents, samples a generated landmark façade for colour, edge,
 and dark-value structure, counts 95 live obstacle bodies, proves three
 building/path-safe bicycle bays and zero roadless motor routes, proves all
@@ -395,7 +398,7 @@ checks prove prefetch/cache behavior, connection-aware suppression, opening,
 slow, cancel, retry, stale-attempt, inert-state, and storage-recovery paths.
 Consequence snapshots prove the two ramp locations, both exclusive garden
 choices, the sheltered linkway extension, and absence outside the appropriate
-story/location states. Motion snapshots prove 1.32× wide-desktop and 1× mobile
+story/location states. Motion snapshots prove 0.94× wide-desktop and 0.84× mobile
 exterior framing, three pond rings with changing phase in normal motion, static
 pond phase, zero walking effects, and no player idle blink under reduced
 motion. Normal-motion snapshots prove the player's interaction-facing and

@@ -105,6 +105,21 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-05 (Codex, reference-led courtyard coherence)** — Confirmed the
+  user's attached target is the repository's reviewed OpenAI estate-density
+  study and translated its accepted composition language without shipping the
+  flat raster. Widened exterior framing to 0.94×/0.9×/0.84×, rebuilt paving as
+  staggered tactile slabs, enriched inhabited/commercial façades and tropical
+  canopy detail, grouped chess players plus two bicycles in a planted pocket,
+  and grouped the trolley/cabinet/hose/drain in a service bay while preserving
+  the two travel axes. The estate now reports 90 props across 24 forms, five
+  community activities, 14/36 grass/path colours and 64 path transitions; all
+  12 locations, reduced motion, rain, touch sizes, east/south travel, façade
+  collision and frame budgets passed 60/60 in WebGL and Canvas2D. Strict
+  TypeScript, 90/90 tests, the 93.04/135.02/1,609.34 kB build and zero-
+  vulnerability audit passed. Current screenshots were recaptured and both
+  renderer sets were inspected. No runtime generated raster, human/device/
+  screen-reader/200%-zoom test, deployment, or new outcome claim was made.
 - **2026-08-05 (Codex, full-viewport estate and HUD polish)** — Centralized
   all 11 trees, six lamps, and six tiled stone aprons in the typed estate
   registry; audited full tree bounds, lamp containment, street/door clearance,

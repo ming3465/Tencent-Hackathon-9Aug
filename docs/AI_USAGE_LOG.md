@@ -3105,3 +3105,98 @@ used for browser verification.
   CodeBuddy success. The checked-in video remains explicitly labelled earlier-
   build evidence. Version-control and Pages deployment status are verified and
   reported separately from these local test claims.
+
+## 2026-08-05 — Reference-Led Courtyard Coherence Pass
+
+**Tools and source review:** Codex (GPT-5), the attached 1668×943 PNG, the
+repository's existing OpenAI density-study record, TypeScript/Vitest/Vite/npm
+audit, the production Chrome/CDP campaign harness, and full-size local image
+inspection. The browser-control skill was selected for production visual
+comparison, but the connected in-app browser returned `Browser is not
+available: iab`; the repository's real-Chrome harness was used instead. No new
+image-generation call was made because the requested result remained a
+collision-aware, stateful Phaser scene rather than a replacement bitmap.
+
+**Reference decision:**
+
+- Pixel review confirmed the attachment is visually the same authored target
+  as `docs/art/openai-estate-density-reference.png`; its file encoding/hash is
+  different, while its 1668×943 composition matches the repository study.
+- Reused the study's already documented accepted direction: density in edge
+  clusters, active older neighbours, two clear travel axes, tactile paving,
+  planted bicycles, a chess gathering, and one coherent maintenance bay.
+- Retained its rejection as a runtime raster: generated residents, flat
+  collision, pseudo-writing, and non-persistent scene state were not imported.
+
+**Implementation:**
+
+- Changed estate-only responsive framing from the close 1.32×/1.22×/1× crop
+  to 0.94×/0.9×/0.84×, keeping interior room-fit cameras unchanged. Adjacent
+  HDB thresholds, courtyard routines, and planting now read in one frame.
+- Rebuilt baked estate paving with staggered slabs, per-tile light/shade,
+  deterministic wear, deeper kerbs, and explicit drain slats. Grass gained a
+  denser deterministic tuft, bloom, and worn-patch grammar without adding
+  per-frame objects.
+- Added lived-in façade staging: warm corridor flooring, pillars, window
+  shades/sills, pots, open commercial bays, counters, shelves, and coloured
+  goods. Existing doors, solidity, minimap anchors, and occlusion layers were
+  preserved.
+- Grouped one chess table, three two-frame older chess players, and two
+  separated bicycles into a low planted courtyard pocket. Grouped the
+  maintenance trolley, broom/bucket, utility cabinet, hose, railing, tiled
+  service apron, and drain into a second pocket. Their collision shells leave
+  a 110 px clear band across the primary horizontal route and leave the civic
+  spine untouched.
+- Enriched rain-tree, palm, and frangipani canopy mottling without moving any
+  of the 11 audited tree anchors or changing trunk collisions. The shaded
+  seating cluster gained a planted canopy and two seated neighbours.
+- Updated the smoke evidence contract from four to five ambient activities and
+  from 1× to 0.84× mobile monsoon framing. Current-facing README, game-design,
+  accessibility, QA, submission, playbook, and improvement records now report
+  the measured 90-prop/24-form scene instead of stale counts.
+
+**Corrections and retained evidence:**
+
+- The first wider-camera production attempt captured the intended scene but a
+  late physical-travel helper remained at `(500,400)` and ended the harness at
+  28 passes. The next complete run traversed east and south normally, so no
+  gameplay workaround was added for that isolated scheduler/input miss.
+- The next complete run passed every behavioral and performance predicate but
+  finished 59/60 because the reduced-motion assertion still required exactly
+  four activity snapshots. It observed all five activities unchanged; the
+  literal was corrected to five, then both complete renderer routes passed.
+- Full-size WebGL and Canvas2D review covered the central courtyard, commercial
+  east, community south, mobile monsoon, and ambient-cluster captures. The
+  second pocket-height iteration replaced tall framed compounds with low
+  planters/railings and retained a collision-clear travel band.
+
+**Final local evidence:**
+
+- Strict TypeScript passed. Vitest passed **90/90**: campaign 30, match engine
+  31, audio 17, accessibility contract 4, and world/door/pause 8.
+- Production build: **93.04 kB HTML (16.28 kB gzip), 135.02 kB initial
+  JavaScript (39.95 kB gzip), and 1,609.34 kB lazy scene (376.36 kB gzip)**.
+  `npm audit` reported zero known vulnerabilities.
+- Default WebGL passed **60/60**: resident routes 9.20 ms p95, monsoon 9.20 ms
+  p95, active movement 9.00 ms p95 at 2.50 ms/frame main-thread work, and
+  4×-throttled movement 17.30 ms p95 at 10.58 ms/frame.
+- Forced Canvas2D passed the same **60/60** route: resident routes 9.20 ms p95,
+  monsoon 9.30 ms p95, active movement 9.10 ms p95 at 2.12 ms/frame, and
+  4×-throttled movement 9.10 ms p95 at 8.23 ms/frame.
+- Both routes reported 14 grass colours, 36 path colours, 64 path transitions,
+  41 landscape props/four forms/44 foliage colours, 90 exterior props across
+  24 forms, 12 story clusters/six forms, 54 ground accents, 285 façade colours,
+  632 façade edges, 35.4% dark façade pixels, zero layout issues, five animated
+  activity vignettes, open east/south travel, and correct reduced-motion and
+  mobile-monsoon behavior.
+
+**Claim boundary:**
+
+- This is AI-assisted code authoring plus automated local and machine-rendered
+  evidence. It is not a human or older-adult playtest, real-phone/tablet run,
+  screen-reader or 200% zoom session, calibrated visual study, accessibility
+  certification, public deployment, social/health outcome, new Miora output,
+  or new CodeBuddy success. No account, backend, analytics, personal-data
+  collection, runtime model/network call, timer, failure state, energy system,
+  medical claim, copied third-party art, or runtime generated environment
+  raster was introduced.

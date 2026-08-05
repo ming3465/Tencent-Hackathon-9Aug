@@ -65,9 +65,9 @@ dimensions/detail/named traits and neutral-to-thoughtful expression state,
 desktop and mobile visual-novel fit,
 four-frame player/resident locomotion, a 12-resident production registry with
 five hair and five outfit silhouettes, one physical keyboard/touch path through
-the 14 approach-only estate details, all four two-frame community task
-vignettes, all eight two-frame butterflies/dragonflies, 88 exterior props
-across 22 forms, 12 collision-aware story clusters across six forms, 54 baked
+the 14 approach-only estate details, all five two-frame community task
+vignettes, all eight two-frame butterflies/dragonflies, 90 exterior props
+across 24 forms, 12 collision-aware story clusters across six forms, 54 baked
 ground accents, responsive exterior zoom, pond phase, pooled walking feedback,
 reduced-motion stillness, Chapter 2
 rain/puddles/shelter/resident/cat/activity/laundry responses,

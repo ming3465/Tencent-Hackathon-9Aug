@@ -109,8 +109,9 @@ product requirements, not optional polish.
   activity tools/laundry preserve the story state. Title-image drift,
   decorative particles, screen fades, and portrait-expression transitions
   also stop.
-- Preserve responsive world legibility: the exterior uses 1.32× wide-desktop,
-  1.22× tablet, and 1× mobile framing; responsive resize updates both Phaser
+- Preserve responsive world legibility: the exterior uses 0.94× wide-desktop,
+  0.9× tablet, and 0.84× mobile framing to retain courtyard context;
+  responsive resize updates both Phaser
   scale and the active camera rather than relying on CSS stretching.
 - Fit desktop interiors from both viewport dimensions and centre unused camera
   margins. Prefer a 0.56× phone readability floor, but cap it by available
@@ -212,7 +213,7 @@ the complete physical travel route open. The nearby prompt, location label,
 and Journal carry the semantic information without relying on those colours.
 The harness also proves that 41 placed landscape objects instantiate across
 four generated forms while keyboard travel still reaches both far districts.
-It separately proves 88 exterior props across 22 texture forms, 12
+It separately proves 90 exterior props across 24 texture forms, 12
 collision-aware story clusters across six forms, and 54 baked drain/leaf
 accents while the same keyboard travel lanes remain open.
 The code-drawn landmark names, awnings, glazing, and structural details are

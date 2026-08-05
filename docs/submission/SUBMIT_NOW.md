@@ -89,7 +89,7 @@ requirements.
 - [ ] Add the "rules verbatim" AI-compliance line to the deck if not already
       present after the handbook is read (see playbook §2 action 9).
 - [x] Complete the judge-path interaction-density and elder-led scam-awareness
-      pass: 14 approach details, four ambient activities, Minah's mandatory
+      pass: 14 approach details, five ambient activities, Minah's mandatory
       check-before-you-act beat, and its persistent shop-window card now ship.
       The optional keepsake-table rehome and proximity bubbles are not claimed.
 
