@@ -110,7 +110,7 @@ accessibility-contract, and 8 world-layout/door/pause tests.
 - [x] Reduced-motion monsoon keeps the overcast/wet story state while falling
       rain is hidden and puddle phase remains static
 - [x] A slept exterior wakes with its location label, controls, camera image,
-      and consequence state restored
+      consequence state, and authored door resting states restored
 - [x] The Journal opens from its visible control as a modal quest book, makes
       the world inert, focuses Close, exposes four keyboard-switchable tabs,
       selected objectives/progress and tracked state, and wraps focus. Escape
@@ -123,8 +123,9 @@ accessibility-contract, and 8 world-layout/door/pause tests.
 - [x] Wide estate and full-width interiors resize the active camera; the
       desktop 960×640 room fits and unused margins remain centred
 - [x] The circular map exposes seven anchors, highlights one current indoor
-      landmark, opens Places, remains in bounds at 360px, and follows physical
-      east/south player movement
+      landmark, opens Places, remains in bounds at 360px, occupies the top-left
+      with the two-card Journal list, clears the top-right area label, and
+      follows physical east/south player movement
 - [x] Exterior camera reports 0.94× at wide desktop and 0.84× at 360px mobile
 - [x] Player movement physically reaches and captures the layered pond before
       continuing through the open east/south travel spine
@@ -146,6 +147,9 @@ accessibility-contract, and 8 world-layout/door/pause tests.
       from one audited registry with style, anchor, approach, return spawn,
       collider, placard, and target; closed blockers open idempotently before
       the entry step and fade
+- [x] Real Chrome completes estate → kopitiam → estate → kopitiam → estate;
+      both returns show a closed exterior leaf, enabled blocker, focused stage,
+      focused document, and enabled keyboard/touch controls
 - [x] All eight exterior structures resolve one audited projection profile,
       spanning two roof styles and seven baked entry recesses without changing
       the entrance or collision registries

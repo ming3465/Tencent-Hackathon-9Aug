@@ -3200,3 +3200,57 @@ collision-aware, stateful Phaser scene rather than a replacement bitmap.
   collection, runtime model/network call, timer, failure state, energy system,
   medical claim, copied third-party art, or runtime generated environment
   raster was introduced.
+
+## 2026-08-05 - Reusable Doors, Top-Left HUD, and Todo Tencent Sync
+
+**Tool:** Codex
+
+**Goal:** Fix exterior doors that stayed open and became unusable after leaving
+an interior, move the minimap and compact Journal quest list to the top-left,
+and make the Todo Tencent board reflect completed and remaining work.
+
+**Diagnosis and implementation:**
+
+- Traced the symptom to the estate scene sleeping during interior travel. The
+  used `DoorView` remained in `transitioning`, with open leaves and its blocker
+  disabled. On the next attempt, the interaction path disabled world controls
+  before `open()` rejected the stale state, which felt like browser focus loss
+  even though document focus remained intact.
+- Added reusable controller/view reset APIs. Resuming the exterior scene now
+  stops door tweens, restores authored transforms and state, and restores the
+  correct blocker behavior. A pre-authorization guard prevents stale doors from
+  taking controls, while a defensive failed-open path re-enables them.
+- Moved the HUD rail containing the circular minimap and at-most-two-card quest
+  tracker to the top-left at desktop, mobile, and short-landscape breakpoints.
+  The area chip moved to the top-right so it does not overlap the rail.
+- Extended the production Chrome harness with a repeated
+  estate → kopitiam → estate → kopitiam → estate regression. Both returns must
+  restore the closed door and blocker while keeping controls enabled, the
+  sandbox stage focused, and `document.hasFocus()` true. HUD checks now assert
+  top-left placement and separation from the area chip.
+- Updated the Todo Tencent Notion records for the map, quest display, quest
+  implementation, and estate entrances. The stale quest card is now Done with
+  dated evidence. Verified board totals are 32 Done, three In progress, and
+  nine Not started.
+
+**Verification:**
+
+- Strict TypeScript passed and Vitest passed **90/90**.
+- Production build: **93.05 kB HTML (16.28 kB gzip), 135.02 kB initial
+  JavaScript (39.95 kB gzip), and 1,609.95 kB lazy scene (376.49 kB gzip)**.
+- `npm audit` reported zero known vulnerabilities.
+- The complete WebGL browser route passed **60/60**, including the repeated
+  doorway lifecycle and focus/control assertions, top-left HUD at all required
+  breakpoints, touch collision, all 12 locations, and zero layout issues.
+
+**Tooling limitation and claim boundary:**
+
+- The in-app browser bootstrap reported that the browser was unavailable, so
+  verification used the repository's real-Chrome CDP production harness.
+- This is AI-assisted code authoring, automated local browser evidence, and an
+  explicitly requested Notion update. It is not a human or older-adult
+  playtest, real-phone/tablet run, screen-reader or 200% zoom session,
+  accessibility certification, commit, push, public deployment, or social or
+  health outcome claim. No account, backend, analytics, personal-data
+  collection, runtime model/network call, timer, failure state, energy system,
+  or medical claim was introduced.

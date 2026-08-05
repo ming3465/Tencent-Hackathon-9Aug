@@ -329,6 +329,24 @@ class DoorView {
     return true;
   }
 
+  canActivate(): boolean {
+    return this.controller.canActivate();
+  }
+
+  resetForReuse(): void {
+    this.scene.tweens.killTweensOf(this.leaves);
+    for (const leaf of this.leaves) {
+      leaf
+        .setPosition(this.definition.anchor.x, this.definition.anchor.y)
+        .setScale(1, 1);
+    }
+    const startsOpen = this.definition.startsOpen === true;
+    this.controller.reset(startsOpen);
+    const body = this.blocker.body as Phaser.Physics.Arcade.StaticBody | null;
+    if (body) body.enable = !startsOpen;
+    if (startsOpen) this.setOpenPose();
+  }
+
   getSnapshot(): { id: string; state: string; blockerEnabled: boolean } {
     const body = this.blocker.body as Phaser.Physics.Arcade.StaticBody | null;
     return {
@@ -1204,6 +1222,9 @@ abstract class WalkableScene extends Phaser.Scene {
   }
 
   resumeFromSleep(spawn: SpawnPoint): void {
+    for (const doorView of this.doorViews.values()) {
+      doorView.resetForReuse();
+    }
     this.setPlayerPosition(spawn);
     this.refreshCampaignState();
     this.cameras.main.resetFX();
@@ -1526,6 +1547,7 @@ abstract class WalkableScene extends Phaser.Scene {
 
   private activateInteraction(interaction: WorldInteraction): void {
     const doorView = this.doorViews.get(interaction.id);
+    if (doorView && !doorView.canActivate()) return;
     const authorized = this.callbacks.onInteract(interaction);
     if (!doorView || authorized === false) return;
     this.cancelTapNavigation("door-opening");
@@ -1534,7 +1556,7 @@ abstract class WalkableScene extends Phaser.Scene {
       doorView.definition.anchor.x,
       doorView.definition.anchor.y,
     );
-    doorView.open(this.reducedMotion, () => {
+    const opened = doorView.open(this.reducedMotion, () => {
       const { anchor, orientation, targetLocationId } = doorView.definition;
       const step = 22;
       const destination = {
@@ -1556,6 +1578,11 @@ abstract class WalkableScene extends Phaser.Scene {
         onComplete: enter,
       });
     });
+    if (!opened) {
+      // A transition-state race must never strand keyboard/touch controls.
+      this.setControlsEnabled(true);
+      this.updateNearbyInteraction(true);
+    }
   }
 
   protected addNpc(

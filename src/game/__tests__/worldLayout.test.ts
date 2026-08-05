@@ -169,6 +169,17 @@ describe("door and pause state", () => {
     expect(controller.finishOpening()).toBe(false);
     expect(controller.beginTransition()).toBe(true);
     expect(controller.beginTransition()).toBe(false);
+    expect(controller.canActivate()).toBe(false);
+
+    controller.reset();
+    expect(controller.getState()).toBe("closed");
+    expect(controller.canActivate()).toBe(true);
+    expect(controller.beginOpening()).toBe(true);
+
+    controller.reset(true);
+    expect(controller.getState()).toBe("open");
+    expect(controller.canActivate()).toBe(true);
+    expect(controller.beginTransition()).toBe(true);
   });
 
   it("implements nested Escape semantics without losing pause", () => {

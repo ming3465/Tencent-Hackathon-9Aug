@@ -85,6 +85,7 @@ let exteriorWorldWidth = 0;
 let exteriorEdgePaletteSize = 0;
 let mobileGameEvidence = null;
 let questTrackerEvidence = null;
+let doorLifecycleEvidence = null;
 const questStoryTitles = new Set();
 const renderedLocationNames = new Set();
 
@@ -336,10 +337,10 @@ try {
         );
       })()`,
       label,
-      // A single authored line can take just over three seconds at the
-      // production typewriter cadence. Wait for that real completion signal
-      // instead of racing longer environmental-detail copy on WebGL.
-      5000
+      // Long environmental-detail copy can cross five seconds when Chrome is
+      // also encoding evidence screenshots. Keep waiting for the real typing
+      // completion signal instead of weakening the rendered-line assertion.
+      8000
     );
 
   const sampleFramePacing = () => page.eval(`
@@ -1122,7 +1123,13 @@ try {
       saved?.completedChapters?.length === 5,
       JSON.stringify(saved?.completedChapters)
     );
+    // Let the final dialogue close and Phaser finish its scene wake before
+    // asking Chrome to composite the day-complete frame. Capturing during that
+    // hand-off can starve the next Runtime.evaluate in screenshot mode even
+    // though the page and campaign state are otherwise healthy.
+    await sleep(700);
     await page.shot(`${SHOT_DIR}/08-day-complete.png`);
+    await sleep(300);
   };
 
   const verifyResidentLife = async () => {
@@ -1648,6 +1655,111 @@ try {
     await page.shot(`${SHOT_DIR}/27-ambient-micro-scenes.png`);
     await walkToAxis("y", 400);
     await walkToAxis("x", 700);
+  };
+
+  const verifyReusableEstateDoor = async () => {
+    const waitForLiveFrames = (duration) => page.eval(`
+      new Promise((resolve) => {
+        const startedAt = performance.now();
+        const tick = (now) => {
+          if (now - startedAt >= ${duration}) {
+            resolve(true);
+            return;
+          }
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      })
+    `);
+
+    const useNearbyDoor = async (
+      x,
+      y,
+      doorId,
+      expectedLocation,
+    ) => {
+      await page.eval(`
+        window.__kampungSmoke.setPlayerPosition(${x}, ${y});
+        document.getElementById("sandbox-stage").focus({ preventScroll: true });
+      `);
+      await waitForPageCondition(
+        `window.__kampungSmoke?.getMotionSnapshot?.()?.nearbyInteractionId
+          === ${JSON.stringify(doorId)}
+          && window.__kampungSmoke?.getMotionSnapshot?.()
+            ?.tapNavigation?.controlsEnabled === true`,
+        `${doorId} to become interactive`,
+        1800,
+      );
+      // `setPlayerPosition` installs a Phaser-time interaction latch. Evidence
+      // screenshots can briefly pause rendering, so wait for live animation
+      // frames rather than assuming Node wall time advanced the scene clock.
+      await waitForLiveFrames(720);
+      const nearbyId = await page.eval(
+        `window.__kampungSmoke?.getMotionSnapshot?.()?.nearbyInteractionId ?? null`
+      );
+      if (nearbyId !== doorId) {
+        throw new Error(`Expected nearby door ${doorId}, found ${nearbyId}`);
+      }
+      await page.eval(`window.__kampungSmoke.tryInteract()`);
+      await waitForLiveFrames(620);
+      await page.eval(`
+        if (window.__kampungSmoke?.getMotionSnapshot?.()?.locationId
+          !== ${JSON.stringify(expectedLocation)}) {
+          window.__kampungSmoke.tryInteract();
+        }
+      `);
+      await waitForPageCondition(
+        `window.__kampungSmoke?.getMotionSnapshot?.()?.locationId
+          === ${JSON.stringify(expectedLocation)}`,
+        `${doorId} to enter ${expectedLocation}`,
+        5000,
+      );
+      await sleep(260);
+    };
+
+    const readReturnedDoor = () => page.eval(`
+      (() => {
+        const snapshot = window.__kampungSmoke?.getMotionSnapshot?.();
+        const door = snapshot?.doors?.find(
+          (candidate) => candidate.id === "estate-kopitiam"
+        );
+        return {
+          locationId: snapshot?.locationId ?? null,
+          state: door?.state ?? null,
+          blockerEnabled: door?.blockerEnabled ?? null,
+          controlsEnabled: snapshot?.tapNavigation?.controlsEnabled ?? false,
+          activeElement: document.activeElement?.id ?? null,
+          documentFocused: document.hasFocus(),
+        };
+      })()
+    `);
+
+    await useNearbyDoor(1550, 400, "estate-kopitiam", "kopitiam");
+    await useNearbyDoor(480, 500, "kopitiam-exit", "estate");
+    const firstReturn = await readReturnedDoor();
+    await useNearbyDoor(1550, 400, "estate-kopitiam", "kopitiam");
+    await useNearbyDoor(480, 500, "kopitiam-exit", "estate");
+    const secondReturn = await readReturnedDoor();
+    const returnedDoorIsReusable = (state) =>
+      state.locationId === "estate"
+      && state.state === "closed"
+      && state.blockerEnabled === true
+      && state.controlsEnabled
+      && state.activeElement === "sandbox-stage"
+      && state.documentFocused;
+    doorLifecycleEvidence = {
+      firstReturn: returnedDoorIsReusable(firstReturn),
+      secondEntry: true,
+      secondReturn: returnedDoorIsReusable(secondReturn),
+      firstState: firstReturn,
+      secondState: secondReturn,
+    };
+    diagnostics.push(
+      `  DOOR  close/re-enter/close=${doorLifecycleEvidence.firstReturn}/` +
+        `${doorLifecycleEvidence.secondEntry}/${doorLifecycleEvidence.secondReturn}; ` +
+        `focus=${secondReturn.activeElement}/${secondReturn.documentFocused}; ` +
+        `controls=${secondReturn.controlsEnabled}`
+    );
   };
 
   const verifyReducedEnvironment = async () => {
@@ -2331,6 +2443,7 @@ try {
     (() => {
       const shell = document.getElementById("world-shell").getBoundingClientRect();
       const rail = document.getElementById("hud-rail").getBoundingClientRect();
+      const area = document.getElementById("area-name").getBoundingClientRect();
       const story = document.querySelector('.quest-tracker-card.story');
       const progress = story?.querySelector('[role="progressbar"]');
       return {
@@ -2342,8 +2455,17 @@ try {
         fallback: !!document.querySelector('.quest-tracker-requests-action'),
         insideWorld:
           rail.top >= shell.top
+          && rail.left >= shell.left
           && rail.right <= shell.right
           && rail.bottom <= shell.bottom,
+        topLeft:
+          rail.left <= shell.left + 24
+          && rail.top <= shell.top + 24,
+        clearsArea:
+          rail.right <= area.left
+          || rail.left >= area.right
+          || rail.bottom <= area.top
+          || rail.top >= area.bottom,
       };
     })()
   `);
@@ -2638,7 +2760,9 @@ try {
       && /Listen to the Voice/.test(initialQuestTracker.next ?? "")
       && initialQuestTracker.progress === "0"
       && initialQuestTracker.fallback
-      && initialQuestTracker.insideWorld,
+      && initialQuestTracker.insideWorld
+      && initialQuestTracker.topLeft
+      && initialQuestTracker.clearsArea,
     keyboardTabs: journalTabKeyboard,
     tracking: journalTracking,
     opened:
@@ -3005,6 +3129,7 @@ try {
   await walkToAxis("y", 1490, 30);
   await page.shot(`${SHOT_DIR}/28-block-twelve-bicycle-verge.png`);
   await page.shotElement("#sandbox-stage canvas", `${SHOT_DIR}/hero-day.png`);
+  await verifyReusableEstateDoor();
 
   await page.eval(`document.getElementById("btn-return-title").click()`);
   await sleep(650);
@@ -3187,6 +3312,9 @@ try {
             && rail.right <= shell.right
             && rail.top >= shell.top
             && rail.bottom <= shell.bottom,
+          topLeft:
+            rail.left <= shell.left + 16
+            && rail.top <= shell.top + 16,
           clearsTouch:
             Array.from(document.querySelectorAll(".dpad button, #btn-touch-interact"))
               .every((button) => {
@@ -3302,6 +3430,7 @@ try {
       && mobileWorldState.questRail.title === "The First Door"
       && mobileWorldState.questRail.progressVisible
       && mobileWorldState.questRail.inside
+      && mobileWorldState.questRail.topLeft
       && mobileWorldState.questRail.clearsTouch,
     journal:
       mobileJournalState.open
@@ -3389,6 +3518,9 @@ try {
         const hudClear = touchElements.every((button) =>
           !overlaps(hud, button.getBoundingClientRect())
         );
+        const hudTopLeft =
+          hud.left <= shell.left + 16
+          && hud.top <= shell.top + 16;
         const trackerCompact =
           trackerCards.length <= 2
           && trackerCards.every((card) => {
@@ -3409,6 +3541,7 @@ try {
             Math.abs(canvas.width - stage.width) <= 1
             && Math.abs(canvas.height - stage.height) <= 1,
           hudClear,
+          hudTopLeft,
           trackerCompact,
           fits:
             Math.abs(screen.height - innerHeight) <= 1
@@ -3421,6 +3554,7 @@ try {
             && topbarTargets
             && touchTargets
             && inside(hud, shell)
+            && hudTopLeft
             && hudClear
             && trackerCompact
             && Math.abs(canvas.width - stage.width) <= 1
@@ -3651,14 +3785,27 @@ try {
   await page.eval(`document.getElementById("sandbox-stage").focus({ preventScroll: true })`);
   await sleep(80);
 
-  // Start close to the known wall so this assertion measures the 650ms
-  // no-progress cutoff rather than variable travel time from an earlier tap.
+  // Start left of Y's bookshelf and tap into its solid side. The former sofa
+  // point sits beneath the top-left HUD after camera clamping, where the UI
+  // correctly consumes the touch instead of the canvas.
   await page.eval(`
-    window.__kampungSmoke.setPlayerPosition(470, 250);
+    window.__kampungSmoke.setPlayerPosition(760, 230);
     document.getElementById("sandbox-stage").focus({ preventScroll: true });
   `);
   await sleep(120);
-  const blockedPoint = await worldPointToClient(350, 250);
+  const blockedPoint = await worldPointToClient(840, 230);
+  const blockedPointHitsCanvas = await page.eval(`
+    (() => {
+      const hit = document.elementFromPoint(
+        ${blockedPoint.x},
+        ${blockedPoint.y}
+      );
+      return hit?.matches?.("#sandbox-stage canvas") === true;
+    })()
+  `);
+  if (!blockedPointHitsCanvas) {
+    throw new Error("Collision-stall probe did not hit the world canvas");
+  }
   await touchTap(blockedPoint.x, blockedPoint.y);
   await sleep(1900);
   const afterCollisionStall = await page.eval(
@@ -3868,6 +4015,10 @@ try {
       && districtTravelEvidence.minimapMoved
       && questTrackerEvidence
       && Object.values(questTrackerEvidence).every(Boolean)
+      && doorLifecycleEvidence
+      && doorLifecycleEvidence.firstReturn
+      && doorLifecycleEvidence.secondEntry
+      && doorLifecycleEvidence.secondReturn
       && [
         "The First Door",
         "Open the Way",

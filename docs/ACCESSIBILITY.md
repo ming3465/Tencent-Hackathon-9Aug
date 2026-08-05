@@ -244,6 +244,11 @@ existing 360 px capture and overflow assertion remain the mobile evidence.
 The same run toggles Sound inside Settings while the scene remains frozen. It
 verifies the main-character triangle follows the player above the sprite,
 then exercises Settings-owned full-screen entry/exit and exact Resume focus.
+It also repeats the same exterior doorway after an indoor return and requires
+the stage and document to retain focus with keyboard/touch controls enabled.
+The minimap and compact Journal quest list are kept together at the top-left;
+the location label occupies the opposite corner and automated desktop/mobile
+layout checks reject overlap or viewport escape.
 
 ## Manual checks still required
 

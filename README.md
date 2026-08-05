@@ -49,8 +49,8 @@ hallucination path.
 - A quest-book Journal, opened only on request, with Story, Requests, People,
   and Places tabs; selected-quest detail, objective checklists, proportional
   progress, optional-request tracking, and context actions remain available
-  without a timer. A compact rail beneath the minimap automatically follows
-  the active story and can show one session-only tracked request
+  without a timer. A compact top-left rail beneath the minimap automatically
+  follows the active story and can show one session-only tracked request
 - A circular code-drawn estate minimap with seven landmark anchors, the current
   indoor building, live outdoor player movement, and a direct Places shortcut
 - WASD, arrow-key, `E`, Space, visible buttons, and touch controls; taps can
@@ -112,7 +112,9 @@ hallucination path.
   district. Six pedestrian streets, eight independently baked buildings,
   choice-specific shelter geometry, the minimap, NPC routes, and 22 contextual
   DoorViews resolve from one audited world registry. Doors own their approach,
-  blocker, opening state, entry step, and paired return spawn. The playable world
+  blocker, opening state, entry step, and paired return spawn. Sleeping exterior
+  doors restore their authored closed/open pose and collider on return, so the
+  same entrance remains reusable without dropping world controls or focus. The playable world
   remains code-drawn after two generated visual-direction studies were
   selectively translated rather than copied; the separately reviewed title
   panorama is the only generated raster intentionally shipped at runtime

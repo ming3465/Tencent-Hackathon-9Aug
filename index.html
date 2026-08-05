@@ -747,7 +747,7 @@
       .area-chip {
         position: absolute;
         top: 0.8rem;
-        left: 0.8rem;
+        right: 0.8rem;
         z-index: 4;
         margin: 0;
         padding: 0.45rem 0.7rem;
@@ -1974,11 +1974,11 @@
       .hud-rail {
         position: absolute;
         top: 0.75rem;
-        right: 0.75rem;
+        left: 0.75rem;
         z-index: 5;
         width: 220px;
         display: flex;
-        align-items: flex-end;
+        align-items: flex-start;
         gap: 0.55rem;
         flex-direction: column;
         pointer-events: none;
@@ -2763,7 +2763,7 @@
       @media (max-width: 680px) {
         .hud-rail {
           top: 0.5rem;
-          right: 0.5rem;
+          left: 0.5rem;
           width: 142px;
           gap: 0.38rem;
         }
@@ -3165,7 +3165,7 @@
             <p id="area-name" class="area-chip">Community Court</p>
             <p class="fullscreen-hint" aria-hidden="true"><kbd>Esc</kbd> pauses the neighbourhood</p>
 
-            <aside id="hud-rail" class="hud-rail" aria-label="Estate map and quest progress">
+            <aside id="hud-rail" class="hud-rail" aria-label="Estate map and Journal quest list">
               <button id="estate-minimap" class="estate-minimap" type="button" aria-label="Circular estate map. You are at Y's Flat. Open Places in the Journal.">
                 <span class="minimap-disc" aria-hidden="true">
                   <svg class="minimap-svg" viewBox="0 0 100 100" focusable="false">

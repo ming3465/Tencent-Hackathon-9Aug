@@ -29,4 +29,12 @@ export class DoorTransitionController {
     this.state = "transitioning";
     return true;
   }
+
+  canActivate(): boolean {
+    return this.state === "closed" || this.state === "open";
+  }
+
+  reset(startsOpen = false): void {
+    this.state = startsOpen ? "open" : "closed";
+  }
 }

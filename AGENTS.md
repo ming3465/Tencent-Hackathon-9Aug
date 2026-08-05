@@ -105,6 +105,22 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-05 (Codex, reusable-door and top-left HUD lane)** — Traced the
+  apparent browser-focus failure to a slept exterior `DoorView` remaining in
+  its terminal transition state: the next interaction disabled world controls,
+  but the stale controller refused to reopen. Exterior doors now reset their
+  authored leaf pose, state, and blocker on scene wake, stale activations are
+  rejected before controls are disabled, and the unexpected-open fallback
+  restores controls. Moved the minimap plus compact Journal quest list to the
+  top-left and the area chip to the top-right. Extended the production-browser
+  route to repeat estate → kopitiam → estate twice and verify the closed door,
+  blocker, controls, stage focus, and document focus. Strict TypeScript,
+  90/90 tests, the 93.05/135.02/1,609.95 kB build, zero-vulnerability audit,
+  and 60/60 WebGL smoke route passed. Updated Todo Tencent's map, quest, and
+  entrance records; the board now has 32 Done, three In progress, and nine Not
+  started items. No commit, push, deployment, human playtest, or real-device
+  verification was claimed.
+
 - **2026-08-05 (Codex, reference-led courtyard coherence)** — Confirmed the
   user's attached target is the repository's reviewed OpenAI estate-density
   study and translated its accepted composition language without shipping the

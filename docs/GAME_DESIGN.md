@@ -119,6 +119,8 @@ Enterable locations include:
 - prayer hall
 
 Exterior state sleeps while indoors and wakes at the correct return door.
+Every exterior `DoorView` resets to its authored resting pose and collider
+before controls resume, so leaving and re-entering the same room is repeatable.
 Visual consequences and lighting persist across chapter progress.
 
 ## World-first interface
@@ -132,6 +134,9 @@ optional tracked-quest state. Future chapters remain spoiler-free. Opening the
 Journal makes the world inert, moves focus to the visible Close button, and
 traps focus inside. Close or the backdrop dismisses it. Escape opens Pause
 above the Journal without changing its selected entry or focus position.
+The minimap and its at-most-two-card Journal quest list occupy the top-left of
+the world; the area label moves to the top-right so the two HUD regions do not
+overlap.
 
 The exterior and interiors use the full available shell. Each 960×640 interior
 computes a room-fit zoom from both viewport dimensions, caps desktop at 1.08×,
@@ -281,8 +286,10 @@ doors, workshop shutters, open hawker gates, and lift doors share an idempotent
 transition guard. Closed thresholds block movement; an authorised interaction
 cancels navigation, faces the player, opens over 180 ms, disables the blocker,
 steps through, and then fades the scene. Reduced motion applies the opening
-immediately. Tap hit-testing recognizes the visible leaf but navigates to the
-unblocked approach point.
+immediately. Waking the slept estate resets leaf transforms, transition state,
+and closed blockers before input resumes. A stale transition cannot run the
+authorization path or disable controls. Tap hit-testing recognizes the visible
+leaf but navigates to the unblocked approach point.
 
 Twenty-two building collision shell pieces leave audited gaps aligned with the
 seven exterior thresholds. The layout audit also rejects overlapping buildings,
