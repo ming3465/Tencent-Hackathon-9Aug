@@ -84,6 +84,8 @@ let exteriorWakePaletteSize = 0;
 let exteriorWorldWidth = 0;
 let exteriorEdgePaletteSize = 0;
 let mobileGameEvidence = null;
+let questTrackerEvidence = null;
+const questStoryTitles = new Set();
 const renderedLocationNames = new Set();
 
 function check(label, condition, detail = "") {
@@ -522,6 +524,14 @@ try {
     await sleep(220);
   };
 
+  const recordStoryTrackerTitle = async () => {
+    const title = await page.eval(
+      `document.querySelector('.quest-tracker-card.story > strong')?.textContent?.trim() ?? ''`
+    );
+    if (title) questStoryTitles.add(title);
+    return title;
+  };
+
   const journalCategoryForSection = {
     "Main Story": "story",
     "Optional Requests": "requests",
@@ -783,29 +793,29 @@ try {
     if (!testPhysicalControls) {
       await clickButton("Use the first door", "Main Story", "Block 9 Corridor");
     } else {
-      await page.eval(`document.getElementById("sandbox-stage").focus({ preventScroll: true })`);
-      await page.key("keyDown", "ArrowDown", "ArrowDown", 40);
-      await sleep(330);
-      await page.key("keyUp", "ArrowDown", "ArrowDown", 40);
-      await page.key("keyDown", "ArrowLeft", "ArrowLeft", 37);
-      await sleep(480);
-      await page.key("keyUp", "ArrowLeft", "ArrowLeft", 37);
-      await sleep(250);
-      const exitPrompt = await page.eval(`document.getElementById("nearby-text").textContent`);
-      check(
-        "Keyboard movement reaches Y's usable door",
-        /Block 9 Corridor|Return to the corridor/i.test(exitPrompt),
-        exitPrompt,
+      const beforeKeyboard = await page.eval(
+        `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
       );
-      await page.key("keyDown", "e", "KeyE", 69);
-      await sleep(100);
-      await page.key("keyUp", "e", "KeyE", 69);
-      await sleep(850);
+      await walkWorld("ArrowLeft", "ArrowLeft", 37, 240);
+      const afterKeyboard = await page.eval(
+        `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
+      );
+      check(
+        "Keyboard movement responds inside Y's flat",
+        beforeKeyboard
+          && afterKeyboard
+          && beforeKeyboard.locationId === "y-flat"
+          && afterKeyboard.locationId === "y-flat"
+          && beforeKeyboard.player.x - afterKeyboard.player.x >= 18,
+        `${JSON.stringify(beforeKeyboard?.player)} -> ${JSON.stringify(afterKeyboard?.player)}`,
+      );
+      await clickButton("Use the first door", "Main Story", "Block 9 Corridor");
     }
     check(
       "The first door enters the HDB corridor",
       /Block 9 Corridor/i.test(await page.eval(`document.getElementById("area-name").textContent`))
     );
+    await recordStoryTrackerTitle();
   };
 
   const inspectMrLong = async (testTouchExit) => {
@@ -857,7 +867,83 @@ try {
       "An Invitation, Not a Notice",
       "Shade That Follows the Route",
     ];
-    for (const request of requests.slice(0, count)) {
+    let completedInsideTrackerCheck = false;
+    if (!questTrackerEvidence) {
+      await ensureJournalOpen();
+      await activateJournalSection("Optional Requests");
+      const selected = await page.eval(`
+        (() => {
+          const item = Array.from(document.querySelectorAll(".journal-item"))
+            .find((candidate) => candidate.querySelector("h3")?.textContent.trim()
+              === "A Garden People Use");
+          const button = item?.querySelector(".journal-entry-select");
+          if (!button) return false;
+          button.click();
+          document.querySelector("#journal-detail .journal-track-button")?.click();
+          return true;
+        })()
+      `);
+      await sleep(100);
+      await page.eval(`document.getElementById("btn-journal-close").click()`);
+      await sleep(120);
+      const tracked = await page.eval(`
+        (() => {
+          const cards = Array.from(document.querySelectorAll(".quest-tracker-card"));
+          const request = document.querySelector('.quest-tracker-card.request');
+          return {
+            selected: ${JSON.stringify(selected)},
+            cards: cards.length,
+            title: request?.querySelector("strong")?.textContent.trim() ?? null,
+            progress: request?.querySelector('[role="progressbar"]')
+              ?.getAttribute("aria-valuenow") ?? null,
+            journalTracked: document.getElementById("btn-journal").dataset.tracked,
+          };
+        })()
+      `);
+      await page.eval(`document.querySelector('.quest-tracker-card.request')?.click()`);
+      await sleep(120);
+      const linked = await page.eval(`
+        document.querySelector('[role="tab"][aria-selected="true"]')
+          ?.dataset.journalCategory === "requests"
+        && document.querySelector("#journal-detail h3")?.textContent.trim()
+          === "A Garden People Use"
+      `);
+      await page.eval(`document.querySelector("#journal-detail .journal-action")?.click()`);
+      await sleep(180);
+      await completeDialogueChoice(gardenChoice);
+      const completed = await page.eval(`
+        (() => {
+          const request = document.querySelector('.quest-tracker-card.request');
+          return request?.querySelector('[role="progressbar"]')
+            ?.getAttribute("aria-valuenow") === "1"
+            && request?.querySelector("b")?.textContent.trim() === "1/1";
+        })()
+      `);
+      await page.eval(`document.querySelector('.quest-tracker-card.request')?.click()`);
+      await sleep(100);
+      await page.eval(`document.querySelector("#journal-detail .journal-track-button")?.click()`);
+      await sleep(80);
+      await page.eval(`document.getElementById("btn-journal-close").click()`);
+      await sleep(100);
+      const fallback = await page.eval(`
+        !document.querySelector('.quest-tracker-card.request')
+        && document.querySelector('.quest-tracker-requests-action')
+          ?.textContent.trim() === "Track a request"
+      `);
+      questTrackerEvidence = {
+        optionalTracked:
+          tracked.selected
+          && tracked.cards === 2
+          && tracked.title === "A Garden People Use"
+          && tracked.progress === "0"
+          && tracked.journalTracked === "true",
+        journalLink: linked,
+        optionalCompleted: completed,
+        fallback,
+      };
+      completedInsideTrackerCheck = true;
+    }
+    for (const request of requests.slice(completedInsideTrackerCheck ? 1 : 0, count)) {
       await completeRequest(
         request,
         request === "A Garden People Use" ? gardenChoice : 0,
@@ -867,6 +953,7 @@ try {
       `${count} distinct helper routes advance to Chapter 2`,
       /CHAPTER 2/i.test(await page.eval(`document.getElementById("chapter-label").textContent`))
     );
+    await recordStoryTrackerTitle();
   };
 
   const completeChapter2 = async (attendeeCount) => {
@@ -954,6 +1041,7 @@ try {
       "Two independent clues open Grandma Ros's kitchen",
       /kitchen is now open/i.test(await page.eval(`document.getElementById("campaign-progress").textContent`))
     );
+    await recordStoryTrackerTitle();
     await clickButton(
       "Enter Grandma Ros's kitchen",
       "Main Story",
@@ -970,6 +1058,7 @@ try {
       `${attendeeCount} invitations stage the lesson and unlock Chapter 3`,
       /CHAPTER 3/i.test(await page.eval(`document.getElementById("chapter-label").textContent`))
     );
+    await recordStoryTrackerTitle();
   };
 
   const completeChapter3 = async () => {
@@ -1014,6 +1103,7 @@ try {
       "Calm no-failure weaving unlocks the ending",
       /ENDING/i.test(await page.eval(`document.getElementById("chapter-label").textContent`))
     );
+    await recordStoryTrackerTitle();
     await page.shot(`${SHOT_DIR}/07-evening-reflection.png`);
   };
 
@@ -1025,6 +1115,7 @@ try {
       "The Last Door ends in free exploration",
       /Story complete/i.test(await page.eval(`document.getElementById("chapter-label").textContent`))
     );
+    await recordStoryTrackerTitle();
     const saved = JSON.parse(await page.eval(`localStorage.getItem("kampung-sg.campaign.v1")`));
     check(
       "Full campaign autosave retains every completed chapter",
@@ -1891,7 +1982,7 @@ try {
         busy: document.getElementById("sandbox-stage").getAttribute("aria-busy"),
         worldControlsInert:
           document.getElementById("sandbox-stage").hasAttribute("inert")
-          && document.getElementById("estate-minimap").hasAttribute("inert")
+          && document.getElementById("hud-rail").hasAttribute("inert")
           && document.getElementById("interaction-prompt").hasAttribute("inert")
           && document.querySelector(".touch-controls").hasAttribute("inert")
           && document.querySelector(".topbar-actions").hasAttribute("inert"),
@@ -1949,7 +2040,7 @@ try {
           && !document.getElementById("btn-start-over").disabled,
         worldControlsRestored:
           !document.getElementById("sandbox-stage").hasAttribute("inert")
-          && !document.getElementById("estate-minimap").hasAttribute("inert")
+          && !document.getElementById("hud-rail").hasAttribute("inert")
           && !document.getElementById("interaction-prompt").hasAttribute("inert")
           && !document.querySelector(".touch-controls").hasAttribute("inert")
           && !document.querySelector(".topbar-actions").hasAttribute("inert"),
@@ -1994,7 +2085,7 @@ try {
         notBusy: document.getElementById("sandbox-stage").getAttribute("aria-busy") === "false",
         worldControlsInert:
           document.getElementById("sandbox-stage").hasAttribute("inert")
-          && document.getElementById("estate-minimap").hasAttribute("inert")
+          && document.getElementById("hud-rail").hasAttribute("inert")
           && document.getElementById("interaction-prompt").hasAttribute("inert")
           && document.querySelector(".touch-controls").hasAttribute("inert")
           && document.querySelector(".topbar-actions").hasAttribute("inert"),
@@ -2029,7 +2120,7 @@ try {
           && !document.getElementById("btn-start-over").disabled,
         worldControlsRestored:
           !document.getElementById("sandbox-stage").hasAttribute("inert")
-          && !document.getElementById("estate-minimap").hasAttribute("inert")
+          && !document.getElementById("hud-rail").hasAttribute("inert")
           && !document.getElementById("interaction-prompt").hasAttribute("inert")
           && !document.querySelector(".touch-controls").hasAttribute("inert")
           && !document.querySelector(".topbar-actions").hasAttribute("inert"),
@@ -2073,9 +2164,16 @@ try {
   const titleScreenEvidence = await page.eval(`
     (() => {
       const art = document.querySelector(".title-art");
+      const screen = document.getElementById("screen-title").getBoundingClientRect();
       return {
         title: document.title.includes("Kampung SG"),
         noOverflow: document.documentElement.scrollWidth <= window.innerWidth,
+        viewportFill:
+          Math.abs(screen.width - innerWidth) <= 1
+          && Math.abs(screen.height - innerHeight) <= 1,
+        documentLocked:
+          document.documentElement.scrollHeight <= innerHeight + 1
+          && getComputedStyle(document.body).overflow === "hidden",
         artLoaded:
           art instanceof HTMLImageElement
           && art.complete
@@ -2089,6 +2187,8 @@ try {
     "Title screen renders its reviewed art without desktop overflow",
     titleScreenEvidence.title
       && titleScreenEvidence.noOverflow
+      && titleScreenEvidence.viewportFill
+      && titleScreenEvidence.documentLocked
       && titleScreenEvidence.artLoaded
       && titleScreenEvidence.artFormat,
     JSON.stringify(titleScreenEvidence)
@@ -2122,6 +2222,63 @@ try {
   const closedWorldWidth = await page.eval(
     `document.querySelector(".world-shell").getBoundingClientRect().width`
   );
+  const desktopViewportEvidence = await page.eval(`
+    (() => {
+      const screen = document.getElementById("screen-sandbox").getBoundingClientRect();
+      const topbar = document.querySelector(".topbar").getBoundingClientRect();
+      const shell = document.getElementById("world-shell").getBoundingClientRect();
+      const canvas = document.querySelector("#sandbox-stage canvas").getBoundingClientRect();
+      return {
+        screenFill:
+          Math.abs(screen.width - innerWidth) <= 1
+          && Math.abs(screen.height - innerHeight) <= 1,
+        topbarVisible:
+          topbar.top >= 0
+          && topbar.bottom <= innerHeight
+          && getComputedStyle(document.querySelector(".topbar")).display !== "none",
+        shellUsesRemainder:
+          shell.top >= topbar.bottom
+          && shell.bottom <= innerHeight + 1
+          && innerHeight - shell.bottom < 20
+          && shell.height > 500,
+        canvasMatches:
+          Math.abs(canvas.width - shell.width + 10) <= 2
+          && Math.abs(canvas.height - shell.height + 10) <= 2,
+        noDocumentOverflow:
+          document.documentElement.scrollWidth <= innerWidth + 1
+          && document.documentElement.scrollHeight <= innerHeight + 1,
+      };
+    })()
+  `);
+  await page.send("Emulation.setDeviceMetricsOverride", {
+    width: 1440,
+    height: 1000,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await sleep(320);
+  const desktopExpandedEvidence = await page.eval(`
+    (() => {
+      const shell = document.getElementById("world-shell").getBoundingClientRect();
+      const stage = document.getElementById("sandbox-stage").getBoundingClientRect();
+      const canvas = document.querySelector("#sandbox-stage canvas").getBoundingClientRect();
+      return {
+        viewport: [innerWidth, innerHeight],
+        shellHeight: shell.height,
+        fillsRemainder: shell.bottom <= innerHeight + 1 && innerHeight - shell.bottom < 20,
+        canvasMatches:
+          Math.abs(canvas.width - stage.width) <= 1
+          && Math.abs(canvas.height - stage.height) <= 1,
+      };
+    })()
+  `);
+  await page.send("Emulation.setDeviceMetricsOverride", {
+    width: 1440,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await sleep(320);
   const gameLayoutWidth = await page.eval(
     `document.querySelector(".game-layout").getBoundingClientRect().width`
   );
@@ -2170,6 +2327,27 @@ try {
       };
     })()
   `);
+  const initialQuestTracker = await page.eval(`
+    (() => {
+      const shell = document.getElementById("world-shell").getBoundingClientRect();
+      const rail = document.getElementById("hud-rail").getBoundingClientRect();
+      const story = document.querySelector('.quest-tracker-card.story');
+      const progress = story?.querySelector('[role="progressbar"]');
+      return {
+        cards: document.querySelectorAll('.quest-tracker-card').length,
+        title: story?.querySelector("strong")?.textContent.trim() ?? null,
+        count: story?.querySelector("b")?.textContent.trim() ?? null,
+        next: story?.querySelector(".quest-tracker-objective")?.textContent.trim() ?? null,
+        progress: progress?.getAttribute("aria-valuenow") ?? null,
+        fallback: !!document.querySelector('.quest-tracker-requests-action'),
+        insideWorld:
+          rail.top >= shell.top
+          && rail.right <= shell.right
+          && rail.bottom <= shell.bottom,
+      };
+    })()
+  `);
+  await recordStoryTrackerTitle();
   const interiorCameraEvidence = await page.eval(`
     (() => {
       const stage = document.getElementById("sandbox-stage");
@@ -2184,11 +2362,13 @@ try {
       };
     })()
   `);
-  await page.eval(`document.getElementById("btn-journal").click()`);
+  await page.eval(`document.querySelector('.quest-tracker-card.story').click()`);
   await sleep(240);
   const openedJournal = await page.eval(`
     (() => {
       const panel = document.getElementById("journal-panel");
+      const backdropRect = document.getElementById("journal-backdrop")
+        .getBoundingClientRect();
       return {
         open: panel.classList.contains("open"),
         expanded: document.getElementById("btn-journal").getAttribute("aria-expanded"),
@@ -2196,6 +2376,11 @@ try {
         inert: panel.hasAttribute("inert"),
         focus: document.activeElement?.id,
         backdrop: document.getElementById("journal-backdrop").classList.contains("open"),
+        backdropViewport:
+          Math.abs(backdropRect.width - innerWidth) <= 1
+          && Math.abs(backdropRect.height - innerHeight) <= 1
+          && backdropRect.left >= -1
+          && backdropRect.top >= -1,
         tabs: panel.querySelectorAll('[role="tab"]').length,
         selectedTab:
           panel.querySelector('[role="tab"][aria-selected="true"]')
@@ -2222,22 +2407,14 @@ try {
   `);
   await page.key("keyDown", "ArrowLeft", "ArrowLeft", 37);
   await page.key("keyUp", "ArrowLeft", "ArrowLeft", 37);
-  await page.eval(
-    `document.querySelector("#journal-detail .journal-track-button")?.click()`
-  );
-  await sleep(80);
   const journalTracking = await page.eval(`
-    document.getElementById("btn-journal").dataset.tracked === "true"
-      && document.querySelector("#journal-detail .journal-track-button")
-        ?.getAttribute("aria-pressed") === "true"
-      && /Tracking The First Door/.test(
-        document.getElementById("estate-minimap").getAttribute("aria-label")
-      )
+    document.getElementById("btn-journal").dataset.tracked === "false"
+      && !document.querySelector("#journal-detail .journal-track-button")
+      && document.querySelector('[role="tab"][aria-selected="true"]')
+        ?.dataset.journalCategory === "story"
+      && document.querySelector("#journal-detail h3")?.textContent.trim()
+        === "The First Door"
   `);
-  await page.eval(
-    `document.querySelector("#journal-detail .journal-track-button")?.click()`
-  );
-  await sleep(80);
   await page.eval(`
     (() => {
       const visible = Array.from(document.querySelectorAll("#journal-panel button"))
@@ -2287,14 +2464,23 @@ try {
   await page.eval(`document.getElementById("btn-menu").click()`);
   await sleep(100);
   const pauseOpened = await page.eval(`
-    (() => ({
-      active: document.getElementById("pause-overlay").classList.contains("active"),
-      hidden: document.getElementById("pause-overlay").getAttribute("aria-hidden"),
-      inert: document.getElementById("pause-overlay").hasAttribute("inert"),
-      paused: window.__kampungSmoke?.isPaused?.() ?? false,
-      focus: document.activeElement?.id,
-      menuExpanded: document.getElementById("btn-menu").getAttribute("aria-expanded"),
-    }))()
+    (() => {
+      const overlay = document.getElementById("pause-overlay");
+      const rect = overlay.getBoundingClientRect();
+      return {
+        active: overlay.classList.contains("active"),
+        hidden: overlay.getAttribute("aria-hidden"),
+        inert: overlay.hasAttribute("inert"),
+        paused: window.__kampungSmoke?.isPaused?.() ?? false,
+        focus: document.activeElement?.id,
+        menuExpanded: document.getElementById("btn-menu").getAttribute("aria-expanded"),
+        viewport:
+          Math.abs(rect.width - innerWidth) <= 1
+          && Math.abs(rect.height - innerHeight) <= 1
+          && rect.left >= -1
+          && rect.top >= -1,
+      };
+    })()
   `);
   await page.shot(`${SHOT_DIR}/30-pause-menu.png`);
   await page.eval(`document.getElementById("btn-pause-settings").click()`);
@@ -2339,15 +2525,27 @@ try {
     2000
   );
   const enteredFullscreen = await page.eval(`
-    (() => ({
-      active:
+    (() => {
+      const screen = document.getElementById("screen-sandbox").getBoundingClientRect();
+      const topbar = document.querySelector(".topbar");
+      const topbarRect = topbar.getBoundingClientRect();
+      const shell = document.getElementById("world-shell").getBoundingClientRect();
+      return {
+        active:
         document.fullscreenElement === document.documentElement
         && document.documentElement.classList.contains("game-fullscreen")
         && document.getElementById("world-shell").classList.contains("fullscreen-active"),
-      pressed: document.getElementById("btn-fullscreen").getAttribute("aria-pressed"),
-      settings: !document.getElementById("pause-view-settings").hidden,
-      focus: document.activeElement?.id,
-    }))()
+        pressed: document.getElementById("btn-fullscreen").getAttribute("aria-pressed"),
+        settings: !document.getElementById("pause-view-settings").hidden,
+        focus: document.activeElement?.id,
+        sameLayout:
+          Math.abs(screen.height - innerHeight) <= 1
+          && getComputedStyle(topbar).display !== "none"
+          && topbarRect.top >= 0
+          && topbarRect.bottom <= shell.top + 1
+          && shell.bottom <= innerHeight + 1,
+      };
+    })()
   `);
   await page.eval(`document.getElementById("btn-fullscreen").click()`);
   await waitForPageCondition(
@@ -2388,7 +2586,8 @@ try {
       && !pauseOpened.inert
       && pauseOpened.paused
       && pauseOpened.focus === "btn-pause-resume"
-      && pauseOpened.menuExpanded === "true",
+      && pauseOpened.menuExpanded === "true"
+      && pauseOpened.viewport,
     settings: settingsOpened,
     frozen:
       beforePauseMovement
@@ -2399,7 +2598,8 @@ try {
       enteredFullscreen.active
       && enteredFullscreen.pressed === "true"
       && enteredFullscreen.settings
-      && enteredFullscreen.focus === "btn-fullscreen",
+      && enteredFullscreen.focus === "btn-fullscreen"
+      && enteredFullscreen.sameLayout,
     resumed:
       !resumedPause.active
       && !resumedPause.paused
@@ -2411,6 +2611,13 @@ try {
       && beforePauseMovement.player.x - afterPauseMovement.player.x >= 18,
   };
   const journalDrawerEvidence = {
+    viewportFill:
+      Object.values(desktopViewportEvidence).every(Boolean)
+      && desktopExpandedEvidence.viewport[0] === 1440
+      && desktopExpandedEvidence.viewport[1] === 1000
+      && desktopExpandedEvidence.shellHeight > 850
+      && desktopExpandedEvidence.fillsRemainder
+      && desktopExpandedEvidence.canvasMatches,
     worldFirstLayout: gameLayoutWidth >= browserWidth * 0.9,
     spaciousInterior:
       closedWorldWidth >= browserWidth * 0.9
@@ -2424,6 +2631,14 @@ try {
       && minimapEvidence.currentLandmarks === 1
       && minimapEvidence.place === "Y's Flat"
       && /^translate\(/.test(minimapEvidence.playerTransform ?? ""),
+    questRail:
+      initialQuestTracker.cards === 1
+      && initialQuestTracker.title === "The First Door"
+      && initialQuestTracker.count === "0/2"
+      && /Listen to the Voice/.test(initialQuestTracker.next ?? "")
+      && initialQuestTracker.progress === "0"
+      && initialQuestTracker.fallback
+      && initialQuestTracker.insideWorld,
     keyboardTabs: journalTabKeyboard,
     tracking: journalTracking,
     opened:
@@ -2433,6 +2648,7 @@ try {
       && openedJournal.inert === false
       && openedJournal.focus === "btn-journal-close"
       && openedJournal.backdrop
+      && openedJournal.backdropViewport
       && openedJournal.tabs === 4
       && openedJournal.selectedTab === "story"
       && openedJournal.sections === 4
@@ -2460,6 +2676,9 @@ try {
       `room-fit=${journalDrawerEvidence.interiorRoomFits}@` +
       `${interiorCameraEvidence.zoom.toFixed(2)}x; ` +
       `minimap=${JSON.stringify(minimapEvidence)}; ` +
+      `tracker=${JSON.stringify(initialQuestTracker)}; ` +
+      `viewport=${JSON.stringify(desktopViewportEvidence)}; ` +
+      `expanded=${JSON.stringify(desktopExpandedEvidence)}; ` +
       `tabs=${journalDrawerEvidence.keyboardTabs}; ` +
       `tracking=${journalDrawerEvidence.tracking}; ` +
       `journal-open=${journalDrawerEvidence.opened}; ` +
@@ -2478,7 +2697,6 @@ try {
     JSON.stringify(journalDrawerEvidence)
   );
   await page.shot(`${SHOT_DIR}/02-neighbourhood.png`);
-  await page.shotElement("#sandbox-stage canvas", `${SHOT_DIR}/hero-day.png`);
   renderedLocationNames.add("Y's Flat");
   await page.shot(`${SHOT_DIR}/03-nearby-resident.png`);
   await runCampaign({
@@ -2786,6 +3004,7 @@ try {
   await page.shot(`${SHOT_DIR}/17-workshop-facade.png`);
   await walkToAxis("y", 1490, 30);
   await page.shot(`${SHOT_DIR}/28-block-twelve-bicycle-verge.png`);
+  await page.shotElement("#sandbox-stage canvas", `${SHOT_DIR}/hero-day.png`);
 
   await page.eval(`document.getElementById("btn-return-title").click()`);
   await sleep(650);
@@ -2875,6 +3094,40 @@ try {
   await page.eval(`document.getElementById("btn-return-title").click()`);
   await sleep(400);
 
+  const shortTitleLayouts = [];
+  for (const viewport of [
+    { width: 320, height: 568 },
+    { width: 360, height: 560 },
+    { width: 640, height: 360 },
+  ]) {
+    await page.send("Emulation.setDeviceMetricsOverride", {
+      ...viewport,
+      deviceScaleFactor: 2,
+      mobile: true,
+    });
+    await sleep(220);
+    shortTitleLayouts.push(await page.eval(`
+      (() => {
+        const screen = document.getElementById("screen-title");
+        const rect = screen.getBoundingClientRect();
+        const overflowY = getComputedStyle(screen).overflowY;
+        return {
+          viewport: [innerWidth, innerHeight],
+          fills:
+            Math.abs(rect.width - innerWidth) <= 1
+            && Math.abs(rect.height - innerHeight) <= 1,
+          documentLocked:
+            document.documentElement.scrollWidth <= innerWidth + 1
+            && document.documentElement.scrollHeight <= innerHeight + 1
+            && getComputedStyle(document.body).overflow === "hidden",
+          internalOwnsOverflow:
+            screen.scrollHeight <= screen.clientHeight + 1
+            || overflowY === "auto"
+            || overflowY === "scroll",
+        };
+      })()
+    `));
+  }
   await page.send("Emulation.setDeviceMetricsOverride", {
     width: 360,
     height: 780,
@@ -2902,6 +3155,7 @@ try {
   const mobileWorldState = await page.eval(`
     (() => {
       const shell = document.querySelector(".world-shell").getBoundingClientRect();
+      const rail = document.getElementById("hud-rail").getBoundingClientRect();
       return {
         canvas: document.querySelectorAll("#sandbox-stage canvas").length,
         noOverflow: document.documentElement.scrollWidth <= 361,
@@ -2920,6 +3174,29 @@ try {
             inside: map.left >= shell.left && map.right <= shell.right,
           };
         })(),
+        questRail: {
+          cards: document.querySelectorAll(".quest-tracker-card").length,
+          title:
+            document.querySelector(".quest-tracker-card.story > strong")
+              ?.textContent.trim() ?? null,
+          progressVisible:
+            document.querySelector(".quest-tracker-progress-track")
+              ?.getBoundingClientRect().height >= 6,
+          inside:
+            rail.left >= shell.left
+            && rail.right <= shell.right
+            && rail.top >= shell.top
+            && rail.bottom <= shell.bottom,
+          clearsTouch:
+            Array.from(document.querySelectorAll(".dpad button, #btn-touch-interact"))
+              .every((button) => {
+                const target = button.getBoundingClientRect();
+                return rail.bottom <= target.top
+                  || rail.top >= target.bottom
+                  || rail.left >= target.right
+                  || rail.right <= target.left;
+              }),
+        },
       };
     })()
   `);
@@ -3020,7 +3297,12 @@ try {
       && mobileWorldState.cameraZoom <= 0.72
       && mobileWorldState.minimap.visible
       && mobileWorldState.minimap.circular
-      && mobileWorldState.minimap.inside,
+      && mobileWorldState.minimap.inside
+      && mobileWorldState.questRail.cards <= 2
+      && mobileWorldState.questRail.title === "The First Door"
+      && mobileWorldState.questRail.progressVisible
+      && mobileWorldState.questRail.inside
+      && mobileWorldState.questRail.clearsTouch,
     journal:
       mobileJournalState.open
       && mobileJournalState.left >= 0
@@ -3083,26 +3365,51 @@ try {
         const topbar = document.querySelector(".topbar").getBoundingClientRect();
         const shell = document.querySelector(".world-shell").getBoundingClientRect();
         const stage = document.getElementById("sandbox-stage").getBoundingClientRect();
+        const canvas = document.querySelector("#sandbox-stage canvas").getBoundingClientRect();
+        const hud = document.getElementById("hud-rail").getBoundingClientRect();
+        const trackerCards = Array.from(document.querySelectorAll(".quest-tracker-card"));
         const topbarTargets = Array.from(document.querySelectorAll(".topbar button"))
           .filter((button) => button.offsetParent !== null)
           .every((button) => {
             const rect = button.getBoundingClientRect();
             return rect.width >= 48 && rect.height >= 48 && inside(rect, viewport);
           });
-        const touchTargets = Array.from(document.querySelectorAll(
+        const touchElements = Array.from(document.querySelectorAll(
           ".dpad button, #btn-touch-interact"
-        )).every((button) => {
+        ));
+        const touchTargets = touchElements.every((button) => {
           const rect = button.getBoundingClientRect();
           return rect.width >= 48
             && rect.height >= 48
             && inside(rect, shell)
             && inside(rect, viewport);
         });
+        const overlaps = (a, b) =>
+          a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+        const hudClear = touchElements.every((button) =>
+          !overlaps(hud, button.getBoundingClientRect())
+        );
+        const trackerCompact =
+          trackerCards.length <= 2
+          && trackerCards.every((card) => {
+            const title = card.querySelector("strong")?.textContent.trim();
+            const progress = card.querySelector(".quest-tracker-progress-track")
+              ?.getBoundingClientRect();
+            const objective = card.querySelector(".quest-tracker-objective");
+            return Boolean(title)
+              && (progress?.height ?? 0) >= 6
+              && (!objective || getComputedStyle(objective).display === "none");
+          });
         return {
           viewport: [innerWidth, innerHeight],
           screenHeight: screen.height,
           shellHeight: shell.height,
           stageHeight: stage.height,
+          canvasMatches:
+            Math.abs(canvas.width - stage.width) <= 1
+            && Math.abs(canvas.height - stage.height) <= 1,
+          hudClear,
+          trackerCompact,
           fits:
             Math.abs(screen.height - innerHeight) <= 1
             && inside(topbar, viewport)
@@ -3112,7 +3419,12 @@ try {
             && document.documentElement.scrollWidth <= innerWidth + 1
             && document.documentElement.scrollHeight <= innerHeight + 1
             && topbarTargets
-            && touchTargets,
+            && touchTargets
+            && inside(hud, shell)
+            && hudClear
+            && trackerCompact
+            && Math.abs(canvas.width - stage.width) <= 1
+            && Math.abs(canvas.height - stage.height) <= 1,
         };
       })()
     `);
@@ -3414,6 +3726,9 @@ try {
   mobileGameEvidence.shortViewports = shortViewportLayouts.every(
     (layout) => layout.fits && layout.journalReachable,
   );
+  mobileGameEvidence.shortTitles = shortTitleLayouts.every(
+    (layout) => layout.fills && layout.documentLocked && layout.internalOwnsOverflow,
+  );
   mobileGameEvidence.tapNavigation = Object.values(tapNavigationEvidence).every(Boolean);
   diagnostics.push(
     `  MOBILE  world=${mobileGameEvidence.world}; ` +
@@ -3421,6 +3736,7 @@ try {
       `dialogue=${mobileGameEvidence.dialogue}; ` +
       `close-focus=${mobileGameEvidence.closedToWorld}; ` +
       `short=${mobileGameEvidence.shortViewports}; ` +
+      `short-title=${mobileGameEvidence.shortTitles}; ` +
       `tap=${mobileGameEvidence.tapNavigation}; ` +
       `drawer=${mobileJournalState.width.toFixed(0)}px; ` +
       `portrait=${portraitEvidence.mobile.portraitWidth.toFixed(0)}x` +
@@ -3437,6 +3753,10 @@ try {
     `  TOUCH  ${JSON.stringify(tapNavigationEvidence)}; ` +
       `viewports=${shortViewportLayouts.map((layout) =>
         `${layout.viewport.join("x")}:${layout.fits}/${layout.journalReachable}`
+      ).join(",")}; ` +
+      `titles=${shortTitleLayouts.map((layout) =>
+        `${layout.viewport.join("x")}:${layout.fills}/${layout.documentLocked}/` +
+        `${layout.internalOwnsOverflow}`
       ).join(",")}`
   );
   const normalFrameBudget = Math.max(
@@ -3545,6 +3865,17 @@ try {
       && districtTravelEvidence.east
       && districtTravelEvidence.south
       && districtTravelEvidence.minimapMoved
+      && questTrackerEvidence
+      && Object.values(questTrackerEvidence).every(Boolean)
+      && [
+        "The First Door",
+        "Open the Way",
+        "Who Knows Grandma Ros?",
+        "A Place at the Table",
+        "Hands Remember",
+        "The Last Door",
+        "Story complete · Free exploration",
+      ].every((title) => questStoryTitles.has(title))
       && terrainDetailEvidence
       && terrainDetailEvidence.grassColourCount >= 3
       && terrainDetailEvidence.pathColourCount >= 6
@@ -3680,6 +4011,10 @@ try {
           `exterior-width=${exteriorWorldWidth.toFixed(0)}px, ` +
           `edge-colours=${exteriorEdgePaletteSize}`
         : "district travel evidence missing",
+      questTrackerEvidence
+        ? `quest-tracker=${JSON.stringify(questTrackerEvidence)}, ` +
+          `story=${JSON.stringify([...questStoryTitles])}`
+        : "quest tracker evidence missing",
       terrainDetailEvidence
         ? `grass-colours=${terrainDetailEvidence.grassColourCount}, ` +
           `path-colours=${terrainDetailEvidence.pathColourCount}, ` +

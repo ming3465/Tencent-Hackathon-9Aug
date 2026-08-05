@@ -16,6 +16,33 @@ export interface PedestrianStreetDefinition extends EstateRect {
   surface: "diagonal-cobbles" | "tiled-apron";
 }
 
+export type TreeTexture = "tree-rain" | "tree-palm" | "tree-frangipani";
+
+export interface TreeDefinition {
+  id: string;
+  texture: TreeTexture;
+  anchor: EstatePoint;
+  spriteSize: {
+    width: number;
+    height: number;
+  };
+  trunkCollider: EstateRect;
+  depthLayer: 5;
+}
+
+export interface SidewalkApronDefinition extends EstateRect {
+  surface: "tiled-apron";
+}
+
+export interface SideLampDefinition {
+  id: string;
+  texture: "prop-lamp";
+  anchor: EstatePoint;
+  apronId: string;
+  collider: EstateRect;
+  depthLayer: 4;
+}
+
 export type EstateFacadeAccent =
   | "coral"
   | "gold"
@@ -130,10 +157,13 @@ export interface EstateVehicleRouteDefinition {
 export interface WorldLayoutDefinition {
   bounds: EstateRect;
   streets: readonly PedestrianStreetDefinition[];
+  sidewalkAprons: readonly SidewalkApronDefinition[];
   buildings: readonly BuildingDefinition[];
   buildingColliders: readonly EstateRect[];
   doors: readonly DoorDefinition[];
   shelters: readonly ShelterDefinition[];
+  trees: readonly TreeDefinition[];
+  sideLamps: readonly SideLampDefinition[];
   npcRoutes: readonly NpcRouteDefinition[];
   bicycleRacks: readonly EstateBicycleRackDefinition[];
   vehicleLanes: readonly EstateRect[];
@@ -203,6 +233,84 @@ export const PEDESTRIAN_STREETS: readonly PedestrianStreetDefinition[] = [
     axis: "plaza",
     surface: "tiled-apron",
   },
+];
+
+export const SIDEWALK_APRONS: readonly SidewalkApronDefinition[] = [
+  { id: "lamp-apron-north-west", x: 742, y: 500, width: 56, height: 40, surface: "tiled-apron" },
+  { id: "lamp-apron-north-centre", x: 992, y: 500, width: 56, height: 40, surface: "tiled-apron" },
+  { id: "lamp-apron-east-market", x: 1990, y: 630, width: 56, height: 40, surface: "tiled-apron" },
+  { id: "lamp-apron-civic-south", x: 1062, y: 1010, width: 56, height: 40, surface: "tiled-apron" },
+  { id: "lamp-apron-south-west", x: 622, y: 1230, width: 56, height: 40, surface: "tiled-apron" },
+  { id: "lamp-apron-south-east", x: 1992, y: 1230, width: 56, height: 40, surface: "tiled-apron" },
+];
+
+const TREE_SPRITE_SIZES: Readonly<Record<TreeTexture, TreeDefinition["spriteSize"]>> = {
+  "tree-rain": { width: 180, height: 166 },
+  "tree-palm": { width: 140, height: 178 },
+  "tree-frangipani": { width: 138, height: 136 },
+};
+
+const tree = (
+  id: string,
+  texture: TreeTexture,
+  x: number,
+  y: number,
+): TreeDefinition => ({
+  id,
+  texture,
+  anchor: { x, y },
+  spriteSize: TREE_SPRITE_SIZES[texture],
+  trunkCollider: {
+    id: `${id}-trunk`,
+    x: x - 10,
+    y: y - 24,
+    width: 20,
+    height: 24,
+  },
+  depthLayer: 5,
+});
+
+export const ESTATE_TREES: readonly TreeDefinition[] = [
+  tree("tree-north-west-frangipani", "tree-frangipani", 90, 700),
+  tree("tree-west-rain", "tree-rain", 270, 740),
+  tree("tree-market-east-frangipani", "tree-frangipani", 2180, 636),
+  tree("tree-far-east-palm", "tree-palm", 2490, 700),
+  tree("tree-south-west-rain", "tree-rain", 790, 1408),
+  tree("tree-south-west-palm", "tree-palm", 960, 1550),
+  tree("tree-south-centre-palm", "tree-palm", 1450, 1480),
+  tree("tree-south-centre-frangipani", "tree-frangipani", 1650, 1370),
+  tree("tree-south-east-rain", "tree-rain", 2140, 1450),
+  tree("tree-south-east-frangipani", "tree-frangipani", 2300, 1530),
+  tree("tree-far-south-east-rain", "tree-rain", 2465, 1400),
+];
+
+const sideLamp = (
+  id: string,
+  x: number,
+  y: number,
+  apronId: string,
+): SideLampDefinition => ({
+  id,
+  texture: "prop-lamp",
+  anchor: { x, y },
+  apronId,
+  collider: {
+    id: `${id}-base`,
+    x: x - 7,
+    y: y - 12,
+    width: 14,
+    height: 12,
+  },
+  depthLayer: 4,
+});
+
+export const ESTATE_SIDE_LAMPS: readonly SideLampDefinition[] = [
+  sideLamp("side-lamp-north-west", 770, 532, "lamp-apron-north-west"),
+  sideLamp("side-lamp-north-centre", 1020, 532, "lamp-apron-north-centre"),
+  sideLamp("side-lamp-east-market", 2018, 662, "lamp-apron-east-market"),
+  sideLamp("side-lamp-civic-south", 1090, 1042, "lamp-apron-civic-south"),
+  sideLamp("side-lamp-south-west", 650, 1262, "lamp-apron-south-west"),
+  sideLamp("side-lamp-south-east", 2020, 1262, "lamp-apron-south-east"),
 ];
 
 const building = (
@@ -413,10 +521,13 @@ export const ESTATE_BUILDING_COLLISION_ZONES: readonly EstateRect[] =
 export const WORLD_LAYOUT: WorldLayoutDefinition = {
   bounds: ESTATE_WORLD_BOUNDS,
   streets: PEDESTRIAN_STREETS,
+  sidewalkAprons: SIDEWALK_APRONS,
   buildings: ESTATE_BUILDINGS,
   buildingColliders: ESTATE_BUILDING_COLLISION_ZONES,
   doors: DOOR_DEFINITIONS,
   shelters: SHELTER_DEFINITIONS,
+  trees: ESTATE_TREES,
+  sideLamps: ESTATE_SIDE_LAMPS,
   npcRoutes: ESTATE_NPC_ROUTES,
   bicycleRacks: ESTATE_BICYCLE_RACKS,
   vehicleLanes: ESTATE_VEHICLE_LANES,
@@ -483,6 +594,27 @@ export function pointIsInRect(point: EstatePoint, rectangle: EstateRect): boolea
     && point.x <= rectangle.x + rectangle.width
     && point.y >= rectangle.y
     && point.y <= rectangle.y + rectangle.height;
+}
+
+export function treeSpriteBounds(definition: TreeDefinition): EstateRect {
+  return {
+    id: `${definition.id}-sprite`,
+    x: definition.anchor.x - definition.spriteSize.width / 2,
+    y: definition.anchor.y - definition.spriteSize.height,
+    width: definition.spriteSize.width,
+    height: definition.spriteSize.height,
+  };
+}
+
+export function doorApproachBounds(definition: DoorDefinition): EstateRect {
+  const clearance = Math.max(96, definition.dimensions.width + 24);
+  return {
+    id: `${definition.id}-approach-clearance`,
+    x: definition.approachPoint.x - clearance / 2,
+    y: definition.approachPoint.y - 48,
+    width: clearance,
+    height: 96,
+  };
 }
 
 export function getDoorsForLocation(locationId: LocationId): readonly DoorDefinition[] {
@@ -569,6 +701,9 @@ export function auditEstateLayout(): readonly string[] {
   unique(PEDESTRIAN_STREETS.map(({ id }) => id), "street ID");
   unique(DOOR_DEFINITIONS.map(({ id }) => id), "door ID");
   unique(SHELTER_DEFINITIONS.map(({ id }) => id), "shelter ID");
+  unique(ESTATE_TREES.map(({ id }) => id), "tree ID");
+  unique(SIDEWALK_APRONS.map(({ id }) => id), "sidewalk apron ID");
+  unique(ESTATE_SIDE_LAMPS.map(({ id }) => id), "side lamp ID");
 
   for (let index = 0; index < ESTATE_BUILDINGS.length; index += 1) {
     const definition = ESTATE_BUILDINGS[index];
@@ -585,6 +720,67 @@ export function auditEstateLayout(): readonly string[] {
 
   if (PEDESTRIAN_STREETS[0] && !hasStreetConnection(PEDESTRIAN_STREETS[0])) {
     issues.push("Pedestrian street network is disconnected");
+  }
+
+  for (const apron of SIDEWALK_APRONS) {
+    if (!rectangleContains(ESTATE_WORLD_BOUNDS, apron)) {
+      issues.push(`${apron.id} leaves the estate bounds`);
+    }
+    if (PEDESTRIAN_STREETS.some((street) => rectanglesOverlap(apron, street))) {
+      issues.push(`${apron.id} overlaps a pedestrian street`);
+    }
+  }
+
+  for (const definition of ESTATE_TREES) {
+    const bounds = treeSpriteBounds(definition);
+    if (!rectangleContains(ESTATE_WORLD_BOUNDS, bounds)) {
+      issues.push(`${definition.id} sprite leaves the estate bounds`);
+    }
+    if (!rectangleContains(bounds, definition.trunkCollider)) {
+      issues.push(`${definition.id} trunk leaves its sprite bounds`);
+    }
+    for (const street of PEDESTRIAN_STREETS) {
+      if (rectanglesOverlap(bounds, street)) {
+        issues.push(`${definition.id} sprite blocks ${street.id}`);
+      }
+    }
+    for (const buildingDefinition of ESTATE_BUILDINGS) {
+      if (rectanglesOverlap(bounds, buildingDefinition.bounds)) {
+        issues.push(`${definition.id} sprite overlaps ${buildingDefinition.id}`);
+      }
+    }
+    for (const shelterDefinition of SHELTER_DEFINITIONS) {
+      if (rectanglesOverlap(bounds, shelterDefinition.bounds)) {
+        issues.push(`${definition.id} sprite overlaps ${shelterDefinition.id}`);
+      }
+    }
+    for (const apron of SIDEWALK_APRONS) {
+      if (rectanglesOverlap(bounds, apron)) {
+        issues.push(`${definition.id} sprite overlaps ${apron.id}`);
+      }
+    }
+  }
+
+  for (const lamp of ESTATE_SIDE_LAMPS) {
+    const apron = SIDEWALK_APRONS.find(({ id }) => id === lamp.apronId);
+    if (!apron) {
+      issues.push(`${lamp.id} references a missing sidewalk apron`);
+      continue;
+    }
+    if (!rectangleContains(apron, lamp.collider)) {
+      issues.push(`${lamp.id} base leaves ${apron.id}`);
+    }
+    if (PEDESTRIAN_STREETS.some((street) => rectanglesOverlap(lamp.collider, street))) {
+      issues.push(`${lamp.id} base blocks a pedestrian street`);
+    }
+    if (DOOR_DEFINITIONS
+      .filter(({ sourceLocationId }) => sourceLocationId === "estate")
+      .some((doorDefinition) => rectanglesOverlap(
+        lamp.collider,
+        doorApproachBounds(doorDefinition),
+      ))) {
+      issues.push(`${lamp.id} base blocks a door approach`);
+    }
   }
 
   if (DOOR_DEFINITIONS.length !== 22) {

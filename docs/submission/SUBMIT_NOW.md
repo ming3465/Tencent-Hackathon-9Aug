@@ -24,7 +24,7 @@
 | --- | --- | --- |
 | 1 | **Game Web Link** | ⚠️ https://ming3465.github.io/Tencent-Hackathon-9Aug/ is live, but this latest local loader/touch/consequence-art pass was not pushed or deployed. After explicit release approval, deploy and verify both the full route and `?demo=1` logged out (see `docs/DEMO_MODE.md`). |
 | 2 | **Project Introduction Deck (PPT)** | ✅ `docs/deck/Kampung SG-Project Introduction Deck-TheTwoGuys.pptx` + `.pdf`, refreshed for the five-part campaign and KampungMind. Re-export after any later count or screenshot change. |
-| 3 | **Game Demo Video** | ⚠️ **CURRENT-BUILD REFRESH AND HUMAN FINISHING REMAIN.** The preserved artifact set contains 63.1 s of indexed silent B-roll plus a reproducible, open-captioned **90.0 s narration-ready review cut** at `docs/video/kampung-sg-demo-review.mp4`. Those durations remain valid historical artifact facts, but the footage predates the registry-driven three-quarter world, 22 DoorViews, corrected choice-specific shelters, Pause/Settings, Phaser.AUTO renderer gate, and 85-test build. It is **not current-build footage**. Its exact 14-beat sources and claim boundaries are in `demo-review-beats.json`; regenerate with `npm run compose:video` after recapturing affected shots or explicitly comparing and approving unchanged sources. The AI-receipts montage, engineering/integrity cards, and QR end slate are already present. **Still required:** current terminal/gameplay evidence, human voice-over, an ear-checked sound mix, final approval, rename to `Kampung SG-Game Demo Video-TheTwoGuys.mp4`, upload, and logged-out link check. The checked-in MP4 is not the final submission video. |
+| 3 | **Game Demo Video** | ⚠️ **CURRENT-BUILD REFRESH AND HUMAN FINISHING REMAIN.** The preserved artifact set contains 63.1 s of indexed silent B-roll plus a reproducible, open-captioned **90.0 s narration-ready review cut** at `docs/video/kampung-sg-demo-review.mp4`. Those durations remain valid historical artifact facts, but the footage predates the registry-driven three-quarter world, 22 DoorViews, corrected choice-specific shelters, Pause/Settings, Phaser.AUTO renderer gate, and 90-test build. It is **not current-build footage**. Its exact 14-beat sources and claim boundaries are in `demo-review-beats.json`; regenerate with `npm run compose:video` after recapturing affected shots or explicitly comparing and approving unchanged sources. The AI-receipts montage, engineering/integrity cards, and QR end slate are already present. **Still required:** current terminal/gameplay evidence, human voice-over, an ear-checked sound mix, final approval, rename to `Kampung SG-Game Demo Video-TheTwoGuys.mp4`, upload, and logged-out link check. The checked-in MP4 is not the final submission video. |
 | + | Social bonus (+5) | ❌ Copy ready in `docs/submission/SOCIAL_POST.md`. Confirmed hashtags: `#CodeBuddy #腾讯云黑客松` (+ event tags) on Xiaohongshu / YouTube / X. Post before submission, screenshot each. |
 
 ## Fail-closed backup package
@@ -79,7 +79,7 @@ requirements.
       boundaries.
 - [ ] Refresh or explicitly approve the gameplay and terminal sources against
       the latest three-quarter world, DoorView, Pause/Settings, renderer, and
-      85-test build.
+      90-test build.
 - [x] Add a fail-closed review/final backup builder with exact filenames,
       media/deck/link/hash checks, an untracked human-approval record, and
       explicit scoring-risk warnings.
@@ -111,12 +111,12 @@ node scripts/capture-deck.mjs
 # Rebuild the raster PDF and render all eight pages with Poppler for inspection.
 ```
 
-Current truth as of 2026-08-05: **85/85 tests (27 campaign · 31 match ·
-17 audio · 4 accessibility · 6 world/door/pause) · 60/60 browser checks in
+Current truth as of 2026-08-05: **90/90 tests (30 campaign · 31 match ·
+17 audio · 4 accessibility · 8 world/door/pause) · 60/60 browser checks in
 default WebGL and forced Canvas fallback ·
 0 known vulnerabilities at the latest audit**. Latest verified production
-build: **HTML 86.59 kB (15.50 kB gzip) · initial JS 129.02 kB (38.50 kB gzip)
-· lazy campaign scene 1,602.13 kB (374.24 kB gzip)**.
+build: **HTML 93.04 kB (16.28 kB gzip) · initial JS 135.02 kB (39.95 kB gzip)
+· lazy campaign scene 1,602.10 kB (374.15 kB gzip)**.
 If those numbers appear anywhere as something else, fix before submitting.
 
 ## Claim boundaries (unchanged, non-negotiable)

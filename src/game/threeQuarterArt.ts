@@ -3,6 +3,7 @@ import Phaser from "phaser";
 import {
   ESTATE_BUILDINGS,
   PEDESTRIAN_STREETS,
+  SIDEWALK_APRONS,
   type BuildingDefinition,
   type EstateRect,
   type PedestrianStreetDefinition,
@@ -120,6 +121,17 @@ export function paintThreeQuarterTerrain(
   for (const street of PEDESTRIAN_STREETS) {
     const local = intersect(street, originX, originY, width, height);
     if (local) paintStreet(graphics, street, local, originX, originY);
+  }
+  for (const apron of SIDEWALK_APRONS) {
+    const local = intersect(apron, originX, originY, width, height);
+    if (!local) continue;
+    paintStreet(
+      graphics,
+      { ...apron, axis: "plaza" },
+      local,
+      originX,
+      originY,
+    );
   }
 
   for (const definition of ESTATE_BUILDINGS) {

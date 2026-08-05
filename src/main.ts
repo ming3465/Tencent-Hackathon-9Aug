@@ -31,11 +31,11 @@ import {
 } from "./game/estateMap.js";
 import {
   JOURNAL_CATEGORIES,
+  buildQuestTrackerView,
   buildJournalView,
   defaultJournalEntryId,
   type JournalCategory,
   type JournalEntryView,
-  type JournalViewModel,
 } from "./game/journal.js";
 import { selectNpcIntent } from "./game/kampungMind.js";
 import {
@@ -107,6 +107,8 @@ const areaName = byId<HTMLElement>("area-name");
 const chapterLabel = byId<HTMLElement>("chapter-label");
 const liveRegion = byId<HTMLElement>("live-region");
 const estateMinimap = byId<HTMLButtonElement>("estate-minimap");
+const hudRail = byId<HTMLElement>("hud-rail");
+const questTracker = byId<HTMLElement>("quest-tracker");
 const minimapPlace = byId<HTMLElement>("minimap-place");
 const minimapPlayer = byId<HTMLElement>("minimap-player");
 const minimapLayout = document.getElementById("minimap-layout") as unknown as SVGGElement;
@@ -265,8 +267,8 @@ const pauseAccessibilitySnapshot = new Map<
 >();
 let journalCategory: JournalCategory = "story";
 let journalRenderedRevision = -1;
-let trackedQuestId: string | null = null;
-let trackedQuestTitle: string | null = null;
+let trackedRequestEntryId: string | null = null;
+let trackedRequestTitle: string | null = null;
 const selectedJournalEntries: Partial<Record<JournalCategory, string>> = {};
 const destroyedCampaignHandles = new WeakSet<CampaignGameHandle>();
 let campaignScenePromise: Promise<CampaignSceneModule> | null = null;
@@ -550,7 +552,7 @@ function renderCampaignLoader(phase: CampaignLoaderPhase): void {
   const blocksWorldControls = phase === "opening" || phase === "slow" || phase === "failed";
   for (const surface of [
     sandboxStage,
-    estateMinimap,
+    hudRail,
     interactionPrompt,
     touchControls,
     topbarActions,
@@ -1320,14 +1322,91 @@ function renderMinimap(): void {
   estateMinimap.setAttribute(
     "aria-label",
     `Circular estate map. You are at ${locationName}.${
-      trackedQuestTitle ? ` Tracking ${trackedQuestTitle}.` : ""
+      trackedRequestTitle ? ` Tracked request: ${trackedRequestTitle}.` : ""
     } Open Places in the Journal.`,
   );
+}
+
+function appendTrackerCard(
+  card: ReturnType<typeof buildQuestTrackerView>["story"],
+): void {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = `quest-tracker-card ${card.kind}`;
+  button.dataset.questTrackerKind = card.kind;
+  if (card.entryId) button.dataset.questEntry = card.entryId;
+  const kind = document.createElement("span");
+  kind.className = "quest-tracker-kind";
+  kind.textContent = card.kind === "story" ? "Main story" : "Tracked request";
+  const title = document.createElement("strong");
+  title.textContent = card.title;
+  const progress = document.createElement("span");
+  progress.className = "quest-tracker-progress";
+  const track = document.createElement("span");
+  track.className = "quest-tracker-progress-track";
+  track.setAttribute("role", "progressbar");
+  track.setAttribute("aria-label", `${card.title} progress`);
+  track.setAttribute("aria-valuemin", "0");
+  track.setAttribute("aria-valuemax", String(card.progressTotal));
+  track.setAttribute("aria-valuenow", String(card.progressCurrent));
+  const fill = document.createElement("span");
+  fill.style.width = `${card.progressTotal > 0
+    ? (card.progressCurrent / card.progressTotal) * 100
+    : 0}%`;
+  track.appendChild(fill);
+  const count = document.createElement("b");
+  count.textContent = `${card.progressCurrent}/${card.progressTotal}`;
+  progress.append(track, count);
+  button.append(kind, title, progress);
+  if (card.nextObjective) {
+    const objective = document.createElement("span");
+    objective.className = "quest-tracker-objective";
+    objective.textContent = `Next · ${card.nextObjective}`;
+    button.appendChild(objective);
+  }
+  button.setAttribute(
+    "aria-label",
+    `${kind.textContent}: ${card.title}. ${card.progressCurrent} of ${
+      card.progressTotal
+    } objectives complete.${
+      card.nextObjective ? ` Next: ${card.nextObjective}.` : ""
+    } Open in the Journal.`,
+  );
+  button.addEventListener("click", () => {
+    openJournalEntry(card.category, card.entryId);
+  });
+  questTracker.appendChild(button);
+}
+
+function renderQuestTracker(): void {
+  const currentLocation =
+    campaignHandle?.getCurrentLocation() ?? campaignState.currentLocation;
+  const view = buildQuestTrackerView(
+    campaignState,
+    trackedRequestEntryId,
+    currentLocation,
+  );
+  questTracker.replaceChildren();
+  appendTrackerCard(view.story);
+  if (view.request) appendTrackerCard(view.request);
+  if (view.showRequestsAction) {
+    const action = document.createElement("button");
+    action.type = "button";
+    action.className = "quest-tracker-requests-action";
+    action.textContent = "Track a request";
+    action.setAttribute(
+      "aria-label",
+      "Open the Requests tab in the Journal to track an optional request.",
+    );
+    action.addEventListener("click", () => openJournalEntry("requests", null));
+    questTracker.appendChild(action);
+  }
 }
 
 function renderCampaign(): void {
   renderMeters();
   renderJournal();
+  renderQuestTracker();
   renderMinimap();
   const chapter = campaignState.currentChapter === "free-explore"
     ? null
@@ -1454,7 +1533,6 @@ function selectJournalEntry(
 }
 
 function renderJournalDetail(
-  view: JournalViewModel,
   entry: JournalEntryView | null,
 ): void {
   journalDetail.innerHTML = "";
@@ -1538,20 +1616,18 @@ function renderJournalDetail(
 
   const actions = document.createElement("div");
   actions.className = "journal-detail-actions";
-  const trackable =
-    (entry.category === "story" || entry.category === "requests")
-    && !entry.locked
-    && !entry.complete;
+  const trackable = entry.category === "requests" && !entry.locked;
   if (trackable) {
     const track = document.createElement("button");
-    const tracked = trackedQuestId === entry.id;
+    const tracked = trackedRequestEntryId === entry.id;
     track.type = "button";
     track.className = "journal-track-button";
     track.setAttribute("aria-pressed", String(tracked));
     track.textContent = tracked ? "Tracking quest" : "Track quest";
     track.addEventListener("click", () => {
-      trackedQuestId = tracked ? null : entry.id;
+      trackedRequestEntryId = tracked ? null : entry.id;
       renderJournal();
+      renderQuestTracker();
       renderMinimap();
       journalDetail
         .querySelector<HTMLButtonElement>(".journal-track-button")
@@ -1574,11 +1650,6 @@ function renderJournalDetail(
     actions.appendChild(button);
   }
   if (actions.childElementCount) journalDetail.appendChild(actions);
-
-  const trackedEntry = JOURNAL_CATEGORIES
-    .flatMap((category) => view.entries[category])
-    .find((candidate) => candidate.id === trackedQuestId);
-  if (trackedEntry?.complete || trackedEntry?.locked) trackedQuestId = null;
 }
 
 function renderJournal(): void {
@@ -1680,11 +1751,11 @@ function renderJournal(): void {
     view.entries[journalCategory].find(
       (entry) => entry.id === selectedJournalEntries[journalCategory],
     ) ?? null;
-  renderJournalDetail(view, selectedEntry);
-  const trackedEntry = JOURNAL_CATEGORIES
-    .flatMap((category) => view.entries[category])
-    .find((entry) => entry.id === trackedQuestId);
-  trackedQuestTitle = trackedEntry?.title ?? null;
+  renderJournalDetail(selectedEntry);
+  const trackedEntry = view.entries.requests.find(
+    (entry) => entry.id === trackedRequestEntryId && !entry.locked,
+  );
+  trackedRequestTitle = trackedEntry?.title ?? null;
   btnJournal.dataset.tracked = String(Boolean(trackedEntry));
   btnJournal.setAttribute(
     "aria-label",
@@ -1758,6 +1829,15 @@ function mainStoryActions(): readonly JournalAction[] {
 function setJournalCategory(category: JournalCategory): void {
   journalCategory = category;
   renderJournal();
+}
+
+function openJournalEntry(
+  category: JournalCategory,
+  entryId: string | null,
+): void {
+  journalCategory = category;
+  if (entryId) selectedJournalEntries[category] = entryId;
+  openJournal();
 }
 
 function openJournal(): void {
@@ -2154,6 +2234,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 window.addEventListener("resize", queueCampaignViewportResize);
+window.visualViewport?.addEventListener("resize", queueCampaignViewportResize);
 document.addEventListener("fullscreenchange", () => {
   const active = isGameFullscreen();
   const changedFromSettings = fullscreenChangeFromSettings;

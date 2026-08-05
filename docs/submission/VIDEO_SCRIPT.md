@@ -6,7 +6,7 @@ edit; do not rely on one live take.
 
 The checked-in review MP4 predates the latest recoverable loader, tap
 navigation, code-drawn consequence-art, three-quarter world, Pause/Settings,
-22 DoorViews, and 85-test build. It is a historical
+22 DoorViews, and 90-test build. It is a historical
 review artifact, not current-build footage. Recapture affected gameplay and
 terminal shots, or compare and explicitly approve an unchanged source shot
 before using it in the final video.
@@ -48,8 +48,8 @@ Include a small caption when demo mode first appears:
 - [ ] Last Door and free exploration
 - [ ] Journal Main Story / Requests / People / Places
 - [ ] `npm test`, `npm audit`, and `npm run smoke` results
-- [ ] Current gate card: 85/85 tests (27 campaign, 31 match, 17 audio,
-      4 accessibility, 6 world/door/pause), 60/60 browser checks; latest build
+- [ ] Current gate card: 90/90 tests (30 campaign, 31 match, 17 audio,
+      4 accessibility, 8 world/door/pause), 60/60 browser checks; latest build
       HTML about 86.6/15.5 kB gzip, initial JS 128.8/38.4 kB gzip, and lazy
       scene 1,601.9/374.2 kB gzip
 - [ ] QR and live URL

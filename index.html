@@ -41,18 +41,29 @@
 
       html {
         min-width: 320px;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
         background: var(--night);
       }
 
       body {
         margin: 0;
-        min-height: 100dvh;
-        overflow-x: hidden;
+        width: 100dvw;
+        height: 100dvh;
+        min-height: 0;
+        overflow: hidden;
         color: var(--ink);
         background:
           radial-gradient(circle at 85% 5%, rgba(242, 184, 75, 0.2), transparent 26rem),
           var(--night);
         font-family: var(--font-ui);
+      }
+
+      #main {
+        width: 100dvw;
+        height: 100dvh;
+        overflow: hidden;
       }
 
       button {
@@ -99,7 +110,9 @@
 
       .screen {
         display: none;
-        width: 100%;
+        width: 100dvw;
+        height: 100dvh;
+        min-height: 0;
         min-width: 0;
         opacity: 0;
         transition: opacity 220ms ease;
@@ -151,8 +164,15 @@
 
       /* Title */
       #screen-title {
-        min-height: 100dvh;
-        padding: clamp(1rem, 4vw, 3rem);
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding:
+          max(clamp(1rem, 4vw, 3rem), env(safe-area-inset-top))
+          max(clamp(1rem, 4vw, 3rem), env(safe-area-inset-right))
+          max(clamp(1rem, 4vw, 3rem), env(safe-area-inset-bottom))
+          max(clamp(1rem, 4vw, 3rem), env(safe-area-inset-left));
         background:
           linear-gradient(115deg, rgba(255, 246, 220, 0.98), rgba(255, 251, 239, 0.95)),
           var(--cream);
@@ -375,15 +395,26 @@
 
       /* Sandbox */
       #screen-sandbox {
-        min-height: 100dvh;
-        padding: 0.75rem;
+        min-height: 0;
+        padding:
+          max(0.75rem, env(safe-area-inset-top))
+          max(0.75rem, env(safe-area-inset-right))
+          max(0.75rem, env(safe-area-inset-bottom))
+          max(0.75rem, env(safe-area-inset-left));
         background:
           linear-gradient(rgba(255, 246, 220, 0.94), rgba(255, 246, 220, 0.94)),
           repeating-linear-gradient(90deg, transparent 0 48px, rgba(23, 63, 79, 0.06) 49px 50px);
       }
 
+      #screen-sandbox.active {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
       .topbar {
-        width: min(1720px, 100%);
+        width: 100%;
+        flex: 0 0 auto;
         margin: 0 auto 0.75rem;
         display: grid;
         grid-template-columns: auto minmax(340px, 1fr) auto;
@@ -485,15 +516,20 @@
       }
 
       .game-layout {
-        width: min(1720px, 100%);
+        width: 100%;
+        min-height: 0;
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
         margin: 0 auto;
-        display: block;
       }
 
       .world-shell {
         position: relative;
         min-width: 0;
-        height: clamp(520px, calc(100dvh - 115px), 780px);
+        min-height: 0;
+        height: auto;
+        flex: 1 1 auto;
         overflow: hidden;
         border: 5px solid var(--ink);
         border-radius: var(--radius-lg);
@@ -582,11 +618,8 @@
       }
 
       html.game-fullscreen #screen-sandbox {
-        padding: 0;
-      }
-
-      html.game-fullscreen .topbar {
-        display: none;
+        width: 100dvw;
+        height: 100dvh;
       }
 
       html.game-fullscreen .game-layout {
@@ -596,13 +629,7 @@
 
       html.game-fullscreen .world-shell,
       .world-shell.fullscreen-active {
-        width: 100vw;
-        height: 100vh;
-        min-height: 0;
-        max-height: none;
-        border: 0;
-        border-radius: 0;
-        box-shadow: none;
+        width: 100%;
       }
 
       html::backdrop {
@@ -824,17 +851,18 @@
 
       .journal-panel {
         position: fixed;
-        top: 0.75rem;
-        right: 0.75rem;
-        bottom: 0.75rem;
+        top: 0;
+        right: 0;
+        bottom: 0;
         z-index: 80;
         width: min(520px, calc(100% - 1.5rem));
+        height: 100dvh;
         display: flex;
         min-height: 0;
         flex-direction: column;
         overflow: hidden;
         border: 4px solid var(--ink);
-        border-radius: var(--radius-lg);
+        border-radius: var(--radius-lg) 0 0 var(--radius-lg);
         background: var(--paper);
         box-shadow: var(--shadow);
         transform: translateX(calc(100% + 2rem));
@@ -855,6 +883,8 @@
       .journal-backdrop {
         position: fixed;
         inset: 0;
+        width: 100dvw;
+        height: 100dvh;
         z-index: 79;
         background: rgba(10, 33, 43, 0.58);
         backdrop-filter: blur(2px);
@@ -1071,10 +1101,16 @@
       .modal {
         position: fixed;
         inset: 0;
+        width: 100dvw;
+        height: 100dvh;
         z-index: 100;
         display: none;
         place-items: center;
-        padding: 1rem;
+        padding:
+          max(1rem, env(safe-area-inset-top))
+          max(1rem, env(safe-area-inset-right))
+          max(1rem, env(safe-area-inset-bottom))
+          max(1rem, env(safe-area-inset-left));
         background: rgba(10, 33, 43, 0.78);
         backdrop-filter: blur(5px);
       }
@@ -1655,7 +1691,13 @@
       @media (max-width: 680px) {
         :root { font-size: 16px; }
 
-        #screen-title { padding: 1rem; }
+        #screen-title {
+          padding:
+            max(1rem, env(safe-area-inset-top))
+            max(1rem, env(safe-area-inset-right))
+            max(1rem, env(safe-area-inset-bottom))
+            max(1rem, env(safe-area-inset-left));
+        }
 
         .title-shell {
           min-height: auto;
@@ -1673,7 +1715,11 @@
         }
 
         #screen-sandbox {
-          padding: 0.4rem;
+          padding:
+            max(0.4rem, env(safe-area-inset-top))
+            max(0.4rem, env(safe-area-inset-right))
+            max(0.4rem, env(safe-area-inset-bottom))
+            max(0.4rem, env(safe-area-inset-left));
         }
 
         .topbar {
@@ -1925,11 +1971,21 @@
       }
 
       /* Circular estate map */
-      .estate-minimap {
+      .hud-rail {
         position: absolute;
         top: 0.75rem;
         right: 0.75rem;
         z-index: 5;
+        width: 220px;
+        display: flex;
+        align-items: flex-end;
+        gap: 0.55rem;
+        flex-direction: column;
+        pointer-events: none;
+      }
+
+      .estate-minimap {
+        position: relative;
         width: 168px;
         min-width: 0;
         min-height: 0;
@@ -1942,6 +1998,7 @@
         box-shadow: 0 8px 22px rgba(16, 46, 59, 0.34);
         text-align: center;
         transition: transform 160ms ease, background 160ms ease;
+        pointer-events: auto;
       }
 
       .estate-minimap:hover {
@@ -2066,6 +2123,116 @@
         font-weight: 800;
         letter-spacing: 0.04em;
         text-transform: uppercase;
+      }
+
+      .quest-tracker {
+        width: 100%;
+        display: grid;
+        gap: 0.45rem;
+        pointer-events: none;
+      }
+
+      .quest-tracker-card,
+      .quest-tracker-requests-action {
+        width: 100%;
+        min-width: 0;
+        min-height: 48px;
+        color: var(--cream);
+        background: rgba(16, 46, 59, 0.94);
+        border: 2px solid var(--gold);
+        border-radius: 11px;
+        box-shadow: 0 5px 14px rgba(16, 46, 59, 0.28);
+        pointer-events: auto;
+      }
+
+      .quest-tracker-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.22rem 0.5rem;
+        padding: 0.52rem 0.6rem;
+        text-align: left;
+      }
+
+      .quest-tracker-card.request {
+        border-color: var(--cream);
+        background: rgba(40, 114, 113, 0.96);
+      }
+
+      .quest-tracker-card:hover,
+      .quest-tracker-requests-action:hover {
+        transform: translateY(-1px);
+      }
+
+      .quest-tracker-kind {
+        color: var(--gold);
+        font-size: 0.55rem;
+        font-weight: 900;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .quest-tracker-card.request .quest-tracker-kind {
+        color: var(--cream);
+      }
+
+      .quest-tracker-card > strong {
+        grid-column: 1 / -1;
+        display: -webkit-box;
+        overflow: hidden;
+        font-family: var(--font-display);
+        font-size: 0.83rem;
+        line-height: 1.08;
+        white-space: normal;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+
+      .quest-tracker-progress {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.42rem;
+      }
+
+      .quest-tracker-progress-track {
+        height: 7px;
+        overflow: hidden;
+        background: rgba(255, 246, 220, 0.34);
+        border: 1px solid var(--cream);
+        border-radius: 999px;
+      }
+
+      .quest-tracker-progress-track > span {
+        display: block;
+        height: 100%;
+        background: var(--gold);
+        border-radius: inherit;
+      }
+
+      .quest-tracker-progress b {
+        font-size: 0.58rem;
+      }
+
+      .quest-tracker-objective {
+        grid-column: 1 / -1;
+        display: -webkit-box;
+        overflow: hidden;
+        color: var(--cream);
+        font-size: 0.62rem;
+        font-weight: 700;
+        line-height: 1.25;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+
+      .quest-tracker-requests-action {
+        padding: 0.38rem 0.55rem;
+        color: var(--ink);
+        background: rgba(255, 246, 220, 0.95);
+        border-color: var(--ink);
+        font-size: 0.68rem;
       }
 
       /* Quest-book Journal */
@@ -2594,9 +2761,14 @@
       }
 
       @media (max-width: 680px) {
-        .estate-minimap {
+        .hud-rail {
           top: 0.5rem;
           right: 0.5rem;
+          width: 142px;
+          gap: 0.38rem;
+        }
+
+        .estate-minimap {
           width: 104px;
           padding: 0.3rem;
           border-width: 2px;
@@ -2617,6 +2789,26 @@
 
         .minimap-location small {
           display: none;
+        }
+
+        .quest-tracker {
+          gap: 0.32rem;
+        }
+
+        .quest-tracker-card {
+          padding: 0.36rem 0.42rem;
+        }
+
+        .quest-tracker-card > strong {
+          font-size: 0.7rem;
+        }
+
+        .quest-tracker-objective {
+          display: none;
+        }
+
+        .quest-tracker-requests-action {
+          font-size: 0.62rem;
         }
 
         .journal-panel {
@@ -2797,6 +2989,63 @@
           width: 100%;
         }
       }
+
+      @media (max-height: 440px) and (orientation: landscape) {
+        #screen-sandbox {
+          padding:
+            max(0.3rem, env(safe-area-inset-top))
+            max(0.3rem, env(safe-area-inset-right))
+            max(0.3rem, env(safe-area-inset-bottom))
+            max(0.3rem, env(safe-area-inset-left));
+        }
+
+        .topbar {
+          margin-bottom: 0.3rem;
+          padding-block: 0.35rem;
+        }
+
+        .meter-track {
+          height: 8px;
+        }
+
+        .hud-rail {
+          width: min(338px, calc(100% - 1rem));
+          display: grid;
+          grid-template-columns: 82px minmax(0, 1fr);
+          align-items: start;
+          gap: 0.35rem;
+        }
+
+        .estate-minimap {
+          width: 82px;
+          padding: 0.22rem;
+        }
+
+        .minimap-location {
+          display: none;
+        }
+
+        .quest-tracker-card,
+        .quest-tracker-requests-action {
+          min-height: 48px;
+        }
+
+        .quest-tracker-card {
+          padding: 0.3rem 0.4rem;
+        }
+
+        .quest-tracker-kind {
+          font-size: 0.48rem;
+        }
+
+        .quest-tracker-card > strong {
+          font-size: 0.68rem;
+        }
+
+        .quest-tracker-objective {
+          display: none;
+        }
+      }
     </style>
   </head>
   <body>
@@ -2916,26 +3165,29 @@
             <p id="area-name" class="area-chip">Community Court</p>
             <p class="fullscreen-hint" aria-hidden="true"><kbd>Esc</kbd> pauses the neighbourhood</p>
 
-            <button id="estate-minimap" class="estate-minimap" type="button" aria-label="Circular estate map. You are at Y's Flat. Open Places in the Journal.">
-              <span class="minimap-disc" aria-hidden="true">
-                <svg class="minimap-svg" viewBox="0 0 100 100" focusable="false">
-                  <circle class="minimap-ground" cx="50" cy="50" r="50"></circle>
-                  <path class="minimap-district" d="M4 52 Q25 42 45 49 T96 46 V96 H4Z"></path>
-                  <path class="minimap-water" d="M5 38 Q13 31 24 36 Q29 42 24 49 Q14 54 7 48Z"></path>
-                  <path class="minimap-garden" d="M31 40 L43 35 L50 44 L40 51 L30 47Z"></path>
-                  <g id="minimap-layout"></g>
-                  <text class="minimap-north" x="50" y="8">N</text>
-                  <g id="minimap-player" transform="translate(28.8 21)">
-                    <circle class="minimap-player-ring" r="5.4"></circle>
-                    <path class="minimap-player-pin" d="M0 -5 L4 4 L0 2.5 L-4 4Z"></path>
-                  </g>
-                </svg>
-              </span>
-              <span class="minimap-location">
-                <strong id="minimap-place">Y's Flat</strong>
-                <small>Open place notes</small>
-              </span>
-            </button>
+            <aside id="hud-rail" class="hud-rail" aria-label="Estate map and quest progress">
+              <button id="estate-minimap" class="estate-minimap" type="button" aria-label="Circular estate map. You are at Y's Flat. Open Places in the Journal.">
+                <span class="minimap-disc" aria-hidden="true">
+                  <svg class="minimap-svg" viewBox="0 0 100 100" focusable="false">
+                    <circle class="minimap-ground" cx="50" cy="50" r="50"></circle>
+                    <path class="minimap-district" d="M4 52 Q25 42 45 49 T96 46 V96 H4Z"></path>
+                    <path class="minimap-water" d="M5 38 Q13 31 24 36 Q29 42 24 49 Q14 54 7 48Z"></path>
+                    <path class="minimap-garden" d="M31 40 L43 35 L50 44 L40 51 L30 47Z"></path>
+                    <g id="minimap-layout"></g>
+                    <text class="minimap-north" x="50" y="8">N</text>
+                    <g id="minimap-player" transform="translate(28.8 21)">
+                      <circle class="minimap-player-ring" r="5.4"></circle>
+                      <path class="minimap-player-pin" d="M0 -5 L4 4 L0 2.5 L-4 4Z"></path>
+                    </g>
+                  </svg>
+                </span>
+                <span class="minimap-location">
+                  <strong id="minimap-place">Y's Flat</strong>
+                  <small>Open place notes</small>
+                </span>
+              </button>
+              <div id="quest-tracker" class="quest-tracker" aria-label="Quest progress"></div>
+            </aside>
 
             <div id="interaction-prompt" class="interaction-prompt" aria-hidden="true">
               <p id="nearby-text">Move closer to a neighbour or activity.</p>

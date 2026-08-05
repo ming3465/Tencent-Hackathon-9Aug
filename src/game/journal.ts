@@ -62,6 +62,23 @@ export interface JournalViewModel {
   entries: Record<JournalCategory, readonly JournalEntryView[]>;
 }
 
+export interface QuestTrackerCardView {
+  kind: "story" | "request";
+  category: "story" | "requests";
+  entryId: string | null;
+  title: string;
+  progressCurrent: number;
+  progressTotal: number;
+  complete: boolean;
+  nextObjective: string | null;
+}
+
+export interface QuestTrackerView {
+  story: QuestTrackerCardView;
+  request: QuestTrackerCardView | null;
+  showRequestsAction: boolean;
+}
+
 const OBJECTIVE_LABELS: Readonly<Record<string, string>> = {
   "heard-voice": "Listen to the Voice",
   "left-y-flat": "Use the first open door",
@@ -411,4 +428,60 @@ export function defaultJournalEntryId(
       ?? null;
   }
   return entries[0]?.id ?? null;
+}
+
+function trackerCard(
+  entry: JournalEntryView,
+  kind: QuestTrackerCardView["kind"],
+): QuestTrackerCardView {
+  return {
+    kind,
+    category: kind === "story" ? "story" : "requests",
+    entryId: entry.id,
+    title: entry.title,
+    progressCurrent: entry.progressCurrent,
+    progressTotal: entry.progressTotal,
+    complete: entry.complete,
+    nextObjective:
+      entry.objectives.find((objective) => !objective.complete)?.label ?? null,
+  };
+}
+
+export function buildQuestTrackerView(
+  state: CampaignStateV1,
+  trackedRequestEntryId: string | null = null,
+  currentLocation: LocationId = state.currentLocation,
+): QuestTrackerView {
+  const journal = buildJournalView(state, currentLocation);
+  const activeStory = journal.entries.story.find(
+    (entry) => !entry.locked && !entry.complete,
+  );
+  const lastStory = [...journal.entries.story]
+    .reverse()
+    .find((entry) => !entry.locked && entry.complete);
+  const story = activeStory
+    ? trackerCard(activeStory, "story")
+    : {
+        kind: "story" as const,
+        category: "story" as const,
+        entryId: lastStory?.id ?? defaultJournalEntryId(journal, "story"),
+        title: "Story complete · Free exploration",
+        progressCurrent: 1,
+        progressTotal: 1,
+        complete: true,
+        nextObjective: null,
+      };
+  const trackedRequest = trackedRequestEntryId
+    ? journal.entries.requests.find(
+        (entry) => entry.id === trackedRequestEntryId && !entry.locked,
+      )
+    : undefined;
+  const request = trackedRequest
+    ? trackerCard(trackedRequest, "request")
+    : null;
+  return {
+    story,
+    request,
+    showRequestsAction: request === null,
+  };
 }

@@ -40,6 +40,8 @@ import {
   ESTATE_BUILDING_VISUAL_ZONES,
   ESTATE_ENTRANCES,
   ESTATE_FACADE_DEPTH_DEFINITIONS,
+  ESTATE_SIDE_LAMPS,
+  ESTATE_TREES,
   ESTATE_VEHICLE_ROUTES,
   ESTATE_NPC_ROUTES as LAYOUT_NPC_ROUTES,
   getDoorsForLocation,
@@ -3090,25 +3092,18 @@ export class EstateScene extends WalkableScene {
     this.landscapeSprites = [];
     this.exteriorPropSprites = [];
     this.storyClusterSprites = [];
-    const trees: readonly [number, number, string][] = [
-      [300, 500, "tree-rain"],
-      [980, 520, "tree-frangipani"],
-      [1450, 535, "tree-palm"],
-      [1950, 575, "tree-rain"],
-      [2380, 635, "tree-frangipani"],
-      [280, 1090, "tree-palm"],
-      [880, 1135, "tree-rain"],
-      [1500, 1095, "tree-frangipani"],
-      [2350, 1165, "tree-rain"],
-      [1350, 920, "tree-palm"],
-      [520, 1460, "tree-frangipani"],
-    ];
-    for (const [x, y, texture] of trees) {
-      this.addObstacle(x - 10, y - 24, 20, 24);
+    for (const definition of ESTATE_TREES) {
+      const { anchor, trunkCollider } = definition;
+      this.addObstacle(
+        trunkCollider.x,
+        trunkCollider.y,
+        trunkCollider.width,
+        trunkCollider.height,
+      );
       const sprite = this.add
-        .sprite(x, y, texture)
+        .sprite(anchor.x, anchor.y, definition.texture)
         .setOrigin(0.5, 1)
-        .setDepth(depthFor(y, 5));
+        .setDepth(depthFor(anchor.y, definition.depthLayer));
       this.exteriorPropSprites.push(sprite);
     }
 
@@ -3130,20 +3125,14 @@ export class EstateScene extends WalkableScene {
     const props: readonly [string, number, number, boolean][] = [
       ["prop-bench", 470, 485, true],
       ["prop-bin", 550, 482, false],
-      ["prop-lamp", 770, 520, false],
       ["prop-planter", 875, 320, true],
       ["prop-bench", 1110, 720, true],
-      ["prop-lamp", 1280, 545, false],
       ["prop-bin", 1570, 500, false],
       ["prop-bench", 1650, 510, true],
-      ["prop-lamp", 1860, 560, false],
       ["prop-planter", 2150, 330, true],
       ["prop-bench", 650, 1050, true],
-      ["prop-lamp", 520, 1100, false],
       ["prop-bin", 1030, 1090, false],
-      ["prop-lamp", 1190, 1120, false],
       ["prop-bench", 1720, 1110, true],
-      ["prop-lamp", 2050, 1130, false],
       ["prop-planter", 2210, 1010, true],
     ];
     for (const [texture, x, y, collides] of props) {
@@ -3152,6 +3141,16 @@ export class EstateScene extends WalkableScene {
         .sprite(x, y, texture)
         .setOrigin(0.5, 1)
         .setDepth(depthFor(y, 4));
+      this.exteriorPropSprites.push(sprite);
+    }
+
+    for (const definition of ESTATE_SIDE_LAMPS) {
+      const { anchor, collider } = definition;
+      this.addObstacle(collider.x, collider.y, collider.width, collider.height);
+      const sprite = this.add
+        .sprite(anchor.x, anchor.y, definition.texture)
+        .setOrigin(0.5, 1)
+        .setDepth(depthFor(anchor.y, definition.depthLayer));
       this.exteriorPropSprites.push(sprite);
     }
 

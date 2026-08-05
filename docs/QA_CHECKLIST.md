@@ -1,9 +1,9 @@
 # Campaign QA Checklist
 
-## Automated unit coverage — 85/85 passing
+## Automated unit coverage — 90/90 passing
 
-The total comprises 27 campaign, 31 match-engine, 17 audio, 4
-accessibility-contract, and 6 world-layout/door/pause tests.
+The total comprises 30 campaign, 31 match-engine, 17 audio, 4
+accessibility-contract, and 8 world-layout/door/pause tests.
 
 - [x] Chapter ordering and future-event rejection
 - [x] Full and demo thresholds
@@ -37,13 +37,20 @@ accessibility-contract, and 6 world-layout/door/pause tests.
       shelter continuity, distinct choice masks, and 96 px minimum clearance
 - [x] Door opening/transition idempotency, four-state Pause Escape semantics,
       and transient 35% music-only ducking
+- [x] All 11 tree sprite bounds clear streets, buildings, shelters, lamp
+      aprons, and world edges while preserving species, depth, and trunk data
+- [x] All six lamp bases sit inside their tiled stone aprons and clear streets
+      and door approaches
+- [x] Automatic story tracker selection across every chapter, sequential
+      Chapter 2 quests, one session-only optional request, fallback action, and
+      post-ending free exploration
 
 ## Production-browser smoke — 60/60 passing
 
 - [x] Production bundle creates exactly one Phaser Canvas
-- [x] Production build measures 86.59 kB HTML (15.50 kB gzip), 129.02 kB
-      initial JavaScript (38.50 kB gzip), and a 1,602.13 kB lazy scene
-      (374.24 kB gzip)
+- [x] Production build measures 93.04 kB HTML (16.28 kB gzip), 135.02 kB
+      initial JavaScript (39.95 kB gzip), and a 1,602.10 kB lazy scene
+      (374.15 kB gzip)
 - [x] Reviewed 1668×943 WebP title artwork loads without desktop overflow
 - [x] Cached idle campaign prefetch runs after title-art settlement, skips
       Save-Data and 2g-class connections, reports opening and 12-second slow

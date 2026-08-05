@@ -76,8 +76,8 @@ Attach: AI evidence page or terminal.
 
 ### 5 — Verification and link
 
-> Today: strict TypeScript, 85/85 tests (27 campaign, 31 match, 17 audio,
-> 4 accessibility, 6 world/door/pause), 60/60 production-browser checks, and 0 known
+> Today: strict TypeScript, 90/90 tests (30 campaign, 31 match, 17 audio,
+> 4 accessibility, 8 world/door/pause), 60/60 production-browser checks, and 0 known
 > vulnerabilities.
 >
 > No human playtest yet; this remains a design hypothesis.
@@ -103,7 +103,7 @@ Include the required disclosure from the short-post section.
 > language model, network call, or backend.
 >
 > No timer, failure state, energy system, account, analytics, or data
-> collection. Current gate: 85/85 tests and 60/60 production-browser checks,
+> collection. Current gate: 90/90 tests and 60/60 production-browser checks,
 > with zero known vulnerabilities. The lazy campaign loader includes visible
 > slow, cancel, and retry paths.
 >
@@ -130,7 +130,7 @@ Include the required disclosure from the short-post section.
 3. Grandma Ros’s kitchen
 4. Craftsman workshop
 5. KampungMind dialogue
-6. Current terminal showing 85/85 tests, 60/60 smoke checks, and 0
+6. Current terminal showing 90/90 tests, 60/60 smoke checks, and 0
    vulnerabilities
 
 The deck’s AI key illustration may be used as marketing art if captioned as

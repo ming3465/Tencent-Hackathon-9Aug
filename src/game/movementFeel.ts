@@ -1,6 +1,10 @@
 import type { WalkFrame } from "./campaignArt.js";
 import type { LocationId } from "./campaignTypes.js";
-import { PEDESTRIAN_STREETS, pointIsInRect } from "./estateLayout.js";
+import {
+  PEDESTRIAN_STREETS,
+  SIDEWALK_APRONS,
+  pointIsInRect,
+} from "./estateLayout.js";
 
 export type MovementSurface = "grass" | "stone" | "indoor";
 
@@ -14,7 +18,9 @@ export function movementSurfaceAt(
   y: number,
 ): MovementSurface {
   if (locationId !== "estate") return "indoor";
-  return PEDESTRIAN_STREETS.some((street) => pointIsInRect({ x, y }, street))
+  const point = { x, y };
+  return PEDESTRIAN_STREETS.some((street) => pointIsInRect(point, street))
+    || SIDEWALK_APRONS.some((apron) => pointIsInRect(point, apron))
     ? "stone"
     : "grass";
 }

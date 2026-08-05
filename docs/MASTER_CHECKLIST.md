@@ -42,8 +42,8 @@ areas, but every required responsibility must appear here with an owner.
 | Eight resident routes and visible consequences | OPENCODE | DONE | Current code-drawn consequence art includes three-quarter exterior/interior ramps, both garden-choice treatments, a sheltered linkway, and the persistent shop-window card |
 | Optional memory-table activity | OPENCODE | DONE | Current build and matching tests |
 | KampungMind authored memory/intent engine | OPENCODE | DONE | `campaignContent.ts`, `kampungMind.ts`, campaign tests |
-| Automated tests | OPENCODE | DONE | 85/85 passing: 27 campaign, 31 match, 17 audio, 4 accessibility, 6 world/door/pause |
-| Production build | OPENCODE | DONE | Latest verified Vite build: HTML 86.59 kB (15.50 kB gzip), initial JS 129.02 kB (38.50 kB gzip), lazy campaign scene 1,602.13 kB (374.24 kB gzip) |
+| Automated tests | OPENCODE | DONE | 90/90 passing: 30 campaign, 31 match, 17 audio, 4 accessibility, 8 world/door/pause |
+| Production build | OPENCODE | DONE | Latest verified Vite build: HTML 93.04 kB (16.28 kB gzip), initial JS 135.02 kB (39.95 kB gzip), lazy campaign scene 1,602.10 kB (374.15 kB gzip) |
 | Production-browser regression | OPENCODE | DONE | 60/60 smoke checks pass across the full and demo campaigns |
 | Dependency security audit | OPENCODE | DONE | Zero known vulnerabilities |
 | CodeBuddy initial implementation evidence | CODEBUDDY | DONE | `docs/AI_USAGE_LOG.md` |
@@ -432,11 +432,11 @@ Replace `[Team Name]` before export.
 - Miora prompts, IDs or links, generation dates, selected variations, and
   rejected issues.
 - Miora procedural-before and integrated-after screenshots.
-- Test output showing the current 85/85 gate (27 campaign, 31 match,
-  17 audio, 4 accessibility, and 6 world/door/pause tests). The earlier 42-test target
+- Test output showing the current 90/90 gate (30 campaign, 31 match,
+  17 audio, 4 accessibility, and 8 world/door/pause tests). The earlier 42-test target
   remains historical planning context, not the current release claim.
-- Production build and audit output, including HTML 86.59/15.50 kB gzip,
-  initial JS 129.02/38.50 kB gzip, and lazy scene 1,602.13/374.24 kB gzip.
+- Production build and audit output, including HTML 93.04/16.28 kB gzip,
+  initial JS 135.02/39.95 kB gzip, and lazy scene 1,602.10/374.15 kB gzip.
 - Browser smoke output showing 60/60 checks, including keyboard, tap
   navigation, compact layouts, loader recovery, and visible consequence art.
 - Manual phone, tablet, keyboard, zoom, and screen-reader notes.

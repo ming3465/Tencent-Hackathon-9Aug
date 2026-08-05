@@ -3020,3 +3020,88 @@ was used as the browser fallback.
   submission. No public deployment was triggered. The checked-in videos remain
   clearly labelled earlier-build evidence until they are re-recorded and
   approved.
+
+## 2026-08-05 — Full-Viewport Estate Fixtures and Quest HUD
+
+**Tools:** Codex (GPT-5), TypeScript/Vitest/Vite/npm audit, the repository's
+real-Chrome DevTools Protocol campaign harness, local full-frame image review,
+the bundled Presentations artifact-tool workflow, Chrome PDF export, and
+Poppler PDF rendering. The in-app browser workflow was attempted first, but
+the `iab` browser was unavailable; the repository's real-Chrome harness was
+used for browser verification.
+
+**Implementation:**
+
+- Extended the pure estate registry with typed tree, sidelamp, and sidewalk-
+  apron definitions. Preserved the exact 11-tree species mix, dimensions,
+  depth layers, and trunk colliders; moved their anchors to landscaped ground.
+  Registered all six lamp bases as 14×12 colliders on six tiled aprons painted
+  with the existing kerb grammar and classified as stone walking surfaces.
+- Strengthened the layout audit and its tests so complete tree sprite bounds
+  clear streets, buildings, shelters, aprons, and world edges. Lamp bases must
+  remain inside their assigned apron and outside streets and door approaches.
+- Reworked the page shell so the title, game, dialogs, Journal, and Pause own
+  `100dvw × 100dvh` with safe-area insets and locked document scrolling. The
+  title owns any exceptional short-height scrolling, the topbar remains visible,
+  and Phaser fills and resizes within the remaining space from both window and
+  `visualViewport` changes. Native fullscreen now uses the same layout.
+- Replaced the standalone minimap positioning with a right-side HUD rail. A
+  pure Journal-derived tracker automatically selects the first incomplete
+  story quest, count, progress and next objective; permits one session-only
+  manually tracked optional request; deep-links each card to its Journal entry;
+  offers the Requests fallback; and renders `Story complete · Free exploration`
+  after the ending. Existing saves and `CampaignStateV1` are unchanged.
+- Expanded browser evidence without increasing the 60-check headline: title
+  and gameplay viewport ownership, document overflow, topbar/canvas resize,
+  Journal and Pause layers, native-fullscreen layout, tracker progression and
+  links, optional tracking/completion/untracking, and unobscured controls now
+  run at desktop, 320×568, 360×560, and 640×360.
+
+**Corrections and retained failures:**
+
+- A screenshot-producing WebGL attempt exposed that an early high-resolution
+  canvas-only capture could stall Phaser before the campaign. Moving that
+  reviewed capture to the late journey preserved the evidence and allowed the
+  unchanged application route to complete. The failed/stalled attempts are not
+  counted as passing evidence.
+- Full-size screenshot review found long story names and the free-exploration
+  state visually ellipsized. Tracker titles now use a compact two-line clamp;
+  the final desktop and mobile captures show the full intended story text.
+- The Presentations montage helper lacked `pdf2image`, and its overflow helper
+  lacked `numpy`. No package was added. All eight source/final slide renders
+  were inspected directly, artifact-tool template fidelity passed with zero
+  issues, slide XML contains no unresolved placeholders, and the PDF was
+  independently rendered through Poppler for page-by-page review.
+
+**Final local evidence:**
+
+- Strict TypeScript passed. Vitest passed **90/90**: campaign 30, match engine
+  31, audio 17, accessibility contract 4, world/door/pause 8.
+- Production build: **93.04 kB HTML (16.28 kB gzip), 135.02 kB initial
+  JavaScript (39.95 kB gzip), and 1,602.10 kB lazy scene (374.15 kB gzip)**.
+  `npm audit` reported zero known vulnerabilities.
+- Default **WebGL** passed **60/60**: resident routes 9.20 ms p95, monsoon 9.20
+  ms p95, active movement 9.30 ms p95 at 2.21 ms/frame main-thread work, and
+  4×-throttled movement 9.40 ms p95 at 8.35 ms/frame.
+- Forced **Canvas2D** passed the same **60/60** route: resident routes 9.30 ms
+  p95, monsoon 9.20 ms p95, active movement 9.10 ms p95 at 2.31 ms/frame, and
+  4×-throttled movement 9.30 ms p95 at 8.52 ms/frame.
+- Both renderers completed full and demo campaigns, all 12 locations, story
+  tracker titles through every chapter and free exploration, optional-request
+  tracking, Journal/Pause/fullscreen round trips, rain/reduced motion, and all
+  requested desktop/compact viewport geometries. All 32 current gameplay/HUD
+  screenshots were recaptured; affected estate, monsoon, mobile, Journal,
+  Pause, tree, lamp, and apron regions were visually inspected.
+- The current-facing README/QA/submission copy was synchronized. The inherited
+  eight-slide PPTX passed artifact-tool frame-map validation and template
+  fidelity, and its refreshed eight-page PDF was rendered through Poppler with
+  no clipping, overlap, broken glyphs, forms, or JavaScript.
+
+**Claim boundary:**
+
+- This is automated local and machine-rendered evidence, not a human or older-
+  adult playtest, real-phone/tablet result, screen-reader or 200% zoom session,
+  accessibility certification, social or health outcome, Miora run, or new
+  CodeBuddy success. The checked-in video remains explicitly labelled earlier-
+  build evidence. Version-control and Pages deployment status are verified and
+  reported separately from these local test claims.

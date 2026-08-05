@@ -49,6 +49,7 @@ import {
   getEstateMapPosition,
 } from "../estateMap.js";
 import {
+  buildQuestTrackerView,
   buildJournalView,
   defaultJournalEntryId,
 } from "../journal.js";
@@ -144,6 +145,20 @@ function reachChapter3(demo = false): CampaignStateV1 {
     state = reduceCampaign(state, { type: "invite-resident", npcId });
   }
   return state;
+}
+
+function reachEnding(): CampaignStateV1 {
+  return apply(
+    reachChapter3(),
+    { type: "visit-location", locationId: "craftsman-workshop" },
+    { type: "collect-clue", clueId: "ben-clue-tools", npcId: "craftsman-tan" },
+    { type: "collect-clue", clueId: "ben-clue-keepsake", npcId: "wei-ling" },
+    { type: "visit-location", locationId: "ben-flat" },
+    { type: "choose-approach", approachId: "sit-beside" },
+    { type: "bring-ben-to-workshop" },
+    { type: "visit-location", locationId: "craftsman-workshop" },
+    { type: "complete-weaving", patternId: "steady-lines" },
+  );
 }
 
 describe("campaign ordering and alternatives", () => {
@@ -373,6 +388,85 @@ describe("demo-mode campaign", () => {
     expect(parseDemoMode("?demo=0")).toBe(false);
     expect(parseDemoMode("?demo")).toBe(false);
     expect(parseDemoMode("?other=1")).toBe(false);
+  });
+});
+
+describe("quest tracker", () => {
+  it("automatically follows the first incomplete story quest through every chapter", () => {
+    const prologue = buildQuestTrackerView(createCampaignState()).story;
+    expect([prologue.title, prologue.progressCurrent, prologue.progressTotal]).toEqual([
+      "The First Door", 0, 2,
+    ]);
+    expect(prologue.nextObjective).toBe("Listen to the Voice");
+
+    const chapterOne = buildQuestTrackerView(inspectMrLong()).story;
+    expect(chapterOne.title).toBe("Open the Way");
+    expect(chapterOne.nextObjective).toContain("Recruit 3 neighbours");
+
+    const chapterTwo = reachChapter2();
+    expect(buildQuestTrackerView(chapterTwo).story.title).toBe(
+      "Who Knows Grandma Ros?",
+    );
+    const invitations = apply(
+      chapterTwo,
+      { type: "publish-scam-check", layoutId: "numbered-steps" },
+      { type: "collect-clue", clueId: "ros-clue-seng", npcId: "uncle-seng" },
+      { type: "visit-location", locationId: "grandma-ros-kitchen" },
+    );
+    const sequential = buildQuestTrackerView(invitations).story;
+    expect(sequential.title).toBe("A Place at the Table");
+    expect(sequential.nextObjective).toContain("Invite 5 residents");
+
+    expect(buildQuestTrackerView(reachChapter3()).story.title).toBe(
+      "Hands Remember",
+    );
+    const ending = reachEnding();
+    expect(buildQuestTrackerView(ending).story.title).toBe("The Last Door");
+    const freeExplore = apply(
+      ending,
+      { type: "visit-location", locationId: "y-flat" },
+      { type: "complete-ending" },
+    );
+    expect(buildQuestTrackerView(freeExplore).story).toMatchObject({
+      title: "Story complete · Free exploration",
+      progressCurrent: 1,
+      progressTotal: 1,
+      complete: true,
+      nextObjective: null,
+    });
+  });
+
+  it("shows one session-selected optional request, including its completion", () => {
+    const available = inspectMrLong();
+    const trackedId = "quest:garden-request";
+    const tracked = buildQuestTrackerView(available, trackedId);
+    expect(tracked.request).toMatchObject({
+      entryId: trackedId,
+      title: "A Garden People Use",
+      progressCurrent: 0,
+      progressTotal: 1,
+      complete: false,
+    });
+    expect(tracked.showRequestsAction).toBe(false);
+
+    const completed = completeRequest(available, REQUEST_ROUTES[0]);
+    expect(buildQuestTrackerView(completed, trackedId).request).toMatchObject({
+      entryId: trackedId,
+      progressCurrent: 1,
+      progressTotal: 1,
+      complete: true,
+    });
+  });
+
+  it("uses the Requests fallback and rejects non-request tracking IDs", () => {
+    const state = inspectMrLong();
+    expect(buildQuestTrackerView(state).showRequestsAction).toBe(true);
+    const invalidStorySelection = buildQuestTrackerView(
+      state,
+      "quest:open-the-way",
+    );
+    expect(invalidStorySelection.request).toBeNull();
+    expect(invalidStorySelection.showRequestsAction).toBe(true);
   });
 });
 

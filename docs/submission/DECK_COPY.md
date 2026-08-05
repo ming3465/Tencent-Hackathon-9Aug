@@ -69,16 +69,16 @@ workflow rejected pseudo-writing, constrained the cleanup to non-text
 pictograms, optimized the accepted image, and integrated it into the playable
 title while keeping interface text semantic. None is claimed as Miora.
 
-**Verified after:** strict TypeScript, 85/85 tests, 0 vulnerabilities, 60/60
+**Verified after:** strict TypeScript, 90/90 tests, 0 vulnerabilities, 60/60
 production-browser checks.
 
 ## Slide 6 — Fast, private, tested, no backend
 
-**85 tests · 0 vulnerabilities · 129.02 kB initial JavaScript · 0 bytes
+**90 tests · 0 vulnerabilities · 135.02 kB initial JavaScript · 0 bytes
 collected**
 
 - Vite + strict TypeScript + Phaser 3
-- 27 campaign, 31 match, 17 audio, 4 accessibility, and 6 world/door/pause tests
+- 30 campaign, 31 match, 17 audio, 4 accessibility, and 8 world/door/pause tests
 - Connection-aware idle prefetch after title art; Start reuses one cached scene
   load and offers cancel/retry recovery
 - 60-check full/demo production-browser campaign
@@ -88,15 +88,15 @@ collected**
 - Runtime-synthesized audio; zero audio files
 - KampungMind uses authored text and deterministic code offline
 
-Current private build: 86.59 kB HTML (15.50 kB gzip), 129.02 kB initial
-JavaScript (38.50 kB gzip), and 1,602.13 kB lazy scene (374.24 kB gzip).
+Current private build: 93.04 kB HTML (16.28 kB gzip), 135.02 kB initial
+JavaScript (39.95 kB gzip), and 1,602.10 kB lazy scene (374.15 kB gzip).
 
 ## Slide 7 — What we tested. What we will not claim
 
 Supported:
 
-- Strict TypeScript, 85 tests (27 campaign, 31 match, 17 audio, 4
-  accessibility, and 6 world/door/pause), 0 vulnerabilities
+- Strict TypeScript, 90 tests (30 campaign, 31 match, 17 audio, 4
+  accessibility, and 8 world/door/pause), 0 vulnerabilities
 - 60/60 production-browser checks
 - Keyboard/touch entry, focus return, and correct return doors
 - Versioned autosave, Continue, Start Over, and demo isolation

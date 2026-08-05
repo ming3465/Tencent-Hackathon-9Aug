@@ -60,9 +60,9 @@ npm run typecheck && npm test && npm run build && npm audit && npm run smoke
 
 `npm run smoke` is self-contained (builds, serves, drives headless Chrome
 through a full playthrough, writes screenshots to `docs/screenshots/`).
-Current truth: **85 unit tests, 60 smoke checks, 0 vulnerabilities.** The unit
-split is campaign 27, match engine 31, audio 17, accessibility contract 4, and
-world-layout/door/pause 6. If a doc
+Current truth: **90 unit tests, 60 smoke checks, 0 vulnerabilities.** The unit
+split is campaign 30, match engine 31, audio 17, accessibility contract 4, and
+world-layout/door/pause 8. If a doc
 or deck quotes different numbers after your change, update them — stale
 numbers are treated as defects.
 
@@ -105,6 +105,21 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-05 (Codex, full-viewport estate and HUD polish)** — Centralized
+  all 11 trees, six lamps, and six tiled stone aprons in the typed estate
+  registry; audited full tree bounds, lamp containment, street/door clearance,
+  and unchanged species/depth/collision data. Made every app layer own the
+  dynamic viewport with safe areas and visual-viewport Phaser resizing, while
+  retaining the topbar in optional native fullscreen. Added an accessible HUD
+  rail that automatically follows the active story, supports one session-only
+  optional request, deep-links into the Journal, and shows free exploration
+  after the ending without changing `CampaignStateV1`. Default WebGL and forced
+  Canvas each passed the same 60/60 full/demo route at desktop, 320×568,
+  360×560, and 640×360; strict TypeScript, 90/90 tests, the 93.04 kB HTML / 135.02
+  kB initial-JS / 1,602.10 kB scene build, and a zero-vulnerability audit passed.
+  Screenshots and the eight-slide PPTX/PDF submission artifacts were refreshed
+  and visually checked. No human/device/screen-reader/200%-zoom or social-
+  outcome claim is made; the checked-in video remains earlier-build evidence.
 - **2026-08-05 (Codex, registry world/doors/pause rebuild)** — Rebuilt the
   12-location campaign around a typed `2560×1600` registry: six pedestrian
   streets, eight independent baked three-quarter buildings, corrected

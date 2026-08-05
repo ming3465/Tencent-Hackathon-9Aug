@@ -48,7 +48,9 @@ hallucination path.
   blocking play
 - A quest-book Journal, opened only on request, with Story, Requests, People,
   and Places tabs; selected-quest detail, objective checklists, proportional
-  progress, tracking, and context actions remain available without a timer
+  progress, optional-request tracking, and context actions remain available
+  without a timer. A compact rail beneath the minimap automatically follows
+  the active story and can show one session-only tracked request
 - A circular code-drawn estate minimap with seven landmark anchors, the current
   indoor building, live outdoor player movement, and a direct Places shortcut
 - WASD, arrow-key, `E`, Space, visible buttons, and touch controls; taps can
@@ -123,8 +125,8 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | Gate | Result |
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
-| `npm test` | 85/85: 27 campaign, 31 match-engine, 17 audio, 4 accessibility-contract, and 6 world-layout/door/pause tests |
-| `npm run build` | 86.59 kB HTML (15.50 kB gzip); 129.02 kB initial JS (38.50 kB gzip); 1,602.13 kB lazy scene (374.24 kB gzip) |
+| `npm test` | 90/90: 30 campaign, 31 match-engine, 17 audio, 4 accessibility-contract, and 8 world-layout/door/pause tests |
+| `npm run build` | 93.04 kB HTML (16.28 kB gzip); 135.02 kB initial JS (39.95 kB gzip); 1,602.10 kB lazy scene (374.15 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
 | `npm run smoke` | 60/60 production-browser checks in default WebGL and forced Canvas fallback |
 

@@ -34,8 +34,8 @@ interaction has an equivalent Journal action.
 - “Maybe later never closes a route.”
 - “There is no timer, energy system, failure state, account, analytics,
   backend, or runtime language model.”
-- “Current gate: 79 out of 79 unit tests—27 campaign, 31 match, 17 audio,
-  and 4 accessibility tests—plus 60 out of 60 production-browser
+- “Current gate: 90 out of 90 unit tests—30 campaign, 31 match, 17 audio,
+  4 accessibility, and 8 world-layout tests—plus 60 out of 60 production-browser
   checks and zero known vulnerabilities.”
 
 If a judge asks about load behavior, say that the campaign scene is lazy-loaded
