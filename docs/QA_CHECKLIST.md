@@ -49,8 +49,8 @@ accessibility-contract, and 8 world-layout/door/pause tests.
 
 - [x] Production bundle creates exactly one Phaser Canvas
 - [x] Production build measures 91.14 kB HTML (15.99 kB gzip), 140.99 kB
-      initial JavaScript (41.21 kB gzip), and a 1,611.06 kB lazy scene
-      (377.18 kB gzip)
+      initial JavaScript (41.21 kB gzip), and a 1,612.67 kB lazy scene
+      (377.60 kB gzip)
 - [x] Reviewed 1668×943 WebP title artwork loads without desktop overflow
 - [x] Cached idle campaign prefetch runs after title-art settlement, skips
       Save-Data and 2g-class connections, reports opening and 12-second slow
@@ -155,8 +155,9 @@ accessibility-contract, and 8 world-layout/door/pause tests.
 - [x] Real Chrome completes estate → kopitiam → estate → kopitiam → estate;
       both returns show a closed exterior leaf, enabled blocker, focused stage,
       focused document, and enabled keyboard/touch controls
-- [x] The authored open hawker gate exposes opposing −18°/+18° outward leaves;
-      reusable returned leaves reset to 0° before controls resume
+- [x] The authored open hawker gate exposes +18°/−18° leaves in the intended
+      `/ C \` framing pose; reusable returned leaves reset to 0° before controls
+      resume
 - [x] The former bottom interaction banner has no visible box at desktop,
       320×568, 360×560, or 640×360; in-world labels, keyboard interaction, the
       contextual touch action, and visually hidden nearby status remain active

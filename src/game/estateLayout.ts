@@ -799,9 +799,9 @@ export function doorOpenLeafAngles(
   style: DoorStyle,
   leafCount: number,
 ): readonly number[] {
-  if (style === "hinged-hdb") return Array.from({ length: leafCount }, () => -18);
+  if (style === "hinged-hdb") return Array.from({ length: leafCount }, () => 18);
   if (style === "double-community" || style === "open-hawker-gate") {
-    return Array.from({ length: leafCount }, (_, index) => index === 0 ? -18 : 18);
+    return Array.from({ length: leafCount }, (_, index) => index === 0 ? 18 : -18);
   }
   return Array.from({ length: leafCount }, () => 0);
 }

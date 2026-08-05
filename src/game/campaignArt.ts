@@ -2242,58 +2242,158 @@ function drawAmbientKopitiam(
   graphics: Phaser.GameObjects.Graphics,
   frame: 0 | 1,
 ): void {
+  const leftSkin = 0xb87f52;
+  const rightSkin = 0xd6a177;
+  const cupY = frame === 0 ? 38 : 31;
+
+  // Grounding and chair silhouettes sit behind the regulars so their seated
+  // posture reads even when the table overlaps their lower bodies.
   graphics
     .fillStyle(PALETTE.night, 0.2)
-    .fillEllipse(69, 72, 128, 10)
+    .fillEllipse(69, 73, 132, 9)
+    .fillStyle(PALETTE.ink)
+    .fillRect(8, 51, 5, 20)
+    .fillRect(34, 51, 5, 20)
+    .fillRect(102, 51, 5, 20)
+    .fillRect(127, 51, 5, 20)
+    .fillRect(11, 48, 27, 5)
+    .fillRect(103, 48, 27, 5);
+
+  // Left regular: silver side-part, square spectacles, collared shirt, and a
+  // raised enamel cup. Small asymmetric details prevent the old blocky clone
+  // look while keeping the two-frame animation inexpensive.
+  graphics
+    .fillStyle(PALETTE.ink)
+    .fillRect(8, 12, 29, 28)
+    .fillRect(6, 21, 5, 11)
+    .fillRect(34, 21, 5, 11)
+    .fillStyle(leftSkin)
+    .fillRect(11, 16, 23, 20)
+    .fillRect(7, 23, 4, 7)
+    .fillRect(34, 23, 4, 7)
+    .fillStyle(0xa9a39b)
+    .fillRect(9, 12, 27, 8)
+    .fillRect(10, 19, 7, 3)
+    .fillStyle(PALETTE.cream)
+    .fillRect(24, 13, 3, 3)
+    .fillStyle(PALETTE.ink)
+    .fillRect(14, 24, 3, 3)
+    .fillRect(28, 24, 3, 3)
+    .fillRect(21, 28, 3, 4)
+    .fillRect(19, 34, 8, 2)
+    .lineStyle(2, PALETTE.ink)
+    .strokeRect(11, 21, 9, 8)
+    .strokeRect(25, 21, 9, 8)
+    .lineBetween(20, 24, 25, 24)
+    .fillStyle(PALETTE.ink)
+    .fillRect(6, 39, 35, 29)
+    .fillStyle(PALETTE.purple)
+    .fillRect(10, 42, 27, 22)
+    .fillStyle(PALETTE.cream)
+    .fillTriangle(12, 42, 21, 42, 21, 50)
+    .fillTriangle(24, 42, 33, 42, 24, 50)
+    .fillStyle(PALETTE.gold)
+    .fillRect(22, 50, 2, 2)
+    .fillRect(22, 56, 2, 2)
+    .fillStyle(PALETTE.ink)
+    .fillRect(8, 64, 12, 7)
+    .fillRect(28, 64, 12, 7);
+
+  // Right regular: swept bun, brows and smile, blouse piping, pocket, and a
+  // folded morning paper. The different silhouette makes the pair readable as
+  // two neighbours rather than recolours of one sprite.
+  graphics
+    .fillStyle(PALETTE.ink)
+    .fillRect(101, 13, 29, 27)
+    .fillRect(99, 22, 5, 10)
+    .fillRect(127, 22, 5, 10)
+    .fillCircle(126, 12, 7)
+    .fillStyle(rightSkin)
+    .fillRect(104, 17, 23, 19)
+    .fillRect(100, 24, 4, 6)
+    .fillRect(127, 24, 4, 6)
+    .fillStyle(0x2a2523)
+    .fillRect(102, 13, 27, 8)
+    .fillRect(119, 11, 10, 7)
+    .fillRect(105, 21, 5, 2)
+    .fillRect(120, 21, 5, 2)
+    .fillStyle(PALETTE.ink)
+    .fillRect(108, 25, 3, 3)
+    .fillRect(121, 25, 3, 3)
+    .fillRect(115, 29, 3, 3)
+    .fillRect(112, 34, 9, 2)
+    .fillStyle(PALETTE.gold)
+    .fillRect(128, 25, 3, 5)
+    .fillStyle(PALETTE.ink)
+    .fillRect(99, 39, 34, 29)
+    .fillStyle(PALETTE.coral)
+    .fillRect(103, 42, 26, 22)
+    .fillStyle(PALETTE.cream)
+    .fillRect(106, 42, 20, 3)
+    .fillRect(115, 45, 2, 17)
+    .fillStyle(PALETTE.ink)
+    .fillRect(119, 50, 7, 6)
+    .fillStyle(PALETTE.gold)
+    .fillRect(116, 48, 2, 2)
+    .fillRect(116, 55, 2, 2)
+    .fillStyle(PALETTE.ink)
+    .fillRect(100, 64, 12, 7)
+    .fillRect(122, 64, 12, 7);
+
+  // Table and shared breakfast details occupy the foreground. Arms are drawn
+  // last so hands visibly meet the cup and newspaper instead of disappearing
+  // behind the tabletop.
+  graphics
     .fillStyle(PALETTE.ink)
     .fillRect(58, 47, 22, 24)
-    .fillEllipse(69, 45, 78, 24)
+    .fillEllipse(69, 45, 82, 25)
     .fillStyle(PALETTE.teal)
     .fillRect(63, 49, 12, 19)
     .fillStyle(lightenColour(PALETTE.teal, 0.2))
-    .fillEllipse(69, 43, 69, 17)
-    .fillStyle(PALETTE.ink)
-    .fillRect(57, 35, 12, 12)
-    .fillRect(75, 35, 12, 12)
+    .fillEllipse(69, 43, 73, 18)
     .fillStyle(PALETTE.cream)
-    .fillRect(60, 37, 7, 8)
-    .fillRect(78, 37, 7, 8);
+    .fillEllipse(72, 42, 20, 7)
+    .fillStyle(0xc78345)
+    .fillRect(65, 39, 14, 5)
+    .fillStyle(PALETTE.ink)
+    .lineStyle(6, PALETTE.ink)
+    .lineBetween(36, 47, 55, cupY + 4)
+    .lineStyle(3, leftSkin)
+    .lineBetween(36, 47, 55, cupY + 4)
+    .fillCircle(55, cupY + 4, 3)
+    .lineStyle(6, PALETTE.ink)
+    .lineBetween(102, 47, 88, 42)
+    .lineStyle(3, rightSkin)
+    .lineBetween(102, 47, 88, 42)
+    .fillCircle(87, 42, 3)
+    .fillStyle(PALETTE.ink)
+    .fillRect(52, cupY - 1, 12, 10)
+    .fillStyle(PALETTE.cream)
+    .fillRect(54, cupY, 8, 7)
+    .fillRect(63, cupY + 2, 3, 4)
+    .fillStyle(PALETTE.ink)
+    .fillRect(81, 35, 22, 13)
+    .fillStyle(PALETTE.cream)
+    .fillRect(83, 37, 18, 9)
+    .fillStyle(PALETTE.teal)
+    .fillRect(85, 39, 6, 2)
+    .fillStyle(PALETTE.ink)
+    .fillRect(93, 39, 6, 1)
+    .fillRect(85, 43, 14, 1);
 
-  graphics
-    .fillStyle(PALETTE.ink)
-    .fillRect(10, 17, 25, 22)
-    .fillStyle(0xb87f52)
-    .fillRect(14, 20, 18, 16)
-    .fillStyle(0xa9a39b)
-    .fillRect(12, 17, 22, 7)
-    .fillStyle(PALETTE.ink)
-    .fillRect(9, 39, 29, 26)
-    .fillStyle(PALETTE.purple)
-    .fillRect(13, 42, 21, 19)
-    .lineStyle(6, PALETTE.ink)
-    .lineBetween(35, 46, 55, 41)
-    .lineStyle(3, 0xb87f52)
-    .lineBetween(35, 46, 55, 41)
-    .fillStyle(PALETTE.ink)
-    .fillRect(104, 18, 24, 21)
-    .fillStyle(0xd6a177)
-    .fillRect(107, 21, 18, 15)
-    .fillStyle(0x2a2523)
-    .fillRect(105, 18, 22, 7)
-    .fillStyle(PALETTE.ink)
-    .fillRect(101, 39, 29, 26)
-    .fillStyle(PALETTE.coral)
-    .fillRect(105, 42, 21, 19)
-    .lineStyle(6, PALETTE.ink)
-    .lineBetween(104, 46, 86, 41)
-    .lineStyle(3, 0xd6a177)
-    .lineBetween(104, 46, 86, 41);
+  if (frame === 1) {
+    graphics
+      .fillStyle(rightSkin)
+      .fillCircle(93, 36, 3)
+      .fillStyle(PALETTE.gold)
+      .fillRect(88, 32, 3, 3);
+  }
 
   const steamLift = frame === 0 ? 0 : -3;
   graphics
     .fillStyle(PALETTE.cream, 0.78)
-    .fillRect(62, 27 + steamLift, 3, 6)
-    .fillRect(79, 24 - steamLift, 3, 6);
+    .fillRect(56, cupY - 7 + steamLift, 2, 5)
+    .fillRect(60, cupY - 10 - steamLift, 2, 5);
 }
 
 function drawAmbientChessPlayers(

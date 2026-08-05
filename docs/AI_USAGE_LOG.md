@@ -3332,3 +3332,58 @@ plant-bearing estate fixture off pedestrian paving and onto open grass.
   evidence. No account, backend, analytics, personal-data collection, runtime
   model/network call, gameplay timer, failure state, energy system, or medical
   claim was introduced.
+
+## 2026-08-05 - Character-Framing Doors and Morning-Table Detail
+
+**User request:**
+
+- Correct the open paired-door silhouette to `/ C \`, with the main character
+  between the leaves, while preserving the reusable-door bug fix.
+- Improve the two people seated at the morning kopitiam table.
+
+**Diagnosis and implementation:**
+
+- Queried the existing Graphify code graph to trace open-leaf pose selection
+  separately from `DoorTransitionController`, `DoorView` reset, blocker, scene
+  fallback, and focus-restoration paths. Only the visual angle seam changed:
+  paired doors now use +18°/−18° instead of −18°/+18°; the lifecycle safeguards
+  remain intact.
+- Updated the pure angle contract and the production-browser diagnostic to
+  require `/ C \`, then retained the double Kopitiam enter/exit regression that
+  proves both returned doors are closed, reusable, focused, and controllable.
+- Rebuilt the existing code-native 140×78 two-frame `kopitiam-regulars`
+  vignette. The pair now have distinct silhouettes, hair, faces, spectacles,
+  blouse/shirt detail, seated posture, hands, an enamel cup with steam, toast,
+  and a folded newspaper without adding a runtime raster asset.
+- Updated current design, accessibility, QA, improvement, rubric, deck, and
+  submission evidence to describe the corrected pose and current build size.
+
+**Verification and visual review:**
+
+- The required gate passed: strict TypeScript, **90/90** Vitest tests,
+  production build, zero known dependency vulnerabilities, and the
+  screenshot-enabled **60/60** WebGL production-browser route.
+- Production build: **91.14 kB HTML (15.99 kB gzip), 140.99 kB initial
+  JavaScript (41.21 kB gzip), and 1,612.67 kB lazy scene (377.60 kB gzip)**.
+- The WebGL route reported `close/re-enter/close=true/true/true`,
+  `frame=/ C \\=true`, `focus=sandbox-stage/true`, and `controls=true`.
+- Forced Canvas2D also passed **60/60**. Its first run passed every door,
+  focus, layout, campaign, and performance assertion but sampled the monsoon at
+  an aliased animation phase (59/60); an unchanged rerun observed animated rain
+  and ten puddles and passed all checks.
+- The refreshed `27-ambient-micro-scenes.png` and a close crop of the morning
+  table were inspected for distinct, readable character and prop detail at
+  gameplay scale.
+
+**Tooling and claim boundary:**
+
+- Graphify guided the code-path analysis. The morning-table art uses the
+  repository's established Phaser Graphics grammar, so image generation was
+  not appropriate.
+- This is AI-assisted implementation, automated local browser evidence, and
+  machine-rendered screenshot inspection. It is not a human or older-adult
+  playtest, real-phone/tablet run, screen-reader or 200% zoom session,
+  accessibility certification, social/health outcome, or new Miora/CodeBuddy
+  evidence. No account, backend, analytics, personal-data collection, runtime
+  model/network call, gameplay timer, failure state, energy system, or medical
+  claim was introduced.

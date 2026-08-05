@@ -1729,7 +1729,7 @@ try {
       await sleep(260);
     };
 
-    const outwardDoor = await page.eval(`
+    const framingDoor = await page.eval(`
       (() => {
         const door = window.__kampungSmoke?.getMotionSnapshot?.()?.doors?.find(
           (candidate) => candidate.id === "estate-hawker"
@@ -1776,10 +1776,10 @@ try {
       && state.activeElement === "sandbox-stage"
       && state.documentFocused;
     doorLifecycleEvidence = {
-      outward:
-        outwardDoor.state === "open"
-        && outwardDoor.blockerEnabled === false
-        && JSON.stringify(outwardDoor.leafAngles) === JSON.stringify([-18, 18]),
+      framed:
+        framingDoor.state === "open"
+        && framingDoor.blockerEnabled === false
+        && JSON.stringify(framingDoor.leafAngles) === JSON.stringify([18, -18]),
       firstReturn: returnedDoorIsReusable(firstReturn),
       secondEntry: true,
       secondReturn: returnedDoorIsReusable(secondReturn),
@@ -1789,7 +1789,7 @@ try {
     diagnostics.push(
       `  DOOR  close/re-enter/close=${doorLifecycleEvidence.firstReturn}/` +
         `${doorLifecycleEvidence.secondEntry}/${doorLifecycleEvidence.secondReturn}; ` +
-        `outward=${doorLifecycleEvidence.outward}; ` +
+        `frame=/ C \\=${doorLifecycleEvidence.framed}; ` +
         `focus=${secondReturn.activeElement}/${secondReturn.documentFocused}; ` +
         `controls=${secondReturn.controlsEnabled}`
     );
@@ -4098,7 +4098,7 @@ try {
       && questTrackerEvidence
       && Object.values(questTrackerEvidence).every(Boolean)
       && doorLifecycleEvidence
-      && doorLifecycleEvidence.outward
+      && doorLifecycleEvidence.framed
       && doorLifecycleEvidence.firstReturn
       && doorLifecycleEvidence.secondEntry
       && doorLifecycleEvidence.secondReturn

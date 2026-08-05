@@ -105,6 +105,25 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-05 (Codex, character-framing doors and morning-table detail)** —
+  Corrected paired DoorView angles to +18°/−18° so open leaves frame the
+  entering character as `/ C \`, while retaining the existing idempotent
+  controller, blocker restoration, scene-time fallback, wall-clock recovery,
+  and wake/reset safeguards. Updated unit and production-browser assertions to
+  require the framing pose plus two complete Kopitiam enter/exit cycles with
+  closed reset, focus, and controls intact. Rebuilt the two-frame
+  `kopitiam-regulars` vignette with distinct older neighbours, seated
+  silhouettes, hair, spectacles, facial features, collared clothing, hands,
+  enamel cup/steam, toast, and newspaper detail. Graphify code-graph queries
+  isolated the door pose seam from its lifecycle and located the ambient-art
+  renderer; no raster generation was needed for the established code-native
+  art. Strict TypeScript, 90/90 tests, the 91.14/140.99/1,612.67 kB build,
+  zero-vulnerability audit, and 60/60 WebGL plus 60/60 forced-Canvas routes
+  passed. One first Canvas sample caught a phase-alias miss for rain/puddles;
+  the unchanged rerun passed both animated predicates. Refreshed ambient art
+  was visually inspected; no human/device/screen-reader/200%-zoom test or
+  outcome claim was made.
+
 - **2026-08-05 (Codex, green-verge/door/chess interaction polish)** — Removed
   the visible bottom interaction banner while retaining keyboard, in-world,
   semantic nearby-status, and contextual touch routes. Rebuilt hinged and

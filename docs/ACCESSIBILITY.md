@@ -252,8 +252,9 @@ verifies the main-character triangle follows the player above the sprite,
 then exercises Settings-owned full-screen entry/exit and exact Resume focus.
 It also repeats the same exterior doorway after an indoor return and requires
 the stage and document to retain focus with keyboard/touch controls enabled.
-The starting two-leaf hawker gate must report opposing −18°/+18° outward leaf
-angles, while each reusable returned door must report its closed 0° pose.
+The starting two-leaf hawker gate must report +18°/−18° leaf angles, forming
+the intended `/ C \` frame around the entering character, while each reusable
+returned door must report its closed 0° pose.
 The minimap and compact Journal quest list are kept together at the top-left;
 the location label occupies the opposite corner and automated desktop/mobile
 layout checks reject overlap or viewport escape.

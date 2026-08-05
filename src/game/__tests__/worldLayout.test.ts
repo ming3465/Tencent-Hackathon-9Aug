@@ -214,9 +214,9 @@ describe("three-quarter world layout", () => {
 
 describe("door and pause state", () => {
   it("makes repeated door interactions idempotent", () => {
-    expect(doorOpenLeafAngles("double-community", 2)).toEqual([-18, 18]);
-    expect(doorOpenLeafAngles("open-hawker-gate", 2)).toEqual([-18, 18]);
-    expect(doorOpenLeafAngles("hinged-hdb", 1)).toEqual([-18]);
+    expect(doorOpenLeafAngles("double-community", 2)).toEqual([18, -18]);
+    expect(doorOpenLeafAngles("open-hawker-gate", 2)).toEqual([18, -18]);
+    expect(doorOpenLeafAngles("hinged-hdb", 1)).toEqual([18]);
     expect(doorOpenLeafAngles("sliding-commercial", 1)).toEqual([0]);
     expect(doorOpenLeafAngles("workshop-shutter", 1)).toEqual([0]);
     expect(doorOpenLeafAngles("lift", 2)).toEqual([0, 0]);

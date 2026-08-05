@@ -142,8 +142,8 @@ Miora-specific before-and-after pipeline.
   slow states, cancellation, retry after failure, focus restoration, and
   duplicate-start protection covered by browser automation.
 - [x] Latest verified production build is HTML 91.14 kB (15.99 kB gzip),
-  initial JS 140.99 kB (41.21 kB gzip), and lazy campaign scene 1,611.06 kB
-  (377.18 kB gzip).
+  initial JS 140.99 kB (41.21 kB gzip), and lazy campaign scene 1,612.67 kB
+  (377.60 kB gzip).
 - [x] No backend or network dependency is required to play.
 - [x] The Phaser bundle-size warning is accepted or reduced with documented
   reasoning.
