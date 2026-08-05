@@ -5,16 +5,23 @@ import { DoorTransitionController } from "../doorState.js";
 import {
   DOOR_DEFINITIONS,
   ESTATE_BUILDINGS,
+  ESTATE_GROUND_FLOWERS,
+  ESTATE_LANDSCAPING,
+  ESTATE_PLANTED_FEATURES,
   ESTATE_SIDE_LAMPS,
   ESTATE_TREES,
+  ESTATE_WORLD_BOUNDS,
   PEDESTRIAN_STREETS,
   SHELTER_DEFINITIONS,
   SIDEWALK_APRONS,
   auditEstateLayout,
+  doorOpenLeafAngles,
   doorApproachBounds,
   getActiveShelters,
   getReturnSpawn,
   isPointDryUnderShelter,
+  groundFlowerBounds,
+  plantingSpriteBounds,
   rectanglesOverlap,
   rectangleContains,
   treeSpriteBounds,
@@ -123,7 +130,7 @@ describe("three-quarter world layout", () => {
     }
   });
 
-  it("grounds all six side lamps on stone aprons clear of streets and doors", () => {
+  it("grounds lamps and planted fixtures clear of streets and structures", () => {
     expect(ESTATE_SIDE_LAMPS.map(({ anchor }) => [anchor.x, anchor.y])).toEqual([
       [770, 532],
       [1020, 532],
@@ -157,11 +164,62 @@ describe("three-quarter world layout", () => {
         .some((door) => rectanglesOverlap(lamp.collider, doorApproachBounds(door))))
         .toBe(false);
     }
+
+    expect(ESTATE_LANDSCAPING).toHaveLength(41);
+    expect(ESTATE_LANDSCAPING.reduce<Record<string, number>>((counts, planting) => {
+      counts[planting.texture] = (counts[planting.texture] ?? 0) + 1;
+      return counts;
+    }, {})).toEqual({
+      "landscape-hedge": 12,
+      "landscape-flower-bed": 12,
+      "landscape-pandan": 8,
+      "landscape-shrub": 9,
+    });
+    expect(ESTATE_GROUND_FLOWERS).toHaveLength(23);
+    expect(ESTATE_PLANTED_FEATURES.filter(({ texture }) => texture === "prop-planter")).toHaveLength(3);
+    expect(ESTATE_PLANTED_FEATURES.filter(({ texture }) => texture === "prop-bike-planters")).toHaveLength(2);
+    expect(ESTATE_PLANTED_FEATURES.filter(({ texture }) => texture === "prop-shaded-seating")).toHaveLength(2);
+
+    const obstructions = [
+      ...PEDESTRIAN_STREETS,
+      ...ESTATE_BUILDINGS.map(({ bounds }) => bounds),
+      ...SHELTER_DEFINITIONS.map(({ bounds }) => bounds),
+      ...SIDEWALK_APRONS,
+      ...ESTATE_TREES.map(treeSpriteBounds),
+    ];
+    for (const definition of ESTATE_LANDSCAPING) {
+      const bounds = plantingSpriteBounds(definition);
+      expect(rectangleContains(ESTATE_WORLD_BOUNDS, bounds), definition.id).toBe(true);
+      expect(rectangleContains(bounds, definition.collider), definition.id).toBe(true);
+      for (const obstruction of obstructions) {
+        expect(rectanglesOverlap(bounds, obstruction), `${definition.id} / ${obstruction.id}`).toBe(false);
+      }
+    }
+    for (const definition of ESTATE_GROUND_FLOWERS) {
+      const bounds = groundFlowerBounds(definition);
+      expect(rectangleContains(ESTATE_WORLD_BOUNDS, bounds), definition.id).toBe(true);
+      for (const obstruction of obstructions) {
+        expect(rectanglesOverlap(bounds, obstruction), `${definition.id} / ${obstruction.id}`).toBe(false);
+      }
+    }
+    for (const definition of ESTATE_PLANTED_FEATURES) {
+      const bounds = plantingSpriteBounds(definition);
+      expect(rectangleContains(ESTATE_WORLD_BOUNDS, bounds), definition.id).toBe(true);
+      for (const obstruction of obstructions) {
+        expect(rectanglesOverlap(bounds, obstruction), `${definition.id} / ${obstruction.id}`).toBe(false);
+      }
+    }
   });
 });
 
 describe("door and pause state", () => {
   it("makes repeated door interactions idempotent", () => {
+    expect(doorOpenLeafAngles("double-community", 2)).toEqual([-18, 18]);
+    expect(doorOpenLeafAngles("open-hawker-gate", 2)).toEqual([-18, 18]);
+    expect(doorOpenLeafAngles("hinged-hdb", 1)).toEqual([-18]);
+    expect(doorOpenLeafAngles("sliding-commercial", 1)).toEqual([0]);
+    expect(doorOpenLeafAngles("workshop-shutter", 1)).toEqual([0]);
+    expect(doorOpenLeafAngles("lift", 2)).toEqual([0, 0]);
     const controller = new DoorTransitionController();
     expect(controller.beginOpening()).toBe(true);
     expect(controller.beginOpening()).toBe(false);

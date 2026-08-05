@@ -761,52 +761,6 @@
         text-transform: uppercase;
       }
 
-      .interaction-prompt {
-        position: absolute;
-        left: 50%;
-        bottom: 1rem;
-        z-index: 6;
-        width: min(620px, calc(100% - 2rem));
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        padding: 0.7rem 0.8rem 0.7rem 1rem;
-        color: var(--cream);
-        background: rgba(16, 46, 59, 0.94);
-        border: 3px solid var(--gold);
-        border-radius: 16px;
-        box-shadow: 0 8px 20px rgba(16, 46, 59, 0.3);
-        transform: translate(-50%, calc(100% + 2rem));
-        opacity: 0;
-        pointer-events: none;
-        transition: transform 180ms ease, opacity 180ms ease;
-      }
-
-      .interaction-prompt.visible {
-        transform: translate(-50%, 0);
-        opacity: 1;
-        pointer-events: none;
-      }
-
-      .interaction-prompt.visible .interact-button {
-        pointer-events: auto;
-      }
-
-      .interaction-prompt p {
-        margin: 0;
-        font-size: 0.9rem;
-        font-weight: 800;
-      }
-
-      .interact-button {
-        flex: 0 0 auto;
-        min-height: 48px;
-        padding: 0.55rem 0.8rem;
-        color: var(--night);
-        background: var(--gold);
-      }
-
       .touch-controls {
         position: absolute;
         inset: auto 0.75rem 0.75rem;
@@ -1754,19 +1708,6 @@
           border-radius: 18px;
         }
 
-        .interaction-prompt {
-          bottom: 8.2rem;
-          align-items: stretch;
-        }
-
-        .interaction-prompt p {
-          font-size: 0.8rem;
-        }
-
-        .interaction-prompt .interact-button {
-          display: none;
-        }
-
         .touch-controls {
           display: flex;
         }
@@ -1860,18 +1801,6 @@
           display: flex;
         }
 
-        /*
-         * Once the d-pad and its Talk button are on screen, the prompt's own
-         * Interact button is a third way to do the same thing. On a tablet all
-         * three were showing at once.
-         */
-        .interact-button {
-          display: none;
-        }
-
-        .interaction-prompt {
-          justify-content: flex-start;
-        }
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -3189,9 +3118,8 @@
               <div id="quest-tracker" class="quest-tracker" aria-label="Quest progress"></div>
             </aside>
 
-            <div id="interaction-prompt" class="interaction-prompt" aria-hidden="true">
+            <div id="interaction-prompt" class="interaction-prompt visually-hidden" aria-hidden="true">
               <p id="nearby-text">Move closer to a neighbour or activity.</p>
-              <button id="btn-interact" class="interact-button" type="button">Interact</button>
             </div>
 
             <div class="touch-controls" role="group" aria-label="Touch movement controls">

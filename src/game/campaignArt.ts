@@ -2300,32 +2300,110 @@ function drawAmbientChessPlayers(
   graphics: Phaser.GameObjects.Graphics,
   frame: 0 | 1,
 ): void {
-  const players: readonly [number, number, number, number, -1 | 1][] = [
-    [14, 25, 0xbd895d, PALETTE.teal, 1],
-    [124, 25, 0xd6a177, PALETTE.coral, -1],
-    [69, 48, 0xa8703f, PALETTE.purple, 1],
+  type ChessPlayer = {
+    x: number;
+    y: number;
+    skin: number;
+    shirt: number;
+    facing: -1 | 1;
+    hair: "side-part" | "flat-cap" | "bald-crown";
+    glasses: boolean;
+  };
+  const players: readonly ChessPlayer[] = [
+    { x: 12, y: 19, skin: 0xbd895d, shirt: PALETTE.teal, facing: 1, hair: "side-part", glasses: false },
+    { x: 126, y: 19, skin: 0xd6a177, shirt: PALETTE.coral, facing: -1, hair: "flat-cap", glasses: true },
+    { x: 68, y: 42, skin: 0xa8703f, shirt: PALETTE.purple, facing: 1, hair: "bald-crown", glasses: false },
   ];
   graphics.fillStyle(PALETTE.night, 0.15).fillEllipse(80, 84, 148, 10);
-  for (const [x, y, skin, shirt, facing] of players) {
+  for (const player of players) {
+    const { x, y, skin, shirt, facing, hair, glasses } = player;
+    const faceLeft = x + 4;
+    const eyeY = y + 11;
     graphics
       .fillStyle(PALETTE.ink)
-      .fillRect(x, y, 24, 21)
+      .fillRect(x, y, 26, 24)
       .fillStyle(skin)
-      .fillRect(x + 4, y + 4, 16, 14)
-      .fillStyle(0xa9a39b)
-      .fillRect(x + 2, y, 20, 7)
+      .fillRect(faceLeft, y + 4, 18, 17)
+      .fillRect(x + (facing === 1 ? 22 : 1), y + 10, 5, 8)
       .fillStyle(PALETTE.ink)
-      .fillRect(x - 2, y + 21, 29, 31)
-      .fillRect(x, y + 49, 9, 9)
-      .fillRect(x + 17, y + 49, 9, 9)
+      .fillRect(x - 3, y + 24, 32, 31)
+      .fillRect(x - 1, y + 52, 11, 8)
+      .fillRect(x + 18, y + 52, 11, 8)
       .fillStyle(shirt)
-      .fillRect(x + 2, y + 25, 21, 21);
+      .fillRect(x, y + 27, 25, 23)
+      .fillStyle(lightenColour(shirt, 0.18))
+      .fillTriangle(x + 3, y + 27, x + 11, y + 27, x + 8, y + 35)
+      .fillTriangle(x + 14, y + 27, x + 22, y + 27, x + 17, y + 35)
+      .fillStyle(PALETTE.cream, 0.78)
+      .fillRect(x + 12, y + 36, 2, 2)
+      .fillRect(x + 12, y + 42, 2, 2)
+      .fillStyle(darkenColour(shirt, 0.18))
+      .fillRect(x + (facing === 1 ? 3 : 16), y + 38, 7, 7)
+      .fillStyle(PALETTE.concreteEdge)
+      .fillRect(x + 1, y + 52, 8, 4)
+      .fillRect(x + 19, y + 52, 8, 4);
+
+    if (hair === "side-part") {
+      graphics
+        .fillStyle(0x918e89)
+        .fillRect(x + 2, y, 22, 7)
+        .fillRect(x + 2, y + 5, 5, 8)
+        .fillStyle(0xc8c1b7)
+        .fillRect(x + 7, y + 2, 12, 2)
+        .fillStyle(PALETTE.ink)
+        .fillRect(x + 17, y, 6, 2);
+    } else if (hair === "flat-cap") {
+      graphics
+        .fillStyle(PALETTE.ink)
+        .fillRect(x + 1, y - 2, 25, 5)
+        .fillStyle(0x6c7778)
+        .fillRect(x + 3, y - 5, 20, 7)
+        .fillStyle(0x9ba3a0)
+        .fillRect(x + 6, y - 3, 12, 2)
+        .fillStyle(PALETTE.ink)
+        .fillRect(x + (facing === 1 ? 20 : -2), y + 1, 9, 3);
+    } else {
+      graphics
+        .fillStyle(0xa9a39b)
+        .fillRect(x + 1, y + 4, 5, 10)
+        .fillRect(x + 20, y + 4, 5, 10)
+        .fillStyle(0xd1c9bf)
+        .fillRect(x + 5, y + 2, 4, 3)
+        .fillRect(x + 17, y + 2, 4, 3);
+    }
+
+    const nearEyeX = facing === 1 ? faceLeft + 12 : faceLeft + 4;
+    const farEyeX = facing === 1 ? faceLeft + 5 : faceLeft + 11;
+    graphics
+      .fillStyle(darkenColour(skin, 0.28))
+      .fillRect(nearEyeX - 1, eyeY - 2, 4, 1)
+      .fillRect(farEyeX - 1, eyeY - 2, 4, 1)
+      .fillStyle(PALETTE.ink)
+      .fillRect(nearEyeX, eyeY, frame === 1 && hair === "bald-crown" ? 3 : 2, 2)
+      .fillRect(farEyeX, eyeY, 2, 2)
+      .fillStyle(darkenColour(skin, 0.22))
+      .fillRect(faceLeft + (facing === 1 ? 14 : 2), y + 14, 3, 2)
+      .fillStyle(PALETTE.ink)
+      .fillRect(faceLeft + 7, y + 18, 6, 2);
+
+    if (glasses) {
+      graphics
+        .lineStyle(2, PALETTE.ink)
+        .strokeRect(faceLeft + 2, eyeY - 2, 6, 5)
+        .strokeRect(faceLeft + 10, eyeY - 2, 6, 5)
+        .lineBetween(faceLeft + 8, eyeY, faceLeft + 10, eyeY);
+    }
+
     const handX = x + (facing === 1 ? 31 + frame * 3 : -7 - frame * 3);
     graphics
       .lineStyle(6, PALETTE.ink)
       .lineBetween(x + (facing === 1 ? 22 : 2), y + 31, handX, y + 37 - frame * 2)
       .lineStyle(3, skin)
-      .lineBetween(x + (facing === 1 ? 22 : 2), y + 31, handX, y + 37 - frame * 2);
+      .lineBetween(x + (facing === 1 ? 22 : 2), y + 31, handX, y + 37 - frame * 2)
+      .fillStyle(PALETTE.ink)
+      .fillRect(handX - 2, y + 34 - frame * 2, 6, 5)
+      .fillStyle(skin)
+      .fillRect(handX - 1, y + 34 - frame * 2, 4, 3);
   }
   graphics
     .fillStyle(PALETTE.cream)

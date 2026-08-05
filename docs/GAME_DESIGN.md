@@ -105,7 +105,8 @@ interaction, depth, collision, transition latching, and reduced-motion fades.
 `WORLD_LAYOUT` is the pure geometry source for six connected pedestrian
 streets, eight buildings, 22 contextual doors, building collision shells,
 entry aprons, NPC routes, three shelter variants, monsoon dry masks, minimap
-landmarks, and deterministic return spawns. Cartesian four-direction movement
+landmarks, deterministic return spawns, and every landscaping, ground-flower,
+and plant-bearing feature placement. Cartesian four-direction movement
 is unchanged; only the presentation uses roof/front/right-face projection.
 
 Enterable locations include:
@@ -221,7 +222,8 @@ counters, shelves, tools, tables, and room-specific floors are drawn in code.
 Twenty-three hand-placed flower clusters are baked into the four exterior
 textures. Seven code-drawn laundry lines and two community cats use
 deterministic two-frame motion. Five additional two-frame vignettes show
-neighbours playing courtyard chess, a neighbour sweeping the void deck, two
+three individually drawn older neighbours playing courtyard chess—with
+different hair, faces, glasses, clothing, hands, and seated detail—a neighbour sweeping the void deck, two
 neighbours discussing the noticeboard, an older garden steward tending a bed,
 and regulars talking at a kopitiam table. Six reusable code-drawn story-cluster
 forms—chess seating, bicycle
@@ -273,18 +275,22 @@ original mosaic dragon playground, and exercise corner with collision and
 y-derived depth. The landscaping pass gives rain trees, palms, and frangipani
 stepped canopies, branch structure, contact shade, and directional cast shadows.
 Forty-one collision-aware shrubs, flower beds, pandan clumps, and hedges use
-four reusable generated textures to plant building and path edges without
-closing travel routes. Named landmarks no longer share generic block fronts:
+four reusable generated textures on open grass verges. A typed registry also
+owns 23 baked flower clumps, three standalone planters, the planted chess
+garden, two bicycle-planter groups, and two planted seating groups. The layout
+audit rejects the complete bounds of any of them crossing streets, structures,
+lamp aprons, tree sprites, or the world edge. Named landmarks no longer share generic block fronts:
 the Hawker Centre, Kopitiam, Minah's shop, Community Centre, Prayer Hall,
 Workshop, and Block 12 have distinct roofs, awnings, glazing, counters, lattice,
 tools, thresholds, and code-drawn pixel signs. The seven exterior entrances,
 four corridor flat doors, corridor lift, and ten interior exits are 22
 first-class `DoorView` objects. Each definition owns its orientation, style,
 anchor, reachable approach point, paired return spawn, placard, dimensions,
-and closed collider. Hinged HDB leaves, sliding shop doors, double community
-doors, workshop shutters, open hawker gates, and lift doors share an idempotent
+and closed collider. Hinged HDB leaves and paired community/hawker gates rotate
+from true outside hinges to −18°/+18° outward poses; sliding shop/lift doors and
+workshop shutters retain their authored mechanisms. All share an idempotent
 transition guard. Closed thresholds block movement; an authorised interaction
-cancels navigation, faces the player, opens over 180 ms, disables the blocker,
+cancels navigation, faces the player, opens over 180–210 ms, disables the blocker,
 steps through, and then fades the scene. Reduced motion applies the opening
 immediately. Waking the slept estate resets leaf transforms, transition state,
 and closed blockers before input resumes. A stale transition cannot run the
@@ -387,7 +393,7 @@ variation, counts the four generated landscape forms and their sampled colours,
 counts 90 exterior props across 24 forms, 12 story-cluster placements across
 six forms, and 54
 baked ground accents, samples a generated landmark façade for colour, edge,
-and dark-value structure, counts 95 live obstacle bodies, proves three
+and dark-value structure, counts 129 live obstacle bodies, proves three
 building/path-safe bicycle bays and zero roadless motor routes, proves all
 eight façade layers fade and restore at a physical building stop, physically pushes
 the player into a solid storefront, physically walks to a pond capture, and

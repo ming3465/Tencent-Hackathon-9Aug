@@ -420,7 +420,16 @@ try {
   };
 
   const walkWorld = async (key, code, keyCode, duration) => {
-    await page.eval(`document.getElementById("sandbox-stage").focus({ preventScroll: true })`);
+    await page.eval(`
+      (() => {
+        // A direct focus() is a no-op when the stage is already active, so it
+        // cannot repair a transient controls-disabled state. Cross the visible
+        // Menu control first to exercise the production focusin policy, then
+        // return to the world before dispatching movement keys.
+        document.getElementById("btn-menu").focus({ preventScroll: true });
+        document.getElementById("sandbox-stage").focus({ preventScroll: true });
+      })()
+    `);
     await page.key("keyDown", "Shift", "ShiftLeft", 16);
     await page.key("keyDown", key, code, keyCode);
     await sleep(duration);
@@ -1661,8 +1670,10 @@ try {
     const waitForLiveFrames = (duration) => page.eval(`
       new Promise((resolve) => {
         const startedAt = performance.now();
+        const fallback = window.setTimeout(() => resolve(true), ${duration} + 2000);
         const tick = (now) => {
           if (now - startedAt >= ${duration}) {
+            window.clearTimeout(fallback);
             resolve(true);
             return;
           }
@@ -1700,14 +1711,15 @@ try {
       if (nearbyId !== doorId) {
         throw new Error(`Expected nearby door ${doorId}, found ${nearbyId}`);
       }
-      await page.eval(`window.__kampungSmoke.tryInteract()`);
-      await waitForLiveFrames(620);
-      await page.eval(`
-        if (window.__kampungSmoke?.getMotionSnapshot?.()?.locationId
-          !== ${JSON.stringify(expectedLocation)}) {
-          window.__kampungSmoke.tryInteract();
-        }
-      `);
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        const entered = await page.eval(`
+          window.__kampungSmoke?.getMotionSnapshot?.()?.locationId
+            === ${JSON.stringify(expectedLocation)}
+        `);
+        if (entered) break;
+        await page.eval(`window.__kampungSmoke.tryInteract()`);
+        await waitForLiveFrames(720);
+      }
       await waitForPageCondition(
         `window.__kampungSmoke?.getMotionSnapshot?.()?.locationId
           === ${JSON.stringify(expectedLocation)}`,
@@ -1716,6 +1728,19 @@ try {
       );
       await sleep(260);
     };
+
+    const outwardDoor = await page.eval(`
+      (() => {
+        const door = window.__kampungSmoke?.getMotionSnapshot?.()?.doors?.find(
+          (candidate) => candidate.id === "estate-hawker"
+        );
+        return {
+          state: door?.state ?? null,
+          blockerEnabled: door?.blockerEnabled ?? null,
+          leafAngles: door?.leafAngles ?? [],
+        };
+      })()
+    `);
 
     const readReturnedDoor = () => page.eval(`
       (() => {
@@ -1727,6 +1752,7 @@ try {
           locationId: snapshot?.locationId ?? null,
           state: door?.state ?? null,
           blockerEnabled: door?.blockerEnabled ?? null,
+          leafAngles: door?.leafAngles ?? [],
           controlsEnabled: snapshot?.tapNavigation?.controlsEnabled ?? false,
           activeElement: document.activeElement?.id ?? null,
           documentFocused: document.hasFocus(),
@@ -1744,10 +1770,16 @@ try {
       state.locationId === "estate"
       && state.state === "closed"
       && state.blockerEnabled === true
+      && state.leafAngles.length > 0
+      && state.leafAngles.every((angle) => angle === 0)
       && state.controlsEnabled
       && state.activeElement === "sandbox-stage"
       && state.documentFocused;
     doorLifecycleEvidence = {
+      outward:
+        outwardDoor.state === "open"
+        && outwardDoor.blockerEnabled === false
+        && JSON.stringify(outwardDoor.leafAngles) === JSON.stringify([-18, 18]),
       firstReturn: returnedDoorIsReusable(firstReturn),
       secondEntry: true,
       secondReturn: returnedDoorIsReusable(secondReturn),
@@ -1757,6 +1789,7 @@ try {
     diagnostics.push(
       `  DOOR  close/re-enter/close=${doorLifecycleEvidence.firstReturn}/` +
         `${doorLifecycleEvidence.secondEntry}/${doorLifecycleEvidence.secondReturn}; ` +
+        `outward=${doorLifecycleEvidence.outward}; ` +
         `focus=${secondReturn.activeElement}/${secondReturn.documentFocused}; ` +
         `controls=${secondReturn.controlsEnabled}`
     );
@@ -2340,6 +2373,8 @@ try {
       const topbar = document.querySelector(".topbar").getBoundingClientRect();
       const shell = document.getElementById("world-shell").getBoundingClientRect();
       const canvas = document.querySelector("#sandbox-stage canvas").getBoundingClientRect();
+      const prompt = document.getElementById("interaction-prompt");
+      const promptRect = prompt.getBoundingClientRect();
       return {
         screenFill:
           Math.abs(screen.width - innerWidth) <= 1
@@ -2359,6 +2394,10 @@ try {
         noDocumentOverflow:
           document.documentElement.scrollWidth <= innerWidth + 1
           && document.documentElement.scrollHeight <= innerHeight + 1,
+        promptSuppressed:
+          prompt.classList.contains("visually-hidden")
+          && promptRect.width <= 1
+          && promptRect.height <= 1,
       };
     })()
   `);
@@ -2830,6 +2869,27 @@ try {
     environmentMode: "living",
   });
 
+  // A WebGL frame captured on the exact scene-wake boundary can leave that
+  // renderer unresponsive to the next Runtime.evaluate on some Chrome builds.
+  // Resume the just-saved campaign in a fresh renderer before the long estate
+  // gallery and door-reuse route; this also verifies the completed save boots.
+  if (CAPTURE_SCREENSHOTS) {
+    await page.send("Page.navigate", { url: TEST_URL });
+    await waitForPageCondition(
+      `document.readyState === "complete"
+        && document.getElementById("btn-continue")
+        && !document.getElementById("btn-continue").hidden`,
+      "the completed save after the day-complete capture"
+    );
+    await page.eval(`document.getElementById("btn-continue").click()`);
+    await waitForPageCondition(
+      `document.getElementById("sandbox-stage").getAttribute("aria-busy") === "false"
+        && window.__kampungSmoke?.getMotionSnapshot?.()?.locationId`,
+      "the resumed completed campaign",
+      4000
+    );
+  }
+
   const galleryLocations = [
     "Block 9 Corridor",
     "Mr. Long's Flat",
@@ -2945,9 +3005,21 @@ try {
       `worst ${throttledFramePacing.worst.toFixed(2)}ms, ` +
       `main-thread ${throttledFramePacing.taskMsPerFrame.toFixed(2)}ms/frame`
   );
-  await page.eval(`document.getElementById("sandbox-stage").focus({ preventScroll: true })`);
+  await page.eval(`
+    document.getElementById("btn-menu").focus({ preventScroll: true });
+    document.getElementById("sandbox-stage").focus({ preventScroll: true });
+  `);
   await page.key("keyDown", "ArrowRight", "ArrowRight", 39);
-  await sleep(230);
+  await waitForPageCondition(
+    `(() => {
+      const snapshot = window.__kampungSmoke?.getMotionSnapshot?.();
+      return snapshot?.tapNavigation?.controlsEnabled === true
+        && snapshot.visibleStepPuffs >= 1
+        && snapshot.activeStepSurfaces.includes(snapshot.movementSurface);
+    })()`,
+    "active world feedback after performance sampling",
+    1200,
+  );
   const worldFeelSnapshot = await page.eval(
     `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
   );
@@ -3496,6 +3568,8 @@ try {
         const stage = document.getElementById("sandbox-stage").getBoundingClientRect();
         const canvas = document.querySelector("#sandbox-stage canvas").getBoundingClientRect();
         const hud = document.getElementById("hud-rail").getBoundingClientRect();
+        const prompt = document.getElementById("interaction-prompt");
+        const promptRect = prompt.getBoundingClientRect();
         const trackerCards = Array.from(document.querySelectorAll(".quest-tracker-card"));
         const topbarTargets = Array.from(document.querySelectorAll(".topbar button"))
           .filter((button) => button.offsetParent !== null)
@@ -3543,6 +3617,10 @@ try {
           hudClear,
           hudTopLeft,
           trackerCompact,
+          promptSuppressed:
+            prompt.classList.contains("visually-hidden")
+            && promptRect.width <= 1
+            && promptRect.height <= 1,
           fits:
             Math.abs(screen.height - innerHeight) <= 1
             && inside(topbar, viewport)
@@ -3557,6 +3635,9 @@ try {
             && hudTopLeft
             && hudClear
             && trackerCompact
+            && prompt.classList.contains("visually-hidden")
+            && promptRect.width <= 1
+            && promptRect.height <= 1
             && Math.abs(canvas.width - stage.width) <= 1
             && Math.abs(canvas.height - stage.height) <= 1,
         };
@@ -3882,6 +3963,7 @@ try {
       `journal=${mobileGameEvidence.journal}; ` +
       `dialogue=${mobileGameEvidence.dialogue}; ` +
       `close-focus=${mobileGameEvidence.closedToWorld}; ` +
+      `pause=${mobileGameEvidence.pauseRoundTrip}; ` +
       `short=${mobileGameEvidence.shortViewports}; ` +
       `short-title=${mobileGameEvidence.shortTitles}; ` +
       `tap=${mobileGameEvidence.tapNavigation}; ` +
@@ -4016,6 +4098,7 @@ try {
       && questTrackerEvidence
       && Object.values(questTrackerEvidence).every(Boolean)
       && doorLifecycleEvidence
+      && doorLifecycleEvidence.outward
       && doorLifecycleEvidence.firstReturn
       && doorLifecycleEvidence.secondEntry
       && doorLifecycleEvidence.secondReturn

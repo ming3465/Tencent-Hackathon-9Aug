@@ -159,7 +159,7 @@ try {
       return box.width > 0 && (box.width < 48 || box.height < 48);
     }).length,
     nearby: document.getElementById("nearby-text")?.textContent?.trim(),
-    promptVisible: document.getElementById("interaction-prompt")?.classList.contains("visible"),
+    promptHidden: document.getElementById("interaction-prompt")?.classList.contains("visually-hidden"),
     errors: window.__smokeErrors,
     liveText: document.getElementById("live-region")?.textContent
   };
@@ -176,7 +176,7 @@ try {
     throw "The 360px sandbox layout has horizontal overflow."
   }
   if ($initial.undersizedTargets -ne 0) { throw "An active touch target is below 48px." }
-  if (-not $initial.promptVisible -or $initial.nearby -notlike "*Uncle Ravi*") {
+  if (-not $initial.promptHidden -or $initial.nearby -notlike "*Uncle Ravi*") {
     throw "The starting noticeboard interaction was not discoverable."
   }
 
@@ -191,7 +191,7 @@ try {
   $noticeboard = Invoke-JavaScript -Expression @'
 (async () => {
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  document.getElementById("btn-interact").click();
+  window.__kampungSmoke?.tryInteract?.();
   await wait(80);
   const opened = {
     active: document.getElementById("dialog-overlay").classList.contains("active"),
@@ -258,17 +258,17 @@ try {
   $nearMemory = Invoke-JavaScript -Expression @'
 ({
   nearby: document.getElementById("nearby-text")?.textContent?.trim(),
-  visible: document.getElementById("interaction-prompt")?.classList.contains("visible")
+  hidden: document.getElementById("interaction-prompt")?.classList.contains("visually-hidden")
 })
 '@
-  if (-not $nearMemory.visible -or $nearMemory.nearby -notlike "*memory table*") {
-    throw "Keyboard movement did not reach the memory table (visible: $($nearMemory.visible), nearby: $($nearMemory.nearby))."
+  if (-not $nearMemory.hidden -or $nearMemory.nearby -notlike "*memory table*") {
+    throw "Keyboard movement did not reach the memory table (prompt hidden: $($nearMemory.hidden), nearby: $($nearMemory.nearby))."
   }
 
   $memoryResult = Invoke-JavaScript -Expression @'
 (async () => {
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  document.getElementById("btn-interact").click();
+  window.__kampungSmoke?.tryInteract?.();
   await wait(80);
   const opened = {
     active: document.getElementById("memory-overlay").classList.contains("active"),
@@ -394,10 +394,10 @@ try {
   $nearNoticeByTouch = Invoke-JavaScript -Expression @'
 ({
   nearby: document.getElementById("nearby-text")?.textContent?.trim(),
-  visible: document.getElementById("interaction-prompt")?.classList.contains("visible")
+  hidden: document.getElementById("interaction-prompt")?.classList.contains("visually-hidden")
 })
 '@
-  if (-not $nearNoticeByTouch.visible -or $nearNoticeByTouch.nearby -notlike "*Uncle Ravi*") {
+  if (-not $nearNoticeByTouch.hidden -or $nearNoticeByTouch.nearby -notlike "*Uncle Ravi*") {
     throw "Touch movement did not return to the noticeboard."
   }
 

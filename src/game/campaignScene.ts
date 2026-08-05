@@ -40,15 +40,20 @@ import {
   ESTATE_BUILDING_VISUAL_ZONES,
   ESTATE_ENTRANCES,
   ESTATE_FACADE_DEPTH_DEFINITIONS,
+  ESTATE_GROUND_FLOWERS,
+  ESTATE_LANDSCAPING,
+  ESTATE_PLANTED_FEATURES,
   ESTATE_SIDE_LAMPS,
   ESTATE_TREES,
   ESTATE_VEHICLE_ROUTES,
   ESTATE_NPC_ROUTES as LAYOUT_NPC_ROUTES,
+  doorOpenLeafAngles,
   getDoorsForLocation,
   getActiveShelters,
   getReturnSpawn,
   getOccludingBuildingIds,
   isPointDryUnderShelter,
+  type EstatePoint,
   type EstateRect,
   type DoorDefinition,
   type ShelterChoice,
@@ -98,6 +103,32 @@ const HURRY_SPEED = 260;
 const INTERACTION_DISTANCE = 112;
 const TRANSITION_LATCH_MS = 420;
 const TRANSITION_FALLBACK_MS = 360;
+
+function scheduleWallClockSceneFallback(
+  scene: Phaser.Scene,
+  callback: () => void,
+): void {
+  let pending = true;
+  const gameEvents = scene.sys.game.events;
+  const sceneEvents = scene.events;
+  const clear = (): void => {
+    if (!pending) return;
+    pending = false;
+    globalThis.clearTimeout(timer);
+  };
+  const run = (): void => {
+    if (!pending) return;
+    pending = false;
+    gameEvents.off(Phaser.Core.Events.DESTROY, clear);
+    sceneEvents.off(Phaser.Scenes.Events.SHUTDOWN, clear);
+    sceneEvents.off(Phaser.Scenes.Events.DESTROY, clear);
+    callback();
+  };
+  const timer = globalThis.setTimeout(run, TRANSITION_FALLBACK_MS);
+  gameEvents.once(Phaser.Core.Events.DESTROY, clear);
+  sceneEvents.once(Phaser.Scenes.Events.SHUTDOWN, clear);
+  sceneEvents.once(Phaser.Scenes.Events.DESTROY, clear);
+}
 
 function depthFor(y: number, layer = 0): number {
   return y * 10 + layer;
@@ -281,6 +312,7 @@ class DoorView {
   private readonly scene: Phaser.Scene;
   private readonly blocker: Phaser.GameObjects.Rectangle;
   private readonly leaves: Phaser.GameObjects.Graphics[] = [];
+  private readonly closedLeafPoses: EstatePoint[] = [];
   private readonly controller: DoorTransitionController;
 
   constructor(
@@ -306,7 +338,10 @@ class DoorView {
       return true;
     }
     if (!this.controller.beginOpening()) return false;
+    let finished = false;
     const finish = (): void => {
+      if (finished) return;
+      finished = true;
       this.disableBlocker();
       this.controller.finishOpening();
       if (!this.controller.beginTransition()) return;
@@ -319,13 +354,34 @@ class DoorView {
     }
     const style = this.definition.style;
     const targets = this.leaves;
-    if (style === "workshop-shutter") {
+    const openAngles = doorOpenLeafAngles(style, targets.length);
+    if (openAngles.some((angle) => angle !== 0)) {
+      let completed = 0;
+      const finishLeaf = (): void => {
+        completed += 1;
+        if (completed === targets.length) finish();
+      };
+      targets.forEach((leaf, index) => {
+        this.scene.tweens.add({
+          targets: leaf,
+          angle: openAngles[index] ?? 0,
+          duration: 210,
+          ease: "Sine.easeInOut",
+          onComplete: finishLeaf,
+        });
+      });
+    } else if (style === "workshop-shutter") {
       this.scene.tweens.add({ targets, scaleY: 0.08, y: `-=${this.definition.dimensions.height / 2}`, duration: 180, ease: "Sine.easeInOut", onComplete: finish });
-    } else if (style === "hinged-hdb") {
-      this.scene.tweens.add({ targets, scaleX: 0.12, x: `-=${this.definition.dimensions.width * 0.34}`, duration: 180, ease: "Sine.easeInOut", onComplete: finish });
     } else {
       this.scene.tweens.add({ targets, scaleX: 0.08, duration: 180, ease: "Sine.easeInOut", onComplete: finish });
     }
+    // Scene-time safety net: losing a tween completion must not leave a door
+    // open-looking, controls-disabled, and permanently non-interactive.
+    this.scene.time.delayedCall(TRANSITION_FALLBACK_MS, finish);
+    // Phaser pauses its scene clock when the page loses focus. Keep a second,
+    // teardown-safe wall-clock path so returning to the tab cannot strand the
+    // door in its opening state.
+    scheduleWallClockSceneFallback(this.scene, finish);
     return true;
   }
 
@@ -335,11 +391,13 @@ class DoorView {
 
   resetForReuse(): void {
     this.scene.tweens.killTweensOf(this.leaves);
-    for (const leaf of this.leaves) {
+    this.leaves.forEach((leaf, index) => {
+      const closedPose = this.closedLeafPoses[index] ?? this.definition.anchor;
       leaf
-        .setPosition(this.definition.anchor.x, this.definition.anchor.y)
-        .setScale(1, 1);
-    }
+        .setPosition(closedPose.x, closedPose.y)
+        .setScale(1, 1)
+        .setAngle(0);
+    });
     const startsOpen = this.definition.startsOpen === true;
     this.controller.reset(startsOpen);
     const body = this.blocker.body as Phaser.Physics.Arcade.StaticBody | null;
@@ -347,12 +405,13 @@ class DoorView {
     if (startsOpen) this.setOpenPose();
   }
 
-  getSnapshot(): { id: string; state: string; blockerEnabled: boolean } {
+  getSnapshot(): { id: string; state: string; blockerEnabled: boolean; leafAngles: readonly number[] } {
     const body = this.blocker.body as Phaser.Physics.Arcade.StaticBody | null;
     return {
       id: this.definition.id,
       state: this.controller.getState(),
       blockerEnabled: body?.enable ?? false,
+      leafAngles: this.leaves.map(({ angle }) => Math.round(angle * 10) / 10),
     };
   }
 
@@ -372,13 +431,25 @@ class DoorView {
       .fillStyle(NIGHT)
       .fillRect(left + 5, top + 5, dimensions.width - 10, dimensions.height - 5);
     const leafCount = style === "double-community" || style === "lift" || style === "open-hawker-gate" ? 2 : 1;
+    const openAngles = doorOpenLeafAngles(style, leafCount);
+    const swinging = openAngles.some((angle) => angle !== 0);
     for (let index = 0; index < leafCount; index += 1) {
-      const leaf = this.scene.add.graphics().setPosition(anchor.x, anchor.y).setDepth(depth + 1);
       const gap = 3;
-      const leafWidth = leafCount === 2 ? (dimensions.width - gap) / 2 : dimensions.width - 10;
-      const leafX = leafCount === 2
-        ? left + index * (leafWidth + gap)
-        : left + 5;
+      const innerLeft = left + 5;
+      const innerWidth = dimensions.width - 10;
+      const leafWidth = leafCount === 2 ? (innerWidth - gap) / 2 : innerWidth;
+      const hingeX = leafCount === 2 && index === 1
+        ? anchor.x + innerLeft + innerWidth
+        : anchor.x + innerLeft;
+      const leafPosition = swinging ? { x: hingeX, y: anchor.y } : anchor;
+      const leaf = this.scene.add.graphics()
+        .setPosition(leafPosition.x, leafPosition.y)
+        .setDepth(depth + 1);
+      const leafX = swinging
+        ? index === 0 ? 0 : -leafWidth
+        : leafCount === 2
+          ? innerLeft + index * (leafWidth + gap)
+          : innerLeft;
       const fill = style === "workshop-shutter"
         ? CONCRETE_EDGE
         : style === "double-community"
@@ -392,13 +463,27 @@ class DoorView {
         .fillStyle(lightenColour(fill, 0.2), 0.8)
         .fillRect(leafX + 5, top + 10, Math.max(3, leafWidth - 10), 6)
         .fillStyle(darkenColour(fill, 0.2), 0.65)
-        .fillRect(leafX + leafWidth - 7, top + 8, 5, dimensions.height - 14);
+        .fillRect(
+          leafX + (swinging && index === 1 ? 2 : leafWidth - 7),
+          top + 8,
+          5,
+          dimensions.height - 14,
+        );
+      if (swinging) {
+        const handleX = index === 0 ? leafX + leafWidth - 10 : leafX + 7;
+        leaf
+          .fillStyle(INK)
+          .fillCircle(handleX, top + dimensions.height * 0.55, 4)
+          .fillStyle(GOLD)
+          .fillCircle(handleX - 1, top + dimensions.height * 0.55 - 1, 2);
+      }
       if (style === "workshop-shutter") {
         for (let stripe = top + 20; stripe < -5; stripe += 12) {
           leaf.fillStyle(INK, 0.35).fillRect(leafX + 3, stripe, leafWidth - 6, 3);
         }
       }
       this.leaves.push(leaf);
+      this.closedLeafPoses.push(leafPosition);
     }
     this.scene.add
       .text(anchor.x, anchor.y - dimensions.height - 12, placard, {
@@ -415,15 +500,16 @@ class DoorView {
 
   private setOpenPose(): void {
     const style = this.definition.style;
-    for (const leaf of this.leaves) {
-      if (style === "workshop-shutter") {
+    const openAngles = doorOpenLeafAngles(style, this.leaves.length);
+    this.leaves.forEach((leaf, index) => {
+      if ((openAngles[index] ?? 0) !== 0) {
+        leaf.setAngle(openAngles[index] ?? 0);
+      } else if (style === "workshop-shutter") {
         leaf.setScale(1, 0.08).setY(leaf.y - this.definition.dimensions.height / 2);
-      } else if (style === "hinged-hdb") {
-        leaf.setScale(0.12, 1).setX(leaf.x - this.definition.dimensions.width * 0.34);
       } else {
         leaf.setScale(0.08, 1);
       }
-    }
+    });
   }
 
   private disableBlocker(): void {
@@ -655,6 +741,7 @@ export interface CampaignMotionSnapshot {
     id: string;
     state: string;
     blockerEnabled: boolean;
+    leafAngles: readonly number[];
   }[];
 }
 
@@ -1563,7 +1650,12 @@ abstract class WalkableScene extends Phaser.Scene {
         x: anchor.x + (orientation === "east" ? step : orientation === "west" ? -step : 0),
         y: anchor.y + (orientation === "south" ? step : orientation === "north" ? -step : 0),
       };
-      const enter = (): void => this.callbacks.onDoorEnter?.(targetLocationId);
+      let entered = false;
+      const enter = (): void => {
+        if (entered) return;
+        entered = true;
+        this.callbacks.onDoorEnter?.(targetLocationId);
+      };
       if (this.reducedMotion) {
         this.player.setPosition(destination.x, destination.y);
         enter();
@@ -1577,6 +1669,8 @@ abstract class WalkableScene extends Phaser.Scene {
         ease: "Sine.easeIn",
         onComplete: enter,
       });
+      this.time.delayedCall(TRANSITION_FALLBACK_MS, enter);
+      scheduleWallClockSceneFallback(this, enter);
     });
     if (!opened) {
       // A transition-state race must never strand keyboard/touch controls.
@@ -2015,8 +2109,8 @@ const ESTATE_AMBIENT_ACTIVITIES: readonly {
   {
     id: "courtyard-chess-players",
     texture: "ambient-task-chess",
-    x: 790,
-    y: 735,
+    x: 2200,
+    y: 775,
   },
   {
     id: "void-deck-sweeper",
@@ -2137,65 +2231,6 @@ const ESTATE_LAUNDRY: readonly [number, number, 0 | 1][] = [
   [2180, 265, 0],
 ];
 
-const LANDSCAPE_TEXTURE_KEYS = [
-  "landscape-shrub",
-  "landscape-flower-bed",
-  "landscape-pandan",
-  "landscape-hedge",
-] as const;
-
-type LandscapeTextureKey = (typeof LANDSCAPE_TEXTURE_KEYS)[number];
-
-const ESTATE_LANDSCAPING: readonly [
-  LandscapeTextureKey,
-  number,
-  number,
-  number,
-  number,
-][] = [
-  ["landscape-flower-bed", 105, 320, 88, 14],
-  ["landscape-hedge", 285, 320, 112, 16],
-  ["landscape-shrub", 480, 320, 56, 14],
-  ["landscape-pandan", 945, 320, 42, 14],
-  ["landscape-hedge", 1120, 320, 112, 16],
-  ["landscape-flower-bed", 1370, 320, 88, 14],
-  ["landscape-shrub", 1520, 320, 56, 14],
-  ["landscape-shrub", 2050, 320, 56, 14],
-  ["landscape-hedge", 2440, 320, 112, 16],
-  ["landscape-hedge", 110, 485, 112, 16],
-  ["landscape-pandan", 260, 485, 42, 14],
-  ["landscape-flower-bed", 1080, 485, 88, 14],
-  ["landscape-pandan", 1230, 485, 42, 14],
-  ["landscape-flower-bed", 1370, 485, 88, 14],
-  ["landscape-hedge", 1770, 485, 112, 16],
-  ["landscape-flower-bed", 2090, 485, 88, 14],
-  ["landscape-pandan", 2440, 485, 42, 14],
-  ["landscape-shrub", 510, 650, 56, 14],
-  ["landscape-hedge", 780, 820, 112, 16],
-  ["landscape-pandan", 510, 930, 42, 14],
-  ["landscape-flower-bed", 780, 1010, 88, 14],
-  ["landscape-shrub", 1785, 650, 56, 14],
-  ["landscape-flower-bed", 2060, 720, 88, 14],
-  ["landscape-pandan", 1780, 900, 42, 14],
-  ["landscape-hedge", 2060, 850, 112, 16],
-  ["landscape-flower-bed", 105, 1120, 88, 14],
-  ["landscape-shrub", 285, 1120, 56, 14],
-  ["landscape-shrub", 1240, 1120, 56, 14],
-  ["landscape-flower-bed", 1370, 1120, 88, 14],
-  ["landscape-hedge", 1620, 1120, 112, 16],
-  ["landscape-hedge", 2460, 1165, 112, 16],
-  ["landscape-hedge", 120, 1285, 112, 16],
-  ["landscape-flower-bed", 510, 1285, 88, 14],
-  ["landscape-pandan", 820, 1285, 42, 14],
-  ["landscape-shrub", 1090, 1285, 56, 14],
-  ["landscape-shrub", 180, 1525, 56, 14],
-  ["landscape-flower-bed", 420, 1525, 88, 14],
-  ["landscape-hedge", 800, 1525, 112, 16],
-  ["landscape-pandan", 1100, 1525, 42, 14],
-  ["landscape-flower-bed", 1290, 1525, 88, 14],
-  ["landscape-hedge", 2480, 1525, 112, 16],
-];
-
 const STORY_CLUSTER_TEXTURE_KEYS = [
   "prop-chess-table",
   "prop-bike-planters",
@@ -2207,6 +2242,17 @@ const STORY_CLUSTER_TEXTURE_KEYS = [
 
 type StoryClusterTextureKey = (typeof STORY_CLUSTER_TEXTURE_KEYS)[number];
 
+const plantedFeatureAnchor = (id: string): { x: number; y: number } => {
+  const feature = ESTATE_PLANTED_FEATURES.find((candidate) => candidate.id === id);
+  if (!feature) throw new Error(`Missing planted estate feature: ${id}`);
+  return feature.anchor;
+};
+
+const southCentreBikePlanters = plantedFeatureAnchor("south-centre-bike-planters");
+const southEastBikePlanters = plantedFeatureAnchor("south-east-bike-planters");
+const southWestShadedSeating = plantedFeatureAnchor("south-west-shaded-seating");
+const southCentreShadedSeating = plantedFeatureAnchor("south-centre-shaded-seating");
+
 const ESTATE_STORY_CLUSTERS: readonly [
   StoryClusterTextureKey,
   number,
@@ -2214,18 +2260,18 @@ const ESTATE_STORY_CLUSTERS: readonly [
   number,
   number,
 ][] = [
-  ["prop-chess-table", 790, 735, 130, 20],
-  ["prop-chess-table", 1580, 840, 130, 20],
-  ["prop-bike-planters", 970, 735, 165, 22],
-  ["prop-bike-planters", 2220, 760, 165, 22],
+  ["prop-chess-table", 2200, 775, 130, 20],
+  ["prop-chess-table", 1580, 735, 130, 20],
+  ["prop-bike-planters", southCentreBikePlanters.x, southCentreBikePlanters.y, 165, 22],
+  ["prop-bike-planters", southEastBikePlanters.x, southEastBikePlanters.y, 165, 22],
   ["prop-maintenance-trolley", 1490, 735, 88, 18],
   ["prop-maintenance-trolley", 2460, 820, 88, 18],
   ["prop-utility-service", 1625, 735, 125, 18],
   ["prop-utility-service", 1150, 1060, 125, 18],
   ["prop-chair-stack", 530, 325, 105, 18],
   ["prop-chair-stack", 1580, 325, 105, 18],
-  ["prop-shaded-seating", 350, 1450, 190, 24],
-  ["prop-shaded-seating", 1640, 1540, 190, 24],
+  ["prop-shaded-seating", southWestShadedSeating.x, southWestShadedSeating.y, 190, 24],
+  ["prop-shaded-seating", southCentreShadedSeating.x, southCentreShadedSeating.y, 190, 24],
 ];
 
 const ESTATE_DRAIN_GRATES: readonly [
@@ -2545,7 +2591,7 @@ export class EstateScene extends WalkableScene {
     }
     const foliageColours = new Set<number>();
     let landscapeTextureCount = 0;
-    for (const key of LANDSCAPE_TEXTURE_KEYS) {
+    for (const key of new Set(ESTATE_LANDSCAPING.map(({ texture }) => texture))) {
       if (!this.textures.exists(key)) continue;
       landscapeTextureCount += 1;
       const source = this.textures
@@ -2999,32 +3045,11 @@ export class EstateScene extends WalkableScene {
         .fillRect(x - 3, top + 10, 6, BICYCLE_BAY_DEPTH - 20);
     }
 
-    const clusters: readonly [number, number, number][] = [
-      [920, 246, GOLD],
-      [1010, 286, CORAL],
-      [1140, 232, CREAM],
-      [835, 570, PURPLE],
-      [1060, 590, GOLD],
-      [1215, 690, CORAL],
-      [95, 770, CREAM],
-      [1370, 590, CREAM],
-      [1550, 690, CORAL],
-      [1830, 710, GOLD],
-      [2110, 620, PURPLE],
-      [2440, 535, CREAM],
-      [2490, 735, CORAL],
-      [105, 945, GOLD],
-      [190, 1170, CREAM],
-      [790, 1000, CORAL],
-      [970, 1250, PURPLE],
-      [690, 1490, GOLD],
-      [1370, 940, CORAL],
-      [1620, 1180, CREAM],
-      [1880, 980, GOLD],
-      [2300, 1260, PURPLE],
-      [2460, 1490, CORAL],
-    ];
-    for (const [worldX, worldY, flower] of clusters) {
+    const flowerColours = [GOLD, CORAL, CREAM, PURPLE] as const;
+    for (const definition of ESTATE_GROUND_FLOWERS) {
+      const worldX = definition.centre.x;
+      const worldY = definition.centre.y;
+      const flower = flowerColours[definition.colourVariant];
       const x = worldX - originX;
       const y = worldY - originY;
       if (x < 12 || x > 1268 || y < 12 || y > 788) continue;
@@ -3144,20 +3169,26 @@ export class EstateScene extends WalkableScene {
       this.exteriorPropSprites.push(sprite);
     }
 
-    for (const [texture, x, y, collisionWidth, collisionHeight] of ESTATE_LANDSCAPING) {
+    for (const definition of ESTATE_LANDSCAPING) {
+      const { anchor, collider } = definition;
       this.addObstacle(
-        x - collisionWidth / 2,
-        y - collisionHeight,
-        collisionWidth,
-        collisionHeight,
+        collider.x,
+        collider.y,
+        collider.width,
+        collider.height,
       );
       const sprite = this.add
-        .sprite(x, y, texture)
+        .sprite(anchor.x, anchor.y, definition.texture)
         .setOrigin(0.5, 1)
-        .setDepth(depthFor(y, 3));
+        .setDepth(depthFor(anchor.y, definition.depthLayer));
       this.landscapeSprites.push(sprite);
       this.exteriorPropSprites.push(sprite);
     }
+
+    const chessGarden = ESTATE_PLANTED_FEATURES.find(
+      ({ id }) => id === "east-chess-garden",
+    );
+    if (!chessGarden) throw new Error("Missing east chess garden layout");
 
     const courtyardBackdrops: readonly [
       string,
@@ -3167,13 +3198,13 @@ export class EstateScene extends WalkableScene {
     ][] = [
       [
         "prop-courtyard-planter-bed",
-        890,
-        750,
+        chessGarden.anchor.x,
+        chessGarden.anchor.y,
         [
-          [700, 653, 380, 18],
-          [700, 671, 18, 79],
-          [1062, 671, 18, 79],
-          [700, 734, 380, 16],
+          [chessGarden.anchor.x - 190, chessGarden.anchor.y - 97, 380, 18],
+          [chessGarden.anchor.x - 190, chessGarden.anchor.y - 79, 18, 79],
+          [chessGarden.anchor.x + 172, chessGarden.anchor.y - 79, 18, 79],
+          [chessGarden.anchor.x - 190, chessGarden.anchor.y - 16, 380, 16],
         ],
       ],
       [
@@ -3190,22 +3221,28 @@ export class EstateScene extends WalkableScene {
       const sprite = this.add
         .sprite(x, y, texture)
         .setOrigin(0.5, 1)
-        .setDepth(depthFor(700, 2));
+        .setDepth(depthFor(y - 50, 2));
       this.exteriorPropSprites.push(sprite);
     }
 
+    const standalonePlanters = ESTATE_PLANTED_FEATURES.filter(
+      ({ texture }) => texture === "prop-planter",
+    );
     const props: readonly [string, number, number, boolean][] = [
       ["prop-bench", 470, 485, true],
       ["prop-bin", 550, 482, false],
-      ["prop-planter", 875, 320, true],
       ["prop-bench", 1110, 720, true],
       ["prop-bin", 1570, 500, false],
       ["prop-bench", 1650, 510, true],
-      ["prop-planter", 2150, 330, true],
       ["prop-bench", 650, 1050, true],
       ["prop-bin", 1030, 1090, false],
       ["prop-bench", 1720, 1110, true],
-      ["prop-planter", 2210, 1010, true],
+      ...standalonePlanters.map(({ anchor }): [string, number, number, boolean] => [
+        "prop-planter",
+        anchor.x,
+        anchor.y,
+        true,
+      ]),
     ];
     for (const [texture, x, y, collides] of props) {
       if (collides) this.addObstacle(x - 35, y - 18, 70, 18);
@@ -4825,6 +4862,7 @@ export function createCampaignGame(
     );
     scene.cameras.main.fadeOut(180, 16, 46, 59);
     scene.time.delayedCall(TRANSITION_FALLBACK_MS, change);
+    scheduleWallClockSceneFallback(scene, change);
   }
 
   return {

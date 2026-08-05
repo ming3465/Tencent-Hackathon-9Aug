@@ -43,6 +43,46 @@ export interface SideLampDefinition {
   depthLayer: 4;
 }
 
+export type EstateLandscapeTexture =
+  | "landscape-shrub"
+  | "landscape-flower-bed"
+  | "landscape-pandan"
+  | "landscape-hedge";
+
+export interface EstateLandscapeDefinition {
+  id: string;
+  texture: EstateLandscapeTexture;
+  anchor: EstatePoint;
+  spriteSize: {
+    width: number;
+    height: number;
+  };
+  collider: EstateRect;
+  depthLayer: 3;
+}
+
+export interface EstateGroundFlowerDefinition {
+  id: string;
+  centre: EstatePoint;
+  colourVariant: 0 | 1 | 2 | 3;
+}
+
+export type EstatePlantedFeatureTexture =
+  | "prop-planter"
+  | "prop-bike-planters"
+  | "prop-shaded-seating"
+  | "prop-courtyard-planter-bed";
+
+export interface EstatePlantedFeatureDefinition {
+  id: string;
+  texture: EstatePlantedFeatureTexture;
+  anchor: EstatePoint;
+  spriteSize: {
+    width: number;
+    height: number;
+  };
+}
+
 export type EstateFacadeAccent =
   | "coral"
   | "gold"
@@ -164,6 +204,9 @@ export interface WorldLayoutDefinition {
   shelters: readonly ShelterDefinition[];
   trees: readonly TreeDefinition[];
   sideLamps: readonly SideLampDefinition[];
+  landscaping: readonly EstateLandscapeDefinition[];
+  groundFlowers: readonly EstateGroundFlowerDefinition[];
+  plantedFeatures: readonly EstatePlantedFeatureDefinition[];
   npcRoutes: readonly NpcRouteDefinition[];
   bicycleRacks: readonly EstateBicycleRackDefinition[];
   vehicleLanes: readonly EstateRect[];
@@ -311,6 +354,127 @@ export const ESTATE_SIDE_LAMPS: readonly SideLampDefinition[] = [
   sideLamp("side-lamp-civic-south", 1090, 1042, "lamp-apron-civic-south"),
   sideLamp("side-lamp-south-west", 650, 1262, "lamp-apron-south-west"),
   sideLamp("side-lamp-south-east", 2020, 1262, "lamp-apron-south-east"),
+];
+
+const LANDSCAPE_SPRITE_SIZES: Readonly<
+  Record<EstateLandscapeTexture, EstateLandscapeDefinition["spriteSize"]>
+> = {
+  "landscape-shrub": { width: 80, height: 58 },
+  "landscape-flower-bed": { width: 116, height: 62 },
+  "landscape-pandan": { width: 72, height: 68 },
+  "landscape-hedge": { width: 142, height: 62 },
+};
+
+const LANDSCAPE_COLLIDER_SIZES: Readonly<
+  Record<EstateLandscapeTexture, { width: number; height: number }>
+> = {
+  "landscape-shrub": { width: 56, height: 14 },
+  "landscape-flower-bed": { width: 88, height: 14 },
+  "landscape-pandan": { width: 42, height: 14 },
+  "landscape-hedge": { width: 112, height: 16 },
+};
+
+const landscaping = (
+  id: string,
+  texture: EstateLandscapeTexture,
+  x: number,
+  y: number,
+): EstateLandscapeDefinition => {
+  const colliderSize = LANDSCAPE_COLLIDER_SIZES[texture];
+  return {
+    id,
+    texture,
+    anchor: { x, y },
+    spriteSize: LANDSCAPE_SPRITE_SIZES[texture],
+    collider: {
+      id: `${id}-collider`,
+      x: x - colliderSize.width / 2,
+      y: y - colliderSize.height,
+      ...colliderSize,
+    },
+    depthLayer: 3,
+  };
+};
+
+export const ESTATE_LANDSCAPING: readonly EstateLandscapeDefinition[] = [
+  landscaping("hedge-south-west-01", "landscape-hedge", 1015, 1310),
+  landscaping("hedge-south-east-01", "landscape-hedge", 2471, 1542),
+  landscaping("hedge-south-east-02", "landscape-hedge", 2471, 1598),
+  landscaping("hedge-east-garden-01", "landscape-hedge", 2327, 630),
+  landscaping("hedge-east-garden-02", "landscape-hedge", 2487, 766),
+  landscaping("hedge-south-centre-01", "landscape-hedge", 1671, 1462),
+  landscaping("hedge-south-east-03", "landscape-hedge", 2447, 1486),
+  landscaping("hedge-east-garden-03", "landscape-hedge", 2327, 582),
+  landscaping("hedge-south-centre-02", "landscape-hedge", 1495, 1294),
+  landscaping("hedge-west-verge-01", "landscape-hedge", 279, 806),
+  landscaping("hedge-south-east-04", "landscape-hedge", 2295, 1598),
+  landscaping("hedge-west-verge-02", "landscape-hedge", 111, 806),
+  landscaping("flower-south-west-01", "landscape-flower-bed", 1042, 1358),
+  landscaping("flower-south-east-01", "landscape-flower-bed", 2290, 1382),
+  landscaping("flower-south-west-02", "landscape-flower-bed", 634, 1350),
+  landscaping("flower-south-west-03", "landscape-flower-bed", 634, 1454),
+  landscaping("flower-south-east-02", "landscape-flower-bed", 2290, 1310),
+  landscaping("flower-west-verge-01", "landscape-flower-bed", 58, 966),
+  landscaping("flower-west-verge-02", "landscape-flower-bed", 58, 910),
+  landscaping("flower-west-verge-03", "landscape-flower-bed", 290, 566),
+  landscaping("flower-south-west-04", "landscape-flower-bed", 634, 1406),
+  landscaping("flower-east-garden-01", "landscape-flower-bed", 2050, 606),
+  landscaping("flower-west-verge-04", "landscape-flower-bed", 58, 1022),
+  landscaping("flower-west-verge-05", "landscape-flower-bed", 58, 862),
+  landscaping("pandan-south-west-01", "landscape-pandan", 924, 1324),
+  landscaping("pandan-south-west-02", "landscape-pandan", 852, 1548),
+  landscaping("pandan-south-centre-01", "landscape-pandan", 1772, 1404),
+  landscaping("pandan-south-west-03", "landscape-pandan", 1076, 1468),
+  landscaping("pandan-south-west-04", "landscape-pandan", 1068, 1524),
+  landscaping("pandan-south-west-05", "landscape-pandan", 852, 1484),
+  landscaping("pandan-south-west-06", "landscape-pandan", 1076, 1596),
+  landscaping("pandan-south-centre-02", "landscape-pandan", 1564, 1444),
+  landscaping("shrub-north-verge-01", "landscape-shrub", 1408, 58),
+  landscaping("shrub-south-west-01", "landscape-shrub", 1072, 1410),
+  landscaping("shrub-north-verge-02", "landscape-shrub", 256, 58),
+  landscaping("shrub-north-verge-03", "landscape-shrub", 2352, 58),
+  landscaping("shrub-north-verge-04", "landscape-shrub", 1488, 58),
+  landscaping("shrub-north-verge-05", "landscape-shrub", 80, 58),
+  landscaping("shrub-north-verge-06", "landscape-shrub", 1136, 58),
+  landscaping("shrub-north-verge-07", "landscape-shrub", 2512, 58),
+  landscaping("shrub-north-verge-08", "landscape-shrub", 1680, 58),
+];
+
+export const ESTATE_GROUND_FLOWERS: readonly EstateGroundFlowerDefinition[] = [
+  { id: "ground-flower-01", centre: { x: 2089, y: 1478 }, colourVariant: 0 },
+  { id: "ground-flower-02", centre: { x: 1769, y: 1310 }, colourVariant: 1 },
+  { id: "ground-flower-03", centre: { x: 2017, y: 1422 }, colourVariant: 2 },
+  { id: "ground-flower-04", centre: { x: 1545, y: 1350 }, colourVariant: 3 },
+  { id: "ground-flower-05", centre: { x: 777, y: 1438 }, colourVariant: 0 },
+  { id: "ground-flower-06", centre: { x: 1393, y: 1286 }, colourVariant: 1 },
+  { id: "ground-flower-07", centre: { x: 2177, y: 1254 }, colourVariant: 2 },
+  { id: "ground-flower-08", centre: { x: 2129, y: 46 }, colourVariant: 3 },
+  { id: "ground-flower-09", centre: { x: 2265, y: 22 }, colourVariant: 0 },
+  { id: "ground-flower-10", centre: { x: 905, y: 1334 }, colourVariant: 1 },
+  { id: "ground-flower-11", centre: { x: 1785, y: 1422 }, colourVariant: 2 },
+  { id: "ground-flower-12", centre: { x: 2057, y: 30 }, colourVariant: 3 },
+  { id: "ground-flower-13", centre: { x: 729, y: 1446 }, colourVariant: 0 },
+  { id: "ground-flower-14", centre: { x: 961, y: 1582 }, colourVariant: 1 },
+  { id: "ground-flower-15", centre: { x: 1777, y: 1262 }, colourVariant: 2 },
+  { id: "ground-flower-16", centre: { x: 897, y: 1574 }, colourVariant: 3 },
+  { id: "ground-flower-17", centre: { x: 2009, y: 1310 }, colourVariant: 0 },
+  { id: "ground-flower-18", centre: { x: 2025, y: 1470 }, colourVariant: 1 },
+  { id: "ground-flower-19", centre: { x: 2073, y: 1246 }, colourVariant: 2 },
+  { id: "ground-flower-20", centre: { x: 2537, y: 1454 }, colourVariant: 3 },
+  { id: "ground-flower-21", centre: { x: 2385, y: 1574 }, colourVariant: 0 },
+  { id: "ground-flower-22", centre: { x: 849, y: 1582 }, colourVariant: 1 },
+  { id: "ground-flower-23", centre: { x: 2081, y: 518 }, colourVariant: 2 },
+];
+
+export const ESTATE_PLANTED_FEATURES: readonly EstatePlantedFeatureDefinition[] = [
+  { id: "east-chess-garden", texture: "prop-courtyard-planter-bed", anchor: { x: 2200, y: 780 }, spriteSize: { width: 380, height: 105 } },
+  { id: "north-gap-planter", texture: "prop-planter", anchor: { x: 1240, y: 70 }, spriteSize: { width: 76, height: 64 } },
+  { id: "south-west-planter", texture: "prop-planter", anchor: { x: 1080, y: 1590 }, spriteSize: { width: 76, height: 64 } },
+  { id: "east-edge-planter", texture: "prop-planter", anchor: { x: 2520, y: 900 }, spriteSize: { width: 76, height: 64 } },
+  { id: "south-centre-bike-planters", texture: "prop-bike-planters", anchor: { x: 1475, y: 1595 }, spriteSize: { width: 220, height: 96 } },
+  { id: "south-east-bike-planters", texture: "prop-bike-planters", anchor: { x: 2110, y: 1595 }, spriteSize: { width: 220, height: 96 } },
+  { id: "south-west-shaded-seating", texture: "prop-shaded-seating", anchor: { x: 690, y: 1595 }, spriteSize: { width: 226, height: 128 } },
+  { id: "south-centre-shaded-seating", texture: "prop-shaded-seating", anchor: { x: 1690, y: 1595 }, spriteSize: { width: 226, height: 128 } },
 ];
 
 const building = (
@@ -528,6 +692,9 @@ export const WORLD_LAYOUT: WorldLayoutDefinition = {
   shelters: SHELTER_DEFINITIONS,
   trees: ESTATE_TREES,
   sideLamps: ESTATE_SIDE_LAMPS,
+  landscaping: ESTATE_LANDSCAPING,
+  groundFlowers: ESTATE_GROUND_FLOWERS,
+  plantedFeatures: ESTATE_PLANTED_FEATURES,
   npcRoutes: ESTATE_NPC_ROUTES,
   bicycleRacks: ESTATE_BICYCLE_RACKS,
   vehicleLanes: ESTATE_VEHICLE_LANES,
@@ -604,6 +771,39 @@ export function treeSpriteBounds(definition: TreeDefinition): EstateRect {
     width: definition.spriteSize.width,
     height: definition.spriteSize.height,
   };
+}
+
+export function plantingSpriteBounds(
+  definition: Pick<EstateLandscapeDefinition | EstatePlantedFeatureDefinition, "id" | "anchor" | "spriteSize">,
+): EstateRect {
+  return {
+    id: `${definition.id}-sprite`,
+    x: definition.anchor.x - definition.spriteSize.width / 2,
+    y: definition.anchor.y - definition.spriteSize.height,
+    width: definition.spriteSize.width,
+    height: definition.spriteSize.height,
+  };
+}
+
+export function groundFlowerBounds(definition: EstateGroundFlowerDefinition): EstateRect {
+  return {
+    id: `${definition.id}-painted-bounds`,
+    x: definition.centre.x - 17,
+    y: definition.centre.y - 12,
+    width: 34,
+    height: 26,
+  };
+}
+
+export function doorOpenLeafAngles(
+  style: DoorStyle,
+  leafCount: number,
+): readonly number[] {
+  if (style === "hinged-hdb") return Array.from({ length: leafCount }, () => -18);
+  if (style === "double-community" || style === "open-hawker-gate") {
+    return Array.from({ length: leafCount }, (_, index) => index === 0 ? -18 : 18);
+  }
+  return Array.from({ length: leafCount }, () => 0);
 }
 
 export function doorApproachBounds(definition: DoorDefinition): EstateRect {
@@ -704,6 +904,9 @@ export function auditEstateLayout(): readonly string[] {
   unique(ESTATE_TREES.map(({ id }) => id), "tree ID");
   unique(SIDEWALK_APRONS.map(({ id }) => id), "sidewalk apron ID");
   unique(ESTATE_SIDE_LAMPS.map(({ id }) => id), "side lamp ID");
+  unique(ESTATE_LANDSCAPING.map(({ id }) => id), "landscaping ID");
+  unique(ESTATE_GROUND_FLOWERS.map(({ id }) => id), "ground flower ID");
+  unique(ESTATE_PLANTED_FEATURES.map(({ id }) => id), "planted feature ID");
 
   for (let index = 0; index < ESTATE_BUILDINGS.length; index += 1) {
     const definition = ESTATE_BUILDINGS[index];
@@ -781,6 +984,37 @@ export function auditEstateLayout(): readonly string[] {
       ))) {
       issues.push(`${lamp.id} base blocks a door approach`);
     }
+  }
+
+  const fixedPlantObstructions: readonly EstateRect[] = [
+    ...PEDESTRIAN_STREETS,
+    ...ESTATE_BUILDINGS.map(({ bounds }) => bounds),
+    ...SHELTER_DEFINITIONS.map(({ bounds }) => bounds),
+    ...SIDEWALK_APRONS,
+    ...ESTATE_TREES.map(treeSpriteBounds),
+  ];
+  const auditPlantBounds = (id: string, bounds: EstateRect): void => {
+    if (!rectangleContains(ESTATE_WORLD_BOUNDS, bounds)) {
+      issues.push(`${id} leaves the estate bounds`);
+    }
+    for (const obstruction of fixedPlantObstructions) {
+      if (rectanglesOverlap(bounds, obstruction)) {
+        issues.push(`${id} overlaps ${obstruction.id}`);
+      }
+    }
+  };
+  for (const definition of ESTATE_LANDSCAPING) {
+    const bounds = plantingSpriteBounds(definition);
+    auditPlantBounds(definition.id, bounds);
+    if (!rectangleContains(bounds, definition.collider)) {
+      issues.push(`${definition.id} collider leaves its sprite bounds`);
+    }
+  }
+  for (const definition of ESTATE_GROUND_FLOWERS) {
+    auditPlantBounds(definition.id, groundFlowerBounds(definition));
+  }
+  for (const definition of ESTATE_PLANTED_FEATURES) {
+    auditPlantBounds(definition.id, plantingSpriteBounds(definition));
   }
 
   if (DOOR_DEFINITIONS.length !== 22) {

@@ -105,6 +105,25 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-05 (Codex, green-verge/door/chess interaction polish)** — Removed
+  the visible bottom interaction banner while retaining keyboard, in-world,
+  semantic nearby-status, and contextual touch routes. Rebuilt hinged and
+  paired DoorView leaves around true outside pivots so open gates form the
+  requested −18°/+18° `\ /` pose and returned doors reset to 0°. Added distinct
+  facial, hair, glasses, collar, pocket, hand, and seated detail to the three
+  two-frame chess regulars and moved their planted pocket onto eastern grass.
+  Centralized 41 landscaping sprites, 23 ground-flower clusters, three
+  planters, and five larger plant-bearing features; the pure audit now rejects
+  complete plant bounds on streets, structures, aprons, trees, or outside the
+  world. Door, player-step, and scene-fade completion also have teardown-safe
+  wall-clock recovery so a focus loss cannot strand a transition. Strict
+  TypeScript, 90/90 tests, the 91.14/140.99/1,611.06 kB build,
+  zero-vulnerability audit, and 60/60 WebGL plus 60/60 forced-Canvas routes
+  passed. One earlier WebGL route retained a transient mobile Journal/Pause
+  focus miss at 59/60; the immediately instrumented rerun proved that omitted
+  flag and all new predicates. Refreshed captures were visually inspected; no
+  human/device/screen-reader/200%-zoom test or outcome claim was made.
+
 - **2026-08-05 (Codex, reusable-door and top-left HUD lane)** — Traced the
   apparent browser-focus failure to a slept exterior `DoorView` remaining in
   its terminal transition state: the next interaction disabled world controls,

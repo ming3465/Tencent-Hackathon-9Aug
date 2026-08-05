@@ -25,7 +25,9 @@ product requirements, not optional polish.
   Settings. Fullscreen changes initiated there keep Settings open; leaving
   native fullscreen through browser Escape must land in Pause.
 - Use a transition latch so the entry key cannot immediately trigger an exit.
-- Show a nearby prompt with a text label and non-colour marker.
+- Keep nearby target text as a visually hidden semantic status, with the same
+  target expressed by an in-world non-colour marker/label and the contextual
+  mobile action. Do not cover the playfield with a duplicate prompt banner.
 - Provide an equivalent Journal action for every meaningful NPC, door, exit,
   quest-object, and story interaction.
 - Never require fast reactions, repeated tapping, or a timer.
@@ -123,7 +125,7 @@ product requirements, not optional polish.
   duplicate underlay.
 - Keep a high-contrast downward triangle directly above the main character in
   every location. It is a visual guide only; player position and interaction
-  meaning remain available through the nearby prompt, location label, map,
+  meaning remain available through the semantic nearby status, location label, map,
   and Journal.
 - Keep inactive story, NPC, and door interaction markers visible as a
   non-colour `!`/door cue, and reveal the plain-language target label when it
@@ -141,7 +143,7 @@ product requirements, not optional polish.
 The circular estate overview is decorative and hidden from assistive
 technology; it is not a semantic rendering of geometry or collision
 boundaries. Its enclosing button announces the current place and opens that
-place in the Journal. The nearby prompt, location label, live region, and
+place in the Journal. The visually hidden nearby status, location label, live region, and
 Journal provide semantic equivalents for every interaction required to
 complete the story.
 
@@ -209,10 +211,14 @@ in-bounds dialogue card and the full-width stacked Journal and captures all
 three states. The grass/paver micro-texture
 and tropical planting are decorative: walkable routes retain outlined kerbs
 and geometry, plant bases have collision, and the new path-edge growth leaves
-the complete physical travel route open. The nearby prompt, location label,
+the complete physical travel route open. The semantic nearby status, location label,
 and Journal carry the semantic information without relying on those colours.
 The harness also proves that 41 placed landscape objects instantiate across
 four generated forms while keyboard travel still reaches both far districts.
+The pure layout audit checks the complete sprite bounds of those objects, 23
+painted flower clumps, three standalone planters, and five larger planted
+activity features against streets, buildings, shelters, lamp aprons, trees,
+and the world edge.
 It separately proves 90 exterior props across 24 texture forms, 12
 collision-aware story clusters across six forms, and 54 baked drain/leaf
 accents while the same keyboard travel lanes remain open.
@@ -222,7 +228,7 @@ runtime door prompts, location announcements, and equivalent Journal actions
 remain the semantic path. The harness samples façade value/edge structure,
 counts all eight shared depth profiles, both roof styles, and seven recessed
 entry bays,
-counts 95 live obstacle bodies, confirms all three solid bicycle bays remain
+counts 129 live obstacle bodies, confirms all three solid bicycle bays remain
 outside pedestrian spines and building footprints, and physically proves the
 Minah storefront is
 solid while deliberate doorway gaps and both far-district routes remain open.
@@ -246,6 +252,8 @@ verifies the main-character triangle follows the player above the sprite,
 then exercises Settings-owned full-screen entry/exit and exact Resume focus.
 It also repeats the same exterior doorway after an indoor return and requires
 the stage and document to retain focus with keyboard/touch controls enabled.
+The starting two-leaf hawker gate must report opposing −18°/+18° outward leaf
+angles, while each reusable returned door must report its closed 0° pose.
 The minimap and compact Journal quest list are kept together at the top-left;
 the location label occupies the opposite corner and automated desktop/mobile
 layout checks reject overlap or viewport escape.

@@ -115,8 +115,8 @@ Current truth as of 2026-08-05: **90/90 tests (30 campaign · 31 match ·
 17 audio · 4 accessibility · 8 world/door/pause) · 60/60 browser checks in
 default WebGL and forced Canvas fallback ·
 0 known vulnerabilities at the latest audit**. Latest verified production
-build: **HTML 93.04 kB (16.28 kB gzip) · initial JS 135.02 kB (39.95 kB gzip)
-· lazy campaign scene 1,602.10 kB (374.15 kB gzip)**.
+build: **HTML 91.14 kB (15.99 kB gzip) · initial JS 140.99 kB (41.21 kB gzip)
+· lazy campaign scene 1,611.06 kB (377.18 kB gzip)**.
 If those numbers appear anywhere as something else, fix before submitting.
 
 ## Claim boundaries (unchanged, non-negotiable)

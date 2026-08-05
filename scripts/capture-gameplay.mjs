@@ -293,7 +293,7 @@ try {
   markBeat("prologue - Y's flat");
   await hold(1800);
 
-  await page.tap("#btn-interact");
+  await page.eval(`window.__kampungSmoke?.tryInteract?.()`);
   await sleep(900);
   markBeat("first conversation - the Voice");
   await readDialogue();

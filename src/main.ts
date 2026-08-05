@@ -116,7 +116,6 @@ if (!minimapLayout) throw new Error("Missing required #minimap-layout");
 
 const interactionPrompt = byId<HTMLElement>("interaction-prompt");
 const nearbyText = byId<HTMLElement>("nearby-text");
-const btnInteract = byId<HTMLButtonElement>("btn-interact");
 const btnTouchInteract = byId<HTMLButtonElement>("btn-touch-interact");
 const foundTouchControls = document.querySelector<HTMLElement>(".touch-controls");
 if (!foundTouchControls) throw new Error("Missing required .touch-controls");
@@ -945,9 +944,7 @@ function dispatchCampaign(event: CampaignEvent): void {
 
 function updateNearbyPrompt(interaction: WorldInteraction | null): void {
   const visible = interaction !== null;
-  interactionPrompt.classList.toggle("visible", visible);
   interactionPrompt.setAttribute("aria-hidden", String(!visible));
-  btnInteract.disabled = !visible;
   btnTouchInteract.disabled = !visible;
   nearbyText.textContent = interaction?.label ?? "Move closer to a person, doorway, or object.";
   btnTouchInteract.textContent = interaction === null
@@ -1948,7 +1945,6 @@ btnCampaignLoadCancel.addEventListener("click", returnToTitle);
 btnCampaignLoadRetry.addEventListener("click", () => {
   void startCampaign(campaignState);
 });
-btnInteract.addEventListener("click", () => campaignHandle?.tryInteract());
 btnTouchInteract.addEventListener("click", () => campaignHandle?.tryInteract());
 
 btnSound.addEventListener("click", () => {

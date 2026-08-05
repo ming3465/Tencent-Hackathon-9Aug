@@ -81,7 +81,9 @@ hallucination path.
   bond paths, planted edge growth, leaf litter, kerbs, drains, and utility
   covers tile-scale material detail; three layered tropical tree forms and 41
   collision-aware shrubs, flower beds, pandan clumps, and hedges add reusable
-  landscaping with contact and sheared cast shadows; named Hawker, Kopitiam,
+  landscaping with contact and sheared cast shadows. Complete sprite bounds,
+  including 23 flower clumps and all plant-bearing activity props, are audited
+  onto green verges and away from pedestrian paving; named Hawker, Kopitiam,
   Minah, Community, Prayer Hall, Workshop, and Block 12 façades use distinct
   code-drawn signs, roofs, awnings, windows, counters, and threshold details,
   with solid building shells and deliberate doorway gaps; three bicycle racks
@@ -93,7 +95,8 @@ hallucination path.
   residents follow short authored routes and stop to face a nearby player;
   baked flower clusters, fluttering HDB laundry, and deterministic community
   cats keep the exterior alive; five two-frame activity vignettes show
-  neighbours playing courtyard chess, sweeping the void deck, discussing the
+  neighbours playing courtyard chess with distinct faces, hair, glasses,
+  collars, pockets, hands, and seated poses, sweeping the void deck, discussing the
   noticeboard, tending the garden, and talking at the kopitiam; 12
   collision-aware story clusters reuse
   six code-drawn forms for chess seating, bicycle planters, maintenance,
@@ -113,7 +116,8 @@ hallucination path.
   choice-specific shelter geometry, the minimap, NPC routes, and 22 contextual
   DoorViews resolve from one audited world registry. Doors own their approach,
   blocker, opening state, entry step, and paired return spawn. Sleeping exterior
-  doors restore their authored closed/open pose and collider on return, so the
+  hinged and paired doors swing from outer-edge pivots into an outward `\ /`
+  pose; doors restore their authored closed/open pose and collider on return, so the
   same entrance remains reusable without dropping world controls or focus. The playable world
   remains code-drawn after two generated visual-direction studies were
   selectively translated rather than copied; the separately reviewed title
@@ -130,7 +134,7 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
 | `npm test` | 90/90: 30 campaign, 31 match-engine, 17 audio, 4 accessibility-contract, and 8 world-layout/door/pause tests |
-| `npm run build` | 93.04 kB HTML (16.28 kB gzip); 135.02 kB initial JS (39.95 kB gzip); 1,609.34 kB lazy scene (376.36 kB gzip) |
+| `npm run build` | 91.14 kB HTML (15.99 kB gzip); 140.99 kB initial JS (41.21 kB gzip); 1,611.06 kB lazy scene (377.18 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
 | `npm run smoke` | 60/60 production-browser checks in default WebGL and forced Canvas fallback |
 

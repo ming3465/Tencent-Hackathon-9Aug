@@ -48,9 +48,9 @@ accessibility-contract, and 8 world-layout/door/pause tests.
 ## Production-browser smoke — 60/60 passing
 
 - [x] Production bundle creates exactly one Phaser Canvas
-- [x] Production build measures 93.04 kB HTML (16.28 kB gzip), 135.02 kB
-      initial JavaScript (39.95 kB gzip), and a 1,602.10 kB lazy scene
-      (374.15 kB gzip)
+- [x] Production build measures 91.14 kB HTML (15.99 kB gzip), 140.99 kB
+      initial JavaScript (41.21 kB gzip), and a 1,611.06 kB lazy scene
+      (377.18 kB gzip)
 - [x] Reviewed 1668×943 WebP title artwork loads without desktop overflow
 - [x] Cached idle campaign prefetch runs after title-art settlement, skips
       Save-Data and 2g-class connections, reports opening and 12-second slow
@@ -134,6 +134,11 @@ accessibility-contract, and 8 world-layout/door/pause tests.
       12 path-edge transitions (documented pass: 14 / 36 / 64)
 - [x] All 41 collision-aware landscape objects instantiate across four
       generated forms with at least 12 foliage colours (documented pass: 44)
+- [x] Complete bounds for all 41 landscape sprites, 23 baked flower clumps,
+      three standalone planters, the planted chess bed, two bicycle-planter
+      groups, and two planted seating groups stay inside green verges and
+      outside every street, building, shelter, lamp apron, tree sprite, and
+      world boundary
 - [x] All 90 exterior props instantiate across 24 generated forms, including
       12 collision-aware story clusters across six forms; 54 baked drain/leaf
       accents add surface detail without adding per-frame objects
@@ -150,6 +155,11 @@ accessibility-contract, and 8 world-layout/door/pause tests.
 - [x] Real Chrome completes estate → kopitiam → estate → kopitiam → estate;
       both returns show a closed exterior leaf, enabled blocker, focused stage,
       focused document, and enabled keyboard/touch controls
+- [x] The authored open hawker gate exposes opposing −18°/+18° outward leaves;
+      reusable returned leaves reset to 0° before controls resume
+- [x] The former bottom interaction banner has no visible box at desktop,
+      320×568, 360×560, or 640×360; in-world labels, keyboard interaction, the
+      contextual touch action, and visually hidden nearby status remain active
 - [x] All eight exterior structures resolve one audited projection profile,
       spanning two roof styles and seven baked entry recesses without changing
       the entrance or collision registries

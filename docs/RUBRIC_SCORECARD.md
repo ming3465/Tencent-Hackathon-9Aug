@@ -141,9 +141,9 @@ Miora-specific before-and-after pipeline.
 - [x] Phaser is lazy-loaded after the title screen with visible opening and
   slow states, cancellation, retry after failure, focus restoration, and
   duplicate-start protection covered by browser automation.
-- [x] Latest verified production build is HTML 93.04 kB (16.28 kB gzip),
-  initial JS 135.02 kB (39.95 kB gzip), and lazy campaign scene 1,602.10 kB
-  (374.15 kB gzip).
+- [x] Latest verified production build is HTML 91.14 kB (15.99 kB gzip),
+  initial JS 140.99 kB (41.21 kB gzip), and lazy campaign scene 1,611.06 kB
+  (377.18 kB gzip).
 - [x] No backend or network dependency is required to play.
 - [x] The Phaser bundle-size warning is accepted or reduced with documented
   reasoning.

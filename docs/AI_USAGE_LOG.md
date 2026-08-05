@@ -3254,3 +3254,81 @@ and make the Todo Tencent board reflect completed and remaining work.
   health outcome claim. No account, backend, analytics, personal-data
   collection, runtime model/network call, timer, failure state, energy system,
   or medical claim was introduced.
+
+## 2026-08-05 - Green Verges, Outward Doors, Chess Detail, and Prompt Removal
+
+**Tool:** Codex
+
+**Goal:** Remove the bottom interaction popup, make applicable doors swing
+outward and remain reusable, enrich the three chess regulars, and move every
+plant-bearing estate fixture off pedestrian paving and onto open grass.
+
+**Implementation:**
+
+- Removed the visible prompt banner and its redundant desktop Interact button.
+  The hidden nearby text remains available to semantics and test controls;
+  keyboard interaction, in-world labels/markers, direct world taps, and the
+  single contextual touch action remain active.
+- Refactored hinged HDB and paired community/hawker leaves around actual outer
+  hinge positions. Double leaves animate to −18°/+18° for a `\ /` silhouette,
+  while sliding commercial/lift doors and workshop shutters keep their
+  distinct mechanisms. Reset now restores position, scale, angle, state, and
+  blocker, and browser snapshots expose leaf angles. Door, player-step, and
+  scene-fade completion retain Phaser-clock guards and now add teardown-safe
+  wall-clock recovery, preventing a browser focus loss from freezing a door
+  between opening and entry.
+- Rebuilt the 160×92 two-frame chess vignette without adding runtime textures:
+  three regulars now have distinct side-part/flat-cap/bald-crown silhouettes,
+  eyes, brows, noses, mouths, one pair of glasses, collars, buttons, pockets,
+  hands, trousers, and shoes. Their chess group and planted bed moved to the
+  eastern grass verge.
+- Moved the full bounds—not only collider strips—of 41 landscape sprites, 23
+  baked flower clumps, three standalone planters, the planted chess bed, two
+  bicycle-planter groups, and two planted seating groups into typed layout
+  registries. The audit rejects overlap with all six pedestrian streets,
+  buildings, shelters, lamp aprons, tree sprites, and world bounds while
+  preserving the 12 hedge / 12 flower-bed / 8 pandan / 9 shrub mix.
+- Extended unit and real-Chrome contracts for complete planting bounds,
+  outward and reset leaf angles, and a visually clipped prompt at desktop,
+  320×568, 360×560, and 640×360. Updated the legacy capture and PowerShell
+  routes so they no longer depend on the removed desktop button.
+
+**Verification and visual review:**
+
+- Strict TypeScript passed. Vitest passed **90/90**: campaign 30, match engine
+  31, audio 17, accessibility contract 4, and world/door/pause 8.
+- Production build: **91.14 kB HTML (15.99 kB gzip), 140.99 kB initial
+  JavaScript (41.21 kB gzip), and 1,611.06 kB lazy scene (377.18 kB gzip)**.
+  `npm audit` reported zero known vulnerabilities.
+- Default WebGL passed **60/60** after one retained 59/60 run whose sole miss
+  was the pre-existing mobile Journal→Pause→Journal focus round trip. The new
+  diagnostic exposed that previously omitted flag; the rerun passed it along
+  with outward doors, both return/reset cycles, the suppressed banner, all
+  compact layouts, zero layout issues, and open east/south travel.
+- After Chrome twice stopped answering the first debugger evaluation following
+  the completed-scene screenshot, the harness was made to reload and continue
+  the verified save in a fresh renderer before the estate gallery. The final
+  screenshot-enabled route passed 60/60, including two complete Kopitiam
+  enter/exit cycles with closed reset, focus, and controls assertions.
+- Forced Canvas2D passed the same **60/60** route: resident routes 9.20 ms p95,
+  monsoon 9.10 ms p95, active movement 9.00 ms p95 at 2.25 ms/frame, and
+  4×-throttled movement 9.20 ms p95 at 7.80 ms/frame.
+- Full-size `10-living-estate.png`, `11-estate-east.png`,
+  `12-estate-south.png`, and `27-ambient-micro-scenes.png` were inspected. The
+  paving is clear of planting, lawns hold the new groups, the eastern chess
+  bed and character detail render coherently, the top-left HUD remains clear,
+  and no bottom banner obscures the world.
+
+**Tooling and claim boundary:**
+
+- The in-app browser bootstrap reported `Browser is not available: iab`, so
+  local UI verification used the repository's real-Chrome CDP harness. The
+  chess art remained established code-native Canvas/Phaser art, so no raster
+  image-generation call was appropriate.
+- This is AI-assisted implementation, automated local browser evidence, and
+  machine-rendered screenshot inspection. It is not a human or older-adult
+  playtest, real-phone/tablet run, screen-reader or 200% zoom session,
+  accessibility certification, social/health outcome, or new Miora/CodeBuddy
+  evidence. No account, backend, analytics, personal-data collection, runtime
+  model/network call, gameplay timer, failure state, energy system, or medical
+  claim was introduced.
