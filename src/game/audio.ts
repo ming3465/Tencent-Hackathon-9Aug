@@ -70,6 +70,15 @@ export function categoryGain(settings: AudioSettings, category: SoundCategory): 
   return category === "music" ? clampVolume(settings.music) : clampVolume(settings.sfx);
 }
 
+export function effectiveCategoryGain(
+  settings: AudioSettings,
+  category: SoundCategory,
+  pauseDucked: boolean,
+): number {
+  const gain = categoryGain(settings, category);
+  return category === "music" && pauseDucked ? gain * 0.35 : gain;
+}
+
 export function readStoredAudioSettings(storage?: Pick<Storage, "getItem">): AudioSettings {
   try {
     const store = storage ?? window.localStorage;
@@ -172,6 +181,7 @@ export class KampungAudio {
   private ambienceStep = 0;
   private eveningMood = false;
   private suspendedByVisibility = false;
+  private pauseDucked = false;
 
   constructor(settings: AudioSettings = DEFAULT_AUDIO_SETTINGS) {
     this.settings = normalizeAudioSettings(settings);
@@ -216,7 +226,7 @@ export class KampungAudio {
 
       const makeBus = (category: SoundCategory): GainNode => {
         const bus = context.createGain();
-        bus.gain.value = categoryGain(this.settings, category);
+        bus.gain.value = effectiveCategoryGain(this.settings, category, this.pauseDucked);
         bus.connect(master);
         return bus;
       };
@@ -240,6 +250,13 @@ export class KampungAudio {
     this.settings = { ...this.settings, [category]: clampVolume(value) };
     this.applyGains();
     this.persist();
+  }
+
+  /** Transiently lowers only music; this state is never written to storage. */
+  setPauseDuck(active: boolean): void {
+    if (this.pauseDucked === active) return;
+    this.pauseDucked = active;
+    this.applyGains();
   }
 
   play(event: SoundEvent): void {
@@ -379,7 +396,7 @@ export class KampungAudio {
     if (!this.buses || !this.context) return;
     for (const category of Object.keys(this.buses) as SoundCategory[]) {
       this.buses[category].gain.setTargetAtTime(
-        categoryGain(this.settings, category),
+        effectiveCategoryGain(this.settings, category, this.pauseDucked),
         this.context.currentTime,
         0.02
       );

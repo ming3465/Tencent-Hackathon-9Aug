@@ -1,18 +1,8 @@
 import type { WalkFrame } from "./campaignArt.js";
 import type { LocationId } from "./campaignTypes.js";
+import { PEDESTRIAN_STREETS, pointIsInRect } from "./estateLayout.js";
 
 export type MovementSurface = "grass" | "stone" | "indoor";
-
-const TERRAIN_TILE_WIDTH = 1280;
-const TERRAIN_TILE_HEIGHT = 800;
-const HORIZONTAL_PATH_TOP = 326;
-const HORIZONTAL_PATH_BOTTOM = 458;
-const VERTICAL_PATH_LEFT = 550;
-const VERTICAL_PATH_RIGHT = 734;
-
-function positiveModulo(value: number, divisor: number): number {
-  return ((value % divisor) + divisor) % divisor;
-}
 
 /**
  * Mirrors the baked estate terrain grammar without reading pixels at runtime.
@@ -24,14 +14,9 @@ export function movementSurfaceAt(
   y: number,
 ): MovementSurface {
   if (locationId !== "estate") return "indoor";
-
-  const localX = positiveModulo(x, TERRAIN_TILE_WIDTH);
-  const localY = positiveModulo(y, TERRAIN_TILE_HEIGHT);
-  const onHorizontalPath =
-    localY >= HORIZONTAL_PATH_TOP && localY <= HORIZONTAL_PATH_BOTTOM;
-  const onVerticalPath =
-    localX >= VERTICAL_PATH_LEFT && localX <= VERTICAL_PATH_RIGHT;
-  return onHorizontalPath || onVerticalPath ? "stone" : "grass";
+  return PEDESTRIAN_STREETS.some((street) => pointIsInRect({ x, y }, street))
+    ? "stone"
+    : "grass";
 }
 
 export function walkFrameAt(

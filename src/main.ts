@@ -23,8 +23,11 @@ import {
   type PortraitMood,
 } from "./game/campaignPortrait.js";
 import {
+  ESTATE_MAP_LANDMARKS,
+  ESTATE_MAP_PATHS,
   estateMapAnchorLocation,
   getEstateMapPosition,
+  projectEstateMapPoint,
 } from "./game/estateMap.js";
 import {
   JOURNAL_CATEGORIES,
@@ -35,6 +38,10 @@ import {
   type JournalViewModel,
 } from "./game/journal.js";
 import { selectNpcIntent } from "./game/kampungMind.js";
+import {
+  reducePauseState,
+  type PauseViewState,
+} from "./game/pauseState.js";
 import type {
   CampaignEvent,
   CampaignStateV1,
@@ -84,10 +91,12 @@ function byId<T extends HTMLElement>(id: string): T {
 
 const screenTitle = byId<HTMLElement>("screen-title");
 const screenSandbox = byId<HTMLElement>("screen-sandbox");
+const mainElement = byId<HTMLElement>("main");
 const btnStart = byId<HTMLButtonElement>("btn-start");
 const btnContinue = byId<HTMLButtonElement>("btn-continue");
 const btnStartOver = byId<HTMLButtonElement>("btn-start-over");
 const btnReturnTitle = byId<HTMLButtonElement>("btn-return-title");
+const btnMenu = byId<HTMLButtonElement>("btn-menu");
 const worldShell = byId<HTMLElement>("world-shell");
 const sandboxStage = byId<HTMLElement>("sandbox-stage");
 const campaignLoader = byId<HTMLElement>("campaign-loader");
@@ -100,6 +109,8 @@ const liveRegion = byId<HTMLElement>("live-region");
 const estateMinimap = byId<HTMLButtonElement>("estate-minimap");
 const minimapPlace = byId<HTMLElement>("minimap-place");
 const minimapPlayer = byId<HTMLElement>("minimap-player");
+const minimapLayout = document.getElementById("minimap-layout") as unknown as SVGGElement;
+if (!minimapLayout) throw new Error("Missing required #minimap-layout");
 
 const interactionPrompt = byId<HTMLElement>("interaction-prompt");
 const nearbyText = byId<HTMLElement>("nearby-text");
@@ -143,6 +154,19 @@ const btnDialogAdvance = byId<HTMLButtonElement>("btn-dialog-advance");
 const dialogChoices = byId<HTMLElement>("dialog-choices");
 const btnDialogClose = byId<HTMLButtonElement>("btn-dialog-close");
 
+const pauseOverlay = byId<HTMLElement>("pause-overlay");
+const pausePanel = byId<HTMLElement>("pause-panel");
+const pauseViewMain = byId<HTMLElement>("pause-view-main");
+const pauseViewSettings = byId<HTMLElement>("pause-view-settings");
+const pauseViewConfirm = byId<HTMLElement>("pause-view-confirm");
+const btnPauseResume = byId<HTMLButtonElement>("btn-pause-resume");
+const btnPauseSettings = byId<HTMLButtonElement>("btn-pause-settings");
+const btnPauseTitle = byId<HTMLButtonElement>("btn-pause-title");
+const btnSettingsBack = byId<HTMLButtonElement>("btn-settings-back");
+const btnConfirmCancel = byId<HTMLButtonElement>("btn-confirm-cancel");
+const memoryOverlay = byId<HTMLElement>("memory-overlay");
+const eveningOverlay = byId<HTMLElement>("evening-overlay");
+
 const meterElements = {
   connection: byId<HTMLElement>("meter-connection"),
   purpose: byId<HTMLElement>("meter-purpose"),
@@ -152,13 +176,18 @@ const meterElements = {
 const DEMO_MODE = parseDemoMode(window.location.search);
 const SMOKE_MODE =
   new URLSearchParams(window.location.search).get("smoke") === "1";
+const FORCE_CANVAS =
+  new URLSearchParams(window.location.search).get("renderer") === "canvas";
 const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const audio = new KampungAudio(readStoredAudioSettings());
 const smokeWindow = window as Window & {
   __kampungSmoke?: {
     getMotionSnapshot: () => CampaignMotionSnapshot | null;
+    getRendererKind: () => "webgl" | "canvas" | null;
+    isPaused: () => boolean;
     resetTouchInput: () => void;
     setPlayerPosition: (x: number, y: number) => void;
+    tryInteract: () => void;
   };
   __kampungLoaderSmoke?: CampaignLoaderSmokeControl;
 };
@@ -226,8 +255,14 @@ function clearCampaignSafely(): boolean {
 let campaignState = createCampaignState({ demo: DEMO_MODE });
 let savedCampaign = loadCampaignSafely();
 let campaignHandle: CampaignGameHandle | null = null;
-let nearbyInteraction: WorldInteraction | null = null;
 let journalOpen = false;
+let pauseState: PauseViewState = "closed";
+let pauseRestoreFocus: HTMLElement | null = null;
+let fullscreenChangeFromSettings = false;
+const pauseAccessibilitySnapshot = new Map<
+  HTMLElement,
+  { ariaHidden: string | null; inert: boolean }
+>();
 let journalCategory: JournalCategory = "story";
 let journalRenderedRevision = -1;
 let trackedQuestId: string | null = null;
@@ -284,17 +319,152 @@ function focusWorld(): void {
     || campaignLoading
     || campaignLoaderPhase === "slow"
     || campaignLoaderPhase === "failed"
+    || pauseState !== "closed"
     || journalOpen
     || dialogOverlay.classList.contains("active")
   ) {
     return;
   }
-  sandboxStage.focus();
+  mainElement.removeAttribute("inert");
+  mainElement.removeAttribute("aria-hidden");
+  sandboxStage.removeAttribute("inert");
+  sandboxStage.focus({ preventScroll: true });
   campaignHandle?.setControlsEnabled(true);
+}
+
+function restoreGameViewportOrigin(): void {
+  requestAnimationFrame(() => {
+    if (
+      screenSandbox.classList.contains("active")
+      && !isGameFullscreen()
+    ) {
+      window.scrollTo(0, 0);
+    }
+  });
 }
 
 function setWorldControls(enabled: boolean): void {
   campaignHandle?.setControlsEnabled(enabled);
+}
+
+function renderPauseView(): void {
+  pauseViewMain.hidden = pauseState !== "paused";
+  pauseViewSettings.hidden = pauseState !== "settings";
+  pauseViewConfirm.hidden = pauseState !== "confirm-title";
+  const labelId = pauseState === "settings"
+    ? "settings-title"
+    : pauseState === "confirm-title"
+      ? "confirm-title-heading"
+      : "pause-title";
+  pauseOverlay.setAttribute("aria-labelledby", labelId);
+}
+
+function snapshotAndHidePauseBackground(): void {
+  pauseAccessibilitySnapshot.clear();
+  for (const element of [
+    mainElement,
+    dialogOverlay,
+    memoryOverlay,
+    eveningOverlay,
+  ]) {
+    pauseAccessibilitySnapshot.set(element, {
+      ariaHidden: element.getAttribute("aria-hidden"),
+      inert: element.hasAttribute("inert"),
+    });
+    element.setAttribute("aria-hidden", "true");
+    element.setAttribute("inert", "");
+  }
+}
+
+function restorePauseBackground(): void {
+  for (const [element, snapshot] of pauseAccessibilitySnapshot) {
+    if (snapshot.ariaHidden === null) element.removeAttribute("aria-hidden");
+    else element.setAttribute("aria-hidden", snapshot.ariaHidden);
+    element.toggleAttribute("inert", snapshot.inert);
+  }
+  pauseAccessibilitySnapshot.clear();
+}
+
+function openPause(): void {
+  if (
+    pauseState !== "closed"
+    || !campaignHandle
+    || !screenSandbox.classList.contains("active")
+    || campaignLoading
+    || campaignLoaderPhase === "opening"
+    || campaignLoaderPhase === "slow"
+    || campaignLoaderPhase === "failed"
+  ) {
+    return;
+  }
+  pauseRestoreFocus = document.activeElement instanceof HTMLElement
+    ? document.activeElement
+    : null;
+  pauseState = reducePauseState(pauseState, "open");
+  renderPauseView();
+  pauseOverlay.classList.add("active");
+  pauseOverlay.setAttribute("aria-hidden", "false");
+  pauseOverlay.removeAttribute("inert");
+  btnMenu.setAttribute("aria-expanded", "true");
+  document.body.classList.add("game-paused");
+  campaignHandle.setPaused(true);
+  audio.setPauseDuck(true);
+  btnPauseResume.focus();
+  snapshotAndHidePauseBackground();
+  audio.play("overlay-open");
+  announce("Paused. Resume, open Settings, or return to the title.");
+}
+
+function showPauseState(next: "paused" | "settings" | "confirm-title"): void {
+  if (pauseState === "closed") return;
+  pauseState = next;
+  renderPauseView();
+  if (next === "settings") {
+    renderSoundControls();
+    btnSound.focus();
+  } else if (next === "confirm-title") {
+    btnConfirmCancel.focus();
+  } else {
+    btnPauseResume.focus();
+  }
+}
+
+function resumePause(): void {
+  if (pauseState === "closed") return;
+  pauseState = reducePauseState(pauseState, "resume");
+  pauseOverlay.classList.remove("active");
+  pauseOverlay.setAttribute("aria-hidden", "true");
+  pauseOverlay.setAttribute("inert", "");
+  btnMenu.setAttribute("aria-expanded", "false");
+  document.body.classList.remove("game-paused");
+  restorePauseBackground();
+  mainElement.removeAttribute("inert");
+  mainElement.removeAttribute("aria-hidden");
+  campaignHandle?.setPaused(false);
+  audio.setPauseDuck(false);
+  audio.play("overlay-close");
+  const restore = pauseRestoreFocus;
+  pauseRestoreFocus = null;
+  if (restore?.isConnected && !restore.hasAttribute("inert")) {
+    restore.focus();
+  } else {
+    focusWorld();
+  }
+  restoreGameViewportOrigin();
+  announce("Resumed.");
+}
+
+function closePauseForTeardown(): void {
+  if (pauseState === "closed") return;
+  pauseState = "closed";
+  pauseOverlay.classList.remove("active");
+  pauseOverlay.setAttribute("aria-hidden", "true");
+  pauseOverlay.setAttribute("inert", "");
+  btnMenu.setAttribute("aria-expanded", "false");
+  document.body.classList.remove("game-paused");
+  restorePauseBackground();
+  audio.setPauseDuck(false);
+  pauseRestoreFocus = null;
 }
 
 function isGameFullscreen(): boolean {
@@ -546,6 +716,10 @@ function renderTitleActions(): void {
 async function startCampaign(state: CampaignStateV1): Promise<void> {
   resetTouchInputState();
   if (campaignLoading || campaignHandle) return;
+  // A fresh launch must never inherit background inertness from a browser
+  // fullscreen or modal teardown race.
+  mainElement.removeAttribute("inert");
+  mainElement.removeAttribute("aria-hidden");
   campaignLoading = true;
   campaignStarts += 1;
   const attempt = ++campaignAttemptSequence;
@@ -600,7 +774,6 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
     renderCampaign();
     showScreen("screen-sandbox");
     sandboxStage.setAttribute("aria-busy", "true");
-    void enterGameFullscreen(false);
 
     const { createCampaignGame } = await loadCampaignScene();
     if (!isCurrentCampaignAttempt(attempt)) return;
@@ -621,8 +794,9 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
         },
         onInteract: (interaction) => {
           if (isCurrentCampaignAttempt(attempt)) {
-            handleWorldInteraction(interaction);
+            return handleWorldInteraction(interaction);
           }
+          return false;
         },
         onLocationChange: (locationId, name) => {
           if (!isCurrentCampaignAttempt(attempt)) return;
@@ -646,6 +820,7 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
         state,
         playerSpeed: DEMO_MODE ? 260 : undefined,
         reducedMotion: REDUCED_MOTION.matches,
+        renderer: FORCE_CANVAS ? "canvas" : "auto",
       },
     );
     attemptHandle = createdHandle;
@@ -662,10 +837,13 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
     if (SMOKE_MODE) {
       smokeWindow.__kampungSmoke = {
         getMotionSnapshot: () => campaignHandle?.getMotionSnapshot() ?? null,
+        getRendererKind: () => campaignHandle?.getRendererKind() ?? null,
+        isPaused: () => campaignHandle?.isPaused() ?? false,
         resetTouchInput: resetTouchInputState,
         setPlayerPosition: (x, y) => {
           campaignHandle?.setPlayerPosition({ x, y });
         },
+        tryInteract: () => campaignHandle?.tryInteract(),
       };
     }
     renderMinimap();
@@ -712,6 +890,9 @@ function startOver(): void {
 
 function returnToTitle(): void {
   resetTouchInputState();
+  closePauseForTeardown();
+  mainElement.removeAttribute("inert");
+  mainElement.removeAttribute("aria-hidden");
   activeCampaignAttempt = ++campaignAttemptSequence;
   campaignLoading = false;
   clearCampaignSlowTimer();
@@ -761,7 +942,6 @@ function dispatchCampaign(event: CampaignEvent): void {
 }
 
 function updateNearbyPrompt(interaction: WorldInteraction | null): void {
-  nearbyInteraction = interaction;
   const visible = interaction !== null;
   interactionPrompt.classList.toggle("visible", visible);
   interactionPrompt.setAttribute("aria-hidden", String(!visible));
@@ -777,16 +957,15 @@ function updateNearbyPrompt(interaction: WorldInteraction | null): void {
         : "Talk";
 }
 
-function handleWorldInteraction(interaction: WorldInteraction): void {
+function handleWorldInteraction(interaction: WorldInteraction): boolean {
   audio.play("interact");
   switch (interaction.kind) {
     case "npc":
       openNpc(interaction.npcId);
-      return;
+      return false;
     case "door":
     case "exit":
-      visitLocation(interaction.targetLocationId);
-      return;
+      return authorizeLocation(interaction.targetLocationId);
     case "quest-object":
       dispatchCampaign({
         type: "complete-objective",
@@ -797,13 +976,14 @@ function handleWorldInteraction(interaction: WorldInteraction): void {
         "Neighbourhood object",
         [`You take a careful look. ${interaction.label}. The Journal records what matters.`],
       );
-      return;
+      return false;
     case "flavour":
       openNarrative(interaction.shortLabel, "The estate", interaction.lines);
+      return false;
   }
 }
 
-function visitLocation(locationId: LocationId): void {
+function authorizeLocation(locationId: LocationId): boolean {
   if (!canEnterLocation(campaignState, locationId)) {
     const location = LOCATIONS.find((candidate) => candidate.id === locationId);
     openNarrative(
@@ -814,16 +994,21 @@ function visitLocation(locationId: LocationId): void {
           ?? "Continue the current chapter. This route will remain available when it opens.",
       ],
     );
-    return;
+    return false;
   }
   if (campaignHandle?.getCurrentLocation() === locationId) {
     announce(`You are already in ${areaName.textContent ?? "this place"}.`);
     focusWorld();
-    return;
+    return false;
   }
   closeJournal(false);
   setWorldControls(false);
   audio.play("overlay-close");
+  return true;
+}
+
+function visitLocation(locationId: LocationId): void {
+  if (!authorizeLocation(locationId)) return;
   campaignHandle?.transitionTo(locationId);
 }
 
@@ -917,6 +1102,8 @@ function openDialogue(
 ): void {
   closeJournal(false);
   dialogOverlay.classList.add("active");
+  dialogOverlay.setAttribute("aria-hidden", "false");
+  dialogOverlay.removeAttribute("inert");
   setWorldControls(false);
   audio.play("overlay-open");
   dialogKicker.textContent = title;
@@ -1054,11 +1241,55 @@ function closeDialogue(restoreFocus = true): void {
   if (!dialogOverlay.classList.contains("active")) return;
   stopTyping();
   dialogOverlay.classList.remove("active");
+  dialogOverlay.setAttribute("aria-hidden", "true");
+  dialogOverlay.setAttribute("inert", "");
   dialogChoices.innerHTML = "";
   dialogueNpcId = null;
   delete dialogPortrait.dataset.mood;
   audio.play("overlay-close");
   if (restoreFocus) focusWorld();
+}
+
+function renderMinimapLayout(): void {
+  const svgNamespace = "http://www.w3.org/2000/svg";
+  minimapLayout.replaceChildren();
+  for (const path of ESTATE_MAP_PATHS) {
+    const x = Math.min(path.xPercent, path.end.xPercent);
+    const y = Math.min(path.yPercent, path.end.yPercent);
+    const width = Math.max(1, Math.abs(path.end.xPercent - path.xPercent));
+    const height = Math.max(1, Math.abs(path.end.yPercent - path.yPercent));
+    for (const className of ["minimap-road-shadow", "minimap-road"]) {
+      const rectangle = document.createElementNS(svgNamespace, "rect");
+      rectangle.setAttribute("class", className);
+      rectangle.setAttribute("x", x.toFixed(2));
+      rectangle.setAttribute("y", y.toFixed(2));
+      rectangle.setAttribute("width", width.toFixed(2));
+      rectangle.setAttribute("height", height.toFixed(2));
+      rectangle.setAttribute("rx", "2");
+      minimapLayout.appendChild(rectangle);
+    }
+  }
+  for (const landmark of ESTATE_MAP_LANDMARKS) {
+    const position = projectEstateMapPoint(landmark);
+    const group = document.createElementNS(svgNamespace, "g");
+    group.setAttribute("class", "minimap-landmark");
+    group.dataset.mapLocation = landmark.locationId;
+    group.setAttribute(
+      "transform",
+      `translate(${position.xPercent.toFixed(2)} ${position.yPercent.toFixed(2)})`,
+    );
+    const rectangle = document.createElementNS(svgNamespace, "rect");
+    const width = landmark.shortLabel.length > 1 ? 14 : 11;
+    rectangle.setAttribute("x", String(-width / 2));
+    rectangle.setAttribute("y", "-4");
+    rectangle.setAttribute("width", String(width));
+    rectangle.setAttribute("height", "8");
+    const label = document.createElementNS(svgNamespace, "text");
+    label.setAttribute("y", "0.3");
+    label.textContent = landmark.shortLabel;
+    group.append(rectangle, label);
+    minimapLayout.appendChild(group);
+  }
 }
 
 function renderMinimap(): void {
@@ -1627,13 +1858,17 @@ btnStart.addEventListener("click", startNewCampaign);
 btnContinue.addEventListener("click", continueCampaign);
 btnStartOver.addEventListener("click", startOver);
 btnReturnTitle.addEventListener("click", returnToTitle);
+btnMenu.addEventListener("click", openPause);
+btnPauseResume.addEventListener("click", resumePause);
+btnPauseSettings.addEventListener("click", () => showPauseState("settings"));
+btnPauseTitle.addEventListener("click", () => showPauseState("confirm-title"));
+btnSettingsBack.addEventListener("click", () => showPauseState("paused"));
+btnConfirmCancel.addEventListener("click", () => showPauseState("paused"));
 btnCampaignLoadCancel.addEventListener("click", returnToTitle);
 btnCampaignLoadRetry.addEventListener("click", () => {
   void startCampaign(campaignState);
 });
-btnInteract.addEventListener("click", () =>
-  nearbyInteraction ? handleWorldInteraction(nearbyInteraction) : campaignHandle?.tryInteract()
-);
+btnInteract.addEventListener("click", () => campaignHandle?.tryInteract());
 btnTouchInteract.addEventListener("click", () => campaignHandle?.tryInteract());
 
 btnSound.addEventListener("click", () => {
@@ -1644,7 +1879,12 @@ btnSound.addEventListener("click", () => {
   setTimeout(focusWorld, 0);
 });
 btnFullscreen.addEventListener("click", () => {
-  void toggleGameFullscreen();
+  fullscreenChangeFromSettings = pauseState === "settings";
+  void toggleGameFullscreen().finally(() => {
+    window.setTimeout(() => {
+      fullscreenChangeFromSettings = false;
+    }, 300);
+  });
 });
 volumeMusic.addEventListener("input", () => {
   audio.unlock();
@@ -1695,6 +1935,7 @@ dialogScroll.addEventListener("click", () => {
 });
 btnDialogClose.addEventListener("click", () => closeDialogue());
 dialogOverlay.addEventListener("keydown", trapModalFocus);
+pausePanel.addEventListener("keydown", (event) => trapFocusWithin(pausePanel, event));
 
 const DIRECTION_VECTORS: Record<string, [number, number]> = {
   up: [0, -1],
@@ -1892,38 +2133,57 @@ document.addEventListener("focusin", (event) => {
     target === sandboxStage
     || target === campaignHandle.game.canvas
     || isTouchControl;
-  setWorldControls(isWorld && !dialogOverlay.classList.contains("active") && !journalOpen);
+  setWorldControls(
+    pauseState === "closed"
+    && isWorld
+    && !dialogOverlay.classList.contains("active")
+    && !journalOpen,
+  );
 });
 
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   campaignHandle?.cancelTapNavigation();
-  if (dialogOverlay.classList.contains("active")) closeDialogue();
-  else if (journalOpen) closeJournal();
+  if (pauseState !== "closed") {
+    const next = reducePauseState(pauseState, "escape");
+    if (next === "closed") resumePause();
+    else showPauseState(next);
+    return;
+  }
+  openPause();
 });
 
 window.addEventListener("resize", queueCampaignViewportResize);
 document.addEventListener("fullscreenchange", () => {
   const active = isGameFullscreen();
+  const changedFromSettings = fullscreenChangeFromSettings;
+  fullscreenChangeFromSettings = false;
   renderFullscreenControl();
   queueCampaignViewportResize();
+  if (!active) restoreGameViewportOrigin();
   if (!campaignHandle || !screenSandbox.classList.contains("active")) return;
-  if (active) {
-    setTimeout(focusWorld, 0);
-    announce("Full screen. Press Escape for sound and volume controls.");
+  if (changedFromSettings && pauseState === "settings") {
+    setTimeout(() => {
+      if (pauseState === "settings") btnFullscreen.focus();
+    }, 0);
+    announce(active ? "Full screen on. Settings remain open." : "Full screen off. Settings remain open.");
     return;
   }
-  setWorldControls(false);
-  setTimeout(() => {
-    btnSound.focus();
-    announce("Full screen closed. Sound and Journal controls are available.");
-  }, 0);
+  if (!active) {
+    if (pauseState === "settings" || pauseState === "confirm-title") {
+      showPauseState("paused");
+    } else {
+      openPause();
+    }
+  }
 });
 
 showScreen("screen-title");
+renderMinimapLayout();
 renderCampaign();
 renderSoundControls();
 renderFullscreenControl();
+renderPauseView();
 renderTitleActions();
 renderCampaignLoader("idle");
 prefetchCampaignSceneAfterTitleLoad();

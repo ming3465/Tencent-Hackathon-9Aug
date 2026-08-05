@@ -2932,3 +2932,91 @@ was therefore the local visual and interaction fallback.
   90-second review cut predate this loader/touch/consequence-art build and must
   not be presented as current-build evidence until an explicitly approved
   release and media refresh occur.
+
+## 2026-08-05 — Registry-Driven Three-Quarter World, DoorViews, and Pause
+
+**Tools:** Codex (GPT-5), TypeScript/Vitest/Vite/npm audit, the repository's
+dependency-free real-Chrome DevTools Protocol harness, and local full-frame
+image inspection. The bundled in-app-browser workflow was read and attempted,
+but its `iab` browser was unavailable; the existing production Chrome harness
+was used as the browser fallback.
+
+**Implementation:**
+
+- Worked from a clean private branch based on `origin/main`; the stale shared
+  checkout was not copied, reset, committed wholesale, pushed, or deployed.
+- Added a typed, pure `2560×1600` layout registry for the six connected
+  pedestrian streets, eight independent buildings, collision, minimap
+  landmarks, resident routes, corrected shelter geometry, rain masks, and all
+  22 contextual doors. Layout audits cover overlap, street connectivity,
+  paired approach/return positions, 20 px shelter continuity, rain-mask
+  agreement, and the 96 px minimum clear path.
+- Rebuilt the estate as deterministic baked terrain, building, shelter, and
+  architectural textures with top/front/right faces, entry recesses, contact
+  shadows, verge planting, drains, aprons, and foreground occlusion. Builder
+  Graphics are destroyed after texture creation; live Graphics remain for
+  changing effects. The same grounded three-quarter grammar now carries
+  through the corridor and ten enterable interiors.
+- Replaced disconnected threshold behavior with idempotent `DoorView` state
+  objects. Each door owns its presentation, blocker, approach and return
+  points, facing, opening animation, transition, and style; tap navigation
+  aims at the reachable approach instead of the collider.
+- Replaced the play topbar with Journal and a 48 px Menu control. The new
+  closed/paused/settings/confirm-title state machine freezes Phaser updates,
+  physics, timers, rain, doors, and CSS world particles while transiently
+  ducking music. It preserves and restores the exact underlying Journal or
+  dialogue, focus position, and scroll origin; settings retain the compatible
+  audio storage contract and native-fullscreen exit lands in Pause.
+- Removed campaign-start fullscreen, exposed pause and renderer methods on the
+  game handle, kept save IDs/storage unchanged, and selected `Phaser.AUTO`
+  after default WebGL and forced Canvas completed the same route. The harness
+  gained pause/fullscreen/freeze/focus/mobile assertions, renderer-aware visual
+  probes, a no-capture functional mode, and an isolated location-gallery mode.
+
+**Corrections and retained failures:**
+
+- The first forced-Canvas visual pass exposed the document remaining scrolled
+  below the topbar after a native-fullscreen round trip. Resume and fullscreen
+  exit now restore the game viewport origin on the next animation frame; the
+  corrected neighbourhood and Pause captures were inspected at full size.
+- One default-WebGL retry reached the shared bicycle prompt but its 116-character
+  environmental line legitimately exceeded the harness's three-second
+  typewriter ceiling. The harness now waits five seconds for the real
+  non-typing completion signal. The corrected unchanged application passed;
+  the timed-out run is not counted as evidence.
+- A screenshot-heavy run and one early loader setup were affected by host
+  Chrome/GPU pressure and an eager prefetch race. Functional no-capture runs,
+  atomic loader baselines, and isolated gallery capture make those concerns
+  explicit rather than hiding them.
+
+**Final local evidence:**
+
+- Strict TypeScript passed. Vitest passed **85/85**: campaign 27, match engine
+  31, audio 17, accessibility contract 4, world/door/pause 6.
+- The production build is **86.59 kB HTML (15.50 kB gzip), 129.02 kB initial
+  JavaScript (38.50 kB gzip), and 1,602.13 kB lazy scene (374.24 kB gzip)**.
+  `npm audit` reported zero known vulnerabilities.
+- Default AUTO selected **WebGL** and passed **60/60**. Resident routes measured
+  10.00 ms p95, monsoon 9.90 ms p95, active movement 10.00 ms p95 at
+  2.82 ms/frame main-thread work, and 4×-throttled movement 9.90 ms p95 at
+  7.55 ms/frame.
+- Forced **Canvas2D** passed the same **60/60** route. Resident and monsoon
+  measured 9.80 ms p95; active movement measured 9.80 ms p95 at
+  2.03 ms/frame, and 4×-throttled movement measured 9.80 ms p95 at
+  6.79 ms/frame. Both renderers stayed inside the existing budgets and exposed
+  the same layout, occlusion, pause, input, weather, consequence, and mobile
+  evidence.
+- The production journey renders all 12 playable locations, full and demo
+  campaigns, both Minah card outcomes, exact monsoon shelter behavior,
+  `320×568`, `360×560`, and `640×360`, reduced motion, keyboard/tap entry and
+  paired returns. Current-facing screenshots were recaptured; the corrected
+  Canvas fullscreen/resume and Pause states were manually inspected.
+
+**Claim boundary:**
+
+- This is local automated and machine-rendered evidence, not a human or
+  older-adult playtest, real-phone/tablet result, screen-reader or 200% zoom
+  session, accessibility certification, public release, or organiser
+  submission. No public deployment was triggered. The checked-in videos remain
+  clearly labelled earlier-build evidence until they are re-recorded and
+  approved.

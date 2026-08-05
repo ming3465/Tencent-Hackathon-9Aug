@@ -34,7 +34,7 @@ areas, but every required responsibility must appear here with an owner.
 | Requirement | Owner | Status | Evidence or next action |
 | --- | --- | --- | --- |
 | Project name `Kampung SG` | SHARED | DONE | Used across game and documentation |
-| Top-down neighbourhood sandbox direction | SHARED | DONE | `docs/GAME_DESIGN.md` |
+| Three-quarter neighbourhood campaign direction | SHARED | DONE | `docs/GAME_DESIGN.md` and the registry-driven exterior/interiors |
 | Local playable vertical slice | OPENCODE | DONE | `http://127.0.0.1:5173/` while server runs |
 | Keyboard and touch movement | OPENCODE | DONE | Keyboard, d-pad, tap-to-walk, nearby tap interaction, cancellation, and short-viewport behavior are covered by production-browser smoke; the real-phone pass remains open below |
 | Recoverable campaign loader | OPENCODE | DONE | The lazy scene has opening, slow, cancel, retry, and back-to-title states with focus/control blocking; production-browser smoke covers recovery, but real-device startup remains unverified |
@@ -42,8 +42,8 @@ areas, but every required responsibility must appear here with an owner.
 | Eight resident routes and visible consequences | OPENCODE | DONE | Current code-drawn consequence art includes three-quarter exterior/interior ramps, both garden-choice treatments, a sheltered linkway, and the persistent shop-window card |
 | Optional memory-table activity | OPENCODE | DONE | Current build and matching tests |
 | KampungMind authored memory/intent engine | OPENCODE | DONE | `campaignContent.ts`, `kampungMind.ts`, campaign tests |
-| Automated tests | OPENCODE | DONE | 79/79 passing: 27 campaign, 31 match, 17 audio, 4 accessibility |
-| Production build | OPENCODE | DONE | Latest verified Vite build: HTML 84.76 kB (15.26 kB gzip), initial JS 114.37 kB (35.06 kB gzip), lazy campaign scene 1,609.14 kB (376.46 kB gzip) |
+| Automated tests | OPENCODE | DONE | 85/85 passing: 27 campaign, 31 match, 17 audio, 4 accessibility, 6 world/door/pause |
+| Production build | OPENCODE | DONE | Latest verified Vite build: HTML 86.59 kB (15.50 kB gzip), initial JS 129.02 kB (38.50 kB gzip), lazy campaign scene 1,602.13 kB (374.24 kB gzip) |
 | Production-browser regression | OPENCODE | DONE | 60/60 smoke checks pass across the full and demo campaigns |
 | Dependency security audit | OPENCODE | DONE | Zero known vulnerabilities |
 | CodeBuddy initial implementation evidence | CODEBUDDY | DONE | `docs/AI_USAGE_LOG.md` |
@@ -432,11 +432,11 @@ Replace `[Team Name]` before export.
 - Miora prompts, IDs or links, generation dates, selected variations, and
   rejected issues.
 - Miora procedural-before and integrated-after screenshots.
-- Test output showing the current 79/79 gate (27 campaign, 31 match,
-  17 audio, and 4 accessibility tests). The earlier 42-test target
+- Test output showing the current 85/85 gate (27 campaign, 31 match,
+  17 audio, 4 accessibility, and 6 world/door/pause tests). The earlier 42-test target
   remains historical planning context, not the current release claim.
-- Production build and audit output, including HTML 84.76/15.26 kB gzip,
-  initial JS 114.37/35.06 kB gzip, and lazy scene 1,609.14/376.46 kB gzip.
+- Production build and audit output, including HTML 86.59/15.50 kB gzip,
+  initial JS 129.02/38.50 kB gzip, and lazy scene 1,602.13/374.24 kB gzip.
 - Browser smoke output showing 60/60 checks, including keyboard, tap
   navigation, compact layouts, loader recovery, and visible consequence art.
 - Manual phone, tablet, keyboard, zoom, and screen-reader notes.

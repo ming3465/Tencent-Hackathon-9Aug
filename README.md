@@ -4,7 +4,7 @@
 
 ### ▶ [Play it now — no install, no account](https://ming3465.github.io/Tencent-Hackathon-9Aug/)
 
-Kampung SG is a cozy top-down Singapore HDB-estate campaign for the Tencent
+Kampung SG is a cozy three-quarter Singapore HDB-estate campaign for the Tencent
 Cloud “Age Well” Social Good Challenge, Game Track. Older residents are the
 experts shaping the neighbourhood—not patients or passive recipients.
 
@@ -69,7 +69,8 @@ hallucination path.
 - A reviewed OpenAI-assisted 1668×943 HDB-estate title panorama, optimized to
   WebP after a documented first-pass rejection and constrained pseudo-writing
   cleanup; the title, controls, tagline, and caption remain semantic HTML
-- Original Canvas-rendered pixel art with speed-responsive four-frame
+- Original code-drawn pixel art rendered through `Phaser.AUTO` with a Canvas
+  fallback, with speed-responsive four-frame
   directional player walks, deterministic idle blinks, interaction-facing,
   four-frame resident walks, stepped head-and-body silhouettes, connected
   limbs, grounded feet, five hair profiles, five outfit grammars, carried
@@ -104,8 +105,10 @@ hallucination path.
   instead of cutting the room against one edge; district dressing includes a tray-return station,
   provision crates, mosaic dragon playground, and exercise corner. A persistent
   downward guide triangle keeps the main character readable in every room and
-  district. Seven exterior entrances now share one audited doorway registry
-  with their art, interaction points, and collision gaps. The playable world
+  district. Six pedestrian streets, eight independently baked buildings,
+  choice-specific shelter geometry, the minimap, NPC routes, and 22 contextual
+  DoorViews resolve from one audited world registry. Doors own their approach,
+  blocker, opening state, entry step, and paired return spawn. The playable world
   remains code-drawn after two generated visual-direction studies were
   selectively translated rather than copied; the separately reviewed title
   panorama is the only generated raster intentionally shipped at runtime
@@ -120,10 +123,10 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | Gate | Result |
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
-| `npm test` | 79/79: 27 campaign, 31 match-engine, 17 audio, and 4 accessibility-contract tests |
-| `npm run build` | 84.76 kB HTML (15.26 kB gzip); 114.37 kB initial JS (35.06 kB gzip); 1,609.14 kB lazy scene (376.46 kB gzip) |
+| `npm test` | 85/85: 27 campaign, 31 match-engine, 17 audio, 4 accessibility-contract, and 6 world-layout/door/pause tests |
+| `npm run build` | 86.59 kB HTML (15.50 kB gzip); 129.02 kB initial JS (38.50 kB gzip); 1,602.13 kB lazy scene (374.24 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
-| `npm run smoke` | 60/60 production-browser checks |
+| `npm run smoke` | 60/60 production-browser checks in default WebGL and forced Canvas fallback |
 
 The smoke harness drives complete full and demo campaigns through production
 JavaScript, instantiates all 12 locations, proves resident route movement,

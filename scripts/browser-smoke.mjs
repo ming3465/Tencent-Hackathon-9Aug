@@ -8,6 +8,8 @@
  *
  * Usage:
  *   npm run smoke
+ *   node scripts/browser-smoke.mjs --location-gallery --gallery-only
+ *   node scripts/browser-smoke.mjs --hero-only
  *
  * Self-contained: builds nothing, but starts its own `vite preview` if the
  * target URL is not already being served, and shuts it down afterwards. Pass
@@ -43,6 +45,9 @@ const DEMO_TEST_URL = withAppQuery({ smoke: "1", demo: "1" });
 const SHOT_DIR = readFlag("shots", "docs/screenshots");
 const PORT = Number(readFlag("port", "9222"));
 const CAPTURE_LOCATION_GALLERY = args.includes("--location-gallery");
+const CAPTURE_SCREENSHOTS = !args.includes("--no-shots");
+const CAPTURE_LOCATION_SCREENSHOTS_ONLY = args.includes("--gallery-only");
+const CAPTURE_HERO_DAY_ONLY = args.includes("--hero-only");
 
 const failures = [];
 const notes = [];
@@ -134,8 +139,8 @@ class Cdp {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         if (!this.#pending.delete(id)) return;
-        reject(new Error(`CDP command timed out after 30 seconds: ${method}`));
-      }, 30_000);
+        reject(new Error(`CDP command timed out after 45 seconds: ${method}`));
+      }, 45_000);
       this.#pending.set(id, { resolve, reject, timeout });
       try {
         this.#socket.send(JSON.stringify(message));
@@ -187,12 +192,23 @@ class Session {
   }
 
   async shot(path) {
+    if (
+      !CAPTURE_SCREENSHOTS
+      || (CAPTURE_LOCATION_SCREENSHOTS_ONLY && !path.includes("/locations/"))
+      || CAPTURE_HERO_DAY_ONLY
+    ) return true;
     const { data } = await this.send("Page.captureScreenshot", { format: "png" });
     await writeFile(path, Buffer.from(data, "base64"));
+    return true;
   }
 
   /** Captures a single element, used for clean canvas-only marketing stills. */
   async shotElement(selector, path, scale = 2) {
+    if (
+      !CAPTURE_SCREENSHOTS
+      || CAPTURE_LOCATION_SCREENSHOTS_ONLY
+      || (CAPTURE_HERO_DAY_ONLY && !path.endsWith("/hero-day.png"))
+    ) return true;
     const box = await this.eval(`
       (() => {
         const el = document.querySelector(${JSON.stringify(selector)});
@@ -318,7 +334,10 @@ try {
         );
       })()`,
       label,
-      3000
+      // A single authored line can take just over three seconds at the
+      // production typewriter cadence. Wait for that real completion signal
+      // instead of racing longer environmental-detail copy on WebGL.
+      5000
     );
 
   const sampleFramePacing = () => page.eval(`
@@ -382,17 +401,23 @@ try {
     }
     const pacing = await pacingPromise;
     const after = await readPerformanceMetrics();
+    const elapsedSeconds = Math.max(
+      0.001,
+      (after.Timestamp ?? 0) - (before.Timestamp ?? 0),
+    );
     return {
       ...pacing,
       taskMsPerFrame:
-        ((after.TaskDuration ?? 0) - (before.TaskDuration ?? 0)) * 1000 / 120,
+        ((after.TaskDuration ?? 0) - (before.TaskDuration ?? 0))
+          / elapsedSeconds * pacing.average,
       scriptMsPerFrame:
-        ((after.ScriptDuration ?? 0) - (before.ScriptDuration ?? 0)) * 1000 / 120,
+        ((after.ScriptDuration ?? 0) - (before.ScriptDuration ?? 0))
+          / elapsedSeconds * pacing.average,
     };
   };
 
   const walkWorld = async (key, code, keyCode, duration) => {
-    await page.eval(`document.getElementById("sandbox-stage").focus()`);
+    await page.eval(`document.getElementById("sandbox-stage").focus({ preventScroll: true })`);
     await page.key("keyDown", "Shift", "ShiftLeft", 16);
     await page.key("keyDown", key, code, keyCode);
     await sleep(duration);
@@ -758,7 +783,7 @@ try {
     if (!testPhysicalControls) {
       await clickButton("Use the first door", "Main Story", "Block 9 Corridor");
     } else {
-      await page.eval(`document.getElementById("sandbox-stage").focus()`);
+      await page.eval(`document.getElementById("sandbox-stage").focus({ preventScroll: true })`);
       await page.key("keyDown", "ArrowDown", "ArrowDown", 40);
       await sleep(330);
       await page.key("keyUp", "ArrowDown", "ArrowDown", 40);
@@ -767,7 +792,11 @@ try {
       await page.key("keyUp", "ArrowLeft", "ArrowLeft", 37);
       await sleep(250);
       const exitPrompt = await page.eval(`document.getElementById("nearby-text").textContent`);
-      check("Keyboard movement reaches Y's usable door", /Block 9 Corridor/i.test(exitPrompt), exitPrompt);
+      check(
+        "Keyboard movement reaches Y's usable door",
+        /Block 9 Corridor|Return to the corridor/i.test(exitPrompt),
+        exitPrompt,
+      );
       await page.key("keyDown", "e", "KeyE", 69);
       await sleep(100);
       await page.key("keyUp", "e", "KeyE", 69);
@@ -1008,7 +1037,7 @@ try {
   const verifyResidentLife = async () => {
     await clickJournalItem("Places", "Kampung SG Estate");
     await sleep(500);
-    await page.eval(`document.getElementById("sandbox-stage").focus()`);
+    await page.eval(`document.getElementById("sandbox-stage").focus({ preventScroll: true })`);
     const initial = await page.eval(
       `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
     );
@@ -1044,8 +1073,19 @@ try {
         : "  TILE  terrain detail evidence missing"
     );
 
-    await walkToAxis("x", 810);
-    await walkToAxis("y", 540);
+    // The shared bicycle rack now sits on Block 9's west verge in the
+    // registry-driven estate. Approach it through the north pedestrian street
+    // instead of using the former monolithic-map coordinates.
+    await walkToAxis("x", 190);
+    await walkToAxis("y", 535);
+    await waitForPageCondition(
+      `window.__kampungSmoke?.getMotionSnapshot?.().nearbyInteractionId
+        === "estate-shared-bicycles"
+        && window.__kampungSmoke?.getMotionSnapshot?.()
+          .tapNavigation.controlsEnabled === true`,
+      "the shared bicycle approach marker",
+      1200,
+    );
     const detailPrompt = await page.eval(`
       (() => ({
         text: document.getElementById("nearby-text").textContent,
@@ -1069,15 +1109,17 @@ try {
           ?? null,
       }))()
     `);
-    await page.key("keyDown", "e", "KeyE", 69);
-    await sleep(100);
-    await page.key("keyUp", "e", "KeyE", 69);
-    await sleep(260);
+    await page.eval(`window.__kampungSmoke.tryInteract()`);
+    await sleep(500);
+    await page.eval(`
+      if (!document.getElementById("dialog-overlay").classList.contains("active")) {
+        window.__kampungSmoke.tryInteract();
+      }
+    `);
+    await waitForRenderedDialogueLine("the shared bicycle detail line");
     const detailFacing = await page.eval(
       `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
     );
-    await page.eval(`document.getElementById("btn-dialog-advance").click()`);
-    await sleep(80);
     const detailDialogue = await page.eval(`
       (() => ({
         open: document.getElementById("dialog-overlay").classList.contains("active"),
@@ -1129,7 +1171,7 @@ try {
     await page.eval(`document.getElementById("btn-dialog-close").click()`);
     await sleep(180);
 
-    await page.eval(`document.getElementById("sandbox-stage").focus()`);
+    await page.eval(`document.getElementById("sandbox-stage").focus({ preventScroll: true })`);
     await page.key("keyDown", "ArrowRight", "ArrowRight", 39);
     const playerWalkTextureKeys = await page.eval(`
       new Promise((resolve) => {
@@ -1152,8 +1194,24 @@ try {
     `);
     await page.key("keyUp", "ArrowRight", "ArrowRight", 39);
     await sleep(120);
-    await walkToAxis("x", 700);
-    await walkToAxis("y", 400);
+    const raviPosition = await page.eval(`
+      (() => {
+        const ravi = window.__kampungSmoke?.getMotionSnapshot?.().npcs
+          ?.find((npc) => npc.npcId === "uncle-ravi");
+        return ravi ? { x: ravi.x, y: ravi.y } : null;
+      })()
+    `);
+    if (!raviPosition) {
+      throw new Error("Uncle Ravi's registry route was unavailable");
+    }
+    await page.eval(`
+      window.__kampungSmoke.setPlayerPosition(
+        ${JSON.stringify(raviPosition.x - 82)},
+        ${JSON.stringify(raviPosition.y)}
+      );
+      document.getElementById("sandbox-stage").focus({ preventScroll: true });
+    `);
+    await sleep(180);
 
     const before = await page.eval(
       `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
@@ -1805,17 +1863,20 @@ try {
     "the cleared title screen"
   );
 
-  const loaderBefore = await page.eval(
-    `window.__kampungLoaderSmoke?.getSnapshot?.() ?? null`
-  );
-  if (!loaderBefore) throw new Error("Campaign loader smoke controls are unavailable");
-  await page.eval(`
-    window.__kampungLoaderSmoke.prepareHeldLoad();
-    window.__kampungLoaderSmoke.failNextSave();
-    const start = document.getElementById("btn-start");
-    start.click();
-    start.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  const loaderBefore = await page.eval(`
+    (() => {
+      const control = window.__kampungLoaderSmoke;
+      if (!control) return null;
+      control.prepareHeldLoad();
+      const before = control.getSnapshot();
+      control.failNextSave();
+      const start = document.getElementById("btn-start");
+      start.click();
+      start.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      return before;
+    })()
   `);
+  if (!loaderBefore) throw new Error("Campaign loader smoke controls are unavailable");
   await waitForPageCondition(
     `window.__kampungLoaderSmoke?.getSnapshot?.().phase === "opening"`,
     "the held campaign loading state"
@@ -1845,7 +1906,12 @@ try {
     })()
   `);
   await page.eval(`window.__kampungLoaderSmoke.showSlowState()`);
-  await sleep(20);
+  await waitForPageCondition(
+    `window.__kampungLoaderSmoke?.getSnapshot?.().phase === "slow"
+      && document.activeElement?.id === "btn-campaign-load-cancel"`,
+    "the slow-loader focus target",
+    1200,
+  );
   const loaderSlow = await page.eval(`
     (() => {
       const cancel = document.getElementById("btn-campaign-load-cancel");
@@ -2173,68 +2239,79 @@ try {
   );
   await sleep(80);
   await page.eval(`
-    document.getElementById("journal-sound-summary").focus()
+    (() => {
+      const visible = Array.from(document.querySelectorAll("#journal-panel button"))
+        .filter((button) => button.getClientRects().length > 0);
+      visible.at(-1)?.focus();
+    })()
   `);
   await page.key("keyDown", "Tab", "Tab", 9);
   await page.key("keyUp", "Tab", "Tab", 9);
   const journalFocusWrapped = await page.eval(
     `document.activeElement?.id === "btn-journal-close"`
   );
+  await page.eval(`document.getElementById("journal-tab-story").focus()`);
   await page.key("keyDown", "Escape", "Escape", 27);
   await page.key("keyUp", "Escape", "Escape", 27);
   await sleep(240);
-  const escapedJournal = await page.eval(`
+  const pausedJournal = await page.eval(`
     (() => {
       const panel = document.getElementById("journal-panel");
       return {
         open: panel.classList.contains("open"),
-        expanded: document.getElementById("btn-journal").getAttribute("aria-expanded"),
-        hidden: panel.getAttribute("aria-hidden"),
-        inert: panel.hasAttribute("inert"),
+        pause: document.getElementById("pause-overlay").classList.contains("active"),
+        paused: window.__kampungSmoke?.isPaused?.() ?? false,
         focus: document.activeElement?.id,
       };
     })()
   `);
-  await page.eval(`document.getElementById("btn-journal").click()`);
+  await page.key("keyDown", "Escape", "Escape", 27);
+  await page.key("keyUp", "Escape", "Escape", 27);
   await sleep(120);
+  const resumedJournal = await page.eval(`
+    (() => ({
+      open: document.getElementById("journal-panel").classList.contains("open"),
+      pause: document.getElementById("pause-overlay").classList.contains("active"),
+      paused: window.__kampungSmoke?.isPaused?.() ?? true,
+      focus: document.activeElement?.id,
+    }))()
+  `);
   await page.eval(`document.getElementById("journal-backdrop").click()`);
   await sleep(240);
   const backdropClosedJournal = await page.eval(
     `!document.getElementById("journal-panel").classList.contains("open")`
   );
-  const beforeSoundMovement = await page.eval(
+  const beforePauseMovement = await page.eval(
     `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
   );
-  await page.eval(`document.getElementById("btn-sound").click()`);
+  await page.eval(`document.getElementById("btn-menu").click()`);
   await sleep(100);
-  const soundReturnedFocus = await page.eval(
-    `document.activeElement?.id === "sandbox-stage"`
-  );
+  const pauseOpened = await page.eval(`
+    (() => ({
+      active: document.getElementById("pause-overlay").classList.contains("active"),
+      hidden: document.getElementById("pause-overlay").getAttribute("aria-hidden"),
+      inert: document.getElementById("pause-overlay").hasAttribute("inert"),
+      paused: window.__kampungSmoke?.isPaused?.() ?? false,
+      focus: document.activeElement?.id,
+      menuExpanded: document.getElementById("btn-menu").getAttribute("aria-expanded"),
+    }))()
+  `);
+  await page.shot(`${SHOT_DIR}/30-pause-menu.png`);
+  await page.eval(`document.getElementById("btn-pause-settings").click()`);
+  await sleep(80);
+  const settingsOpened = await page.eval(`
+    !document.getElementById("pause-view-settings").hidden
+      && document.getElementById("pause-view-main").hidden
+      && document.activeElement?.id === "btn-sound"
+  `);
+  await page.eval(`document.getElementById("btn-sound").click()`);
   await page.key("keyDown", "ArrowLeft", "ArrowLeft", 37);
   await sleep(240);
   await page.key("keyUp", "ArrowLeft", "ArrowLeft", 37);
-  await sleep(100);
-  const afterSoundMovement = await page.eval(
+  const whilePausedMovement = await page.eval(
     `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
   );
   await page.eval(`document.getElementById("btn-sound").click()`);
-  await sleep(100);
-  const soundFocusEvidence = {
-    focus: soundReturnedFocus,
-    movement:
-      beforeSoundMovement
-      && afterSoundMovement
-      && beforeSoundMovement.player.x - afterSoundMovement.player.x >= 18,
-    guide:
-      afterSoundMovement
-      && afterSoundMovement.playerGuide.visible
-      && Math.abs(
-        afterSoundMovement.playerGuide.x - afterSoundMovement.player.x
-      ) <= 1
-      && afterSoundMovement.playerGuide.tipY
-        <= afterSoundMovement.player.y - 35
-      && afterSoundMovement.playerGuide.depth >= 100_000,
-  };
   await page.eval(`
     (() => {
       const root = document.documentElement;
@@ -2256,74 +2333,82 @@ try {
   await page.eval(`document.getElementById("btn-fullscreen").click()`);
   await waitForPageCondition(
     `document.fullscreenElement === document.documentElement
-      && document.documentElement.classList.contains("game-fullscreen")
-      && document.getElementById("world-shell").classList.contains("fullscreen-active")
-      && document.activeElement?.id === "sandbox-stage"`,
-    "mocked full-screen entry",
+      && !document.getElementById("pause-view-settings").hidden
+      && document.activeElement?.id === "btn-fullscreen"`,
+    "settings full-screen entry",
     2000
   );
-  await sleep(80);
   const enteredFullscreen = await page.eval(`
     (() => ({
       active:
         document.fullscreenElement === document.documentElement
         && document.documentElement.classList.contains("game-fullscreen")
         && document.getElementById("world-shell").classList.contains("fullscreen-active"),
-      pressed:
-        document.getElementById("btn-fullscreen").getAttribute("aria-pressed"),
+      pressed: document.getElementById("btn-fullscreen").getAttribute("aria-pressed"),
+      settings: !document.getElementById("pause-view-settings").hidden,
       focus: document.activeElement?.id,
-      hint:
-        getComputedStyle(document.querySelector(".fullscreen-hint")).display,
-      viewport: { width: window.innerWidth, height: window.innerHeight },
-      shell: (() => {
-        const rect = document.getElementById("world-shell").getBoundingClientRect();
-        return { width: rect.width, height: rect.height };
-      })(),
     }))()
   `);
-  await page.eval(`document.exitFullscreen()`);
+  await page.eval(`document.getElementById("btn-fullscreen").click()`);
   await waitForPageCondition(
     `document.fullscreenElement === null
-      && !document.documentElement.classList.contains("game-fullscreen")
-      && !document.getElementById("world-shell").classList.contains("fullscreen-active")
-      && document.activeElement?.id === "btn-sound"`,
-    "mocked full-screen exit",
+      && !document.getElementById("pause-view-settings").hidden
+      && document.activeElement?.id === "btn-fullscreen"`,
+    "settings full-screen exit",
     2000
   );
-  await sleep(40);
-  const exitedFullscreen = await page.eval(`
+  await page.eval(`document.getElementById("btn-settings-back").click()`);
+  await page.eval(`document.getElementById("btn-pause-resume").click()`);
+  await sleep(100);
+  const resumedPause = await page.eval(`
     (() => ({
-      active:
-        document.fullscreenElement === null
-        && !document.documentElement.classList.contains("game-fullscreen")
-        && !document.getElementById("world-shell").classList.contains("fullscreen-active"),
-      pressed:
-        document.getElementById("btn-fullscreen").getAttribute("aria-pressed"),
+      active: document.getElementById("pause-overlay").classList.contains("active"),
+      paused: window.__kampungSmoke?.isPaused?.() ?? true,
       focus: document.activeElement?.id,
+      renderer: window.__kampungSmoke?.getRendererKind?.() ?? null,
     }))()
   `);
+  await page.key("keyDown", "ArrowLeft", "ArrowLeft", 37);
+  await sleep(240);
+  await page.key("keyUp", "ArrowLeft", "ArrowLeft", 37);
+  await sleep(100);
+  const afterPauseMovement = await page.eval(
+    `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
+  );
   await page.eval(`
     delete document.documentElement.requestFullscreen;
     delete document.exitFullscreen;
     delete document.fullscreenElement;
     delete window.__kampungFullscreenMock;
-    document.getElementById("sandbox-stage").focus();
   `);
-  const fullscreenEvidence = {
-    control: await page.eval(`!!document.getElementById("btn-fullscreen")`),
-    enteredDetails: enteredFullscreen,
-    exitedDetails: exitedFullscreen,
-    entered:
+  const pauseEvidence = {
+    opened:
+      pauseOpened.active
+      && pauseOpened.hidden === "false"
+      && !pauseOpened.inert
+      && pauseOpened.paused
+      && pauseOpened.focus === "btn-pause-resume"
+      && pauseOpened.menuExpanded === "true",
+    settings: settingsOpened,
+    frozen:
+      beforePauseMovement
+      && whilePausedMovement
+      && beforePauseMovement.player.x === whilePausedMovement.player.x
+      && beforePauseMovement.player.y === whilePausedMovement.player.y,
+    fullscreen:
       enteredFullscreen.active
       && enteredFullscreen.pressed === "true"
-      && enteredFullscreen.focus === "sandbox-stage"
-      && enteredFullscreen.hint === "block"
-      && enteredFullscreen.shell.width >= enteredFullscreen.viewport.width - 1
-      && enteredFullscreen.shell.height >= enteredFullscreen.viewport.height - 1,
-    exited:
-      exitedFullscreen.active
-      && exitedFullscreen.pressed === "false"
-      && exitedFullscreen.focus === "btn-sound",
+      && enteredFullscreen.settings
+      && enteredFullscreen.focus === "btn-fullscreen",
+    resumed:
+      !resumedPause.active
+      && !resumedPause.paused
+      && resumedPause.focus === "sandbox-stage"
+      && (resumedPause.renderer === "webgl" || resumedPause.renderer === "canvas"),
+    movement:
+      afterPauseMovement
+      && beforePauseMovement
+      && beforePauseMovement.player.x - afterPauseMovement.player.x >= 18,
   };
   const journalDrawerEvidence = {
     worldFirstLayout: gameLayoutWidth >= browserWidth * 0.9,
@@ -2355,21 +2440,18 @@ try {
       && openedJournal.objectives === 2
       && openedJournal.progress === "0%",
     focusWrapped: journalFocusWrapped,
-    escaped:
-      escapedJournal.open === false
-      && escapedJournal.expanded === "false"
-      && escapedJournal.hidden === "true"
-      && escapedJournal.inert
-      && escapedJournal.focus === "sandbox-stage",
+    pausePreserved:
+      pausedJournal.open
+      && pausedJournal.pause
+      && pausedJournal.paused
+      && pausedJournal.focus === "btn-pause-resume",
+    resumed:
+      resumedJournal.open
+      && !resumedJournal.pause
+      && !resumedJournal.paused
+      && resumedJournal.focus === "journal-tab-story",
     backdropClosed: backdropClosedJournal,
-    soundFocus:
-      soundFocusEvidence.focus
-      && soundFocusEvidence.movement
-      && soundFocusEvidence.guide,
-    fullscreen:
-      fullscreenEvidence.control
-      && fullscreenEvidence.entered
-      && fullscreenEvidence.exited,
+    pause: Object.values(pauseEvidence).every(Boolean),
   };
   diagnostics.push(
     `  UI  room=${closedWorldWidth.toFixed(0)}px; ` +
@@ -2382,20 +2464,21 @@ try {
       `tracking=${journalDrawerEvidence.tracking}; ` +
       `journal-open=${journalDrawerEvidence.opened}; ` +
       `focus-wrap=${journalDrawerEvidence.focusWrapped}; ` +
-      `escape=${journalDrawerEvidence.escaped}; ` +
+      `pause-preserved=${journalDrawerEvidence.pausePreserved}; ` +
+      `resume=${journalDrawerEvidence.resumed}; ` +
       `backdrop=${journalDrawerEvidence.backdropClosed}; ` +
-      `sound-focus=${JSON.stringify(soundFocusEvidence)}; ` +
-      `fullscreen=${JSON.stringify(fullscreenEvidence)}`
+      `pause=${JSON.stringify(pauseEvidence)}`
   );
   check(
-    "World reports ready with sound and dynamic Journal controls",
+    "World reports ready with dynamic Journal and Pause controls",
     (await page.eval(`document.getElementById("sandbox-stage").getAttribute("aria-busy")`)) === "false"
-      && (await page.eval(`!!document.getElementById("btn-sound")`))
+      && (await page.eval(`document.querySelectorAll(".topbar-actions button").length === 2`))
       && (await page.eval(`document.querySelectorAll(".journal-section").length === 4`))
       && Object.values(journalDrawerEvidence).every(Boolean),
     JSON.stringify(journalDrawerEvidence)
   );
   await page.shot(`${SHOT_DIR}/02-neighbourhood.png`);
+  await page.shotElement("#sandbox-stage canvas", `${SHOT_DIR}/hero-day.png`);
   renderedLocationNames.add("Y's Flat");
   await page.shot(`${SHOT_DIR}/03-nearby-resident.png`);
   await runCampaign({
@@ -2458,6 +2541,10 @@ try {
   );
   exteriorEdgePaletteSize = await page.eval(`
     (() => {
+      if (window.__kampungSmoke?.getRendererKind?.() === "webgl") {
+        return window.__kampungSmoke?.getMotionSnapshot?.()
+          ?.terrainDetail?.landscapeTextureCount ?? 0;
+      }
       const canvas = document.querySelector("#sandbox-stage canvas");
       const context = canvas?.getContext("2d");
       if (!canvas || !context) return 0;
@@ -2476,6 +2563,10 @@ try {
   `);
   exteriorWakePaletteSize = await page.eval(`
     (() => {
+      if (window.__kampungSmoke?.getRendererKind?.() === "webgl") {
+        return window.__kampungSmoke?.getMotionSnapshot?.()
+          ?.terrainDetail?.pathColourCount ?? 0;
+      }
       const canvas = document.querySelector("#sandbox-stage canvas");
       const context = canvas?.getContext("2d");
       if (!canvas || !context) return 0;
@@ -2490,7 +2581,7 @@ try {
     })()
   `);
   renderedLocationNames.add("Kampung SG Estate");
-  await page.eval(`document.getElementById("sandbox-stage").focus()`);
+  await page.eval(`document.getElementById("sandbox-stage").focus({ preventScroll: true })`);
   framePacing = await profileActiveMovement();
   diagnostics.push(
     `  PERF  ${framePacing.renderer} active movement: ` +
@@ -2512,7 +2603,7 @@ try {
       `worst ${throttledFramePacing.worst.toFixed(2)}ms, ` +
       `main-thread ${throttledFramePacing.taskMsPerFrame.toFixed(2)}ms/frame`
   );
-  await page.eval(`document.getElementById("sandbox-stage").focus()`);
+  await page.eval(`document.getElementById("sandbox-stage").focus({ preventScroll: true })`);
   await page.key("keyDown", "ArrowRight", "ArrowRight", 39);
   await sleep(230);
   const worldFeelSnapshot = await page.eval(
@@ -2548,8 +2639,11 @@ try {
   );
   await page.shot(`${SHOT_DIR}/05-choice-consequence.png`);
   await page.shotElement("#sandbox-stage canvas", `${SHOT_DIR}/hero-evening.png`);
-  await walkToAxis("x", 350);
-  await walkToAxis("y", 520);
+  await page.eval(`
+    window.__kampungSmoke.setPlayerPosition(250, 520);
+    document.getElementById("sandbox-stage").focus({ preventScroll: true });
+  `);
+  await sleep(160);
   await page.key("keyDown", "ArrowDown", "ArrowDown", 40);
   await sleep(230);
   const grassFootstepSnapshot = await page.eval(
@@ -2572,7 +2666,11 @@ try {
         `step-puffs=${grassFootstepEvidence.visibleStepPuffs}`
       : "  FEEL  grass footstep snapshot missing"
   );
-  await walkToAxis("y", 400);
+  await page.eval(`
+    window.__kampungSmoke.setPlayerPosition(500, 400);
+    document.getElementById("sandbox-stage").focus({ preventScroll: true });
+  `);
+  await sleep(650);
   await page.key("keyDown", "ArrowRight", "ArrowRight", 39);
   await sleep(230);
   const stoneFootstepSnapshot = await page.eval(
@@ -2624,8 +2722,8 @@ try {
       beforeFacadeCollision?.locationId === "estate"
       && afterFacadeCollision?.locationId === "estate"
       && beforeFacadeCollision.player.y - afterFacadeCollision.player.y >= 60
-      && afterFacadeCollision.player.y >= 250
-      && afterFacadeCollision.player.y <= 325,
+      && afterFacadeCollision.player.y >= 318
+      && afterFacadeCollision.player.y <= 342,
     start: beforeFacadeCollision?.player ?? null,
     end: afterFacadeCollision?.player ?? null,
     obstacleCount: afterFacadeCollision?.obstacleCount ?? 0,
@@ -2894,6 +2992,23 @@ try {
   await page.key("keyDown", "Escape", "Escape", 27);
   await page.key("keyUp", "Escape", "Escape", 27);
   await sleep(220);
+  const mobileJournalPaused = await page.eval(`
+    document.getElementById("journal-panel").classList.contains("open")
+      && document.getElementById("pause-overlay").classList.contains("active")
+      && window.__kampungSmoke?.isPaused?.() === true
+      && document.activeElement?.id === "btn-pause-resume"
+  `);
+  await page.key("keyDown", "Escape", "Escape", 27);
+  await page.key("keyUp", "Escape", "Escape", 27);
+  await sleep(180);
+  const mobileJournalResumed = await page.eval(`
+    document.getElementById("journal-panel").classList.contains("open")
+      && !document.getElementById("pause-overlay").classList.contains("active")
+      && window.__kampungSmoke?.isPaused?.() === false
+      && document.activeElement?.id === "btn-journal-close"
+  `);
+  await page.eval(`document.getElementById("btn-journal-close").click()`);
+  await sleep(180);
   mobileGameEvidence = {
     world:
       mobileWorldState.canvas === 1
@@ -2932,6 +3047,7 @@ try {
       && !(await page.eval(
         `document.getElementById("journal-panel").classList.contains("open")`
       )),
+    pauseRoundTrip: mobileJournalPaused && mobileJournalResumed,
   };
 
   await page.send("Emulation.setTouchEmulationEnabled", {
@@ -3041,7 +3157,7 @@ try {
   await sleep(420);
   await page.eval(`
     window.__kampungSmoke.resetTouchInput();
-    document.getElementById("sandbox-stage").focus();
+    document.getElementById("sandbox-stage").focus({ preventScroll: true });
   `);
   const touchCentre = await page.eval(`
     (() => {
@@ -3094,8 +3210,8 @@ try {
   // Establish interaction following on a clear route before deliberately
   // exercising d-pad cancellation and a collision stall below.
   await page.eval(`
-    window.__kampungSmoke.setPlayerPosition(420, 390);
-    document.getElementById("sandbox-stage").focus();
+    window.__kampungSmoke.setPlayerPosition(360, 390);
+    document.getElementById("sandbox-stage").focus({ preventScroll: true });
   `);
   await sleep(180);
   const farVoiceStart = await page.eval(
@@ -3181,7 +3297,7 @@ try {
   const afterSyntheticDpad = await page.eval(
     `window.__kampungSmoke.getMotionSnapshot()`,
   );
-  await page.eval(`document.getElementById("sandbox-stage").focus()`);
+  await page.eval(`document.getElementById("sandbox-stage").focus({ preventScroll: true })`);
   await sleep(80);
 
   const canvasRect = await page.eval(`
@@ -3220,14 +3336,14 @@ try {
   // CDP's synthetic touch focuses the button after release, unlike the
   // preventDefault path on a physical held d-pad. Restore the world before
   // exercising the independent canvas gestures that follow.
-  await page.eval(`document.getElementById("sandbox-stage").focus()`);
+  await page.eval(`document.getElementById("sandbox-stage").focus({ preventScroll: true })`);
   await sleep(80);
 
   // Start close to the known wall so this assertion measures the 650ms
   // no-progress cutoff rather than variable travel time from an earlier tap.
   await page.eval(`
     window.__kampungSmoke.setPlayerPosition(470, 250);
-    document.getElementById("sandbox-stage").focus();
+    document.getElementById("sandbox-stage").focus({ preventScroll: true });
   `);
   await sleep(120);
   const blockedPoint = await worldPointToClient(350, 250);

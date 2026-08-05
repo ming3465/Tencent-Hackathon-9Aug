@@ -5,7 +5,7 @@ CodeBuddy, Cursor, Codex, or anything else) working in this repository.
 
 ## What this is
 
-**Kampung SG** — a cozy top-down Singapore HDB-estate sandbox for the Tencent
+**Kampung SG** — a cozy three-quarter Singapore HDB-estate campaign for the Tencent
 Cloud "AI CAN DO IT" **Age Well** Social Good Challenge, **Game Track**. Team
 **TheTwoGuys** (Sutolimin Widjaja, Andreas Auwyano). Thesis: older adults are
 the experts, not the patients.
@@ -60,8 +60,9 @@ npm run typecheck && npm test && npm run build && npm audit && npm run smoke
 
 `npm run smoke` is self-contained (builds, serves, drives headless Chrome
 through a full playthrough, writes screenshots to `docs/screenshots/`).
-Current truth: **79 unit tests, 60 smoke checks, 0 vulnerabilities.** The unit
-split is campaign 27, match engine 31, audio 17, and accessibility contract 4. If a doc
+Current truth: **85 unit tests, 60 smoke checks, 0 vulnerabilities.** The unit
+split is campaign 27, match engine 31, audio 17, accessibility contract 4, and
+world-layout/door/pause 6. If a doc
 or deck quotes different numbers after your change, update them — stale
 numbers are treated as defects.
 
@@ -104,6 +105,19 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-05 (Codex, registry world/doors/pause rebuild)** — Rebuilt the
+  12-location campaign around a typed `2560×1600` registry: six pedestrian
+  streets, eight independent baked three-quarter buildings, corrected
+  consequence-specific shelters, derived minimap/rain/collision data, and 22
+  idempotent contextual DoorViews with paired approaches and returns. Added
+  Journal/Menu-only play chrome plus focus-safe Pause, Settings, fullscreen
+  handling, transient audio ducking, exact overlay restoration, and a confirmed
+  autosaved return to title. Default AUTO/WebGL and forced Canvas each passed
+  the same 60/60 production-browser journey; strict TypeScript, 85/85 tests,
+  the production build, and 0-vulnerability audit passed. Current screenshots
+  and documentation were refreshed; video remains labelled earlier-build.
+  Nothing was pushed or deployed, and no human/device/screen-reader/200%-zoom
+  or public-release claim is made.
 - **2026-08-04 (Codex, integrated consequence-art/loader/touch polish)** —
   Integrated three reviewed local lanes without disturbing the concurrently
   dirty shared worktree: state-specific three-quarter exterior/interior ramps,

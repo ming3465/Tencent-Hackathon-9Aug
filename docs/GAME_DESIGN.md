@@ -2,7 +2,7 @@
 
 ## Definition
 
-Kampung SG is a cozy top-down Singapore HDB-estate campaign about ageing well
+Kampung SG is a cozy three-quarter Singapore HDB-estate campaign about ageing well
 through connection, agency, comfort, and continued contribution.
 
 Older residents organize, teach, repair, map, cook, grow, and welcome. The
@@ -102,6 +102,12 @@ uses isolated in-memory state.
 draw resident-specific rooms from data. `WalkableScene` provides shared input,
 interaction, depth, collision, transition latching, and reduced-motion fades.
 
+`WORLD_LAYOUT` is the pure geometry source for six connected pedestrian
+streets, eight buildings, 22 contextual doors, building collision shells,
+entry aprons, NPC routes, three shelter variants, monsoon dry masks, minimap
+landmarks, and deterministic return spawns. Cartesian four-direction movement
+is unchanged; only the presentation uses roof/front/right-face projection.
+
 Enterable locations include:
 
 - Y’s, Mr. Long’s, Grandma Ros’s, and Ben’s flats via the Block 9 corridor
@@ -124,8 +130,8 @@ arrow-key navigation. Each selected entry has a dedicated detail page,
 objective checklist, proportional progress, status, context actions, and
 optional tracked-quest state. Future chapters remain spoiler-free. Opening the
 Journal makes the world inert, moves focus to the visible Close button, and
-traps focus inside; Escape, the Close button, or the backdrop closes it and
-restores focus to the world.
+traps focus inside. Close or the backdrop dismisses it. Escape opens Pause
+above the Journal without changing its selected entry or focus position.
 
 The exterior and interiors use the full available shell. Each 960×640 interior
 computes a room-fit zoom from both viewport dimensions, caps desktop at 1.08×,
@@ -151,15 +157,23 @@ the Canvas stage retains browser pinch/pan, and the grouped directional pad and
 Talk control reserve their own gestures. The destination ring remains 28 CSS
 pixels across camera zoom levels.
 
-A labelled browser-fullscreen control expands the game to the complete
-viewport. The document root is the fullscreen target so dialogue and Journal
-overlays remain valid descendants. Fullscreen hides the topbar for an
-uninterrupted world view and shows an Escape hint; leaving fullscreen restores
-the topbar and focuses Sound, while toggling Sound returns focus to the world
-so movement resumes immediately.
+The play topbar exposes only Journal and Menu. Menu or Escape opens a compact
+Pause dialog with Resume, Settings, and a confirmed return to title. Pause
+freezes the active Phaser scene, physics, resident routes, rain, ripples,
+tweens, timers, door transitions, and CSS world particles. Music is transiently
+ducked to 35% of its configured level while effects and UI feedback remain
+available. Settings contains Sound, Music, Effects, Fullscreen, and a controls
+reminder. Pause can sit above dialogue or Journal and restores that exact
+overlay and focused element on resume. Return to title states that progress is
+autosaved and destroys the still-paused game without briefly resuming it.
 
-A circular, code-drawn estate map sits inside the world HUD. Seven landmark
-anchors follow the same doorway coordinates as the playable exterior. Outdoors,
+The document root remains the browser-fullscreen target so all modal overlays
+remain valid descendants. Fullscreen changes started from Settings keep
+Settings open. Leaving native fullscreen through browser Escape lands in the
+Paused view.
+
+A circular, code-drawn estate map sits inside the world HUD. Its pedestrian
+paths and seven landmark anchors are generated from `WORLD_LAYOUT`. Outdoors,
 the player marker projects the live 2560×1600 position into the map; indoors,
 the corresponding landmark is highlighted and Block 9 homes share their real
 building anchor. Activating the map opens that place in the Journal. The SVG is
@@ -229,8 +243,12 @@ collision semantics. Mr. Long's route uses matching exterior and interior
 three-quarter ramps with rails, a tactile gold edge, shading, and contact
 shadows. The garden choice renders either two labelled raised herb beds with
 varied plants or two flower beds plus a shaded bench. The sheltered-route
-choice adds a five-post extension with a pitched teal roof, ground shadow, and
-striped shade bands. Each asset is location- and state-specific, so unrelated
+choice is spatially exact: the original 360,500,260,260 shelter always remains;
+`shelter-gap` adds a connected 360,740,260,320 north-south extension with a
+20 px roof overlap to the south street; `rest-point` adds a distinct shaded
+120,810,220,190 bench canopy beside the clear west walk. Posts, interaction
+points, shade bands, warm glow, collision, and monsoon dry masks derive from
+those definitions. Each asset is location- and state-specific, so unrelated
 rooms and incomplete routes remain visually unchanged.
 
 Chapter 2 changes the same estate into a deterministic tropical monsoon rather
@@ -252,16 +270,23 @@ four reusable generated textures to plant building and path edges without
 closing travel routes. Named landmarks no longer share generic block fronts:
 the Hawker Centre, Kopitiam, Minah's shop, Community Centre, Prayer Hall,
 Workshop, and Block 12 have distinct roofs, awnings, glazing, counters, lattice,
-tools, thresholds, and code-drawn pixel signs. Seven exterior entrances share
-one registry for their code-drawn door, prompt point, named building, and
-placard. Fourteen building collision zones make the architecture physically
-solid while leaving explicit audited gaps aligned with those usable doors.
-All eight large exterior structures now also share one shallow three-quarter
-projection contract. Hipped or sawtooth roof planes, seam lines, right-side
-faces, ground contact shadows, and seven recessed entry bays are baked into the
-same quadrant textures as their original façades. The depth registry keys each
-profile to the existing visual-zone ID, and the layout audit rejects duplicate,
-missing, or invalid geometry without moving a doorway or collision shell.
+tools, thresholds, and code-drawn pixel signs. The seven exterior entrances,
+four corridor flat doors, corridor lift, and ten interior exits are 22
+first-class `DoorView` objects. Each definition owns its orientation, style,
+anchor, reachable approach point, paired return spawn, placard, dimensions,
+and closed collider. Hinged HDB leaves, sliding shop doors, double community
+doors, workshop shutters, open hawker gates, and lift doors share an idempotent
+transition guard. Closed thresholds block movement; an authorised interaction
+cancels navigation, faces the player, opens over 180 ms, disables the blocker,
+steps through, and then fades the scene. Reduced motion applies the opening
+immediately. Tap hit-testing recognizes the visible leaf but navigates to the
+unblocked approach point.
+
+Twenty-two building collision shell pieces leave audited gaps aligned with the
+seven exterior thresholds. The layout audit also rejects overlapping buildings,
+disconnected streets, missing return doors, unreachable approaches/spawns,
+shelter discontinuity, dry-mask drift, and less than 96 px of clear shelter
+walking width.
 Three bicycle racks use centralized outdoor-verge
 placements, marked concrete bays, and solid collision. Their ground footprints
 are checked against the larger visual bounds of all eight exterior buildings
@@ -313,17 +338,22 @@ Those decisions informed the original code-drawn resident registry; the raster
 study remains evidence-only. All four workflows are OpenAI evidence, not
 Miora.
 
-The four exterior quadrants are baked into static textures. Their shared 32 px
-terrain grammar places deterministic grass patches and tufts, running-bond
-concrete and sheltered-walk pavers, outlined kerbs, drain grates, and utility
-covers. Grass fringe and sparse leaf litter are baked over path edges, so the
-extra surface detail adds no per-frame work. Landmark façades are baked into
-those same static quadrant textures. Reusable character, tree, landscape, and
-prop textures are generated once, and interiors reuse one rebuilt backdrop
-texture instead of retaining a full-size texture for every room. Movement
+The four exterior terrain quadrants are baked into static textures. Their
+registry-driven grammar places deterministic grass, diagonal cobbles, tiled
+aprons, kerbs, drains, shade, and planted verges without vehicle lanes.
+Buildings are not painted into those terrain textures. Each of the eight
+structures is generated once as an independent baked sprite with roof plane,
+front wall, shaded right face, contact shadow, recessed entry, and a separate
+y-sorted foreground occluder; the temporary builder Graphics is destroyed.
+Shelter views use the same top/front/right-face grammar. Reusable character,
+tree, landscape, and prop textures are generated once, and interiors reuse one
+rebuilt backdrop texture instead of retaining a full-size texture for every
+room. Furniture adds a highlighted top plane, shaded right face, and floor
+contact shadow. Movement
 reuses one vector, interaction distance uses squared comparisons on a 50 ms
-cadence, and the camera uses a small deadzone. Canvas remains the renderer until
-a real-device comparison justifies changing it.
+cadence, and the camera uses a small deadzone. The default is `Phaser.AUTO`,
+which selected WebGL in the current desktop production-browser run; a
+`?renderer=canvas` path remains available for forced Canvas fallback checks.
 
 The production build intentionally keeps Phaser and the complete campaign
 scene in one cached lazy chunk. After the title art settles, idle time prefetches

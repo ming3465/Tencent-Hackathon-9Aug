@@ -135,15 +135,15 @@ Miora-specific before-and-after pipeline.
 ### Technical Execution
 
 - [x] Strict TypeScript passes.
-- [x] 79/79 tests pass: 27 campaign, 31 match, 17 audio, and 4 accessibility.
+- [x] 85/85 tests pass: 27 campaign, 31 match, 17 audio, 4 accessibility, and 6 world/door/pause.
 - [x] 60/60 production-browser checks drive complete full and demo campaigns.
 - [x] Dependency audit has zero known vulnerabilities.
 - [x] Phaser is lazy-loaded after the title screen with visible opening and
   slow states, cancellation, retry after failure, focus restoration, and
   duplicate-start protection covered by browser automation.
-- [x] Latest verified production build is HTML 84.76 kB (15.26 kB gzip),
-  initial JS 114.37 kB (35.06 kB gzip), and lazy campaign scene 1,609.14 kB
-  (376.46 kB gzip).
+- [x] Latest verified production build is HTML 86.59 kB (15.50 kB gzip),
+  initial JS 129.02 kB (38.50 kB gzip), and lazy campaign scene 1,602.13 kB
+  (374.24 kB gzip).
 - [x] No backend or network dependency is required to play.
 - [x] The Phaser bundle-size warning is accepted or reduced with documented
   reasoning.

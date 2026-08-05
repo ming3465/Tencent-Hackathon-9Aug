@@ -1,9 +1,9 @@
 # Campaign QA Checklist
 
-## Automated unit coverage — 79/79 passing
+## Automated unit coverage — 85/85 passing
 
-The total comprises 27 campaign, 31 match-engine, 17 audio, and 4
-accessibility-contract tests.
+The total comprises 27 campaign, 31 match-engine, 17 audio, 4
+accessibility-contract, and 6 world-layout/door/pause tests.
 
 - [x] Chapter ordering and future-event rejection
 - [x] Full and demo thresholds
@@ -32,13 +32,18 @@ accessibility-contract tests.
 - [x] Dialogue source contract keeps the sole visible `>` advance text,
       `aria-label="Continue dialogue"`, exact 52×52 target, enclosing focus
       ring, reduced-motion pulse removal, and the “Maybe later” route
+- [x] Exact six-street/eight-building geometry, non-overlap, connected walking
+      network, 22 paired contextual doors, approach/return spawns, 20 px
+      shelter continuity, distinct choice masks, and 96 px minimum clearance
+- [x] Door opening/transition idempotency, four-state Pause Escape semantics,
+      and transient 35% music-only ducking
 
 ## Production-browser smoke — 60/60 passing
 
 - [x] Production bundle creates exactly one Phaser Canvas
-- [x] Production build measures 84.76 kB HTML (15.26 kB gzip), 114.37 kB
-      initial JavaScript (35.06 kB gzip), and a 1,609.14 kB lazy scene
-      (376.46 kB gzip)
+- [x] Production build measures 86.59 kB HTML (15.50 kB gzip), 129.02 kB
+      initial JavaScript (38.50 kB gzip), and a 1,602.13 kB lazy scene
+      (374.24 kB gzip)
 - [x] Reviewed 1668×943 WebP title artwork loads without desktop overflow
 - [x] Cached idle campaign prefetch runs after title-art settlement, skips
       Save-Data and 2g-class connections, reports opening and 12-second slow
@@ -101,8 +106,13 @@ accessibility-contract tests.
       and consequence state restored
 - [x] The Journal opens from its visible control as a modal quest book, makes
       the world inert, focuses Close, exposes four keyboard-switchable tabs,
-      selected objectives/progress and tracked state, wraps focus, closes via
-      Escape and backdrop, and restores world focus
+      selected objectives/progress and tracked state, and wraps focus. Escape
+      opens Pause above it; Resume preserves the Journal and exact focus;
+      backdrop dismissal restores world focus
+- [x] Play topbar contains only Journal and a 48×48 Menu; Pause freezes the
+      motion snapshot, traps focus, exposes Settings/confirmation, ducks only
+      music, retains Settings through its fullscreen toggle, and resumes exact
+      focus and movement
 - [x] Wide estate and full-width interiors resize the active camera; the
       desktop 960×640 room fits and unused margins remain centred
 - [x] The circular map exposes seven anchors, highlights one current indoor
@@ -125,9 +135,10 @@ accessibility-contract tests.
 - [x] All eight exterior building crops remain opaque at rest, soften while
       covering the player at a physical façade stop, restore after departure,
       and switch instantly under reduced motion
-- [x] All seven exterior entrance visuals, prompts, thresholds, and collision
-      gaps resolve from one audited registry; no doorway sits outside or high
-      inside its named façade
+- [x] All 22 exterior, corridor, lift, flat, and interior-exit DoorViews resolve
+      from one audited registry with style, anchor, approach, return spawn,
+      collider, placard, and target; closed blockers open idempotently before
+      the entry step and fade
 - [x] All eight exterior structures resolve one audited projection profile,
       spanning two roof styles and seven baked entry recesses without changing
       the entrance or collision registries
@@ -137,11 +148,12 @@ accessibility-contract tests.
       three builds, five hair silhouettes, five outfit grammars, four
       accessory states, and four carried totes; refreshed captures show one
       synchronized contact shadow per resident
-- [x] Generated landmark façade exposes at least 20 colours, 180 edge
-      transitions, and 8% dark pixels (documented pass: 214 / 270 / 28.6%)
-- [x] All 95 obstacle bodies instantiate; a real northward movement sample
-      stops at the Minah storefront (about `y=396` to `y=253`) while east/south
-      travel remains reachable
+- [x] All eight structures are independently baked roof/front/right-face
+      sprites with recessed entries, contact shadows, y-sorted occluders, and
+      destroyed builder Graphics; the terrain tiles contain only ground detail
+- [x] The live obstacle set includes building shells, shelter posts, props, and
+      closed door blockers; a real northward movement sample stops at the Minah
+      storefront while east/south travel remains reachable
 - [x] Mr. Long's runtime portrait exposes his stable ID, cane, side-part, and
       at least 30 code-drawn primitives
 - [x] 120 resident-route frames stay inside the normal p95 budget
@@ -159,8 +171,11 @@ accessibility-contract tests.
       preserves browser pinch/pan, supports grouped directional-pad activation
       from keyboard/assistive-technology clicks, keeps Talk usable, and holds a
       28 px destination ring across zoom levels
-- [x] Pressing Sound restores world focus and keyboard movement; full-screen
-      entry fills the viewport and exit moves focus to Sound controls
+- [x] Settings Sound/volume controls stay available while paused; Settings-owned
+      fullscreen entry/exit leaves Settings open and Resume restores movement
+- [x] Default `Phaser.AUTO` selects WebGL in capable Chrome and the forced
+      `?renderer=canvas` fallback completes the same 60/60 route within the
+      same frame and main-thread budgets
 - [x] The 360px path enters gameplay with touch controls and verifies/captures
       the world and circular map, an in-bounds 88×120 px visual-novel portrait,
       and the full-width stacked Journal

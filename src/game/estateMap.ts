@@ -1,4 +1,5 @@
 import type { LocationId } from "./campaignTypes.js";
+import { ESTATE_BUILDINGS, PEDESTRIAN_STREETS } from "./estateLayout.js";
 
 export interface EstateMapPoint {
   x: number;
@@ -22,49 +23,25 @@ const MAP_PADDING_PERCENT = 7;
 const MAP_DRAWABLE_PERCENT = 100 - MAP_PADDING_PERCENT * 2;
 
 export const ESTATE_MAP_LANDMARKS: readonly EstateMapLandmark[] = [
-  {
-    locationId: "hdb-corridor",
-    shortLabel: "9",
-    x: 650,
-    y: 260,
-  },
-  {
-    locationId: "hawker-centre",
-    shortLabel: "H",
-    x: 1260,
-    y: 270,
-  },
-  {
-    locationId: "kopitiam",
-    shortLabel: "K",
-    x: 1710,
-    y: 270,
-  },
-  {
-    locationId: "provision-shop",
-    shortLabel: "S",
-    x: 2260,
-    y: 300,
-  },
-  {
-    locationId: "community-centre",
-    shortLabel: "CC",
-    x: 2200,
-    y: 1030,
-  },
-  {
-    locationId: "prayer-hall",
-    shortLabel: "P",
-    x: 2050,
-    y: 1350,
-  },
-  {
-    locationId: "craftsman-workshop",
-    shortLabel: "W",
-    x: 1120,
-    y: 1370,
-  },
+  ...ESTATE_BUILDINGS.flatMap((definition): EstateMapLandmark[] =>
+    definition.targetLocationId
+      ? [{
+          locationId: definition.targetLocationId,
+          shortLabel: definition.minimapLabel,
+          ...definition.minimapAnchor,
+        }]
+      : []),
 ];
+
+export const ESTATE_MAP_PATHS = PEDESTRIAN_STREETS.map((street) => ({
+  id: street.id,
+  ...projectEstateMapPoint({ x: street.x, y: street.y }),
+  end: projectEstateMapPoint({
+    x: street.x + street.width,
+    y: street.y + street.height,
+  }),
+  axis: street.axis,
+}));
 
 const BLOCK_9_HOME_IDS: readonly LocationId[] = [
   "y-flat",

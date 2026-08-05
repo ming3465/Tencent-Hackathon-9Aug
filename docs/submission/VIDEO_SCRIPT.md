@@ -5,7 +5,8 @@ campaign length. Capture clean gameplay and terminal evidence separately, then
 edit; do not rely on one live take.
 
 The checked-in review MP4 predates the latest recoverable loader, tap
-navigation, code-drawn consequence-art, and 79-test build. It is a historical
+navigation, code-drawn consequence-art, three-quarter world, Pause/Settings,
+22 DoorViews, and 85-test build. It is a historical
 review artifact, not current-build footage. Recapture affected gameplay and
 terminal shots, or compare and explicitly approve an unchanged source shot
 before using it in the final video.
@@ -23,7 +24,7 @@ before using it in the final video.
 | 0:54–1:02 | Calm weaving interaction and active workshop | “There is no timer, energy bar, or failure state.” |
 | 1:02–1:10 | Return to Y’s flat; residents arrive; free exploration | “The last door opens, and the estate remains explorable with every consequence intact.” |
 | 1:10–1:20 | KampungMind content/reducer code and Journal | “AI-authored personalities run through a private, offline memory-and-decision engine: deterministic, testable, and with no runtime model.” |
-| 1:20–1:27 | Current terminal verification | “Strict TypeScript. Seventy-nine unit tests. Sixty production-browser checks. Zero known vulnerabilities.” |
+| 1:20–1:27 | Current terminal verification | “Strict TypeScript. Eighty-five unit tests. Sixty production-browser checks. Zero known vulnerabilities.” |
 | 1:27–1:30 | QR/end slate | “Every small act grows the kampung.” |
 
 ## Required on-screen disclosure
@@ -47,10 +48,10 @@ Include a small caption when demo mode first appears:
 - [ ] Last Door and free exploration
 - [ ] Journal Main Story / Requests / People / Places
 - [ ] `npm test`, `npm audit`, and `npm run smoke` results
-- [ ] Current gate card: 79/79 tests (27 campaign, 31 match, 17 audio,
-      4 accessibility), 60/60 browser checks; latest build HTML
-      84.76/15.26 kB gzip, initial JS 114.37/35.06 kB gzip, and lazy scene
-      1,609.14/376.46 kB gzip
+- [ ] Current gate card: 85/85 tests (27 campaign, 31 match, 17 audio,
+      4 accessibility, 6 world/door/pause), 60/60 browser checks; latest build
+      HTML about 86.6/15.5 kB gzip, initial JS 128.8/38.4 kB gzip, and lazy
+      scene 1,601.9/374.2 kB gzip
 - [ ] QR and live URL
 
 ## Claim boundaries

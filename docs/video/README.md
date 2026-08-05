@@ -1,5 +1,10 @@
 # Demo video assets
 
+> **Earlier-build evidence:** both checked-in MP4 files predate the 2026-08-05
+> registry-driven three-quarter world, 22 DoorViews, corrected two-choice
+> shelter geometry, Pause/Settings flow, and Phaser.AUTO renderer gate. They
+> must be recaptured before they can represent the current build.
+
 ## What is here
 
 | File | What it is |

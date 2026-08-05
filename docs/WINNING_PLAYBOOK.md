@@ -15,12 +15,13 @@ TheTwoGuys | Tencent Cloud "AI CAN DO IT" Age Well Social Good Challenge, Game T
 
 The finalist cut (~Aug 7) will be decided almost entirely by our video and deck, so the 90-second video is the real submission and everything this week serves it. Our path to top-5 is to be the one team whose entry maps verbatim onto the published rules — "AI creation in at least one area: worldbuilding/narrative, artwork, security systems, or sound design" is satisfied by our creation-time AI story, and 适老化关怀 (elderly care) is a *named sub-theme* of the Social Good track — and to say both out loud on screen. Our path from top-5 to winning the track is dignity-plus-proof: the "elders as experts, not patients" thesis is literally Tencent IEG Social Value Exploration Center's own published frame, and 3–5 real older-adult playtests would convert our biggest audited weakness into strong Impact-30 evidence. On stage Aug 16, our zero-backend runtime has no model or gameplay-network dependency after its assets load. The lazy loader has recoverable slow, cancel, and retry paths, but real-device startup and human play remain unverified. Ship order: fix the judge path, record the video, get playtest receipts, and let polish stop at "the first 120 seconds are perfect," because the first 120 seconds are the judging.
 
-**Current verified engineering snapshot (2026-08-04):** 79/79 tests (27
-campaign, 31 match, 17 audio, 4 accessibility), 60/60
-production-browser checks, and a production build of HTML 84.76 kB (15.26 kB
-gzip), initial JS 114.37 kB (35.06 kB gzip), and lazy campaign scene 1,609.14
-kB (376.46 kB gzip). The checked-in 90-second review cut predates the latest
-recoverable loader, tap navigation, and code-drawn consequence-art polish; it
+**Current verified engineering snapshot (2026-08-05):** 85/85 tests (27
+campaign, 31 match, 17 audio, 4 accessibility, 6 world/door/pause), 60/60
+production-browser checks in default WebGL and forced Canvas fallback, and a
+production build of HTML 86.59 kB (15.50 kB gzip), initial JS 129.02 kB
+(38.50 kB gzip), and lazy campaign scene 1,602.13 kB (374.24 kB gzip). The
+checked-in 90-second review cut predates the registry-driven world, DoorViews,
+corrected shelters, Pause/Settings, and renderer-parity gate; it
 is not current-build footage.
 
 ---
@@ -38,7 +39,7 @@ every chapter in `?demo=1`; only the helper/invitation thresholds compress from
 3/5 to 2/2 and walking speed increases. The judge sees the same story and
 consequences as the full campaign.
 Why: Judges' engagement window is 3–10 min and the hook must land in 30–60 s (Defold, StraySpark); the 6–8 min walking-heavy arc is our documented killer (Craft memo Tier 1).
-Must not break: the public build (query-param gated), all 79 unit tests, the
+Must not break: the public build (query-param gated), all 85 unit tests, the
 60-check production-browser smoke suite. Run the repository's complete
 verification gate after any change.
 
@@ -99,7 +100,7 @@ Why: Tencent ecosystem alignment, Singapore edge node for Singapore judges, and 
 Must not break: keep GitHub Pages live as fallback; print both URLs everywhere.
 
 **9. Rubric-map the deck with the rules' exact words. (2–3 h)**
-What: AI slide quotes the official requirement verbatim and checks off worldbuilding + artwork + sound; one line: "Elderly care (适老化关怀) is a named sub-theme of the official Social Good track"; Impact slide opens with 1-in-4 Singaporeans 65+ by 2030 and cites the official brief; Quality slide: 79/79 tests / 60/60 CDP checks / 0 vulnerabilities, with the latest build figures—HTML 84.76/15.26 kB gzip, initial JS 114.37/35.06 kB gzip, and lazy scene 1,609.14/376.46 kB gzip.
+What: AI slide quotes the official requirement verbatim and checks off worldbuilding + artwork + sound; one line: "Elderly care (适老化关怀) is a named sub-theme of the official Social Good track"; Impact slide opens with 1-in-4 Singaporeans 65+ by 2030 and cites the official brief; Quality slide: 85/85 tests / 60/60 CDP checks / 0 vulnerabilities, with the latest build figures—HTML 86.59/15.50 kB gzip, initial JS 129.02/38.50 kB gzip, and lazy scene 1,602.13/374.24 kB gzip.
 Why: Winners visibly game the rubric and balance all criteria (Square, Klaviyo method); the verbatim-compliance line pre-empts the "no runtime LLM = no AI" misread, which is our single biggest scoring risk on a 40-point criterion (Critic §A4).
 Must not break: citation honesty — every number sourced, "aligned with," never "partnered with" Age Well SG.
 
@@ -142,7 +143,7 @@ Keep 90 s total. Burn open captions on every shot (most judges watch muted); mix
 - **5–15 s — Genre → hook:** walk into a resident conversation (genre), immediately a dialogue choice and the world visibly responding (hook). Caption the thesis.
 - **15–48 s — Three resident beats:** title card → 6–8 s interaction → visible consequence, per resident. Jump-cut ALL traversal. Vary locations and framing hard (silhouette-repetition defense). Include the scam beat as one of the three. No memory-match.
 - **48–60 s — Payoff:** calm weaving → Last Door → gathered residents and free exploration. Card: “No timer. No failure state. No medical claims.”
-- **60–82 s — AI receipts montage, dense:** KampungMind personality/intents → pure reducer/save → current terminal shot of 79/79 tests + 60/60 CDP checks → honest card: “What worked, what did not — every run documented.”
+- **60–82 s — AI receipts montage, dense:** KampungMind personality/intents → pure reducer/save → current terminal shot of 85/85 tests + 60/60 CDP checks → honest card: “What worked, what did not — every run documented.”
 - **82–90 s — End slate, 8–10 s (not 4):** title, play-now URL + QR, team, event hashtags, one-line vision.
 
 **Deviation from the old 64/22/4 script:** restructure gameplay from "a playthrough" to Genre→Hook→Beats→Payoff; extend the close to 8–10 s; do NOT lengthen the AI segment — instead caption AI evidence *during* gameplay beats ("AI-generated visual target → human-curated code-drawn activity scenes") so effective AI coverage reaches ~35–40 s while Impact+Quality footage still dominates.

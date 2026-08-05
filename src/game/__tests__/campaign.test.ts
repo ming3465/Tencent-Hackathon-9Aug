@@ -453,7 +453,7 @@ describe("campaign registries", () => {
     expect(ESTATE_VEHICLE_LANES).toHaveLength(0);
     expect(ESTATE_VEHICLE_ROUTES).toHaveLength(0);
     expect(ESTATE_BUILDING_VISUAL_ZONES).toHaveLength(8);
-    expect(ESTATE_BUILDING_COLLISION_ZONES).toHaveLength(14);
+    expect(ESTATE_BUILDING_COLLISION_ZONES).toHaveLength(22);
     expect(ESTATE_FACADE_DEPTH_DEFINITIONS).toHaveLength(8);
     expect(
       new Set(
@@ -479,13 +479,13 @@ describe("campaign registries", () => {
         entrance.y,
       ]),
     ).toEqual([
-      ["block-9-lobby", "block-9", 650, 292],
-      ["hawker-door", "hawker-centre", 1460, 270],
-      ["kopitiam-door", "kopitiam", 1714, 264],
-      ["shop-door", "provision-shop", 2260, 274],
-      ["cc-door", "community-centre", 2200, 1155],
-      ["hall-door", "prayer-hall", 2050, 1505],
-      ["workshop-door", "craftsman-workshop", 1120, 1358],
+      ["estate-block-9", "block-9", 610, 330],
+      ["estate-hawker", "hawker-centre", 970, 330],
+      ["estate-kopitiam", "kopitiam", 1550, 330],
+      ["estate-provision", "provision-shop", 2140, 330],
+      ["estate-workshop", "craftsman-workshop", 870, 1050],
+      ["estate-community", "community-centre", 1600, 1050],
+      ["estate-prayer", "prayer-hall", 2250, 1050],
     ]);
     expect(ESTATE_MAP_LANDMARKS).toHaveLength(7);
     for (const location of LOCATIONS) {
@@ -525,7 +525,7 @@ describe("campaign registries", () => {
     expect(getOccludingBuildingIds({ x: 2100, y: 253 })).toContain(
       "provision-shop",
     );
-    expect(getOccludingBuildingIds({ x: 2100, y: 400 })).toEqual([]);
+    expect(getOccludingBuildingIds({ x: 2100, y: 500 })).toEqual([]);
     for (const rack of ESTATE_BICYCLE_RACKS) {
       if (!rack.interactionId) continue;
       const detail = ESTATE_FLAVOUR_INTERACTIONS.find(

@@ -20,11 +20,10 @@ product requirements, not optional polish.
 - Prevent movement-key browser scrolling and stop world movement while an
   overlay owns focus.
 - Restore focus to the world after dialogue and after the Journal closes.
-- Return focus to the world after the topbar Sound toggle so WASD and arrow
-  movement resume without an extra canvas click.
-- Offer a labelled full-screen control. Entering full screen keeps focus on
-  the world; leaving with Escape restores the topbar and moves focus to Sound,
-  next to Journal-based Music and Effects controls.
+- Keep only Journal and a minimum 48×48 Menu control in the play topbar.
+- Put Sound, Music, Effects, Fullscreen, and the controls reminder in Pause
+  Settings. Fullscreen changes initiated there keep Settings open; leaving
+  native fullscreen through browser Escape must land in Pause.
 - Use a transition latch so the entry key cannot immediately trigger an exit.
 - Show a nearby prompt with a text label and non-colour marker.
 - Provide an equivalent Journal action for every meaningful NPC, door, exit,
@@ -41,8 +40,16 @@ product requirements, not optional polish.
 - Give Journal tabs `role="tab"`, `aria-selected`, labelled tab panels, and
   Left/Right/Home/End keyboard navigation.
 - While the Journal is open, mark the background inert, expose
-  `aria-modal="true"`, keep focus inside, and provide visible Close plus Escape
-  and backdrop dismissal. Restore focus to the world after dismissal.
+  `aria-modal="true"`, keep focus inside, and provide visible Close plus
+  backdrop dismissal. Escape opens Pause above it. Resume restores the same
+  selected Journal control; ordinary dismissal restores focus to the world.
+- Pause is a separate `aria-modal` focus trap with `closed`, `paused`,
+  `settings`, and `confirm-title` states. Opening it snapshots the underlying
+  dialogue/Journal accessibility and focus state, marks every background
+  surface inert and `aria-hidden`, pauses the active scene, and ducks only
+  music. Escape moves Settings/confirmation back to Paused and Paused back to
+  the exact underlying focus. The confirmation states that progress is
+  autosaved and teardown never resumes the scene first.
 - Show locked future chapters without spoilers.
 - Announce location changes, progress, choices, and completion in a polite live
   region.
@@ -143,7 +150,7 @@ Four source-contract tests protect the dialogue's sole visible `>` text,
 `aria-label="Continue dialogue"`, exact 52×52 geometry, enclosing focus ring,
 reduced-motion pulse removal, and the continued availability of “Maybe later.”
 
-The 60-check production-browser harness verifies keyboard and touch entry,
+The production-browser harness verifies keyboard and touch entry,
 Space-key choices, visible modal state, focus return, correct return doors,
 Journal completion paths, all 12 locations rendering, 360px overflow, 48px
 targets, saved progress, demo isolation, normal and 4×-CPU-throttled active
@@ -182,8 +189,12 @@ story and location states.
 It opens the Journal through its visible control, checks four tabs and their
 selected state, uses arrow keys to switch categories, verifies selected-quest
 objectives/progress and tracked state, checks `aria-hidden`/`inert` state and
-Close-button focus, wraps focus from the final control, dismisses with both
-Escape and backdrop, and confirms world-focus restoration. It also proves a
+Close-button focus, wraps focus from the final control, opens Pause with Escape
+without losing the Journal, resumes to the same focus, dismisses with the
+backdrop, and confirms world-focus restoration. It also proves Pause freezes
+the scene snapshot, traps focus, keeps Settings open across its fullscreen
+toggle, restores movement/focus on Resume, and exposes only Journal/Menu in the
+topbar. It also proves a
 desktop room fits the full-width camera and the circular map has seven
 landmarks, one current indoor anchor, and a marker that changes between
 physical east/south positions. Runs at 320×568, 360×560, and 640×360 verify the
@@ -229,10 +240,9 @@ reduced-motion stillness without increasing the 60-check headline. The title
 check confirms the
 reviewed 1668×943 WebP loads and that the page has no desktop overflow; the
 existing 360 px capture and overflow assertion remain the mobile evidence.
-The same run toggles Sound, confirms focus returns to the world, and proves
-movement resumes. It verifies the main-character triangle follows the player
-above the sprite, then exercises full-screen entry, full-viewport geometry,
-the visible Escape hint, full-screen exit, and focus placement on Sound.
+The same run toggles Sound inside Settings while the scene remains frozen. It
+verifies the main-character triangle follows the player above the sprite,
+then exercises Settings-owned full-screen entry/exit and exact Resume focus.
 
 ## Manual checks still required
 

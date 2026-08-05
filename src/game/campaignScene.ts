@@ -5,7 +5,6 @@ import {
   drawPixelBlock,
   ensureCampaignArtTextures,
   lightenColour,
-  paintEstateTerrain,
   PALETTE,
   type PlayerFacing,
   type WalkFrame,
@@ -20,7 +19,6 @@ import {
   drawFlowerSeatGarden,
   drawHerbGarden,
   drawInteriorRamp,
-  drawShelteredLinkway,
   emptyConsequenceArtSnapshot,
   type CampaignConsequenceArtSnapshot,
 } from "./consequenceArt.js";
@@ -37,15 +35,28 @@ import {
   BICYCLE_COLLISION_WIDTH,
   BUILDING_OCCLUSION_FADE_ALPHA,
   ESTATE_BICYCLE_RACKS,
+  ESTATE_BUILDINGS,
   ESTATE_BUILDING_COLLISION_ZONES,
   ESTATE_BUILDING_VISUAL_ZONES,
   ESTATE_ENTRANCES,
   ESTATE_FACADE_DEPTH_DEFINITIONS,
   ESTATE_VEHICLE_ROUTES,
+  ESTATE_NPC_ROUTES as LAYOUT_NPC_ROUTES,
+  getDoorsForLocation,
+  getActiveShelters,
+  getReturnSpawn,
   getOccludingBuildingIds,
+  isPointDryUnderShelter,
   type EstateRect,
+  type DoorDefinition,
+  type ShelterChoice,
 } from "./estateLayout.js";
-import { paintFacadeDepth } from "./facadeDepthArt.js";
+import { DoorTransitionController } from "./doorState.js";
+import {
+  ensureBuildingTexture,
+  ensureShelterTexture,
+  paintThreeQuarterTerrain,
+} from "./threeQuarterArt.js";
 import {
   movementSurfaceAt,
   stepIntervalFor,
@@ -235,38 +246,6 @@ function drawScamCheckCard(
   }
 }
 
-function drawPixelSign(
-  graphics: Phaser.GameObjects.Graphics,
-  text: string,
-  centreX: number,
-  y: number,
-  scale: number,
-  background: number,
-  foreground: number = CREAM,
-): void {
-  const textWidth = pixelTextWidth(text, scale);
-  const width = textWidth + scale * 6;
-  const height = scale * 9;
-  const x = Math.round(centreX - width / 2);
-  graphics
-    .fillStyle(NIGHT, 0.22)
-    .fillRect(x + 6, y + 7, width, height)
-    .fillStyle(INK)
-    .fillRect(x - 3, y - 3, width + 6, height + 6)
-    .fillStyle(background)
-    .fillRect(x, y, width, height)
-    .fillStyle(lightenColour(background, 0.2))
-    .fillRect(x, y, width, 3);
-  drawPixelText(
-    graphics,
-    text,
-    x + scale * 3,
-    y + scale * 2,
-    scale,
-    foreground,
-  );
-}
-
 interface SpawnPoint {
   x: number;
   y: number;
@@ -281,7 +260,8 @@ interface SceneStartData {
 export interface CampaignSceneCallbacks {
   onReady: (locationId: LocationId) => void;
   onNearbyInteraction: (interaction: WorldInteraction | null) => void;
-  onInteract: (interaction: WorldInteraction) => void;
+  onInteract: (interaction: WorldInteraction) => boolean | void;
+  onDoorEnter?: (locationId: LocationId) => void;
   onLocationChange: (locationId: LocationId, name: string) => void;
   onStep: (surface: MovementSurface) => void;
 }
@@ -291,6 +271,145 @@ export interface CampaignGameOptions {
   state: CampaignStateV1;
   playerSpeed?: number;
   reducedMotion?: boolean;
+  renderer?: "auto" | "canvas";
+}
+
+class DoorView {
+  readonly definition: DoorDefinition;
+  private readonly scene: Phaser.Scene;
+  private readonly blocker: Phaser.GameObjects.Rectangle;
+  private readonly leaves: Phaser.GameObjects.Graphics[] = [];
+  private readonly controller: DoorTransitionController;
+
+  constructor(
+    scene: Phaser.Scene,
+    definition: DoorDefinition,
+    blocker: Phaser.GameObjects.Rectangle,
+  ) {
+    this.scene = scene;
+    this.definition = definition;
+    this.blocker = blocker;
+    this.controller = new DoorTransitionController(definition.startsOpen === true);
+    this.draw();
+    if (definition.startsOpen) {
+      this.disableBlocker();
+      this.setOpenPose();
+    }
+  }
+
+  open(reducedMotion: boolean, onReady: () => void): boolean {
+    if (this.controller.getState() === "open") {
+      if (!this.controller.beginTransition()) return false;
+      onReady();
+      return true;
+    }
+    if (!this.controller.beginOpening()) return false;
+    const finish = (): void => {
+      this.disableBlocker();
+      this.controller.finishOpening();
+      if (!this.controller.beginTransition()) return;
+      onReady();
+    };
+    if (reducedMotion) {
+      this.setOpenPose();
+      finish();
+      return true;
+    }
+    const style = this.definition.style;
+    const targets = this.leaves;
+    if (style === "workshop-shutter") {
+      this.scene.tweens.add({ targets, scaleY: 0.08, y: `-=${this.definition.dimensions.height / 2}`, duration: 180, ease: "Sine.easeInOut", onComplete: finish });
+    } else if (style === "hinged-hdb") {
+      this.scene.tweens.add({ targets, scaleX: 0.12, x: `-=${this.definition.dimensions.width * 0.34}`, duration: 180, ease: "Sine.easeInOut", onComplete: finish });
+    } else {
+      this.scene.tweens.add({ targets, scaleX: 0.08, duration: 180, ease: "Sine.easeInOut", onComplete: finish });
+    }
+    return true;
+  }
+
+  getSnapshot(): { id: string; state: string; blockerEnabled: boolean } {
+    const body = this.blocker.body as Phaser.Physics.Arcade.StaticBody | null;
+    return {
+      id: this.definition.id,
+      state: this.controller.getState(),
+      blockerEnabled: body?.enable ?? false,
+    };
+  }
+
+  private draw(): void {
+    const { anchor, dimensions, placard, style } = this.definition;
+    const left = -dimensions.width / 2;
+    const top = -dimensions.height;
+    const depth = depthFor(anchor.y, 6);
+    const frame = this.scene.add.graphics().setPosition(anchor.x, anchor.y).setDepth(depth);
+    frame
+      .fillStyle(NIGHT, 0.26)
+      .fillRect(left + 8, top + 9, dimensions.width + 10, dimensions.height + 10)
+      .fillStyle(INK)
+      .fillRect(left - 6, top - 7, dimensions.width + 12, dimensions.height + 9)
+      .fillStyle(CREAM)
+      .fillRect(left - 1, top - 2, dimensions.width + 2, dimensions.height + 2)
+      .fillStyle(NIGHT)
+      .fillRect(left + 5, top + 5, dimensions.width - 10, dimensions.height - 5);
+    const leafCount = style === "double-community" || style === "lift" || style === "open-hawker-gate" ? 2 : 1;
+    for (let index = 0; index < leafCount; index += 1) {
+      const leaf = this.scene.add.graphics().setPosition(anchor.x, anchor.y).setDepth(depth + 1);
+      const gap = 3;
+      const leafWidth = leafCount === 2 ? (dimensions.width - gap) / 2 : dimensions.width - 10;
+      const leafX = leafCount === 2
+        ? left + index * (leafWidth + gap)
+        : left + 5;
+      const fill = style === "workshop-shutter"
+        ? CONCRETE_EDGE
+        : style === "double-community"
+          ? PURPLE
+          : style === "open-hawker-gate"
+            ? CORAL
+            : TEAL;
+      leaf
+        .fillStyle(fill)
+        .fillRect(leafX, top + 5, leafWidth, dimensions.height - 7)
+        .fillStyle(lightenColour(fill, 0.2), 0.8)
+        .fillRect(leafX + 5, top + 10, Math.max(3, leafWidth - 10), 6)
+        .fillStyle(darkenColour(fill, 0.2), 0.65)
+        .fillRect(leafX + leafWidth - 7, top + 8, 5, dimensions.height - 14);
+      if (style === "workshop-shutter") {
+        for (let stripe = top + 20; stripe < -5; stripe += 12) {
+          leaf.fillStyle(INK, 0.35).fillRect(leafX + 3, stripe, leafWidth - 6, 3);
+        }
+      }
+      this.leaves.push(leaf);
+    }
+    this.scene.add
+      .text(anchor.x, anchor.y - dimensions.height - 12, placard, {
+        color: "#173f4f",
+        backgroundColor: "#fff6dc",
+        fontFamily: "system-ui, sans-serif",
+        fontSize: "14px",
+        fontStyle: "bold",
+        padding: { x: 5, y: 2 },
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(depth + 2);
+  }
+
+  private setOpenPose(): void {
+    const style = this.definition.style;
+    for (const leaf of this.leaves) {
+      if (style === "workshop-shutter") {
+        leaf.setScale(1, 0.08).setY(leaf.y - this.definition.dimensions.height / 2);
+      } else if (style === "hinged-hdb") {
+        leaf.setScale(0.12, 1).setX(leaf.x - this.definition.dimensions.width * 0.34);
+      } else {
+        leaf.setScale(0.08, 1);
+      }
+    }
+  }
+
+  private disableBlocker(): void {
+    const body = this.blocker.body as Phaser.Physics.Arcade.StaticBody | null;
+    if (body) body.enable = false;
+  }
 }
 
 interface MarkerView {
@@ -512,6 +631,11 @@ export interface CampaignMotionSnapshot {
   terrainDetail: CampaignTerrainDetailSnapshot | null;
   buildingOcclusion: CampaignBuildingOcclusionSnapshot[];
   buildingOcclusionMotion: "smooth" | "instant" | null;
+  doors: readonly {
+    id: string;
+    state: string;
+    blockerEnabled: boolean;
+  }[];
 }
 
 export interface CampaignNavigationSnapshot {
@@ -526,6 +650,17 @@ interface BuildingOcclusionView {
   overlay: Phaser.GameObjects.Image;
   faded: boolean;
 }
+
+const ESTATE_NPC_TEXTURES: Readonly<Partial<Record<NpcId, string>>> = {
+  "aunty-mei": "npc-mei",
+  "uncle-ravi": "npc-ravi",
+  "mdm-siti": "npc-siti",
+  "pak-yusof": "npc-yusof",
+  "coach-meng": "npc-meng",
+  "uncle-seng": "npc-seng",
+  "auntie-minah": "npc-minah",
+  "wei-ling": "npc-weiling",
+};
 
 interface TapNavigationTarget {
   destination: SpawnPoint;
@@ -588,6 +723,7 @@ abstract class WalkableScene extends Phaser.Scene {
     surface: MovementSurface;
   }[] = [];
   private nextStepPuff = 0;
+  protected readonly doorViews = new Map<string, DoorView>();
 
   protected constructor(
     key: string,
@@ -836,8 +972,11 @@ abstract class WalkableScene extends Phaser.Scene {
     let tappedDistanceSquared = Number.POSITIVE_INFINITY;
     for (const interaction of this.interactions) {
       const marker = this.markers.get(interaction.id);
-      const actorDx = this.tapWorldPoint.x - interaction.x;
-      const actorDy = this.tapWorldPoint.y - interaction.y;
+      const doorDefinition = this.doorViews.get(interaction.id)?.definition;
+      const actorDx = this.tapWorldPoint.x
+        - (doorDefinition?.anchor.x ?? interaction.x);
+      const actorDy = this.tapWorldPoint.y
+        - (doorDefinition?.anchor.y ?? interaction.y);
       const actorDistanceSquared = actorDx * actorDx + actorDy * actorDy;
       const markerDx = marker
         ? this.tapWorldPoint.x - marker.ring.x
@@ -870,7 +1009,7 @@ abstract class WalkableScene extends Phaser.Scene {
       ) {
         this.tapNavigationOutcome = "interacted";
         this.facePlayerToward(tappedInteraction.x, tappedInteraction.y);
-        this.callbacks.onInteract(tappedInteraction);
+        this.activateInteraction(tappedInteraction);
         return "interacted";
       }
       this.beginTapNavigation(
@@ -912,7 +1051,7 @@ abstract class WalkableScene extends Phaser.Scene {
         this.nearbyInteraction.x,
         this.nearbyInteraction.y,
       );
-      this.callbacks.onInteract(this.nearbyInteraction);
+      this.activateInteraction(this.nearbyInteraction);
     }
   }
 
@@ -1028,6 +1167,7 @@ abstract class WalkableScene extends Phaser.Scene {
       terrainDetail: null,
       buildingOcclusion: [],
       buildingOcclusionMotion: null,
+      doors: [...this.doorViews.values()].map((view) => view.getSnapshot()),
       npcs: [...this.npcViews].map(([npcId, view]) => {
         const interaction = this.interactions.find(
           (candidate) => candidate.kind === "npc" && candidate.npcId === npcId,
@@ -1110,6 +1250,7 @@ abstract class WalkableScene extends Phaser.Scene {
     this.consequenceArt = emptyConsequenceArtSnapshot();
     this.npcViews.clear();
     this.markers.clear();
+    this.doorViews.clear();
     this.nearbyInteraction = null;
     this.tapNavigation = null;
     this.tapNavigationOutcome = "idle";
@@ -1204,7 +1345,7 @@ abstract class WalkableScene extends Phaser.Scene {
         }
         this.finishTapNavigation("interacted");
         this.facePlayerToward(interaction.x, interaction.y);
-        this.callbacks.onInteract(interaction);
+        this.activateInteraction(interaction);
         return false;
       }
     } else if (distanceSquared <= 12 * 12) {
@@ -1339,7 +1480,7 @@ abstract class WalkableScene extends Phaser.Scene {
     y: number,
     width: number,
     height: number,
-  ): void {
+  ): Phaser.GameObjects.Rectangle {
     const obstacle = this.add.rectangle(
       x + width / 2,
       y + height / 2,
@@ -1350,6 +1491,69 @@ abstract class WalkableScene extends Phaser.Scene {
     );
     this.physics.add.existing(obstacle, true);
     this.obstacles.push(obstacle);
+    return obstacle;
+  }
+
+  protected addDoorView(definition: DoorDefinition): void {
+    const blocker = this.addObstacle(
+      definition.collider.x,
+      definition.collider.y,
+      definition.collider.width,
+      definition.collider.height,
+    );
+    this.doorViews.set(
+      definition.id,
+      new DoorView(this, definition, blocker),
+    );
+    const isExit = definition.sourceLocationId !== "estate"
+      && (
+        definition.targetLocationId === "estate"
+        || (definition.sourceLocationId !== "hdb-corridor"
+          && definition.targetLocationId === "hdb-corridor")
+      );
+    this.interactions.push({
+      kind: isExit ? "exit" : "door",
+      id: definition.id,
+      label: definition.label,
+      shortLabel: isExit ? "Exit" : "Enter",
+      targetLocationId: definition.targetLocationId,
+      x: definition.approachPoint.x,
+      y: definition.approachPoint.y,
+    });
+  }
+
+  private activateInteraction(interaction: WorldInteraction): void {
+    const doorView = this.doorViews.get(interaction.id);
+    const authorized = this.callbacks.onInteract(interaction);
+    if (!doorView || authorized === false) return;
+    this.cancelTapNavigation("door-opening");
+    this.setControlsEnabled(false);
+    this.facePlayerToward(
+      doorView.definition.anchor.x,
+      doorView.definition.anchor.y,
+    );
+    doorView.open(this.reducedMotion, () => {
+      const { anchor, orientation, targetLocationId } = doorView.definition;
+      const step = 22;
+      const destination = {
+        x: anchor.x + (orientation === "east" ? step : orientation === "west" ? -step : 0),
+        y: anchor.y + (orientation === "south" ? step : orientation === "north" ? -step : 0),
+      };
+      const enter = (): void => this.callbacks.onDoorEnter?.(targetLocationId);
+      if (this.reducedMotion) {
+        this.player.setPosition(destination.x, destination.y);
+        enter();
+        return;
+      }
+      this.tweens.add({
+        targets: this.player,
+        x: destination.x,
+        y: destination.y,
+        duration: 90,
+        ease: "Sine.easeIn",
+        onComplete: enter,
+      });
+    });
   }
 
   protected addNpc(
@@ -1555,45 +1759,6 @@ abstract class WalkableScene extends Phaser.Scene {
     return y < 0 ? "up" : "down";
   }
 
-  protected addDoorVisual(
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    unit: string,
-    depth = depthFor(y, 1),
-  ): void {
-    const left = Math.round(x - width / 2);
-    const top = y - height;
-    const graphics = this.add.graphics().setDepth(depth);
-    graphics
-      .fillStyle(NIGHT, 0.28)
-      .fillRect(left + 9, top + 10, width + 8, height + 10);
-    drawPixelBlock(graphics, left, top, width, height, TEAL, 4, false);
-    graphics
-      .fillStyle(lightenColour(TEAL, 0.2))
-      .fillRect(left + 8, top + 9, width - 16, 8)
-      .fillStyle(NIGHT)
-      .fillRect(left + width - 17, top + Math.round(height * 0.46), 7, 7)
-      .fillStyle(GOLD)
-      .fillRect(left + width - 15, top + Math.round(height * 0.46) + 2, 3, 3)
-      .fillStyle(CREAM)
-      .fillRect(left - 7, top - 10, width + 14, 8)
-      .fillStyle(INK)
-      .fillRect(left - 10, top - 14, width + 20, 4);
-    this.add
-      .text(x, y - height - 10, unit, {
-        color: "#173f4f",
-        backgroundColor: "#fff6dc",
-        fontFamily: "system-ui, sans-serif",
-        fontSize: "15px",
-        fontStyle: "bold",
-        padding: { x: 5, y: 2 },
-      })
-      .setOrigin(0.5, 1)
-      .setDepth(depth + 1);
-  }
-
   protected addRoomPlant(x: number, y: number): void {
     this.add.sprite(x, y - 32, "prop-planter").setDepth(depthFor(y, 1));
   }
@@ -1776,70 +1941,6 @@ abstract class WalkableScene extends Phaser.Scene {
     this.player.setTexture(key);
   }
 }
-
-const ESTATE_NPCS: readonly [NpcId, number, number, string][] = [
-  ["aunty-mei", 1117, 673, "npc-mei"],
-  ["uncle-ravi", 735, 365, "npc-ravi"],
-  ["mdm-siti", 448, 748, "npc-siti"],
-  ["pak-yusof", 905, 620, "npc-yusof"],
-  ["coach-meng", 375, 1245, "npc-meng"],
-  ["uncle-seng", 1735, 300, "npc-seng"],
-  ["auntie-minah", 2255, 385, "npc-minah"],
-  ["wei-ling", 1770, 785, "npc-weiling"],
-];
-
-const ESTATE_NPC_ROUTES: Partial<
-  Record<NpcId, readonly SpawnPoint[]>
-> = {
-  "aunty-mei": [
-    { x: 1117, y: 673 },
-    { x: 1075, y: 700 },
-    { x: 1110, y: 732 },
-    { x: 1160, y: 705 },
-  ],
-  "uncle-ravi": [
-    { x: 735, y: 365 },
-    { x: 778, y: 392 },
-    { x: 748, y: 425 },
-    { x: 702, y: 398 },
-  ],
-  "mdm-siti": [
-    { x: 448, y: 748 },
-    { x: 410, y: 720 },
-    { x: 390, y: 770 },
-    { x: 438, y: 805 },
-  ],
-  "pak-yusof": [
-    { x: 905, y: 620 },
-    { x: 950, y: 652 },
-    { x: 930, y: 700 },
-    { x: 875, y: 676 },
-  ],
-  "coach-meng": [
-    { x: 375, y: 1245 },
-    { x: 420, y: 1280 },
-    { x: 390, y: 1330 },
-    { x: 340, y: 1300 },
-  ],
-  "uncle-seng": [
-    { x: 1735, y: 300 },
-    { x: 1780, y: 340 },
-    { x: 1740, y: 390 },
-    { x: 1690, y: 360 },
-  ],
-  "auntie-minah": [
-    { x: 2255, y: 385 },
-    { x: 2310, y: 410 },
-    { x: 2280, y: 465 },
-    { x: 2215, y: 440 },
-  ],
-  "wei-ling": [
-    { x: 1770, y: 785 },
-    { x: 1820, y: 820 },
-    { x: 1780, y: 865 },
-    { x: 1725, y: 835 },
-  ],
-};
 
 const ESTATE_AMBIENT_CATS: readonly {
   id: string;
@@ -2202,10 +2303,13 @@ export class EstateScene extends WalkableScene {
   private pondRipplePhase = 0;
   private monsoonActive = false;
   private monsoonShelterRestored = false;
+  private currentShelterChoice: ShelterChoice | null = null;
   private rainPhase = 0;
   private puddleRipplePhase = 0;
   private residentArrangement: "routes" | "monsoon" | "gathering" = "routes";
   private buildingOcclusionViews: BuildingOcclusionView[] = [];
+  private shelterSprites: Phaser.GameObjects.Image[] = [];
+  private shelterColliderIds = new Set<string>();
 
   constructor(
     callbacks: CampaignSceneCallbacks,
@@ -2233,41 +2337,22 @@ export class EstateScene extends WalkableScene {
     for (const [x, y, width, height] of ESTATE_POND_COLLISIONS) {
       this.addObstacle(x, y, width, height);
     }
+    this.refreshShelterViews(this.getState());
     this.drawExteriorDepthProps();
     this.createAmbientLife();
-    for (const [npcId, x, y, texture] of ESTATE_NPCS) {
+    for (const route of LAYOUT_NPC_ROUTES) {
+      const texture = ESTATE_NPC_TEXTURES[route.npcId];
+      if (!texture) continue;
       this.addNpc(
-        npcId,
-        x,
-        y,
+        route.npcId,
+        route.home.x,
+        route.home.y,
         texture,
-        ESTATE_NPC_ROUTES[npcId] ?? [],
+        route.points,
       );
     }
-    for (const entrance of ESTATE_ENTRANCES) {
-      const building = ESTATE_BUILDING_VISUAL_ZONES.find(
-        (candidate) => candidate.id === entrance.buildingId,
-      );
-      const doorDepth = building
-        ? depthFor(building.y + building.height, 2)
-        : depthFor(entrance.y, 1);
-      this.addDoorVisual(
-        entrance.x,
-        entrance.y,
-        entrance.width,
-        entrance.height,
-        entrance.placard,
-        doorDepth,
-      );
-      this.interactions.push({
-        kind: "door",
-        id: entrance.id,
-        label: entrance.label,
-        shortLabel: "Enter",
-        targetLocationId: entrance.targetLocationId,
-        x: entrance.x,
-        y: entrance.y,
-      });
+    for (const definition of getDoorsForLocation("estate")) {
+      this.addDoorView(definition);
     }
     for (const detail of ESTATE_FLAVOUR_INTERACTIONS) {
       this.interactions.push({
@@ -2446,18 +2531,26 @@ export class EstateScene extends WalkableScene {
         );
       }
     }
-    const facadeCanvas = this.textures
-      .get("estate-ne")
-      .getSourceImage() as HTMLCanvasElement;
-    const facadeContext = facadeCanvas.getContext("2d", {
-      willReadFrequently: true,
-    });
     const facadeColours = new Set<number>();
     let facadeEdgeTransitions = 0;
     let facadeDarkPixels = 0;
     let facadeOpaquePixels = 0;
-    if (facadeContext) {
-      const facadeRegion = facadeContext.getImageData(0, 45, 1160, 250);
+    for (const building of ESTATE_BUILDINGS) {
+      const textureKey = `building-view:${building.id}`;
+      if (!this.textures.exists(textureKey)) continue;
+      const facadeCanvas = this.textures
+        .get(textureKey)
+        .getSourceImage() as HTMLCanvasElement;
+      const facadeContext = facadeCanvas.getContext("2d", {
+        willReadFrequently: true,
+      });
+      if (!facadeContext) continue;
+      const facadeRegion = facadeContext.getImageData(
+        0,
+        0,
+        facadeCanvas.width,
+        facadeCanvas.height,
+      );
       for (let offset = 0; offset < facadeRegion.data.length; offset += 4) {
         if (facadeRegion.data[offset + 3] === 0) continue;
         const red = facadeRegion.data[offset];
@@ -2469,10 +2562,22 @@ export class EstateScene extends WalkableScene {
           facadeDarkPixels += 1;
         }
       }
-      for (const y of [73, 104, 139, 173, 213, 252]) {
-        const line = facadeContext.getImageData(0, y, 1160, 1).data;
+      const scanRows = [
+        building.roofDepth,
+        building.roofDepth + 18,
+        Math.floor(facadeCanvas.height * 0.5),
+        facadeCanvas.height - 40,
+        facadeCanvas.height - 14,
+      ].filter((y) => y >= 0 && y < facadeCanvas.height);
+      for (const y of scanRows) {
+        const line = facadeContext.getImageData(
+          0,
+          y,
+          facadeCanvas.width,
+          1,
+        ).data;
         let previous = -1;
-        for (let x = 0; x < 1160; x += 1) {
+        for (let x = 0; x < facadeCanvas.width; x += 1) {
           const offset = x * 4;
           const colour =
             (line[offset] << 16) |
@@ -2532,6 +2637,7 @@ export class EstateScene extends WalkableScene {
     this.scamCheckCard = undefined;
     this.consequenceArt = emptyConsequenceArtSnapshot();
     const state = this.getState();
+    this.refreshShelterViews(state);
     const objects: Phaser.GameObjects.GameObject[] = [];
     const windowXs = [142, 234, 326, 418, 510, 602, 694, 786];
     const litWindowCount = Math.min(
@@ -2567,7 +2673,6 @@ export class EstateScene extends WalkableScene {
     }
 
     if (state.completedQuests.includes("sheltered-route-request")) {
-      objects.push(...drawShelteredLinkway(this));
       this.consequenceArt.shelteredRoute = CONSEQUENCE_ART_IDS.shelteredRoute;
     }
 
@@ -2720,7 +2825,8 @@ export class EstateScene extends WalkableScene {
     for (const [key, originX, originY] of tiles) {
       if (!this.textures.exists(key)) {
         const graphics = this.make.graphics({ x: 0, y: 0 });
-        this.paintExteriorTile(graphics, originX, originY);
+        paintThreeQuarterTerrain(graphics, originX, originY);
+        this.paintGroundDetails(graphics, originX, originY);
         graphics.generateTexture(key, 1280, 800);
         graphics.destroy();
       }
@@ -2729,22 +2835,18 @@ export class EstateScene extends WalkableScene {
   }
 
   private createBuildingOcclusionLayers(): void {
-    this.buildingOcclusionViews = ESTATE_BUILDING_VISUAL_ZONES.map((zone) => {
-      const tileX = zone.x >= 1280 ? 1280 : 0;
-      const tileY = zone.y >= 800 ? 800 : 0;
-      const tileKey =
-        tileY === 0
-          ? tileX === 0 ? "estate-nw" : "estate-ne"
-          : tileX === 0 ? "estate-sw" : "estate-se";
-      const overlay = this.add
-        .image(tileX, tileY, tileKey)
+    this.buildingOcclusionViews = ESTATE_BUILDINGS.map((definition) => {
+      const zone = definition.bounds;
+      const texture = ensureBuildingTexture(this, definition);
+      this.add
+        .image(zone.x, zone.y, texture)
         .setOrigin(0)
-        .setCrop(
-          zone.x - tileX,
-          zone.y - tileY,
-          zone.width,
-          zone.height,
-        )
+        .setName(`building-base:${definition.id}`)
+        .setDepth(8);
+      const overlay = this.add
+        .image(zone.x, zone.y, texture)
+        .setOrigin(0)
+        .setName(`building-occluder:${definition.id}`)
         .setDepth(depthFor(zone.y + zone.height));
       return {
         zone,
@@ -2752,6 +2854,32 @@ export class EstateScene extends WalkableScene {
         faded: false,
       };
     });
+  }
+
+  private refreshShelterViews(state: CampaignStateV1): void {
+    for (const sprite of this.shelterSprites) sprite.destroy();
+    this.shelterSprites = [];
+    const storedChoice = state.choices["request:sheltered-route-request"];
+    const choice: ShelterChoice | null =
+      state.completedQuests.includes("sheltered-route-request")
+      && (storedChoice === "shelter-gap" || storedChoice === "rest-point")
+        ? storedChoice
+        : null;
+    for (const definition of getActiveShelters(choice)) {
+      const texture = ensureShelterTexture(this, definition);
+      this.shelterSprites.push(
+        this.add
+          .image(definition.bounds.x, definition.bounds.y, texture)
+          .setOrigin(0)
+          .setName(`shelter:${definition.id}`)
+          .setDepth(depthFor(definition.bounds.y + definition.bounds.height, 4)),
+      );
+      for (const post of definition.posts) {
+        if (this.shelterColliderIds.has(post.id)) continue;
+        this.shelterColliderIds.add(post.id);
+        this.addObstacle(post.x, post.y, post.width, post.height);
+      }
+    }
   }
 
   private updateBuildingOcclusion(): void {
@@ -2783,535 +2911,6 @@ export class EstateScene extends WalkableScene {
         duration: 180,
         ease: "Sine.easeOut",
       });
-    }
-  }
-
-  private paintExteriorTile(
-    graphics: Phaser.GameObjects.Graphics,
-    originX: number,
-    originY: number,
-  ): void {
-    paintEstateTerrain(graphics, originX, originY);
-
-    if (originX === 0 && originY === 0) {
-      drawPixelBlock(graphics, 78, 68, 766, 232, CREAM, 7);
-      graphics
-        .fillStyle(CORAL)
-        .fillRect(85, 75, 752, 20)
-        .fillStyle(lightenColour(CORAL, 0.18))
-        .fillRect(85, 75, 752, 5)
-        .fillStyle(NIGHT)
-        .fillRect(85, 216, 752, 77);
-      for (let x = 112; x < 800; x += 92) {
-        graphics
-          .fillStyle(INK)
-          .fillRect(x, 111, 60, 61)
-          .fillStyle(TEAL)
-          .fillRect(x + 5, 116, 50, 51)
-          .fillStyle(0x79a7b3)
-          .fillRect(x + 11, 123, 38, 35)
-          .fillStyle(CREAM, 0.72)
-          .fillRect(x + 13, 125, 13, 30)
-          .fillStyle(INK)
-          .fillRect(x + 29, 119, 3, 45)
-          .fillRect(x + 5, 142, 50, 3);
-      }
-      for (let column = 0; column < 6; column += 1) {
-        if (column === 4) continue;
-        const x = 105 + column * 139;
-        graphics
-          .fillStyle(CREAM)
-          .fillRect(x, 210, 18, 83)
-          .fillStyle(CONCRETE_EDGE)
-          .fillRect(x + 13, 210, 5, 83);
-      }
-      graphics
-        .fillStyle(GOLD)
-        .fillRect(132, 230, 118, 42)
-        .fillStyle(INK)
-        .fillRect(137, 235, 108, 5);
-      for (let slot = 0; slot < 10; slot += 1) {
-        const x = 140 + (slot % 5) * 20;
-        const y = 244 + Math.floor(slot / 5) * 13;
-        graphics.fillStyle(slot % 3 === 0 ? CORAL : TEAL).fillRect(x, y, 15, 9);
-      }
-      graphics
-        .fillStyle(INK)
-        .fillRect(310, 252, 142, 9)
-        .fillRect(321, 260, 7, 23)
-        .fillRect(434, 260, 7, 23)
-        .fillStyle(0x9b714b)
-        .fillRect(316, 254, 130, 4);
-
-      graphics
-        .fillStyle(TEAL)
-        .fillRect(174, 513, 444, 31)
-        .fillStyle(NIGHT, 0.22)
-        .fillRect(188, 544, 430, 156);
-      for (let x = 193; x < 610; x += 82) {
-        graphics
-          .fillStyle(INK)
-          .fillRect(x, 544, 12, 154)
-          .fillStyle(lightenColour(TEAL, 0.18))
-          .fillRect(x + 3, 548, 4, 145);
-      }
-      for (let x = 205; x < 590; x += 82) {
-        graphics
-          .fillStyle(NIGHT, 0.12)
-          .fillPoints(
-            [
-              new Phaser.Geom.Point(x, 547),
-              new Phaser.Geom.Point(x + 28, 547),
-              new Phaser.Geom.Point(x + 72, 698),
-              new Phaser.Geom.Point(x + 44, 698),
-            ],
-            true,
-          );
-      }
-      graphics
-        .fillStyle(NIGHT, 0.22)
-        .fillEllipse(178, 708, 286, 142)
-        .fillStyle(INK)
-        .fillEllipse(170, 700, 276, 134)
-        .fillStyle(CONCRETE_EDGE)
-        .fillEllipse(170, 699, 264, 124)
-        .fillStyle(0x4f8f93)
-        .fillEllipse(170, 700, 246, 108)
-        .fillStyle(0x77b6b2)
-        .fillEllipse(166, 693, 232, 94)
-        .fillStyle(lightenColour(0x77b6b2, 0.2))
-        .fillEllipse(121, 673, 92, 23)
-        .fillEllipse(216, 719, 72, 17)
-        .fillStyle(GREEN)
-        .fillEllipse(105, 704, 25, 11)
-        .fillEllipse(226, 686, 22, 10)
-        .fillStyle(GOLD)
-        .fillRect(101, 698, 7, 7)
-        .fillStyle(CORAL)
-        .fillRect(223, 680, 7, 7)
-        .fillStyle(INK)
-        .fillRect(103, 700, 2, 2)
-        .fillRect(225, 682, 2, 2);
-    } else if (originX === 1280 && originY === 0) {
-      drawPixelBlock(graphics, 20, 85, 300, 185, CREAM, 6);
-      graphics
-        .fillStyle(INK)
-        .fillRect(12, 69, 316, 24)
-        .fillStyle(CORAL)
-        .fillRect(18, 74, 304, 14)
-        .fillStyle(lightenColour(CORAL, 0.2))
-        .fillRect(18, 74, 304, 4);
-      drawPixelSign(graphics, "HAWKER", 170, 96, 3, CORAL);
-      for (let stall = 0; stall < 2; stall += 1) {
-        const x = 35 + stall * 182;
-        graphics
-          .fillStyle(INK)
-          .fillRect(x, 143, 74, 120)
-          .fillStyle(NIGHT)
-          .fillRect(x + 5, 148, 64, 110)
-          .fillStyle(stall % 2 === 0 ? TEAL : darkenColour(CORAL, 0.12))
-          .fillRect(x + 7, 151, 60, 22)
-          .fillStyle(GOLD)
-          .fillRect(x + 11, 178, 18, 11)
-          .fillStyle(CREAM)
-          .fillRect(x + 35, 178, 26, 11)
-          .fillStyle(CONCRETE_EDGE)
-          .fillRect(x + 9, 198, 56, 4)
-          .fillStyle(CORAL)
-          .fillRect(x + 5, 232, 64, 12)
-          .fillStyle(lightenColour(CORAL, 0.18))
-          .fillRect(x + 5, 232, 64, 3);
-        drawPixelText(graphics, String(stall + 1), x + 31, 153, 3, CREAM);
-      }
-      graphics
-        .fillStyle(INK)
-        .fillRect(136, 143, 90, 120)
-        .fillStyle(NIGHT)
-        .fillRect(142, 149, 78, 114)
-        .fillStyle(0x79a7b3)
-        .fillRect(148, 158, 66, 92)
-        .fillStyle(CREAM, 0.52)
-        .fillRect(153, 163, 22, 81)
-        .fillStyle(INK)
-        .fillRect(179, 154, 5, 102);
-      graphics
-        .fillStyle(INK)
-        .fillRect(28, 260, 284, 8)
-        .fillStyle(CORAL)
-        .fillRect(34, 255, 272, 7);
-
-      drawPixelBlock(graphics, 330, 65, 360, 205, CREAM, 6);
-      graphics
-        .fillStyle(INK)
-        .fillRect(320, 49, 380, 25)
-        .fillStyle(TEAL)
-        .fillRect(326, 54, 368, 15)
-        .fillStyle(lightenColour(TEAL, 0.2))
-        .fillRect(326, 54, 368, 4);
-      drawPixelSign(graphics, "KOPITIAM", 510, 76, 3, TEAL);
-      graphics
-        .fillStyle(INK)
-        .fillRect(342, 126, 336, 34);
-      for (let stripe = 0; stripe < 8; stripe += 1) {
-        const colour = stripe % 2 === 0 ? CORAL : CREAM;
-        graphics
-          .fillStyle(colour)
-          .fillRect(346 + stripe * 41, 131, 41, 23)
-          .fillRect(350 + stripe * 41, 154, 33, 8);
-      }
-      graphics
-        .fillStyle(INK)
-        .fillRect(403, 170, 62, 94)
-        .fillStyle(NIGHT)
-        .fillRect(409, 176, 50, 88)
-        .fillStyle(0x79a7b3)
-        .fillRect(482, 174, 186, 59)
-        .fillStyle(CREAM, 0.58)
-        .fillRect(489, 181, 52, 43)
-        .fillStyle(INK)
-        .fillRect(548, 174, 5, 59)
-        .fillRect(482, 229, 186, 8)
-        .fillStyle(TEAL)
-        .fillRect(478, 237, 194, 23)
-        .fillStyle(lightenColour(TEAL, 0.18))
-        .fillRect(478, 237, 194, 4)
-        .fillStyle(INK)
-        .fillRect(620, 191, 23, 24)
-        .fillStyle(CREAM)
-        .fillRect(624, 194, 15, 15)
-        .fillStyle(GOLD)
-        .fillRect(638, 198, 7, 4);
-
-      drawPixelBlock(graphics, 700, 90, 420, 190, CREAM, 6);
-      graphics
-        .fillStyle(INK)
-        .fillRect(690, 73, 440, 25)
-        .fillStyle(GREEN)
-        .fillRect(696, 78, 428, 15)
-        .fillStyle(lightenColour(GREEN, 0.2))
-        .fillRect(696, 78, 428, 4);
-      drawPixelSign(graphics, "MINAH", 910, 101, 4, GREEN);
-      graphics
-        .fillStyle(INK)
-        .fillRect(714, 148, 392, 34);
-      for (let stripe = 0; stripe < 10; stripe += 1) {
-        const colour = stripe % 2 === 0 ? GOLD : CREAM;
-        graphics
-          .fillStyle(colour)
-          .fillRect(719 + stripe * 38, 153, 38, 23)
-          .fillRect(723 + stripe * 38, 176, 30, 7);
-      }
-      graphics
-        .fillStyle(INK)
-        .fillRect(719, 184, 214, 84)
-        .fillStyle(NIGHT)
-        .fillRect(725, 190, 202, 72);
-      for (let shelf = 0; shelf < 3; shelf += 1) {
-        const shelfY = 198 + shelf * 21;
-        graphics
-          .fillStyle(CONCRETE_EDGE)
-          .fillRect(731, shelfY + 13, 190, 4);
-        for (let product = 0; product < 8; product += 1) {
-          const colour = [CORAL, GOLD, TEAL, GREEN][
-            (shelf + product) % 4
-          ];
-          graphics
-            .fillStyle(colour)
-            .fillRect(736 + product * 23, shelfY, 14, 12)
-            .fillStyle(lightenColour(colour, 0.2))
-            .fillRect(738 + product * 23, shelfY + 2, 5, 3);
-        }
-      }
-      graphics
-        .fillStyle(INK)
-        .fillRect(949, 179, 63, 95)
-        .fillStyle(NIGHT)
-        .fillRect(955, 185, 51, 89)
-        .fillStyle(TEAL)
-        .fillRect(1018, 211, 82, 57)
-        .fillStyle(CORAL)
-        .fillRect(1024, 220, 31, 42)
-        .fillStyle(GOLD)
-        .fillRect(1060, 227, 34, 35)
-        .fillStyle(INK)
-        .fillRect(1024, 238, 31, 4)
-        .fillRect(1060, 244, 34, 4);
-      for (let table = 0; table < 6; table += 1) {
-        const x = 80 + (table % 3) * 170;
-        const y = 520 + Math.floor(table / 3) * 120;
-        graphics
-          .fillStyle(NIGHT, 0.18)
-          .fillEllipse(x + 5, y + 12, 114, 30)
-          .fillStyle(INK)
-          .fillEllipse(x, y, 104, 49)
-          .fillStyle(GOLD)
-          .fillEllipse(x, y - 4, 91, 34)
-          .fillStyle(CREAM)
-          .fillRect(x - 14, y - 11, 26, 14)
-          .fillStyle(INK)
-          .fillRect(x - 5, y + 17, 10, 38);
-      }
-    } else if (originX === 0 && originY === 800) {
-      graphics
-        .fillStyle(NIGHT, 0.18)
-        .fillRect(308, 26, 452, 216)
-        .fillStyle(TEAL)
-        .fillRect(308, 10, 452, 34)
-        .fillStyle(lightenColour(TEAL, 0.18))
-        .fillRect(313, 14, 442, 6);
-      for (let x = 340; x <= 720; x += 76) {
-        graphics
-          .fillStyle(INK)
-          .fillRect(x, 44, 12, 180)
-          .fillStyle(CONCRETE)
-          .fillRect(x + 3, 48, 6, 171)
-          .fillStyle(NIGHT, 0.14)
-          .fillPoints(
-            [
-              new Phaser.Geom.Point(x + 12, 50),
-              new Phaser.Geom.Point(x + 31, 50),
-              new Phaser.Geom.Point(x + 83, 222),
-              new Phaser.Geom.Point(x + 63, 222),
-            ],
-            true,
-          );
-      }
-      drawPixelBlock(graphics, 900, 200, 288, 154, 0x86624b, 5);
-      graphics.fillStyle(0x6f4f36).fillRect(914, 216, 260, 122);
-      graphics.fillStyle(GREEN);
-      for (let plant = 0; plant < 18; plant += 1) {
-        const x = 932 + (plant % 9) * 28;
-        const y = 233 + Math.floor(plant / 9) * 61;
-        graphics
-          .fillStyle(plant % 3 === 0 ? lightenColour(GREEN, 0.18) : GREEN)
-          .fillRect(x, y, 13, 18);
-      }
-      graphics
-        .fillStyle(NIGHT)
-        .fillRect(0, 500, 1280, 150)
-        .fillStyle(CONCRETE_EDGE)
-        .fillRect(0, 514, 1280, 126)
-        .fillStyle(CONCRETE)
-        .fillRect(0, 522, 1280, 108);
-      drawPixelBlock(graphics, 930, 350, 330, 210, PAPER, 7);
-      graphics
-        .fillStyle(INK)
-        .fillRect(920, 331, 350, 28)
-        .fillTriangle(920, 331, 965, 308, 1010, 331)
-        .fillTriangle(1005, 331, 1050, 308, 1095, 331)
-        .fillTriangle(1090, 331, 1135, 308, 1180, 331)
-        .fillTriangle(1175, 331, 1220, 308, 1265, 331)
-        .fillStyle(CORAL)
-        .fillRect(927, 336, 336, 16)
-        .fillTriangle(931, 330, 965, 313, 999, 330)
-        .fillTriangle(1016, 330, 1050, 313, 1084, 330)
-        .fillTriangle(1101, 330, 1135, 313, 1169, 330)
-        .fillTriangle(1186, 330, 1220, 313, 1254, 330)
-        .fillStyle(lightenColour(CORAL, 0.18))
-        .fillRect(927, 336, 336, 4);
-      drawPixelSign(graphics, "WORKSHOP", 1095, 365, 3, CORAL);
-      for (let panel = 0; panel < 5; panel += 1) {
-        const panelX = 947 + panel * 59;
-        graphics
-          .fillStyle(CONCRETE_EDGE)
-          .fillRect(panelX, 414, 49, 136)
-          .fillStyle(lightenColour(CONCRETE_EDGE, 0.18))
-          .fillRect(panelX + 4, 418, 41, 5)
-          .fillStyle(darkenColour(CONCRETE_EDGE, 0.12))
-          .fillRect(panelX + 44, 418, 3, 128);
-      }
-      graphics
-        .fillStyle(INK)
-        .fillRect(951, 432, 108, 72)
-        .fillStyle(0x79a7b3)
-        .fillRect(957, 438, 96, 60)
-        .fillStyle(CREAM, 0.5)
-        .fillRect(962, 443, 34, 50)
-        .fillStyle(INK)
-        .fillRect(1004, 438, 5, 60)
-        .fillStyle(INK)
-        .fillRect(1084, 468, 72, 90)
-        .fillStyle(NIGHT)
-        .fillRect(1091, 475, 58, 83)
-        .fillStyle(0x9b714b)
-        .fillRect(1168, 478, 77, 68)
-        .fillStyle(lightenColour(0x9b714b, 0.18))
-        .fillRect(1174, 484, 65, 5)
-        .fillStyle(INK)
-        .fillRect(1180, 494, 7, 42)
-        .fillRect(1204, 489, 7, 47)
-        .fillRect(1228, 500, 7, 36)
-        .fillStyle(GOLD)
-        .fillRect(1182, 497, 3, 20)
-        .fillStyle(TEAL)
-        .fillRect(1206, 492, 3, 24)
-        .fillStyle(CORAL)
-        .fillRect(1230, 503, 3, 18);
-    } else {
-      drawPixelBlock(graphics, 644, 92, 512, 270, PAPER, 7);
-      graphics
-        .fillStyle(INK)
-        .fillRect(634, 74, 532, 27)
-        .fillStyle(PURPLE)
-        .fillRect(640, 80, 520, 16)
-        .fillStyle(lightenColour(PURPLE, 0.18))
-        .fillRect(640, 80, 520, 4);
-      drawPixelSign(graphics, "COMMUNITY", 785, 108, 3, PURPLE);
-      for (let x = 674; x < 1115; x += 88) {
-        graphics
-          .fillStyle(INK)
-          .fillRect(x, 158, 62, 70)
-          .fillStyle(0x79a7b3)
-          .fillRect(x + 6, 164, 50, 58)
-          .fillStyle(CREAM, 0.58)
-          .fillRect(x + 10, 168, 17, 50)
-          .fillStyle(INK)
-          .fillRect(x + 31, 161, 4, 64);
-      }
-      graphics
-        .fillStyle(INK)
-        .fillRect(670, 249, 157, 87)
-        .fillStyle(0x86624b)
-        .fillRect(677, 256, 143, 73)
-        .fillStyle(GOLD)
-        .fillRect(687, 267, 46, 9)
-        .fillStyle(CREAM)
-        .fillRect(741, 267, 68, 9)
-        .fillStyle(CORAL)
-        .fillRect(687, 285, 73, 10)
-        .fillStyle(TEAL)
-        .fillRect(768, 285, 41, 10)
-        .fillStyle(INK)
-        .fillRect(857, 233, 125, 19)
-        .fillStyle(PURPLE)
-        .fillRect(863, 238, 113, 10)
-        .fillStyle(INK)
-        .fillRect(866, 250, 10, 103)
-        .fillRect(964, 250, 10, 103)
-        .fillRect(885, 266, 70, 89)
-        .fillStyle(NIGHT)
-        .fillRect(892, 273, 56, 82)
-        .fillStyle(CONCRETE_EDGE)
-        .fillRect(848, 350, 143, 9);
-
-      drawPixelBlock(graphics, 644, 492, 442, 220, CREAM, 7);
-      graphics
-        .fillStyle(INK)
-        .fillRect(634, 474, 462, 27)
-        .fillStyle(GOLD)
-        .fillRect(640, 480, 450, 16)
-        .fillStyle(lightenColour(GOLD, 0.16))
-        .fillRect(640, 480, 450, 4);
-      drawPixelSign(graphics, "PRAYER HALL", 865, 508, 3, GOLD, NIGHT);
-      for (let panel = 0; panel < 5; panel += 1) {
-        const x = 665 + panel * 76;
-        graphics
-          .fillStyle(INK)
-          .fillRect(x, 558, 58, 59)
-          .fillStyle(PAPER)
-          .fillRect(x + 5, 563, 48, 49)
-          .fillStyle(GOLD)
-          .fillRect(x + 12, 568, 4, 39)
-          .fillRect(x + 27, 568, 4, 39)
-          .fillRect(x + 42, 568, 4, 39)
-          .fillRect(x + 9, 579, 40, 4)
-          .fillRect(x + 9, 594, 40, 4);
-      }
-      graphics
-        .fillStyle(NIGHT)
-        .fillRect(734, 620, 72, 85)
-        .fillStyle(TEAL)
-        .fillRect(741, 627, 58, 78)
-        .fillStyle(CREAM, 0.45)
-        .fillRect(748, 633, 18, 66)
-        .fillStyle(INK)
-        .fillRect(825, 648, 188, 49)
-        .fillStyle(0x9b714b)
-        .fillRect(832, 655, 174, 35);
-      for (let shelf = 0; shelf < 3; shelf += 1) {
-        graphics
-          .fillStyle(INK)
-          .fillRect(839, 662 + shelf * 10, 160, 3);
-      }
-
-      drawPixelBlock(graphics, 84, 472, 422, 212, PAPER, 6);
-      graphics
-        .fillStyle(INK)
-        .fillRect(74, 454, 442, 27)
-        .fillStyle(CORAL)
-        .fillRect(80, 460, 430, 16)
-        .fillStyle(lightenColour(CORAL, 0.18))
-        .fillRect(80, 460, 430, 4);
-      drawPixelSign(graphics, "BLOCK 12", 295, 490, 3, CORAL);
-      for (let window = 0; window < 5; window += 1) {
-        const x = 112 + window * 72;
-        graphics
-          .fillStyle(INK)
-          .fillRect(x, 544, 54, 53)
-          .fillStyle(0x79a7b3)
-          .fillRect(x + 5, 549, 44, 43)
-          .fillStyle(CREAM, 0.58)
-          .fillRect(x + 9, 553, 15, 35)
-          .fillStyle(INK)
-          .fillRect(x + 28, 546, 4, 49);
-      }
-      graphics
-        .fillStyle(NIGHT)
-        .fillRect(96, 620, 398, 57);
-      for (let column = 0; column < 4; column += 1) {
-        const x = 122 + column * 112;
-        graphics
-          .fillStyle(CREAM)
-          .fillRect(x, 620, 14, 57)
-          .fillStyle(CONCRETE_EDGE)
-          .fillRect(x + 10, 620, 4, 57);
-      }
-      graphics
-        .fillStyle(INK)
-        .fillRect(214, 644, 164, 8)
-        .fillStyle(0x9b714b)
-        .fillRect(221, 646, 150, 4);
-    }
-    this.paintFacadeDepthDetails(graphics, originX, originY);
-    this.paintGroundDetails(graphics, originX, originY);
-  }
-
-  private paintFacadeDepthDetails(
-    graphics: Phaser.GameObjects.Graphics,
-    originX: number,
-    originY: number,
-  ): void {
-    const tileRight = originX + 1280;
-    const tileBottom = originY + 800;
-    for (const definition of ESTATE_FACADE_DEPTH_DEFINITIONS) {
-      const worldZone = ESTATE_BUILDING_VISUAL_ZONES.find(
-        (candidate) => candidate.id === definition.buildingId,
-      );
-      if (
-        !worldZone
-        || worldZone.x < originX
-        || worldZone.y < originY
-        || worldZone.x + worldZone.width > tileRight
-        || worldZone.y + worldZone.height > tileBottom
-      ) {
-        continue;
-      }
-      const localZone: EstateRect = {
-        ...worldZone,
-        x: worldZone.x - originX,
-        y: worldZone.y - originY,
-      };
-      const worldEntrance = ESTATE_ENTRANCES.find(
-        (candidate) => candidate.buildingId === definition.buildingId,
-      );
-      const localEntrance = worldEntrance
-        ? {
-            ...worldEntrance,
-            x: worldEntrance.x - originX,
-            y: worldEntrance.y - originY,
-          }
-        : undefined;
-      paintFacadeDepth(graphics, definition, localZone, localEntrance);
     }
   }
 
@@ -3682,14 +3281,22 @@ export class EstateScene extends WalkableScene {
       .setDepth(98_920)
       .setAlpha(0)
       .setVisible(false);
+    const baseShelter = getActiveShelters(null)[0];
     this.baseShelterGlow = this.add
-      .rectangle(396, 620, 420, 156, 0xffd98b, 1)
+      .rectangle(
+        baseShelter ? baseShelter.glow.x + baseShelter.glow.width / 2 : 490,
+        baseShelter ? baseShelter.glow.y + baseShelter.glow.height / 2 : 630,
+        baseShelter?.glow.width ?? 260,
+        baseShelter?.glow.height ?? 260,
+        0xffd98b,
+        1,
+      )
       .setBlendMode(Phaser.BlendModes.SCREEN)
       .setDepth(98_980)
       .setAlpha(0)
       .setVisible(false);
     this.restoredShelterGlow = this.add
-      .rectangle(600, 884, 324, 108, 0xffd98b, 1)
+      .rectangle(490, 900, 260, 320, 0xffd98b, 1)
       .setBlendMode(Phaser.BlendModes.SCREEN)
       .setDepth(98_980)
       .setAlpha(0)
@@ -3762,11 +3369,16 @@ export class EstateScene extends WalkableScene {
   private applyMonsoonState(state: CampaignStateV1): void {
     const active = state.currentChapter === "chapter-2";
     const wasActive = this.monsoonActive;
-    const shelterRestored = state.completedQuests.includes(
-      "sheltered-route-request",
-    );
+    const storedChoice = state.choices["request:sheltered-route-request"];
+    const shelterChoice: ShelterChoice | null =
+      state.completedQuests.includes("sheltered-route-request")
+      && (storedChoice === "shelter-gap" || storedChoice === "rest-point")
+        ? storedChoice
+        : null;
+    const shelterRestored = shelterChoice !== null;
     this.monsoonActive = active;
     this.monsoonShelterRestored = active && shelterRestored;
+    this.currentShelterChoice = shelterChoice;
 
     this.monsoonSurface?.setVisible(active);
     this.monsoonTint
@@ -3778,6 +3390,18 @@ export class EstateScene extends WalkableScene {
     this.baseShelterGlow
       ?.setVisible(active)
       .setAlpha(active ? 0.14 : 0);
+    const choiceShelter = getActiveShelters(shelterChoice).find(
+      (definition) => definition.variant === shelterChoice,
+    );
+    if (choiceShelter) {
+      this.restoredShelterGlow
+        ?.setPosition(
+          choiceShelter.glow.x + choiceShelter.glow.width / 2,
+          choiceShelter.glow.y + choiceShelter.glow.height / 2,
+        )
+        .setSize(choiceShelter.glow.width, choiceShelter.glow.height)
+        .setDisplaySize(choiceShelter.glow.width, choiceShelter.glow.height);
+    }
     this.restoredShelterGlow
       ?.setVisible(active && shelterRestored)
       .setAlpha(active && shelterRestored ? 0.16 : 0);
@@ -3873,18 +3497,10 @@ export class EstateScene extends WalkableScene {
   }
 
   private isUnderDryShelter(x: number, y: number): boolean {
-    const underBase =
-      x >= 164
-      && x <= 628
-      && y >= 505
-      && y <= 710;
-    const underRestored =
-      this.monsoonShelterRestored
-      && x >= 420
-      && x <= 780
-      && y >= 805
-      && y <= 950;
-    return underBase || underRestored;
+    return isPointDryUnderShelter(
+      { x, y },
+      this.monsoonShelterRestored ? this.currentShelterChoice : null,
+    );
   }
 
   private createAmbientLife(): void {
@@ -4122,19 +3738,6 @@ export class EstateScene extends WalkableScene {
 
 }
 
-const CORRIDOR_DOORS: readonly [
-  string,
-  string,
-  LocationId,
-  number,
-  string,
-][] = [
-  ["door-y", "Enter Y's flat", "y-flat", 150, "#09-101"],
-  ["door-long", "Enter Mr. Long's flat", "mr-long-flat", 350, "#09-103"],
-  ["door-ros", "Enter Grandma Ros's kitchen", "grandma-ros-kitchen", 585, "#09-105"],
-  ["door-ben", "Enter Ben's flat", "ben-flat", 805, "#09-107"],
-];
-
 function roomReturnLocation(locationId: LocationId): LocationId {
   if (
     ["y-flat", "mr-long-flat", "grandma-ros-kitchen", "ben-flat"].includes(locationId)
@@ -4292,12 +3895,24 @@ export class InteriorScene extends WalkableScene {
     // drawPixelBlock disappear on anything sofa-sized.
     const band = Math.max(6, Math.round(height * 0.16));
     graphics
+      .fillStyle(lightenColour(fill, 0.22), 0.86)
+      .fillPoints([
+        new Phaser.Geom.Point(left + 4, top + band),
+        new Phaser.Geom.Point(left + Math.min(18, width * 0.1), top + 3),
+        new Phaser.Geom.Point(left + width - 4, top + 3),
+        new Phaser.Geom.Point(left + width - band, top + band),
+      ], true)
       .fillStyle(lightenColour(fill, 0.17), 0.5)
       .fillRect(left, top, width, band)
       .fillStyle(darkenColour(fill, 0.2), 0.45)
       .fillRect(left, bottom - band, width, band)
       .fillStyle(darkenColour(fill, 0.14), 0.34)
-      .fillRect(left + width - band, top, band, height);
+      .fillPoints([
+        new Phaser.Geom.Point(left + width - band, top + band),
+        new Phaser.Geom.Point(left + width - 4, top + 3),
+        new Phaser.Geom.Point(left + width - 4, bottom - band),
+        new Phaser.Geom.Point(left + width - band, bottom),
+      ], true);
     if (width >= 190 && height >= 60) {
       // Panel seam so wide pieces read as cushions or doors, not one slab.
       graphics
@@ -4447,17 +4062,8 @@ export class InteriorScene extends WalkableScene {
       return;
     }
 
-    const exitTarget = roomReturnLocation(this.locationId);
-    this.addDoorVisual(480, 588, 82, 90, "EXIT");
-    this.interactions.push({
-      kind: "exit",
-      id: `exit:${this.locationId}`,
-      label: `Return to ${LOCATION_BY_ID.get(exitTarget)?.name ?? "the estate"}`,
-      shortLabel: "Exit",
-      targetLocationId: exitTarget,
-      x: 480,
-      y: 555,
-    });
+    const exitDoor = getDoorsForLocation(this.locationId)[0];
+    if (exitDoor) this.addDoorView(exitDoor);
 
     switch (this.locationId) {
       case "y-flat":
@@ -4530,29 +4136,12 @@ export class InteriorScene extends WalkableScene {
       })
       .setOrigin(0.5)
       .setDepth(48);
-    for (const [id, label, targetLocationId, x, unit] of CORRIDOR_DOORS) {
-      this.addDoorVisual(x, 265, 74, 92, unit);
-      this.addRoomPlant(x + 58, 314);
-      this.interactions.push({
-        kind: "door",
-        id,
-        label,
-        shortLabel: label.replace(/^Enter /, ""),
-        targetLocationId,
-        x,
-        y: 292,
-      });
+    for (const definition of getDoorsForLocation("hdb-corridor")) {
+      this.addDoorView(definition);
+      if (definition.targetLocationId !== "estate") {
+        this.addRoomPlant(definition.anchor.x + 58, 314);
+      }
     }
-    this.addDoorVisual(480, 588, 96, 90, "LIFT / VOID DECK");
-    this.interactions.push({
-      kind: "exit",
-      id: "corridor-estate-exit",
-      label: "Take the lift down to the estate",
-      shortLabel: "Estate",
-      targetLocationId: "estate",
-      x: 480,
-      y: 555,
-    });
     for (const x of [90, 870]) {
       const pillar = this.add.graphics().setDepth(depthFor(455, 2));
       drawPixelBlock(pillar, x - 12, 230, 24, 226, CONCRETE, 4);
@@ -5043,9 +4632,8 @@ export class InteriorScene extends WalkableScene {
 
   private spawnForRoom(): SpawnPoint {
     if (this.locationId === "y-flat") return { x: 610, y: 455 };
-    if (this.locationId !== "hdb-corridor") return { x: 480, y: 510 };
-    const door = CORRIDOR_DOORS.find((entry) => entry[2] === this.fromLocationId);
-    return door ? { x: door[3], y: 390 } : { x: 480, y: 510 };
+    return getReturnSpawn(this.fromLocationId, this.locationId)
+      ?? { x: 480, y: 510 };
   }
 }
 
@@ -5063,6 +4651,9 @@ export interface CampaignGameHandle {
   tryInteract(): void;
   transitionTo(locationId: LocationId): void;
   setCampaignState(state: CampaignStateV1): void;
+  setPaused(paused: boolean): void;
+  isPaused(): boolean;
+  getRendererKind(): "webgl" | "canvas";
   getCurrentLocation(): LocationId;
   getNavigationSnapshot(): CampaignNavigationSnapshot | null;
   getMotionSnapshot(): CampaignMotionSnapshot | null;
@@ -5075,14 +4666,18 @@ export function createCampaignGame(
 ): CampaignGameHandle {
   let state = options.state;
   let currentLocation = options.initialLocation;
-  let exteriorReturn: SpawnPoint = { x: 700, y: 400 };
+  let paused = false;
   const getState = (): CampaignStateV1 => state;
-  const estate = new EstateScene(callbacks, getState, options);
-  const interior = new InteriorScene(callbacks, getState, options);
+  const sceneCallbacks: CampaignSceneCallbacks = {
+    ...callbacks,
+    onDoorEnter: (locationId) => transitionTo(locationId),
+  };
+  const estate = new EstateScene(sceneCallbacks, getState, options);
+  const interior = new InteriorScene(sceneCallbacks, getState, options);
   const initialIsExterior = currentLocation === "estate";
   const sceneOrder = initialIsExterior ? [estate, interior] : [interior, estate];
   const game = new Phaser.Game({
-    type: Phaser.CANVAS,
+    type: options.renderer === "canvas" ? Phaser.CANVAS : Phaser.AUTO,
     parent,
     backgroundColor: "#ead9b7",
     pixelArt: true,
@@ -5109,10 +4704,7 @@ export function createCampaignGame(
 
   function switchLocation(target: LocationId): void {
     const from = currentLocation;
-    const source = activeScene();
-    if (from === "estate" && source) {
-      exteriorReturn = source.getPlayerPosition();
-    }
+    const targetSpawn = getReturnSpawn(from, target);
     currentLocation = target;
     callbacks.onNearbyInteraction(null);
 
@@ -5121,10 +4713,12 @@ export function createCampaignGame(
         game.scene.wake("estate");
         const woken = game.scene.getScene("estate");
         if (woken instanceof EstateScene) {
-          woken.resumeFromSleep(exteriorReturn);
+          woken.resumeFromSleep(targetSpawn ?? { x: 700, y: 400 });
         }
       } else if (!game.scene.isActive("estate")) {
-        game.scene.start("estate", { spawn: exteriorReturn } satisfies SceneStartData);
+        game.scene.start("estate", {
+          spawn: targetSpawn ?? { x: 700, y: 400 },
+        } satisfies SceneStartData);
       }
       game.scene.stop("interior");
       return;
@@ -5137,6 +4731,7 @@ export function createCampaignGame(
     game.scene.start("interior", {
       locationId: target,
       fromLocationId: from,
+      spawn: targetSpawn,
     } satisfies SceneStartData);
   }
 
@@ -5198,6 +4793,20 @@ export function createCampaignGame(
     setCampaignState(nextState: CampaignStateV1): void {
       state = nextState;
       activeScene()?.refreshCampaignState();
+    },
+    setPaused(nextPaused: boolean): void {
+      if (paused === nextPaused) return;
+      const scene = activeScene();
+      if (!scene) return;
+      paused = nextPaused;
+      if (nextPaused) game.scene.pause(scene.scene.key);
+      else game.scene.resume(scene.scene.key);
+    },
+    isPaused(): boolean {
+      return paused;
+    },
+    getRendererKind(): "webgl" | "canvas" {
+      return game.renderer.type === Phaser.WEBGL ? "webgl" : "canvas";
     },
     getCurrentLocation(): LocationId {
       return currentLocation;
