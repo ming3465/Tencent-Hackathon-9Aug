@@ -286,10 +286,11 @@ tools, thresholds, and code-drawn pixel signs. The seven exterior entrances,
 four corridor flat doors, corridor lift, and ten interior exits are 22
 first-class `DoorView` objects. Each definition owns its orientation, style,
 anchor, reachable approach point, paired return spawn, placard, dimensions,
-and closed collider. Hinged HDB leaves rotate from their authored hinge, while
-paired community/hawker gates rotate from true outside hinges to +18°/−18° so
-the open leaves frame the entering character as `/ C \`; sliding shop/lift doors and
-workshop shutters retain their authored mechanisms. All share an idempotent
+and closed collider. The original DoorView movement grammar is shared across
+the registry: hinged HDB leaves narrow and shift toward the hinge, workshop
+shutters lift, and sliding, paired, hawker, and lift panels collapse
+horizontally. The Hawker Centre `ENTRY` starts closed rather than holding an
+open transform. All share an idempotent
 transition guard. Closed thresholds block movement; an authorised interaction
 cancels navigation, faces the player, opens over 180–210 ms, disables the blocker,
 steps through, and then fades the scene. Reduced motion applies the opening

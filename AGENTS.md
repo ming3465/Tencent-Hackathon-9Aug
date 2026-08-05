@@ -105,6 +105,23 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-05 (Codex, original door animation and ENTRY recovery)** — Restored
+  the first DoorView implementation's normal movement grammar across all 22
+  doors: HDB leaves narrow/shift toward the hinge, standard paired/sliding/lift
+  panels collapse horizontally, and workshop shutters lift vertically. Removed
+  the angled-leaf drawing/animation path. Diagnosed the Hawker Centre `ENTRY`
+  as an authored `startsOpen` exception: its controller intentionally stayed
+  open and therefore skipped the animation path. ENTRY now starts closed with
+  its blocker enabled. Added a pure transform contract for all six styles,
+  full-size leaf-scale snapshots, and a real-browser Hawker round trip before
+  the existing double Kopitiam cycle. Both WebGL and forced Canvas passed 60/60
+  with `entry=closed/open/closed=true/true/true`, reusable doors, stage/document
+  focus, and controls intact. Graphify traced the shared DoorView/controller and
+  literal ENTRY definition before the historical implementation was restored.
+  Strict TypeScript, 90/90 tests, the 91.14/140.99/1,612.32 kB build, and visual
+  inspection of the refreshed closed ENTRY capture passed; no human/device/
+  screen-reader/200%-zoom test or outcome claim was made.
+
 - **2026-08-05 (Codex, character-framing doors and morning-table detail)** —
   Corrected paired DoorView angles to +18°/−18° so open leaves frame the
   entering character as `/ C \`, while retaining the existing idempotent

@@ -88,8 +88,8 @@ collected**
 - Runtime-synthesized audio; zero audio files
 - KampungMind uses authored text and deterministic code offline
 
-Current private build: 91.14 kB HTML (15.99 kB gzip), 140.99 kB initial
-JavaScript (41.21 kB gzip), and 1,612.67 kB lazy scene (377.60 kB gzip).
+Current private build: 91.14 kB HTML (16.00 kB gzip), 140.99 kB initial
+JavaScript (41.22 kB gzip), and 1,612.32 kB lazy scene (377.41 kB gzip).
 
 ## Slide 7 — What we tested. What we will not claim
 

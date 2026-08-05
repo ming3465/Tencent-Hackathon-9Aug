@@ -15,7 +15,7 @@ import {
   SHELTER_DEFINITIONS,
   SIDEWALK_APRONS,
   auditEstateLayout,
-  doorOpenLeafAngles,
+  doorOpenLeafTransform,
   doorApproachBounds,
   getActiveShelters,
   getReturnSpawn,
@@ -214,12 +214,34 @@ describe("three-quarter world layout", () => {
 
 describe("door and pause state", () => {
   it("makes repeated door interactions idempotent", () => {
-    expect(doorOpenLeafAngles("double-community", 2)).toEqual([18, -18]);
-    expect(doorOpenLeafAngles("open-hawker-gate", 2)).toEqual([18, -18]);
-    expect(doorOpenLeafAngles("hinged-hdb", 1)).toEqual([18]);
-    expect(doorOpenLeafAngles("sliding-commercial", 1)).toEqual([0]);
-    expect(doorOpenLeafAngles("workshop-shutter", 1)).toEqual([0]);
-    expect(doorOpenLeafAngles("lift", 2)).toEqual([0, 0]);
+    const entryDoor = DOOR_DEFINITIONS.find(({ id }) => id === "estate-hawker");
+    expect(entryDoor?.placard).toBe("ENTRY");
+    expect(entryDoor?.startsOpen).not.toBe(true);
+    expect(doorOpenLeafTransform("hinged-hdb", { width: 70, height: 92 })).toEqual({
+      scaleX: 0.12,
+      scaleY: 1,
+      offsetX: -23.8,
+      offsetY: 0,
+    });
+    expect(doorOpenLeafTransform("workshop-shutter", { width: 90, height: 92 })).toEqual({
+      scaleX: 1,
+      scaleY: 0.08,
+      offsetX: 0,
+      offsetY: -46,
+    });
+    for (const style of [
+      "sliding-commercial",
+      "double-community",
+      "open-hawker-gate",
+      "lift",
+    ] as const) {
+      expect(doorOpenLeafTransform(style, { width: 82, height: 84 })).toEqual({
+        scaleX: 0.08,
+        scaleY: 1,
+        offsetX: 0,
+        offsetY: 0,
+      });
+    }
     const controller = new DoorTransitionController();
     expect(controller.beginOpening()).toBe(true);
     expect(controller.beginOpening()).toBe(false);

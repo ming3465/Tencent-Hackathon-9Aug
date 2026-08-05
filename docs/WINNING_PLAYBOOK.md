@@ -18,8 +18,8 @@ The finalist cut (~Aug 7) will be decided almost entirely by our video and deck,
 **Current verified engineering snapshot (2026-08-05):** 90/90 tests (30
 campaign, 31 match, 17 audio, 4 accessibility, 8 world/door/pause), 60/60
 production-browser checks in default WebGL and forced Canvas fallback, and a
-production build of HTML 91.14 kB (15.99 kB gzip), initial JS 140.99 kB
-(41.21 kB gzip), and lazy campaign scene 1,612.67 kB (377.60 kB gzip). The
+production build of HTML 91.14 kB (16.00 kB gzip), initial JS 140.99 kB
+(41.22 kB gzip), and lazy campaign scene 1,612.32 kB (377.41 kB gzip). The
 checked-in 90-second review cut predates the registry-driven world, DoorViews,
 corrected shelters, Pause/Settings, and renderer-parity gate; it
 is not current-build footage.
@@ -100,7 +100,7 @@ Why: Tencent ecosystem alignment, Singapore edge node for Singapore judges, and 
 Must not break: keep GitHub Pages live as fallback; print both URLs everywhere.
 
 **9. Rubric-map the deck with the rules' exact words. (2–3 h)**
-What: AI slide quotes the official requirement verbatim and checks off worldbuilding + artwork + sound; one line: "Elderly care (适老化关怀) is a named sub-theme of the official Social Good track"; Impact slide opens with 1-in-4 Singaporeans 65+ by 2030 and cites the official brief; Quality slide: 90/90 tests / 60/60 CDP checks / 0 vulnerabilities, with the latest build figures—HTML 91.14/15.99 kB gzip, initial JS 140.99/41.21 kB gzip, and lazy scene 1,612.67/377.60 kB gzip.
+What: AI slide quotes the official requirement verbatim and checks off worldbuilding + artwork + sound; one line: "Elderly care (适老化关怀) is a named sub-theme of the official Social Good track"; Impact slide opens with 1-in-4 Singaporeans 65+ by 2030 and cites the official brief; Quality slide: 90/90 tests / 60/60 CDP checks / 0 vulnerabilities, with the latest build figures—HTML 91.14/16.00 kB gzip, initial JS 140.99/41.22 kB gzip, and lazy scene 1,612.32/377.41 kB gzip.
 Why: Winners visibly game the rubric and balance all criteria (Square, Klaviyo method); the verbatim-compliance line pre-empts the "no runtime LLM = no AI" misread, which is our single biggest scoring risk on a 40-point criterion (Critic §A4).
 Must not break: citation honesty — every number sourced, "aligned with," never "partnered with" Age Well SG.
 

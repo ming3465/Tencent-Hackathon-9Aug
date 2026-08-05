@@ -3387,3 +3387,58 @@ plant-bearing estate fixture off pedestrian paving and onto open grass.
   evidence. No account, backend, analytics, personal-data collection, runtime
   model/network call, gameplay timer, failure state, energy system, or medical
   claim was introduced.
+
+## 2026-08-05 - Original Door Animation and Hawker ENTRY Recovery
+
+**User request:**
+
+- Replace every angled door animation with the normal door animation from the
+  first DoorView implementation.
+- Diagnose and fix the Hawker Centre building labelled `ENTRY`, which appeared
+  stuck in its animation.
+
+**Diagnosis and implementation:**
+
+- Graphify queries traced the shared `DoorView` methods, pure layout registry,
+  transition controller, and wake/reset path. Git history then identified the
+  first DoorView movement grammar without disturbing the later lifecycle fixes.
+- The stuck ENTRY was not a lost tween: `estate-hawker` alone was authored with
+  `startsOpen: true`. Its controller therefore initialized as open, disabled
+  its blocker, applied the open transform immediately, and skipped the normal
+  opening animation whenever activated.
+- Removed that exception so ENTRY starts closed and interactive. Restored the
+  original animations for every style: HDB narrow/shift, standard paired,
+  sliding, hawker, and lift panels collapse horizontally, and workshop
+  shutters lift vertically. Removed the angled hinge rendering path.
+- Retained all newer correctness protections: idempotent controller state,
+  blocker restoration, wake/reset, Phaser-time fallback, wall-clock fallback,
+  and failed-open control recovery.
+- Added a pure transform helper and unit expectations for all six styles. Door
+  snapshots now report leaf scales, allowing browser checks to distinguish a
+  genuinely closed full-size door from a stuck open transform.
+- Expanded the browser route to require Hawker ENTRY closed at rest, enter the
+  Hawker Centre, exit to the estate, and observe ENTRY closed and reusable
+  before repeating the existing two Kopitiam enter/exit cycles.
+
+**Verification and visual review:**
+
+- Strict TypeScript and **90/90** Vitest tests passed.
+- Production build: **91.14 kB HTML (16.00 kB gzip), 140.99 kB initial
+  JavaScript (41.22 kB gzip), and 1,612.32 kB lazy scene (377.41 kB gzip)**.
+- Screenshot-enabled WebGL and forced Canvas2D each passed **60/60**, reporting
+  `entry=closed/open/closed=true/true/true`, `reusable=true/true/true`,
+  `focus=sandbox-stage/true`, and `controls=true`.
+- The refreshed `27-ambient-micro-scenes.png` was inspected at full size; ENTRY
+  visibly renders as a closed two-panel doorway before interaction.
+
+**Tooling and claim boundary:**
+
+- Graphify guided the code-path diagnosis; Git history supplied the exact first
+  DoorView animation behavior. No raster generation was needed.
+- This is AI-assisted implementation, automated local browser evidence, and
+  machine-rendered screenshot inspection. It is not a human or older-adult
+  playtest, real-phone/tablet run, screen-reader or 200% zoom session,
+  accessibility certification, social/health outcome, or new Miora/CodeBuddy
+  evidence. No account, backend, analytics, personal-data collection, runtime
+  model/network call, gameplay timer, failure state, energy system, or medical
+  claim was introduced.

@@ -47,7 +47,7 @@ import {
   ESTATE_TREES,
   ESTATE_VEHICLE_ROUTES,
   ESTATE_NPC_ROUTES as LAYOUT_NPC_ROUTES,
-  doorOpenLeafAngles,
+  doorOpenLeafTransform,
   getDoorsForLocation,
   getActiveShelters,
   getReturnSpawn,
@@ -352,29 +352,21 @@ class DoorView {
       finish();
       return true;
     }
-    const style = this.definition.style;
     const targets = this.leaves;
-    const openAngles = doorOpenLeafAngles(style, targets.length);
-    if (openAngles.some((angle) => angle !== 0)) {
-      let completed = 0;
-      const finishLeaf = (): void => {
-        completed += 1;
-        if (completed === targets.length) finish();
-      };
-      targets.forEach((leaf, index) => {
-        this.scene.tweens.add({
-          targets: leaf,
-          angle: openAngles[index] ?? 0,
-          duration: 210,
-          ease: "Sine.easeInOut",
-          onComplete: finishLeaf,
-        });
-      });
-    } else if (style === "workshop-shutter") {
-      this.scene.tweens.add({ targets, scaleY: 0.08, y: `-=${this.definition.dimensions.height / 2}`, duration: 180, ease: "Sine.easeInOut", onComplete: finish });
-    } else {
-      this.scene.tweens.add({ targets, scaleX: 0.08, duration: 180, ease: "Sine.easeInOut", onComplete: finish });
-    }
+    const pose = doorOpenLeafTransform(
+      this.definition.style,
+      this.definition.dimensions,
+    );
+    this.scene.tweens.add({
+      targets,
+      scaleX: pose.scaleX,
+      scaleY: pose.scaleY,
+      x: this.definition.anchor.x + pose.offsetX,
+      y: this.definition.anchor.y + pose.offsetY,
+      duration: 180,
+      ease: "Sine.easeInOut",
+      onComplete: finish,
+    });
     // Scene-time safety net: losing a tween completion must not leave a door
     // open-looking, controls-disabled, and permanently non-interactive.
     this.scene.time.delayedCall(TRANSITION_FALLBACK_MS, finish);
@@ -405,13 +397,23 @@ class DoorView {
     if (startsOpen) this.setOpenPose();
   }
 
-  getSnapshot(): { id: string; state: string; blockerEnabled: boolean; leafAngles: readonly number[] } {
+  getSnapshot(): {
+    id: string;
+    state: string;
+    blockerEnabled: boolean;
+    leafAngles: readonly number[];
+    leafScales: readonly { x: number; y: number }[];
+  } {
     const body = this.blocker.body as Phaser.Physics.Arcade.StaticBody | null;
     return {
       id: this.definition.id,
       state: this.controller.getState(),
       blockerEnabled: body?.enable ?? false,
       leafAngles: this.leaves.map(({ angle }) => Math.round(angle * 10) / 10),
+      leafScales: this.leaves.map(({ scaleX, scaleY }) => ({
+        x: Math.round(scaleX * 100) / 100,
+        y: Math.round(scaleY * 100) / 100,
+      })),
     };
   }
 
@@ -431,25 +433,13 @@ class DoorView {
       .fillStyle(NIGHT)
       .fillRect(left + 5, top + 5, dimensions.width - 10, dimensions.height - 5);
     const leafCount = style === "double-community" || style === "lift" || style === "open-hawker-gate" ? 2 : 1;
-    const openAngles = doorOpenLeafAngles(style, leafCount);
-    const swinging = openAngles.some((angle) => angle !== 0);
     for (let index = 0; index < leafCount; index += 1) {
+      const leaf = this.scene.add.graphics().setPosition(anchor.x, anchor.y).setDepth(depth + 1);
       const gap = 3;
-      const innerLeft = left + 5;
-      const innerWidth = dimensions.width - 10;
-      const leafWidth = leafCount === 2 ? (innerWidth - gap) / 2 : innerWidth;
-      const hingeX = leafCount === 2 && index === 1
-        ? anchor.x + innerLeft + innerWidth
-        : anchor.x + innerLeft;
-      const leafPosition = swinging ? { x: hingeX, y: anchor.y } : anchor;
-      const leaf = this.scene.add.graphics()
-        .setPosition(leafPosition.x, leafPosition.y)
-        .setDepth(depth + 1);
-      const leafX = swinging
-        ? index === 0 ? 0 : -leafWidth
-        : leafCount === 2
-          ? innerLeft + index * (leafWidth + gap)
-          : innerLeft;
+      const leafWidth = leafCount === 2 ? (dimensions.width - gap) / 2 : dimensions.width - 10;
+      const leafX = leafCount === 2
+        ? left + index * (leafWidth + gap)
+        : left + 5;
       const fill = style === "workshop-shutter"
         ? CONCRETE_EDGE
         : style === "double-community"
@@ -463,27 +453,14 @@ class DoorView {
         .fillStyle(lightenColour(fill, 0.2), 0.8)
         .fillRect(leafX + 5, top + 10, Math.max(3, leafWidth - 10), 6)
         .fillStyle(darkenColour(fill, 0.2), 0.65)
-        .fillRect(
-          leafX + (swinging && index === 1 ? 2 : leafWidth - 7),
-          top + 8,
-          5,
-          dimensions.height - 14,
-        );
-      if (swinging) {
-        const handleX = index === 0 ? leafX + leafWidth - 10 : leafX + 7;
-        leaf
-          .fillStyle(INK)
-          .fillCircle(handleX, top + dimensions.height * 0.55, 4)
-          .fillStyle(GOLD)
-          .fillCircle(handleX - 1, top + dimensions.height * 0.55 - 1, 2);
-      }
+        .fillRect(leafX + leafWidth - 7, top + 8, 5, dimensions.height - 14);
       if (style === "workshop-shutter") {
         for (let stripe = top + 20; stripe < -5; stripe += 12) {
           leaf.fillStyle(INK, 0.35).fillRect(leafX + 3, stripe, leafWidth - 6, 3);
         }
       }
       this.leaves.push(leaf);
-      this.closedLeafPoses.push(leafPosition);
+      this.closedLeafPoses.push(anchor);
     }
     this.scene.add
       .text(anchor.x, anchor.y - dimensions.height - 12, placard, {
@@ -499,16 +476,16 @@ class DoorView {
   }
 
   private setOpenPose(): void {
-    const style = this.definition.style;
-    const openAngles = doorOpenLeafAngles(style, this.leaves.length);
+    const pose = doorOpenLeafTransform(
+      this.definition.style,
+      this.definition.dimensions,
+    );
     this.leaves.forEach((leaf, index) => {
-      if ((openAngles[index] ?? 0) !== 0) {
-        leaf.setAngle(openAngles[index] ?? 0);
-      } else if (style === "workshop-shutter") {
-        leaf.setScale(1, 0.08).setY(leaf.y - this.definition.dimensions.height / 2);
-      } else {
-        leaf.setScale(0.08, 1);
-      }
+      const closedPose = this.closedLeafPoses[index] ?? this.definition.anchor;
+      leaf
+        .setPosition(closedPose.x + pose.offsetX, closedPose.y + pose.offsetY)
+        .setScale(pose.scaleX, pose.scaleY)
+        .setAngle(0);
     });
   }
 
@@ -742,6 +719,7 @@ export interface CampaignMotionSnapshot {
     state: string;
     blockerEnabled: boolean;
     leafAngles: readonly number[];
+    leafScales: readonly { x: number; y: number }[];
   }[];
 }
 

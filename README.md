@@ -116,9 +116,10 @@ hallucination path.
   choice-specific shelter geometry, the minimap, NPC routes, and 22 contextual
   DoorViews resolve from one audited world registry. Doors own their approach,
   blocker, opening state, entry step, and paired return spawn. Sleeping exterior
-  hinged doors swing from their authored hinge, while paired doors open into a
-  `/ C \` framing pose around the entering character; doors restore their authored
-  closed/open pose and collider on return, so the
+  doors use the original opening grammar: HDB leaves narrow toward their hinge,
+  shutters lift, and all other panels slide-collapse horizontally. Every door,
+  including the Hawker Centre `ENTRY`, starts closed and restores its closed pose
+  and collider on return, so the
   same entrance remains reusable without dropping world controls or focus. The playable world
   remains code-drawn after two generated visual-direction studies were
   selectively translated rather than copied; the separately reviewed title
@@ -135,7 +136,7 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
 | `npm test` | 90/90: 30 campaign, 31 match-engine, 17 audio, 4 accessibility-contract, and 8 world-layout/door/pause tests |
-| `npm run build` | 91.14 kB HTML (15.99 kB gzip); 140.99 kB initial JS (41.21 kB gzip); 1,612.67 kB lazy scene (377.60 kB gzip) |
+| `npm run build` | 91.14 kB HTML (16.00 kB gzip); 140.99 kB initial JS (41.22 kB gzip); 1,612.32 kB lazy scene (377.41 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
 | `npm run smoke` | 60/60 production-browser checks in default WebGL and forced Canvas fallback |
 

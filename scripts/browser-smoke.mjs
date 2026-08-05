@@ -1729,7 +1729,7 @@ try {
       await sleep(260);
     };
 
-    const framingDoor = await page.eval(`
+    const entryDoorAtRest = await page.eval(`
       (() => {
         const door = window.__kampungSmoke?.getMotionSnapshot?.()?.doors?.find(
           (candidate) => candidate.id === "estate-hawker"
@@ -1738,21 +1738,23 @@ try {
           state: door?.state ?? null,
           blockerEnabled: door?.blockerEnabled ?? null,
           leafAngles: door?.leafAngles ?? [],
+          leafScales: door?.leafScales ?? [],
         };
       })()
     `);
 
-    const readReturnedDoor = () => page.eval(`
+    const readReturnedDoor = (doorId) => page.eval(`
       (() => {
         const snapshot = window.__kampungSmoke?.getMotionSnapshot?.();
         const door = snapshot?.doors?.find(
-          (candidate) => candidate.id === "estate-kopitiam"
+          (candidate) => candidate.id === ${JSON.stringify(doorId)}
         );
         return {
           locationId: snapshot?.locationId ?? null,
           state: door?.state ?? null,
           blockerEnabled: door?.blockerEnabled ?? null,
           leafAngles: door?.leafAngles ?? [],
+          leafScales: door?.leafScales ?? [],
           controlsEnabled: snapshot?.tapNavigation?.controlsEnabled ?? false,
           activeElement: document.activeElement?.id ?? null,
           documentFocused: document.hasFocus(),
@@ -1760,36 +1762,47 @@ try {
       })()
     `);
 
+    await useNearbyDoor(970, 400, "estate-hawker", "hawker-centre");
+    await useNearbyDoor(480, 500, "hawker-exit", "estate");
+    const entryReturn = await readReturnedDoor("estate-hawker");
     await useNearbyDoor(1550, 400, "estate-kopitiam", "kopitiam");
     await useNearbyDoor(480, 500, "kopitiam-exit", "estate");
-    const firstReturn = await readReturnedDoor();
+    const firstReturn = await readReturnedDoor("estate-kopitiam");
     await useNearbyDoor(1550, 400, "estate-kopitiam", "kopitiam");
     await useNearbyDoor(480, 500, "kopitiam-exit", "estate");
-    const secondReturn = await readReturnedDoor();
+    const secondReturn = await readReturnedDoor("estate-kopitiam");
     const returnedDoorIsReusable = (state) =>
       state.locationId === "estate"
       && state.state === "closed"
       && state.blockerEnabled === true
       && state.leafAngles.length > 0
       && state.leafAngles.every((angle) => angle === 0)
+      && state.leafScales.length > 0
+      && state.leafScales.every(({ x, y }) => x === 1 && y === 1)
       && state.controlsEnabled
       && state.activeElement === "sandbox-stage"
       && state.documentFocused;
     doorLifecycleEvidence = {
-      framed:
-        framingDoor.state === "open"
-        && framingDoor.blockerEnabled === false
-        && JSON.stringify(framingDoor.leafAngles) === JSON.stringify([18, -18]),
+      entryReady:
+        entryDoorAtRest.state === "closed"
+        && entryDoorAtRest.blockerEnabled === true
+        && entryDoorAtRest.leafAngles.every((angle) => angle === 0)
+        && entryDoorAtRest.leafScales.length === 2
+        && entryDoorAtRest.leafScales.every(({ x, y }) => x === 1 && y === 1),
+      entryOpened: true,
+      entryReturn: returnedDoorIsReusable(entryReturn),
       firstReturn: returnedDoorIsReusable(firstReturn),
       secondEntry: true,
       secondReturn: returnedDoorIsReusable(secondReturn),
+      entryState: entryReturn,
       firstState: firstReturn,
       secondState: secondReturn,
     };
     diagnostics.push(
-      `  DOOR  close/re-enter/close=${doorLifecycleEvidence.firstReturn}/` +
+      `  DOOR  entry=closed/open/closed=${doorLifecycleEvidence.entryReady}/` +
+        `${doorLifecycleEvidence.entryOpened}/${doorLifecycleEvidence.entryReturn}; ` +
+        `reusable=${doorLifecycleEvidence.firstReturn}/` +
         `${doorLifecycleEvidence.secondEntry}/${doorLifecycleEvidence.secondReturn}; ` +
-        `frame=/ C \\=${doorLifecycleEvidence.framed}; ` +
         `focus=${secondReturn.activeElement}/${secondReturn.documentFocused}; ` +
         `controls=${secondReturn.controlsEnabled}`
     );
@@ -4098,7 +4111,9 @@ try {
       && questTrackerEvidence
       && Object.values(questTrackerEvidence).every(Boolean)
       && doorLifecycleEvidence
-      && doorLifecycleEvidence.framed
+      && doorLifecycleEvidence.entryReady
+      && doorLifecycleEvidence.entryOpened
+      && doorLifecycleEvidence.entryReturn
       && doorLifecycleEvidence.firstReturn
       && doorLifecycleEvidence.secondEntry
       && doorLifecycleEvidence.secondReturn

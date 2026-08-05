@@ -562,7 +562,7 @@ const INTERIOR_DOOR_SIZE = { width: 70, height: 92 } as const;
 
 export const DOOR_DEFINITIONS: readonly DoorDefinition[] = [
   door({ id: "estate-block-9", sourceLocationId: "estate", targetLocationId: "hdb-corridor", buildingId: "block-9", label: "Enter Block 9 lobby", orientation: "north", style: "hinged-hdb", anchor: { x: 610, y: 330 }, approachPoint: { x: 610, y: 400 }, returnSpawn: { x: 610, y: 405 }, dimensions: EXTERIOR_DOOR_SIZE, placard: "BLK 9" }),
-  door({ id: "estate-hawker", sourceLocationId: "estate", targetLocationId: "hawker-centre", buildingId: "hawker-centre", label: "Enter the hawker centre", orientation: "north", style: "open-hawker-gate", anchor: { x: 970, y: 330 }, approachPoint: { x: 970, y: 400 }, returnSpawn: { x: 970, y: 405 }, dimensions: { width: 82, height: 84 }, placard: "ENTRY", startsOpen: true }),
+  door({ id: "estate-hawker", sourceLocationId: "estate", targetLocationId: "hawker-centre", buildingId: "hawker-centre", label: "Enter the hawker centre", orientation: "north", style: "open-hawker-gate", anchor: { x: 970, y: 330 }, approachPoint: { x: 970, y: 400 }, returnSpawn: { x: 970, y: 405 }, dimensions: { width: 82, height: 84 }, placard: "ENTRY" }),
   door({ id: "estate-kopitiam", sourceLocationId: "estate", targetLocationId: "kopitiam", buildingId: "kopitiam", label: "Enter the kopitiam", orientation: "north", style: "sliding-commercial", anchor: { x: 1550, y: 330 }, approachPoint: { x: 1550, y: 400 }, returnSpawn: { x: 1550, y: 405 }, dimensions: EXTERIOR_DOOR_SIZE, placard: "KOPI" }),
   door({ id: "estate-provision", sourceLocationId: "estate", targetLocationId: "provision-shop", buildingId: "provision-shop", label: "Enter Minah's provision shop", orientation: "north", style: "sliding-commercial", anchor: { x: 2140, y: 330 }, approachPoint: { x: 2140, y: 400 }, returnSpawn: { x: 2140, y: 405 }, dimensions: EXTERIOR_DOOR_SIZE, placard: "MINAH" }),
   door({ id: "estate-workshop", sourceLocationId: "estate", targetLocationId: "craftsman-workshop", buildingId: "craftsman-workshop", label: "Enter the craftsman's workshop", orientation: "north", style: "workshop-shutter", anchor: { x: 870, y: 1050 }, approachPoint: { x: 870, y: 1120 }, returnSpawn: { x: 870, y: 1125 }, dimensions: { width: 82, height: 84 }, placard: "OPEN" }),
@@ -795,15 +795,34 @@ export function groundFlowerBounds(definition: EstateGroundFlowerDefinition): Es
   };
 }
 
-export function doorOpenLeafAngles(
+export interface DoorOpenLeafTransform {
+  scaleX: number;
+  scaleY: number;
+  offsetX: number;
+  offsetY: number;
+}
+
+export function doorOpenLeafTransform(
   style: DoorStyle,
-  leafCount: number,
-): readonly number[] {
-  if (style === "hinged-hdb") return Array.from({ length: leafCount }, () => 18);
-  if (style === "double-community" || style === "open-hawker-gate") {
-    return Array.from({ length: leafCount }, (_, index) => index === 0 ? 18 : -18);
+  dimensions: { width: number; height: number },
+): DoorOpenLeafTransform {
+  if (style === "workshop-shutter") {
+    return {
+      scaleX: 1,
+      scaleY: 0.08,
+      offsetX: 0,
+      offsetY: -dimensions.height / 2,
+    };
   }
-  return Array.from({ length: leafCount }, () => 0);
+  if (style === "hinged-hdb") {
+    return {
+      scaleX: 0.12,
+      scaleY: 1,
+      offsetX: -dimensions.width * 0.34,
+      offsetY: 0,
+    };
+  }
+  return { scaleX: 0.08, scaleY: 1, offsetX: 0, offsetY: 0 };
 }
 
 export function doorApproachBounds(definition: DoorDefinition): EstateRect {
