@@ -11,6 +11,50 @@ review artifact, not current-build footage. Recapture affected gameplay and
 terminal shots, or compare and explicitly approve an unchanged source shot
 before using it in the final video.
 
+## Read-only voice-over (record this)
+
+Every line below is spoken text — no stage direction, no timing markers,
+nothing to parse mid-take. Word counts are calibrated at ~160 wpm to fit each
+beat's window in the beat sheet. Read the whole thing top to bottom in one
+sitting; edit later. Pauses shown as "//" are ~0.4 s beats, not written words.
+
+> Kampung SG is a cozy Singapore estate // where older adults are the experts,
+> not the patients. //
+>
+> A prologue, three chapters, and one last door // connect the whole
+> neighbourhood. //
+>
+> Mr. Long doesn't need a score. // He needs neighbours who listen, // and a
+> route he can use. //
+>
+> Every resident brings practical expertise. // In this judge path, any two
+> routes stage the ramp; // the full game asks for three. //
+>
+> The next chapter gathers clues and invitations // around Grandma Ros's
+> cooking table. //
+>
+> KampungMind remembers who you helped // and how you responded, // then
+> selects reviewed authored dialogue from that context. //
+>
+> There is no timer, // no energy bar, // no failure state. //
+>
+> The last door opens, // and the estate remains explorable // with every
+> consequence intact. //
+>
+> AI-authored personalities run through a private, offline
+> memory-and-decision engine — // deterministic, testable, // and with no
+> runtime model. //
+>
+> Strict TypeScript. // Ninety unit tests. // Sixty production-browser checks.
+> // Zero known vulnerabilities. //
+>
+> Every small act grows the kampung.
+
+**Recording notes:** warm delivery, unhurried; the game has no timer, the VO
+shouldn't either. Do a full-length practice read before recording — the
+Ninety/Sixty/Zero cadence is easy to fumble cold. If a take runs long, cut a
+"//" pause, not a word.
+
 ## Beat sheet
 
 | Time | Picture | Voiceover / caption |
@@ -24,7 +68,7 @@ before using it in the final video.
 | 0:54–1:02 | Calm weaving interaction and active workshop | “There is no timer, energy bar, or failure state.” |
 | 1:02–1:10 | Return to Y’s flat; residents arrive; free exploration | “The last door opens, and the estate remains explorable with every consequence intact.” |
 | 1:10–1:20 | KampungMind content/reducer code and Journal | “AI-authored personalities run through a private, offline memory-and-decision engine: deterministic, testable, and with no runtime model.” |
-| 1:20–1:27 | Current terminal verification | “Strict TypeScript. Eighty-five unit tests. Sixty production-browser checks. Zero known vulnerabilities.” |
+| 1:20–1:27 | Current terminal verification | “Strict TypeScript. Ninety unit tests. Sixty production-browser checks. Zero known vulnerabilities.” |
 | 1:27–1:30 | QR/end slate | “Every small act grows the kampung.” |
 
 ## Required on-screen disclosure
