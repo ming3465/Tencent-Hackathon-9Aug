@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import { effectiveCategoryGain } from "../audio.js";
 import { DoorTransitionController } from "../doorState.js";
+import { ESTATE_NPC_ART_KEYS, RESIDENT_ART } from "../characterArt.js";
 import {
   DOOR_DEFINITIONS,
   ESTATE_BUILDINGS,
   ESTATE_GROUND_FLOWERS,
   ESTATE_LANDSCAPING,
   ESTATE_PLANTED_FEATURES,
+  ESTATE_NPC_ROUTES,
   ESTATE_SIDE_LAMPS,
   ESTATE_TREES,
   ESTATE_WORLD_BOUNDS,
@@ -280,5 +282,40 @@ describe("door and pause state", () => {
     expect(effectiveCategoryGain(settings, "sfx", true)).toBe(0.6);
     expect(effectiveCategoryGain(settings, "ui", true)).toBe(0.6);
     expect(effectiveCategoryGain({ ...settings, muted: true }, "music", true)).toBe(0);
+  });
+});
+
+describe("the village is intergenerational", () => {
+  // The estate was drawn entirely as older adults. The story does not work
+  // that way: the player is sent to convince *young* neighbours to build
+  // Mr. Long's ramp and to fill Grandma Ros's kitchen, so young neighbours
+  // have to exist and be visible in the world - not just in the art file.
+  it("walks young residents around the estate, not only elders", () => {
+    const walkers = ESTATE_NPC_ROUTES.map((route) => route.npcId);
+    const artByNpc = new Map(
+      Object.entries(ESTATE_NPC_ART_KEYS) as [string, string][],
+    );
+    const generations = walkers.map((npcId) => {
+      const key = artByNpc.get(npcId);
+      return RESIDENT_ART.find((art) => art.key === key)?.generation ?? null;
+    });
+    expect(generations).not.toContain(null);
+    const young = generations.filter((g) => g === "young").length;
+    const elder = generations.filter((g) => g === "elder").length;
+    // At least half the people visibly walking the estate read as young...
+    expect(young / generations.length).toBeGreaterThanOrEqual(0.5);
+    // ...while elders remain a real presence rather than being designed out.
+    expect(elder).toBeGreaterThanOrEqual(4);
+  });
+
+  it("gives every walking resident a route inside the estate bounds", () => {
+    for (const route of ESTATE_NPC_ROUTES) {
+      for (const point of route.points) {
+        expect(point.x).toBeGreaterThan(0);
+        expect(point.x).toBeLessThan(2560);
+        expect(point.y).toBeGreaterThan(0);
+        expect(point.y).toBeLessThan(1600);
+      }
+    }
   });
 });

@@ -12,6 +12,7 @@ import {
 import {
   getCharacterArtAudit,
   type CharacterArtAudit,
+  ESTATE_NPC_ART_KEYS as ESTATE_NPC_TEXTURES,
 } from "./characterArt.js";
 import {
   CONSEQUENCE_ART_IDS,
@@ -737,16 +738,6 @@ interface BuildingOcclusionView {
   faded: boolean;
 }
 
-const ESTATE_NPC_TEXTURES: Readonly<Partial<Record<NpcId, string>>> = {
-  "aunty-mei": "npc-mei",
-  "uncle-ravi": "npc-ravi",
-  "mdm-siti": "npc-siti",
-  "pak-yusof": "npc-yusof",
-  "coach-meng": "npc-meng",
-  "uncle-seng": "npc-seng",
-  "auntie-minah": "npc-minah",
-  "wei-ling": "npc-weiling",
-};
 
 interface TapNavigationTarget {
   destination: SpawnPoint;

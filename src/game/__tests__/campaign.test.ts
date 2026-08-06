@@ -638,12 +638,15 @@ describe("campaign registries", () => {
       new Set(NPC_PROFILES.map((npc) => npc.id)),
     );
     expect(getCharacterArtAudit()).toEqual({
-      residentCount: 12,
-      hairStyleCount: 5,
-      outfitCount: 5,
+      residentCount: 18,
+      youngCount: 8,
+      adultCount: 2,
+      elderCount: 8,
+      hairStyleCount: 7,
+      outfitCount: 7,
       buildCount: 3,
-      accessoryCount: 4,
-      carryingResidentCount: 4,
+      accessoryCount: 6,
+      carryingResidentCount: 6,
     });
     const portraitSvgs = NPC_PROFILES.map((npc) => {
       const svg = renderCampaignPortrait(npc.id);

@@ -639,6 +639,14 @@ export const ESTATE_NPC_ROUTES: readonly NpcRouteDefinition[] = [
   { npcId: "uncle-seng", home: { x: 980, y: 1140 }, points: [{ x: 980, y: 1140 }, { x: 1240, y: 1140 }, { x: 1000, y: 1190 }] },
   { npcId: "auntie-minah", home: { x: 2140, y: 430 }, points: [{ x: 2140, y: 430 }, { x: 1930, y: 450 }, { x: 2220, y: 460 }] },
   { npcId: "wei-ling", home: { x: 1720, y: 680 }, points: [{ x: 1720, y: 680 }, { x: 1600, y: 650 }, { x: 1740, y: 620 }] },
+  // Young villagers, kept in the open courtyard band (y 760-990) that sits
+  // clear of both building rows.
+  { npcId: "hafiz", home: { x: 1150, y: 940 }, points: [{ x: 1150, y: 940 }, { x: 1330, y: 900 }, { x: 1120, y: 880 }] },
+  { npcId: "jia-en", home: { x: 700, y: 960 }, points: [{ x: 700, y: 960 }, { x: 860, y: 930 }, { x: 690, y: 900 }] },
+  { npcId: "arun", home: { x: 1450, y: 980 }, points: [{ x: 1450, y: 980 }, { x: 1620, y: 950 }, { x: 1430, y: 920 }] },
+  { npcId: "nadia", home: { x: 1980, y: 930 }, points: [{ x: 1980, y: 930 }, { x: 2140, y: 900 }, { x: 1960, y: 870 }] },
+  { npcId: "kai", home: { x: 900, y: 790 }, points: [{ x: 900, y: 790 }, { x: 1040, y: 830 }, { x: 880, y: 850 }] },
+  { npcId: "priya", home: { x: 1680, y: 830 }, points: [{ x: 1680, y: 830 }, { x: 1850, y: 800 }, { x: 1660, y: 780 }] },
 ];
 
 export const BLOCK_9_BICYCLE_RACK: EstateBicycleRackDefinition = {

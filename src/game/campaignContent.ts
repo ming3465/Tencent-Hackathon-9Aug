@@ -892,6 +892,156 @@ function profile(
   return { id, name, traits, communityRole: role, expertise, knowledge, memoryRules, intents };
 }
 
+/**
+ * Young villagers.
+ *
+ * They carry no quests of their own on purpose: the campaign's thresholds and
+ * chapter gates are tuned around the existing request-givers, and adding six
+ * more would silently change how much work an ending needs. What they add is
+ * the thing the story actually requires - young neighbours who are present,
+ * greetable, and available to be asked for help. The elders stay the experts.
+ */
+const YOUNG_PROFILES: readonly NpcProfile[] = [
+  profile(
+    "hafiz",
+    "Hafiz",
+    ["easygoing", "practical", "always mid-errand"],
+    "Football regular at the void deck",
+    ["carrying heavy things up stairs", "who owns a drill"],
+    ["which lifts are out", "when the court is free"],
+    ["remember if the player asked him to help"],
+    [
+      {
+        id: "hafiz-greeting",
+        npcId: "hafiz",
+        kind: "greeting",
+        title: "By the void deck",
+        lines: [
+          "Eh, you're the one from the end house. Haven't seen you around before.",
+          "If anyone needs muscle for something, I'm usually here after four.",
+        ],
+        eligibility: {},
+        chapterRelevance: 1,
+      },
+    ],
+  ),
+  profile(
+    "jia-en",
+    "Jia En",
+    ["curious", "blunt", "observant"],
+    "Secondary school student",
+    ["noticing what adults miss", "posters and notices"],
+    ["who actually reads the noticeboard", "which neighbours never come out"],
+    ["remember what the player noticed first"],
+    [
+      {
+        id: "jia-en-greeting",
+        npcId: "jia-en",
+        kind: "greeting",
+        title: "At the noticeboard",
+        lines: [
+          "Nobody reads this board. I keep pinning things anyway.",
+          "You're new to walking around. Most people here just go flat to lift to gone.",
+        ],
+        eligibility: {},
+        chapterRelevance: 1,
+      },
+    ],
+  ),
+  profile(
+    "arun",
+    "Arun",
+    ["restless", "kind", "quick"],
+    "Delivery rider",
+    ["every shortcut in the estate", "which ramps are too steep"],
+    ["which doors have a step", "who never comes down"],
+    ["remember any route the player suggested"],
+    [
+      {
+        id: "arun-greeting",
+        npcId: "arun",
+        kind: "greeting",
+        title: "Between deliveries",
+        lines: [
+          "Twenty blocks a day and I still don't know half the names here.",
+          "Some of these entrances, I can't even get a trolley up. Must be worse on a bad hip.",
+        ],
+        eligibility: {},
+        chapterRelevance: 1,
+      },
+    ],
+  ),
+  profile(
+    "nadia",
+    "Nadia",
+    ["warm", "direct", "tired"],
+    "Nursing student",
+    ["knowing when someone is managing and when they are not"],
+    ["who has stopped answering their door"],
+    ["remember whether the player listened"],
+    [
+      {
+        id: "nadia-greeting",
+        npcId: "nadia",
+        kind: "greeting",
+        title: "On the way to class",
+        lines: [
+          "People think checking on someone means fixing them. Usually it just means turning up.",
+          "Half my course is about bodies. The other half nobody teaches - the being-forgotten part.",
+        ],
+        eligibility: {},
+        chapterRelevance: 1,
+      },
+    ],
+  ),
+  profile(
+    "kai",
+    "Kai",
+    ["loud", "fearless", "eleven"],
+    "Lives on the third floor",
+    ["where the cats sleep", "which railings are loose"],
+    ["which uncle gives out sweets", "the fastest way to the garden"],
+    ["remember if the player took him seriously"],
+    [
+      {
+        id: "kai-greeting",
+        npcId: "kai",
+        kind: "greeting",
+        title: "Cutting through the courtyard",
+        lines: [
+          "You're the one from the house nobody goes to! My mother says don't stare.",
+          "There's a man at the end house. He used to wave. He doesn't come out now.",
+        ],
+        eligibility: {},
+        chapterRelevance: 1,
+      },
+    ],
+  ),
+  profile(
+    "priya",
+    "Priya",
+    ["patient", "organised", "quietly stubborn"],
+    "Primary school teacher",
+    ["getting people to show up", "explaining things without talking down"],
+    ["which neighbours would teach if asked", "who has room in their week"],
+    ["remember any gathering the player helped fill"],
+    [
+      {
+        id: "priya-greeting",
+        npcId: "priya",
+        kind: "greeting",
+        title: "Marking on the bench",
+        lines: [
+          "I mark out here. The flat is too quiet and this is too loud, so it balances.",
+          "If you ever get something started, tell me. I can fill a room - that part I'm good at.",
+        ],
+        eligibility: {},
+        chapterRelevance: 1,
+      },
+    ],
+  ),
+];
+
 const STORY_PROFILES: readonly NpcProfile[] = [
   profile(
     "voice",
@@ -1323,6 +1473,7 @@ addStoryIntent("wei-ling", {
 
 export const NPC_PROFILES: readonly NpcProfile[] = [
   ...residentProfiles,
+  ...YOUNG_PROFILES,
   ...STORY_PROFILES,
 ];
 

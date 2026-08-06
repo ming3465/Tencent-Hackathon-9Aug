@@ -19,6 +19,15 @@ export type NpcId =
   | "uncle-seng"
   | "auntie-minah"
   | "wei-ling"
+  // Young villagers. The story asks the player to convince young neighbours
+  // to build Mr. Long's ramp and to fill Grandma Ros's kitchen, so the estate
+  // needs young neighbours in it to convince.
+  | "hafiz"
+  | "jia-en"
+  | "arun"
+  | "nadia"
+  | "kai"
+  | "priya"
   | "mr-long"
   | "grandma-ros"
   | "craftsman-tan"

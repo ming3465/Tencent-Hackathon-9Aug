@@ -561,6 +561,28 @@ function drawResidentHair(
     graphics
       .fillStyle(definition.skin)
       .fillRect(13, 12, sideFace ? 15 : 18, 5);
+  } else if (definition.hairStyle === "ponytail") {
+    // Gathered at the back and falling clear of the shoulder - the silhouette
+    // cue that reads youngest at this size.
+    const tailX = sideFace ? 8 : 29;
+    graphics
+      .fillStyle(PALETTE.ink)
+      .fillRect(tailX, 8, 6, 4)
+      .fillStyle(hair)
+      .fillRect(tailX + 1, 9, 4, 3)
+      .fillRect(tailX + 1, 12, 3, 9)
+      .fillStyle(darkenColour(hair, 0.16))
+      .fillRect(tailX + 1, 18, 3, 3);
+  } else if (definition.hairStyle === "curly") {
+    // Stacked lobes rather than a smooth cap.
+    graphics.fillStyle(hair);
+    for (let lobe = 0; lobe < 4; lobe += 1) {
+      graphics.fillRect(11 + lobe * 5, 2 + (lobe % 2 === 0 ? 0 : 2), 6, 6);
+    }
+    graphics
+      .fillStyle(lightenColour(hair, 0.18))
+      .fillRect(13, 3, 4, 2)
+      .fillRect(23, 5, 3, 2);
   }
   graphics
     .fillStyle(highlight)
@@ -607,6 +629,32 @@ function drawResidentOutfit(
       .fillStyle(PALETTE.gold)
       .fillRect(centreX - 1, bodyTop + 9, 2, 2)
       .fillRect(centreX - 1, bodyTop + 15, 2, 2);
+  } else if (definition.outfit === "tee") {
+    // Short sleeves and a round neck: bare forearms are the clearest
+    // young-adult read against the estate's long-sleeved elders.
+    graphics
+      .fillStyle(darkenColour(definition.shirt, 0.18))
+      .fillRect(bodyLeft + 4, bodyTop + 4, bodyWidth - 8, 2)
+      .fillStyle(lightenColour(definition.shirt, 0.3))
+      .fillRect(centreX - 4, bodyTop + 3, 8, 2);
+    if (facing !== "up") {
+      graphics
+        .fillStyle(lightenColour(definition.shirt, 0.16))
+        .fillRect(bodyLeft + 6, bodyTop + 9, usableWidth - 2, 3);
+    }
+  } else if (definition.outfit === "hoodie") {
+    graphics
+      .fillStyle(darkenColour(definition.shirt, 0.24))
+      // Hood bunched behind the neck.
+      .fillRect(centreX - 6, bodyTop + 1, 12, 4)
+      .fillStyle(darkenColour(definition.shirt, 0.14))
+      .fillRect(bodyLeft + 5, bodyTop + 12, usableWidth, 4);
+    if (facing !== "up") {
+      graphics
+        .fillStyle(PALETTE.cream, 0.8)
+        .fillRect(centreX - 3, bodyTop + 5, 1, 5)
+        .fillRect(centreX + 2, bodyTop + 5, 1, 5);
+    }
   } else if (facing !== "up") {
     graphics
       .fillStyle(lightenColour(definition.shirt, 0.25))
@@ -1037,6 +1085,37 @@ function drawResidentFrame(
           Math.max(3, apronWidth - 4),
           2,
         );
+    }
+  } else if (definition.accessory === "cap") {
+    // Crown plus a forward peak. Sits over the hair, so it reads at 40x56.
+    const peakX = facing === "side" ? 30 : 26;
+    graphics
+      .fillStyle(darkenColour(definition.shirt, 0.18))
+      .fillRect(12, 3, 18, 5)
+      .fillRect(peakX, 7, 8, 3)
+      .fillStyle(lightenColour(definition.shirt, 0.16))
+      .fillRect(14, 4, 7, 2);
+  } else if (definition.accessory === "backpack") {
+    if (facing === "up") {
+      // Facing away, the pack is the whole back.
+      graphics
+        .fillStyle(darkenColour(definition.shirt, 0.34))
+        .fillRect(13, 27, 14, Math.min(17, bodyHeight - 4))
+        .fillStyle(PALETTE.gold)
+        .fillRect(17, 33, 6, 3);
+    } else {
+      const strapLeft = facing === "side" ? 22 : 15;
+      graphics
+        .fillStyle(darkenColour(definition.shirt, 0.34))
+        .fillRect(strapLeft, 27, 3, Math.min(14, bodyHeight - 6));
+      if (facing === "side") {
+        // In profile the pack itself shows behind the shoulder.
+        graphics
+          .fillStyle(darkenColour(definition.shirt, 0.3))
+          .fillRect(10, 28, 8, 14)
+          .fillStyle(PALETTE.gold)
+          .fillRect(12, 33, 4, 2);
+      }
     }
   }
 }

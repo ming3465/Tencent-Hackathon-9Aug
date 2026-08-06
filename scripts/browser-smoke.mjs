@@ -1703,7 +1703,10 @@ try {
         `player-frames=${residentMotionEvidence.playerWalkFrames}; ` +
         `player-idle-blink=${residentMotionEvidence.playerIdleBlink}; ` +
         `resident-frames=${residentFourFrameIds.join(",") || "none"}; ` +
-        `cast=${residentMotionEvidence.characterArt.residentCount}/` +
+        `cast=${residentMotionEvidence.characterArt.residentCount}` +
+        `(${residentMotionEvidence.characterArt.youngCount}y/` +
+        `${residentMotionEvidence.characterArt.adultCount}a/` +
+        `${residentMotionEvidence.characterArt.elderCount}e)/` +
         `${residentMotionEvidence.characterArt.hairStyleCount} hair/` +
         `${residentMotionEvidence.characterArt.outfitCount} outfits; ` +
         `ambient=${movedAmbientIds.join(",") || "none"}; ` +
@@ -4395,12 +4398,18 @@ try {
       && residentMotionEvidence.playerWalkFrames === 4
       && residentMotionEvidence.playerIdleBlink
       && residentMotionEvidence.residentFourFrameIds.length >= 1
-      && residentMotionEvidence.characterArt.residentCount === 12
-      && residentMotionEvidence.characterArt.hairStyleCount === 5
-      && residentMotionEvidence.characterArt.outfitCount === 5
+      && residentMotionEvidence.characterArt.residentCount >= 18
+      && residentMotionEvidence.characterArt.hairStyleCount >= 7
+      && residentMotionEvidence.characterArt.outfitCount >= 7
+      // The village has to read as intergenerational, not as an elder
+      // enclave: young neighbours are who the story asks you to recruit.
+      && residentMotionEvidence.characterArt.youngCount >= 8
+      && residentMotionEvidence.characterArt.elderCount >= 6
       && residentMotionEvidence.characterArt.buildCount === 3
-      && residentMotionEvidence.characterArt.accessoryCount === 4
-      && residentMotionEvidence.characterArt.carryingResidentCount === 4
+      // >= not ===: these gate variety, so they must not fail when the cast
+      // gains any. Exact equality here is what broke on the young villagers.
+      && residentMotionEvidence.characterArt.accessoryCount >= 6
+      && residentMotionEvidence.characterArt.carryingResidentCount >= 6
       && consequenceArtEvidence.before
       && Object.values(consequenceArtEvidence.before).every(
         (artId) => artId === null
