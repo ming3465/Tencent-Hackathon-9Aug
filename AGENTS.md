@@ -60,9 +60,11 @@ npm run typecheck && npm test && npm run build && npm audit && npm run smoke
 
 `npm run smoke` is self-contained (builds, serves, drives headless Chrome
 through a full playthrough, writes screenshots to `docs/screenshots/`).
-Current truth: **100 unit tests, 60 smoke checks, 0 vulnerabilities.** The unit
-split is campaign 30, match engine 31, audio 17, accessibility contract 4,
-world-layout/door/pause 8, and isometric world 10. If a doc
+Current truth: **125 unit tests, 65 smoke checks, 0 vulnerabilities.** The unit
+split is campaign 30, match engine 31, audio 17, player identity 25,
+accessibility contract 4, world-layout/door/pause 8, and isometric world 10.
+The smoke suite plays the campaign as a named player, so a render site that
+forgets to resolve the `{player}` token fails the gate. If a doc
 or deck quotes different numbers after your change, update them — stale
 numbers are treated as defects.
 
@@ -117,9 +119,10 @@ Nothing else needs editing. `vite.config.ts` adds the second entry only when
 exactly this reason — do not move it back).
 
 **Verified, not assumed:** run in a throwaway worktree with those paths
-deleted, the full gate passed — typecheck clean, **90/90** tests (the 10
-isometric tests go with it), build green, **60/60 smoke**. Re-verify the same
-way if the coupling ever changes.
+deleted, the full gate passed — typecheck clean, **115/125** tests (the 10
+isometric tests go with them), build green, **65/65 smoke**. Re-verify the
+same way if the coupling ever changes, and update these numbers with what you
+actually measured.
 
 Tag `pre-isometric` marks the last commit before the slice began. It is a
 **comparison point, not a reset target** — unrelated work landed after it, so
@@ -129,6 +132,28 @@ never `git reset` to it.
 
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
+
+- **2026-08-06 (Claude Code, player-identity and isometric-rollback lane)** —
+  The protagonist was hard-coded as "Y"; the title screen now asks for a name
+  and a look. Story text carries a `{player}` token resolved at render time,
+  defaulting to "Y" so existing saves, screenshots and the demo script still
+  read correctly. The look customiser offers skin, hair, shirt and trousers,
+  every option carrying a visible word as well as a colour, at 48px targets on
+  native radios. The preview is not a re-drawing: `CanvasPixelPainter`
+  implements the same surface Phaser's `Graphics` does, so the title screen
+  calls the exact function that bakes the in-game sprite. Two real bugs
+  surfaced and were fixed — `makeTexture` skips existing keys so starting over
+  kept the previous body, and `startOver` rebuilt the campaign without the
+  chosen identity. Pre-identity saves migrate rather than being rejected, so
+  the format stays at version 1. The smoke suite now plays the whole campaign
+  as a named player and fails on any unresolved token, which is how the 11
+  missed render sites were found; a new check also keeps "Start the story"
+  above the fold, which the panel had pushed off. Separately, the isometric
+  slice was made a genuine one-command rollback: the shared grain pass moved
+  out of `src/game/iso/` (the shipped campaign had been importing it), and the
+  vite entry is now conditional. Verified by deleting the whole footprint in a
+  worktree — 115/125 tests, 65/65 smoke, clean build. Gate: typecheck clean,
+  125 tests, 65/65 smoke, 0 vulnerabilities.
 
 - **2026-08-06 (Codex, focus-recovery and pointer-frame lane)** — Reproduced a
   real pointer Menu → Resume lockout: Resume restored the Menu trigger, the
