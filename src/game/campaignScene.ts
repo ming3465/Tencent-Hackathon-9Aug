@@ -24,6 +24,11 @@ import {
   type CampaignConsequenceArtSnapshot,
 } from "./consequenceArt.js";
 import {
+  availableDropoff,
+  availablePickups,
+  carriedErrand,
+} from "./carryErrands.js";
+import {
   ESTATE_FLAVOUR_INTERACTIONS,
   LOCATION_BY_ID,
   NPC_BY_ID,
@@ -757,6 +762,8 @@ abstract class WalkableScene extends Phaser.Scene {
   private playerGuide!: Phaser.GameObjects.Graphics;
   protected obstacles: Phaser.GameObjects.GameObject[] = [];
   protected interactions: WorldInteraction[] = [];
+  /** Cosmetic parcel drawn above the player while an errand is in hand. */
+  protected carriedItemView: Phaser.GameObjects.Rectangle | null = null;
   protected consequences: Phaser.GameObjects.GameObject[] = [];
   protected scamCheckCard?: Phaser.GameObjects.Graphics;
   protected consequenceArt = emptyConsequenceArtSnapshot();
@@ -890,6 +897,7 @@ abstract class WalkableScene extends Phaser.Scene {
   update(time: number, delta: number): void {
     if (!this.player?.body) return;
     this.updateStepPuffs(time);
+    this.updateCarriedItemPosition();
     this.playerShadow
       .setPosition(this.player.x, this.player.y + 23)
       .setDepth(depthFor(this.player.y, 1))
@@ -1297,6 +1305,21 @@ abstract class WalkableScene extends Phaser.Scene {
 
   refreshCampaignState(): void {
     this.drawConsequences();
+    this.refreshCarriedItemView();
+    this.refreshErrandInteractions();
+  }
+
+  /**
+   * Rebuilds the errand prompts after any state change, so a pickup disappears
+   * the moment it is taken and the matching drop-off appears in the same tick.
+   */
+  protected refreshErrandInteractions(): void {
+    this.interactions = this.interactions.filter(
+      (interaction) => interaction.kind !== "carry-pickup"
+        && interaction.kind !== "carry-dropoff",
+    );
+    this.registerErrandPoints(this.locationId);
+    this.updateNearbyInteraction(true);
   }
 
   refreshCameraLayout(width = this.scale.width, height = this.scale.height): void {
@@ -1955,6 +1978,65 @@ abstract class WalkableScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Registers whichever errand points the player can act on right now.
+   *
+   * Recomputed from state rather than shown-and-disabled: a prompt the player
+   * cannot act on is worse than no prompt, and "hands full" is already
+   * communicated by the carried item above their head.
+   */
+  protected registerErrandPoints(locationId: LocationId): void {
+    const state = this.getState();
+    for (const errand of availablePickups(state, locationId)) {
+      this.interactions.push({
+        kind: "carry-pickup",
+        id: `errand-pickup:${errand.id}`,
+        label: errand.pickup.label,
+        shortLabel: errand.pickup.shortLabel,
+        errandId: errand.id,
+        x: errand.pickup.x,
+        y: errand.pickup.y,
+      });
+    }
+    const dropoff = availableDropoff(state, locationId);
+    if (dropoff) {
+      this.interactions.push({
+        kind: "carry-dropoff",
+        id: `errand-dropoff:${dropoff.id}`,
+        label: dropoff.dropoff.label,
+        shortLabel: dropoff.dropoff.shortLabel,
+        errandId: dropoff.id,
+        x: dropoff.dropoff.x,
+        y: dropoff.dropoff.y,
+      });
+    }
+  }
+
+  /**
+   * The parcel the player is holding, drawn as a small block carried in front
+   * of them. Purely cosmetic - it never collides and never blocks input.
+   */
+  protected refreshCarriedItemView(): void {
+    const errand = carriedErrand(this.getState());
+    if (!errand) {
+      this.carriedItemView?.destroy();
+      this.carriedItemView = null;
+      return;
+    }
+    if (!this.carriedItemView) {
+      this.carriedItemView = this.add.rectangle(0, 0, 16, 12, errand.tint)
+        .setStrokeStyle(2, PALETTE.ink)
+        .setDepth(depthFor(this.player.y, 6));
+    }
+    this.carriedItemView.setFillStyle(errand.tint);
+  }
+
+  protected updateCarriedItemPosition(): void {
+    if (!this.carriedItemView) return;
+    this.carriedItemView.setPosition(this.player.x, this.player.y - 34);
+    this.carriedItemView.setDepth(depthFor(this.player.y, 6));
+  }
+
   private updateNearbyInteraction(force: boolean): void {
     let nearest: WorldInteraction | null = null;
     let nearestDistance = Number.POSITIVE_INFINITY;
@@ -2415,6 +2497,7 @@ export class EstateScene extends WalkableScene {
         ...detail,
       });
     }
+    this.registerErrandPoints("estate");
     this.setupWorld(
       ESTATE_WIDTH,
       ESTATE_HEIGHT,

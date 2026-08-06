@@ -11,6 +11,7 @@ import type {
   NpcId,
   QuestId,
 } from "./campaignTypes.js";
+import { errandById } from "./carryErrands.js";
 import {
   type PlayerAppearance,
   sanitiseAppearance,
@@ -154,6 +155,7 @@ export function createCampaignState(
     version: CAMPAIGN_VERSION,
     playerName: sanitisePlayerName(options.playerName),
     playerAppearance: sanitiseAppearance(options.playerAppearance),
+    carrying: null,
     currentChapter: "prologue",
     completedChapters: [],
     completedQuests: [],
@@ -348,6 +350,21 @@ export function reduceCampaign(
       }
       next = withObjective(state, event.objectiveId);
       break;
+    case "pick-up-errand": {
+      const errand = errandById(event.errandId);
+      // Hands full, unknown errand, or already run: all no-ops rather than
+      // errors. Nothing the player can press should be able to break a save.
+      if (!errand || state.carrying !== null) return state;
+      if (state.objectives.includes(errand.objectiveId)) return state;
+      next = { ...state, carrying: errand.id };
+      break;
+    }
+    case "deliver-errand": {
+      const errand = errandById(event.errandId);
+      if (!errand || state.carrying !== errand.id) return state;
+      next = withObjective({ ...state, carrying: null }, errand.objectiveId);
+      break;
+    }
     case "complete-request":
       next = reduceRequest(state, event);
       break;

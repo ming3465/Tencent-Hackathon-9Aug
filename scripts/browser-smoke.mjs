@@ -1723,6 +1723,86 @@ try {
         `worst ${wanderingFramePacing.worst.toFixed(2)}ms`
     );
     await page.shot(`${SHOT_DIR}/10-living-estate.png`);
+
+    // Carry-and-deliver: pick an errand up on one side of the estate, walk it
+    // to the other, hand it over. Driven through the real interaction path so
+    // the prompt, the HUD, the carried sprite and the objective are all proved
+    // together rather than asserted from state alone.
+    const runErrand = async () => {
+      // Wall time can pass without the scene stepping (evidence screenshots
+      // pause rendering), so wait on real animation frames.
+      const waitFrames = (duration) => page.eval(`
+        new Promise((resolve) => {
+          const startedAt = performance.now();
+          const fallback = window.setTimeout(() => resolve(true), ${duration} + 2000);
+          const tick = (now) => {
+            if (now - startedAt >= ${duration}) {
+              window.clearTimeout(fallback);
+              resolve(true);
+              return;
+            }
+            requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        })
+      `);
+      const errand = await page.eval(`
+        (() => {
+          const first = window.__kampungErrands?.[0] ?? null;
+          return first ? { id: first.id, item: first.item,
+            pickup: first.pickup, dropoff: first.dropoff } : null;
+        })()
+      `);
+      if (!errand) return { skipped: "no errand registry exposed" };
+
+      const step = async (point, expectPrefix) => {
+        await page.eval(`
+          window.__kampungSmoke.setPlayerPosition(${point.x}, ${point.y});
+          document.getElementById("sandbox-stage").focus({ preventScroll: true });
+        `);
+        await waitFrames(720);
+        const nearby = await page.eval(
+          `window.__kampungSmoke?.getMotionSnapshot?.()?.nearbyInteractionId ?? null`
+        );
+        await page.eval(`window.__kampungSmoke.tryInteract()`);
+        await waitFrames(480);
+        await page.eval(`document.getElementById("btn-dialog-close")?.click()`);
+        await waitFrames(240);
+        return { nearby, matched: String(nearby ?? "").startsWith(expectPrefix) };
+      };
+
+      const picked = await step(errand.pickup, "errand-pickup:");
+      const carrying = await page.eval(`
+        (() => {
+          const hud = document.getElementById("carry-indicator");
+          return {
+            hudVisible: hud instanceof HTMLElement && !hud.hidden,
+            hudText: hud?.textContent?.trim() ?? "",
+          };
+        })()
+      `);
+      const dropped = await step(errand.dropoff, "errand-dropoff:");
+      const delivered = await page.eval(`
+        (() => {
+          const hud = document.getElementById("carry-indicator");
+          return { hudHidden: hud instanceof HTMLElement && hud.hidden };
+        })()
+      `);
+      return { errand: errand.id, picked, carrying, dropped, delivered };
+    };
+
+    const errandEvidence = await runErrand();
+    check(
+      "An errand can be picked up, carried across the estate, and delivered",
+      Boolean(
+        errandEvidence.picked?.matched
+        && errandEvidence.carrying?.hudVisible
+        && /^Carrying /.test(errandEvidence.carrying?.hudText ?? "")
+        && errandEvidence.dropped?.matched
+        && errandEvidence.delivered?.hudHidden
+      ),
+      JSON.stringify(errandEvidence)
+    );
     // Leave the north-crossing prop line before travelling east. A straight
     // axis-only hold can correctly meet the planter/trolley collision shells;
     // the player route goes around them just as a real player would.

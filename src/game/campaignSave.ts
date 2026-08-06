@@ -3,6 +3,7 @@ import type {
   CampaignStateV1,
   ScamCheckCardLayout,
 } from "./campaignTypes.js";
+import { errandById } from "./carryErrands.js";
 import { sanitiseAppearance, sanitisePlayerName } from "./playerIdentity.js";
 
 export interface CampaignStorage {
@@ -89,6 +90,19 @@ function migratePlayerIdentity(state: CampaignStateV1): CampaignStateV1 {
   return { ...state, playerName, playerAppearance };
 }
 
+/**
+ * Saves written before errands existed have no `carrying` field. Empty hands
+ * is the only correct reading, and a missing field must never invalidate a
+ * save.
+ */
+function migrateCarriedItem(state: CampaignStateV1): CampaignStateV1 {
+  const carrying = typeof state.carrying === "string"
+    && errandById(state.carrying) !== undefined
+    ? state.carrying
+    : null;
+  return carrying === state.carrying ? state : { ...state, carrying };
+}
+
 function migrateScamCheckCard(state: CampaignStateV1): CampaignStateV1 {
   const hasMinahClue = state.objectives.includes("ros-clue-minah");
   const hasScamCard = state.objectives.includes("scam-check-shared");
@@ -143,7 +157,7 @@ export function loadCampaign(
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!isCampaignStateV1(parsed)) return null;
-    return migrateScamCheckCard(migratePlayerIdentity(parsed));
+    return migrateScamCheckCard(migrateCarriedItem(migratePlayerIdentity(parsed)));
   } catch {
     return null;
   }

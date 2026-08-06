@@ -2285,6 +2285,21 @@
         text-transform: uppercase;
       }
 
+      /* What the player is holding. A word, not just the parcel above their
+         head - the sprite alone would carry the fact by colour and shape only. */
+      .carry-indicator {
+        margin: 0.5rem 0 0;
+        padding: 0.5rem 0.7rem;
+        max-width: 15rem;
+        color: var(--cream);
+        background: rgba(23, 63, 79, 0.92);
+        border: 2px solid var(--gold);
+        border-radius: 12px;
+        font-size: 0.82rem;
+        font-weight: 800;
+        pointer-events: none;
+      }
+
       .quest-tracker {
         width: 100%;
         display: grid;
@@ -3385,6 +3400,7 @@
                 </span>
               </button>
               <div id="quest-tracker" class="quest-tracker" aria-label="Quest progress"></div>
+              <p id="carry-indicator" class="carry-indicator" hidden></p>
             </aside>
 
             <div id="interaction-prompt" class="interaction-prompt visually-hidden" aria-hidden="true">

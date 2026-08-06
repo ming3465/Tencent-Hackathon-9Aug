@@ -84,6 +84,14 @@ export interface CampaignStateV1 {
   playerName: string;
   /** The look chosen on the title screen; drives the baked player sprite. */
   playerAppearance: PlayerAppearance;
+  /**
+   * Id of the errand item in the player's hands, or null.
+   *
+   * One at a time on purpose: the HUD then only ever states one fact, and
+   * "hands full" is shown by hiding other pickups rather than by refusing a
+   * press the player already made.
+   */
+  carrying: string | null;
   currentChapter: CampaignPhase;
   completedChapters: ChapterId[];
   completedQuests: QuestId[];
@@ -105,6 +113,8 @@ export type ScamCheckCardLayout = "numbered-steps" | "icons-and-words";
 export type CampaignEvent =
   | { type: "visit-location"; locationId: LocationId }
   | { type: "complete-objective"; objectiveId: string }
+  | { type: "pick-up-errand"; errandId: string }
+  | { type: "deliver-errand"; errandId: string }
   | {
       type: "complete-request";
       questId: QuestId;
@@ -235,6 +245,24 @@ export type WorldInteraction =
       label: string;
       shortLabel: string;
       targetLocationId: LocationId;
+      x: number;
+      y: number;
+    }
+  | {
+      kind: "carry-pickup";
+      id: string;
+      label: string;
+      shortLabel: string;
+      errandId: string;
+      x: number;
+      y: number;
+    }
+  | {
+      kind: "carry-dropoff";
+      id: string;
+      label: string;
+      shortLabel: string;
+      errandId: string;
       x: number;
       y: number;
     }

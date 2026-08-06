@@ -31,6 +31,12 @@ import {
 } from "./game/playerIdentity.js";
 import { renderPlayerPreview } from "./game/playerPreview.js";
 import {
+  carriedErrand,
+  CARRY_ERRANDS,
+  type CarryErrand,
+  errandById,
+} from "./game/carryErrands.js";
+import {
   CAMPAIGN_PORTRAITS,
   renderCampaignPortrait,
   type PortraitMood,
@@ -135,6 +141,7 @@ if (!minimapLayout) throw new Error("Missing required #minimap-layout");
 
 const interactionPrompt = byId<HTMLElement>("interaction-prompt");
 const nearbyText = byId<HTMLElement>("nearby-text");
+const carryIndicator = byId<HTMLElement>("carry-indicator");
 const btnTouchInteract = byId<HTMLButtonElement>("btn-touch-interact");
 const foundTouchControls = document.querySelector<HTMLElement>(".touch-controls");
 if (!foundTouchControls) throw new Error("Missing required .touch-controls");
@@ -210,6 +217,8 @@ const smokeWindow = window as Window & {
     tryInteract: () => void;
   };
   __kampungLoaderSmoke?: CampaignLoaderSmokeControl;
+  /** Errand registry, so the harness drives real points rather than literals. */
+  __kampungErrands?: readonly CarryErrand[];
 };
 
 let campaignStorageAvailable = true;
@@ -697,6 +706,9 @@ function prefetchCampaignSceneAfterTitleLoad(): void {
 }
 
 if (SMOKE_MODE) {
+  // Exposing the data, not hard-coded coordinates, keeps the browser check
+  // honest when an errand is moved or added.
+  smokeWindow.__kampungErrands = CARRY_ERRANDS;
   smokeWindow.__kampungLoaderSmoke = {
     prepareHeldLoad(): void {
       cancelScheduledCampaignPrefetch?.();
@@ -1185,6 +1197,22 @@ function handleWorldInteraction(interaction: WorldInteraction): boolean {
         [`You take a careful look. ${interaction.label}. The Journal records what matters.`],
       );
       return false;
+    case "carry-pickup": {
+      const errand = errandById(interaction.errandId);
+      if (!errand) return false;
+      dispatchCampaign({ type: "pick-up-errand", errandId: errand.id });
+      openNarrative(errand.pickup.shortLabel, "The estate", errand.pickup.lines);
+      announce(`Carrying ${errand.item}.`);
+      return false;
+    }
+    case "carry-dropoff": {
+      const errand = errandById(interaction.errandId);
+      if (!errand) return false;
+      dispatchCampaign({ type: "deliver-errand", errandId: errand.id });
+      openNarrative(errand.dropoff.shortLabel, "The estate", errand.dropoff.lines);
+      announce(`Delivered ${errand.item}.`);
+      return false;
+    }
     case "flavour":
       openNarrative(interaction.shortLabel, "The estate", interaction.lines);
       return false;
@@ -1584,6 +1612,13 @@ function appendTrackerCard(
   questTracker.appendChild(button);
 }
 
+/** Shows the errand in hand, so the parcel sprite is never the only cue. */
+function renderCarryIndicator(): void {
+  const errand = carriedErrand(campaignState);
+  carryIndicator.hidden = errand === undefined;
+  carryIndicator.textContent = errand ? `Carrying ${errand.item}` : "";
+}
+
 function renderQuestTracker(): void {
   const currentLocation =
     campaignHandle?.getCurrentLocation() ?? campaignState.currentLocation;
@@ -1613,6 +1648,7 @@ function renderCampaign(): void {
   renderMeters();
   renderJournal();
   renderQuestTracker();
+  renderCarryIndicator();
   renderMinimap();
   const chapter = campaignState.currentChapter === "free-explore"
     ? null
