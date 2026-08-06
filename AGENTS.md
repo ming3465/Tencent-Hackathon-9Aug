@@ -100,6 +100,31 @@ More than one agent is often live in this working tree at the same time
 - Every push to `main` deploys to the public judged URL — keep `main` always
   green and always shippable.
 
+## Dropping the isometric direction (rollback)
+
+The isometric art direction is **opt-in and unlinked**. It lives at
+`/iso-preview.html`; the judged game at `/` is untouched top-down and loads
+none of it. If the direction is rejected, remove it with one command:
+
+```bash
+rm -rf src/game/iso src/iso-preview.ts iso-preview.html \
+       src/game/__tests__/isoWorld.test.ts
+```
+
+Nothing else needs editing. `vite.config.ts` adds the second entry only when
+`iso-preview.html` exists, and no shipped module imports from `src/game/iso/`
+(the shared grain pass deliberately lives at `src/game/textureGrain.ts` for
+exactly this reason — do not move it back).
+
+**Verified, not assumed:** run in a throwaway worktree with those paths
+deleted, the full gate passed — typecheck clean, **90/90** tests (the 10
+isometric tests go with it), build green, **60/60 smoke**. Re-verify the same
+way if the coupling ever changes.
+
+Tag `pre-isometric` marks the last commit before the slice began. It is a
+**comparison point, not a reset target** — unrelated work landed after it, so
+never `git reset` to it.
+
 ## Session log (what has been worked on, newest first)
 
 This section is the cross-agent handoff trail. Append a dated line when you
