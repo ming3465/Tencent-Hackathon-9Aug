@@ -48,9 +48,9 @@ accessibility-contract, and 8 world-layout/door/pause tests.
 ## Production-browser smoke — 60/60 passing
 
 - [x] Production bundle creates exactly one Phaser Canvas
-- [x] Production build measures 91.14 kB HTML (16.00 kB gzip), 140.99 kB
-      initial JavaScript (41.22 kB gzip), and a 1,612.32 kB lazy scene
-      (377.41 kB gzip)
+- [x] Production build measures 91.64 kB HTML (16.14 kB gzip), 141.46 kB
+      initial JavaScript (41.48 kB gzip), and a 1,613.26 kB lazy scene
+      (379.79 kB gzip)
 - [x] Reviewed 1668×943 WebP title artwork loads without desktop overflow
 - [x] Cached idle campaign prefetch runs after title-art settlement, skips
       Save-Data and 2g-class connections, reports opening and 12-second slow

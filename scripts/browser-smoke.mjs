@@ -48,6 +48,8 @@ const CAPTURE_LOCATION_GALLERY = args.includes("--location-gallery");
 const CAPTURE_SCREENSHOTS = !args.includes("--no-shots");
 const CAPTURE_LOCATION_SCREENSHOTS_ONLY = args.includes("--gallery-only");
 const CAPTURE_HERO_DAY_ONLY = args.includes("--hero-only");
+const FOCUS_ONLY = args.includes("--focus-only");
+const FOCUS_ONLY_COMPLETE = "__KAMPUNG_FOCUS_ONLY_COMPLETE__";
 
 const failures = [];
 const notes = [];
@@ -457,6 +459,47 @@ try {
     await dispatchTouch("touchStart", [{ id: 1, x, y }]);
     await sleep(holdMs);
     await dispatchTouch("touchEnd", []);
+  };
+
+  const pointerClick = async (selector) => {
+    const point = await page.eval(`
+      (() => {
+        const target = document.querySelector(${JSON.stringify(selector)});
+        if (!target) return null;
+        const rect = target.getBoundingClientRect();
+        return {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+        };
+      })()
+    `);
+    if (!point) throw new Error(`Pointer target not found: ${selector}`);
+    await page.send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: point.x,
+      y: point.y,
+      button: "none",
+      buttons: 0,
+      pointerType: "mouse",
+    });
+    await page.send("Input.dispatchMouseEvent", {
+      type: "mousePressed",
+      x: point.x,
+      y: point.y,
+      button: "left",
+      buttons: 1,
+      clickCount: 1,
+      pointerType: "mouse",
+    });
+    await page.send("Input.dispatchMouseEvent", {
+      type: "mouseReleased",
+      x: point.x,
+      y: point.y,
+      button: "left",
+      buttons: 0,
+      clickCount: 1,
+      pointerType: "mouse",
+    });
   };
 
   const worldPointToClient = (x, y) => page.eval(`
@@ -2387,6 +2430,57 @@ try {
     "Exactly one Phaser canvas is created",
     (await page.eval(`document.querySelectorAll("#sandbox-stage canvas").length`)) === 1
   );
+  if (FOCUS_ONLY) {
+    await page.eval(`
+      (() => {
+        window.__kampungFocusTrace = [];
+        for (const type of ["pointerdown", "mousedown", "click", "keydown"]) {
+          window.addEventListener(type, (event) => {
+            window.__kampungFocusTrace.push({
+              type,
+              detail: event.detail ?? null,
+              x: event.clientX ?? null,
+              y: event.clientY ?? null,
+              key: event.key ?? null,
+              modality: document.documentElement.dataset.inputModality ?? null,
+            });
+          }, { capture: true });
+        }
+      })()
+    `);
+    await pointerClick("#btn-menu");
+    await sleep(100);
+    await pointerClick("#btn-pause-resume");
+    await sleep(100);
+    await pointerClick("#sandbox-stage canvas");
+    await sleep(100);
+    const focusOnlyState = await page.eval(`
+      (() => {
+        const stage = document.getElementById("sandbox-stage");
+        const style = getComputedStyle(stage);
+        return {
+          focus: document.activeElement?.id,
+          modality: document.documentElement.dataset.inputModality ?? null,
+          controls: window.__kampungSmoke?.getMotionSnapshot?.()
+            ?.tapNavigation?.controlsEnabled ?? false,
+          outline: style.outline,
+          boxShadow: style.boxShadow,
+          trace: window.__kampungFocusTrace,
+        };
+      })()
+    `);
+    diagnostics.push(`  FOCUS  ${JSON.stringify(focusOnlyState)}`);
+    check(
+      "Pointer focus returns to the world without a decorative frame",
+      focusOnlyState.focus === "sandbox-stage"
+        && focusOnlyState.modality === "pointer"
+        && focusOnlyState.controls
+        && focusOnlyState.outline.includes(" none ")
+        && focusOnlyState.boxShadow === "none",
+      JSON.stringify(focusOnlyState),
+    );
+    throw new Error(FOCUS_ONLY_COMPLETE);
+  }
   const closedWorldWidth = await page.eval(
     `document.querySelector(".world-shell").getBoundingClientRect().width`
   );
@@ -2763,6 +2857,85 @@ try {
     delete document.fullscreenElement;
     delete window.__kampungFullscreenMock;
   `);
+
+  const beforePointerPauseMovement = await page.eval(
+    `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
+  );
+  await pointerClick("#btn-menu");
+  await sleep(100);
+  const pointerPauseOpened = await page.eval(`
+    document.getElementById("pause-overlay").classList.contains("active")
+      && document.activeElement?.id === "btn-pause-resume"
+  `);
+  await pointerClick("#btn-pause-resume");
+  await sleep(100);
+  const pointerResumeState = await page.eval(`
+    (() => {
+      const menu = document.getElementById("btn-menu");
+      const style = getComputedStyle(menu);
+      return {
+        focus: document.activeElement?.id,
+        modality: document.documentElement.dataset.inputModality ?? null,
+        controls: window.__kampungSmoke?.getMotionSnapshot?.()
+          ?.tapNavigation?.controlsEnabled ?? false,
+        outlineHidden:
+          style.outlineStyle === "none" || parseFloat(style.outlineWidth) === 0,
+      };
+    })()
+  `);
+  await pointerClick("#sandbox-stage canvas");
+  await sleep(80);
+  const pointerWorldState = await page.eval(`
+    (() => {
+      const stage = document.getElementById("sandbox-stage");
+      const style = getComputedStyle(stage);
+      return {
+        focus: document.activeElement?.id,
+        modality: document.documentElement.dataset.inputModality ?? null,
+        controls: window.__kampungSmoke?.getMotionSnapshot?.()
+          ?.tapNavigation?.controlsEnabled ?? false,
+        outlineHidden:
+          style.outlineStyle === "none" || parseFloat(style.outlineWidth) === 0,
+        goldFrameHidden: style.boxShadow === "none",
+      };
+    })()
+  `);
+  await page.key("keyDown", "ArrowRight", "ArrowRight", 39);
+  await sleep(240);
+  await page.key("keyUp", "ArrowRight", "ArrowRight", 39);
+  await sleep(100);
+  const afterPointerPauseMovement = await page.eval(
+    `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
+  );
+  await page.key("keyDown", "Tab", "Tab", 9);
+  await page.key("keyUp", "Tab", "Tab", 9);
+  await sleep(80);
+  const keyboardFocusState = await page.eval(`
+    (() => {
+      const active = document.activeElement;
+      if (!(active instanceof HTMLElement)) return null;
+      const style = getComputedStyle(active);
+      return {
+        id: active.id,
+        visible:
+          style.outlineStyle !== "none" && parseFloat(style.outlineWidth) >= 3,
+      };
+    })()
+  `);
+  await pointerClick("#sandbox-stage canvas");
+  await sleep(80);
+  if (beforePointerPauseMovement) {
+    await page.eval(`
+      window.__kampungSmoke?.setPlayerPosition?.(
+        ${beforePointerPauseMovement.player.x},
+        ${beforePointerPauseMovement.player.y}
+      )
+    `);
+    // setPlayerPosition deliberately re-arms the scene's transition latch.
+    // Let it settle so this isolated regression probe cannot block the
+    // immediately following prologue interaction.
+    await sleep(700);
+  }
   const pauseEvidence = {
     opened:
       pauseOpened.active
@@ -2793,6 +2966,20 @@ try {
       afterPauseMovement
       && beforePauseMovement
       && beforePauseMovement.player.x - afterPauseMovement.player.x >= 18,
+    pointerRecovery:
+      pointerPauseOpened
+      && pointerResumeState.focus === "btn-menu"
+      && !pointerResumeState.controls
+      && pointerWorldState.focus === "sandbox-stage"
+      && pointerWorldState.controls
+      && beforePointerPauseMovement
+      && afterPointerPauseMovement
+      && afterPointerPauseMovement.player.x - beforePointerPauseMovement.player.x >= 18,
+    pointerFocusTreatment:
+      pointerResumeState.outlineHidden
+      && pointerWorldState.outlineHidden
+      && pointerWorldState.goldFrameHidden
+      && keyboardFocusState?.visible === true,
   };
   const journalDrawerEvidence = {
     viewportFill:
@@ -2872,7 +3059,17 @@ try {
       `pause-preserved=${journalDrawerEvidence.pausePreserved}; ` +
       `resume=${journalDrawerEvidence.resumed}; ` +
       `backdrop=${journalDrawerEvidence.backdropClosed}; ` +
-      `pause=${JSON.stringify(pauseEvidence)}`
+      `pause=${JSON.stringify(pauseEvidence)}; ` +
+      `pointer-state=${JSON.stringify({
+        resume: pointerResumeState,
+        world: pointerWorldState,
+        keyboard: keyboardFocusState,
+        moved:
+          beforePointerPauseMovement && afterPointerPauseMovement
+            ? afterPointerPauseMovement.player.x
+              - beforePointerPauseMovement.player.x
+            : null,
+      })}`
   );
   check(
     "World reports ready with dynamic Journal and Pause controls",
@@ -3805,6 +4002,12 @@ try {
     "nearby viewport tap to open dialogue",
     1200,
   );
+  // The pointer tap above intentionally suppresses decorative focus frames.
+  // Switch through a real keyboard event before asserting that keyboard focus
+  // still exposes the high-contrast dialogue ring.
+  await page.key("keyDown", "Tab", "Tab", 9);
+  await page.key("keyUp", "Tab", "Tab", 9);
+  await sleep(40);
   const shortDialogue = await page.eval(`
     (() => {
       const card = document.querySelector("#dialog-overlay .dialog-card")
@@ -4355,7 +4558,9 @@ try {
     ].filter(Boolean).join(" | ")
   );
 } catch (error) {
-  failures.push(`  FAIL  harness error - ${error.message}`);
+  if (error.message !== FOCUS_ONLY_COMPLETE) {
+    failures.push(`  FAIL  harness error - ${error.message}`);
+  }
 } finally {
   cdp?.close();
   if (chrome.exitCode === null) {

@@ -92,6 +92,18 @@
         box-shadow: inset 0 0 0 8px var(--gold);
       }
 
+      /* Pointer clicks already show their target through hover/pressed states.
+         Keep the high-contrast rings for keyboard navigation without leaving a
+         decorative gold frame behind after a mouse or touch interaction. */
+      html[data-input-modality="pointer"] :focus {
+        outline: none !important;
+      }
+
+      html[data-input-modality="pointer"] #sandbox-stage:focus,
+      html[data-input-modality="pointer"] .dialog-advance:focus {
+        box-shadow: none;
+      }
+
       .skip-link {
         position: fixed;
         top: 0.75rem;

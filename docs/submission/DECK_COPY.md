@@ -74,7 +74,7 @@ production-browser checks.
 
 ## Slide 6 — Fast, private, tested, no backend
 
-**90 tests · 0 vulnerabilities · 140.99 kB initial JavaScript · 0 bytes
+**90 tests · 0 vulnerabilities · 141.46 kB initial JavaScript · 0 bytes
 collected**
 
 - Vite + strict TypeScript + Phaser 3
@@ -88,8 +88,8 @@ collected**
 - Runtime-synthesized audio; zero audio files
 - KampungMind uses authored text and deterministic code offline
 
-Current private build: 91.14 kB HTML (16.00 kB gzip), 140.99 kB initial
-JavaScript (41.22 kB gzip), and 1,612.32 kB lazy scene (377.41 kB gzip).
+Current private build: 91.64 kB HTML (16.14 kB gzip), 141.46 kB initial
+JavaScript (41.48 kB gzip), and 1,613.26 kB lazy scene (379.79 kB gzip).
 
 ## Slide 7 — What we tested. What we will not claim
 

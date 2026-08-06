@@ -3494,3 +3494,95 @@ screenshot lane was claimed.
   social/health outcome, or new Miora/CodeBuddy evidence. No account, backend,
   analytics, personal-data collection, runtime model/network call, gameplay
   timer, failure state, energy system, or medical claim was introduced.
+
+## 2026-08-06 - Focus Recovery and Pointer-Only Frame Removal
+
+**Tool:** Codex
+
+**Lane:** Browser/stage focus ownership, pointer-versus-keyboard focus styling,
+and focused regression evidence only. No campaign, narrative, world art,
+shared screenshot, deployment, or release lane was claimed.
+
+**User-reported issue and diagnosis:**
+
+- Reproduced the lockout on a frozen pre-fix production bundle with physical
+  CDP mouse events. Clicking Menu made the topbar button the saved Pause focus
+  owner; Resume restored that button; the global `focusin` policy disabled
+  Phaser controls because the focus target was no longer the world; and a
+  later Canvas click could not repair it because Phaser's child Canvas is not
+  focusable and focusing an already-active parent is otherwise a no-op.
+- The augmented UI contract failed exactly this path at **59/60** while every
+  campaign, renderer, layout, and performance check passed. Graphify traced
+  `focusWorld()`, `setControlsEnabled()`, Pause restoration, the stage host,
+  and the smoke helper that had previously masked the issue by forcing a Menu
+  → stage focus crossing before each movement.
+
+**Implementation:**
+
+- Stage pointer-down now calls the guarded `focusWorld()` path before touch
+  navigation handling, so returning to the Canvas restores the stage and
+  focus-owned controls without changing overlay guards.
+- Added pointer/keyboard modality tracking across PointerEvent, mouse, touch,
+  and coordinate-bearing click fallbacks. Pointer-focused controls suppress
+  outlines, and the stage/dialogue suppress their focus-only gold shadow;
+  meaningful keyboard input restores the existing high-contrast indicators.
+  Repeated `keydown` events whose key is literally `Unidentified` are ignored
+  because they do not represent keyboard navigation.
+- Extended the existing 60-check UI predicate rather than inflating the
+  headline. It now drives physical Menu → Resume → Canvas clicks, requires the
+  intermediate Menu focus with controls off, the recovered stage focus with
+  controls on, **53.75 px** of actual movement, no pointer outline/gold frame,
+  and a visible keyboard ring after Tab. A `--focus-only` route provides the
+  same focused **5/5** proof in seconds. The player position is restored and
+  the authored interaction latch allowed to settle before the remaining route.
+
+**Failed attempts retained:**
+
+- The first post-fix route restored movement but still showed the frame under
+  Chrome's focus-visible heuristic. A stricter pointer-modality selector fixed
+  buttons but the stage's ID-specific keyboard rule still won after a long
+  keyboard session; the final pointer-scoped `outline: none !important` closes
+  that specificity leak without affecting keyboard modality.
+- Instrumentation exposed bursts of bridge-generated `Unidentified` keydowns
+  between mouse-down and click; filtering only that invalid value stabilized
+  modality while retaining Tab, arrows, Escape, Enter, Space, and WASD.
+- One run passed the new UI predicate but immediately missed the prologue
+  interaction because the smoke position restore correctly re-armed the scene
+  latch. Waiting the real 700 ms isolation interval fixed it. The next 59/60
+  run showed the old touch assertion was programmatically requesting a
+  keyboard ring while still in pointer modality; sending a real Tab before
+  measuring preserved the correct accessibility contract. None of these runs
+  is counted as a pass.
+
+**Final verification:**
+
+- Strict TypeScript passed; Vitest passed **90/90** (30 campaign, 31 match,
+  17 audio, 4 accessibility, 8 world/door/pause).
+- Private production build, without touching shared `dist/`: **91.64 kB HTML
+  (16.14 kB gzip), 141.46 kB initial JavaScript (41.48 kB gzip), and 1,613.26
+  kB lazy scene (379.79 kB gzip)**.
+- Registry-backed `npm audit` reported zero known vulnerabilities after the
+  sandboxed attempt failed DNS lookup and the approved retry succeeded.
+- Default WebGL and forced Canvas2D each passed **60/60**, with
+  `pointerRecovery=true`, `pointerFocusTreatment=true`, stage focus, controls,
+  full/demo campaigns, mobile touch navigation, doors, and performance gates
+  intact. The focused route separately passed **5/5**.
+- The eight-slide submission PPTX and eight-page PDF were refreshed to the
+  verified bundle figures. The existing single-image slide template passed
+  fidelity and overflow checks; PowerPoint renders and Poppler PDF renders were
+  inspected page by page with no clipping, placeholder, metadata, or layout
+  defect found.
+
+**Tooling and claim boundary:**
+
+- The in-app browser was unavailable, so the repository's real-Chrome CDP
+  harness supplied production interaction evidence. No image generation was
+  appropriate for an input-ownership defect. Graphify rebuilt to **1,276 nodes
+  / 2,541 edges / 84 communities**, retaining the four known zero-node JSON
+  warnings and stale community-label notice.
+- This is AI-assisted implementation and automated local browser evidence. It
+  is not a commit, push, deployment, human or older-adult playtest, real-device
+  run, screen-reader or 200% zoom session, accessibility certification,
+  social/health outcome, or new Miora/CodeBuddy evidence. No account, backend,
+  analytics, personal-data collection, runtime model/network call, gameplay
+  timer, failure state, energy system, or medical claim was introduced.

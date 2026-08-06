@@ -43,7 +43,7 @@ areas, but every required responsibility must appear here with an owner.
 | Optional memory-table activity | OPENCODE | DONE | Current build and matching tests |
 | KampungMind authored memory/intent engine | OPENCODE | DONE | `campaignContent.ts`, `kampungMind.ts`, campaign tests |
 | Automated tests | OPENCODE | DONE | 90/90 passing: 30 campaign, 31 match, 17 audio, 4 accessibility, 8 world/door/pause |
-| Production build | OPENCODE | DONE | Latest verified Vite build: HTML 91.14 kB (16.00 kB gzip), initial JS 140.99 kB (41.22 kB gzip), lazy campaign scene 1,612.32 kB (377.41 kB gzip) |
+| Production build | OPENCODE | DONE | Latest verified Vite build: HTML 91.64 kB (16.14 kB gzip), initial JS 141.46 kB (41.48 kB gzip), lazy campaign scene 1,613.26 kB (379.79 kB gzip) |
 | Production-browser regression | OPENCODE | DONE | 60/60 smoke checks pass across the full and demo campaigns |
 | Dependency security audit | OPENCODE | DONE | Zero known vulnerabilities |
 | CodeBuddy initial implementation evidence | CODEBUDDY | DONE | `docs/AI_USAGE_LOG.md` |
@@ -435,8 +435,8 @@ Replace `[Team Name]` before export.
 - Test output showing the current 90/90 gate (30 campaign, 31 match,
   17 audio, 4 accessibility, and 8 world/door/pause tests). The earlier 42-test target
   remains historical planning context, not the current release claim.
-- Production build and audit output, including HTML 91.14/16.00 kB gzip,
-  initial JS 140.99/41.22 kB gzip, and lazy scene 1,612.32/377.41 kB gzip.
+- Production build and audit output, including HTML 91.64/16.14 kB gzip,
+  initial JS 141.46/41.48 kB gzip, and lazy scene 1,613.26/379.79 kB gzip.
 - Browser smoke output showing 60/60 checks, including keyboard, tap
   navigation, compact layouts, loader recovery, and visible consequence art.
 - Manual phone, tablet, keyboard, zoom, and screen-reader notes.

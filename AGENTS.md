@@ -105,6 +105,27 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-06 (Codex, focus-recovery and pointer-frame lane)** — Reproduced a
+  real pointer Menu → Resume lockout: Resume restored the Menu trigger, the
+  document `focusin` policy disabled Phaser controls, and clicking the
+  non-focusable Canvas could not re-enter the stage. Canvas pointer-down now
+  explicitly reclaims the stage and controls. Input-modality tracking removes
+  outlines and the gold inset only for mouse/touch activation while preserving
+  the high-contrast Tab/keyboard ring; meaningless `Unidentified` bridge keys
+  cannot override pointer modality. The existing UI smoke predicate now uses
+  physical mouse events, proves 53.75 px post-recovery movement, verifies both
+  pointer-hidden and keyboard-visible focus, and has a focused 5/5 mode. A
+  frozen pre-fix bundle failed the augmented gate at 59/60; the final private
+  build passed strict TypeScript, 90/90 tests, zero vulnerabilities, and 60/60
+  in WebGL plus forced Canvas2D. Build: 91.64 kB HTML (16.14 gzip), 141.46 kB
+  initial JS (41.48 gzip), 1,613.26 kB scene (379.79 gzip). Synchronized the
+  eight-slide PPTX/PDF submission artifacts to those verified figures; template
+  fidelity, overflow, metadata, and all rendered pages passed inspection.
+  Graphify rebuilt to 1,276 nodes / 2,541 edges / 84 communities with the four
+  known zero-node JSON warnings and stale community-label notice. No shared
+  `dist/` or gameplay screenshots, commit, push, deployment,
+  human/device/screen-reader/200%-zoom test, or outcome claim was made.
+
 - **2026-08-06 (Codex, Hawker interior EXIT closure lane)** — Changed the
   Hawker Centre interior `hawker-exit` authored exception from
   `startsOpen: true` to explicit `startsOpen: false`, so its two coral panels,

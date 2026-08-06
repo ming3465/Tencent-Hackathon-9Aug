@@ -20,6 +20,10 @@ product requirements, not optional polish.
 - Prevent movement-key browser scrolling and stop world movement while an
   overlay owns focus.
 - Restore focus to the world after dialogue and after the Journal closes.
+- Let a pointer press on the Canvas reclaim the stage and world controls after
+  topbar or browser focus loss. Pointer activation must not leave a decorative
+  outline or gold frame; Tab and other meaningful keyboard navigation retain
+  the high-contrast focus indicator.
 - Keep only Journal and a minimum 48×48 Menu control in the play topbar.
 - Put Sound, Music, Effects, Fullscreen, and the controls reminder in Pause
   Settings. Fullscreen changes initiated there keep Settings open; leaving
@@ -197,7 +201,9 @@ without losing the Journal, resumes to the same focus, dismisses with the
 backdrop, and confirms world-focus restoration. It also proves Pause freezes
 the scene snapshot, traps focus, keeps Settings open across its fullscreen
 toggle, restores movement/focus on Resume, and exposes only Journal/Menu in the
-topbar. It also proves a
+topbar. A physical pointer Menu → Resume → Canvas round trip separately proves
+that the world reclaims focus and movement without a pointer-only frame, then
+uses Tab to prove the keyboard ring remains visible. It also proves a
 desktop room fits the full-width camera and the circular map has seven
 landmarks, one current indoor anchor, and a marker that changes between
 physical east/south positions. Runs at 320×568, 360×560, and 640×360 verify the

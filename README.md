@@ -136,7 +136,7 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
 | `npm test` | 90/90: 30 campaign, 31 match-engine, 17 audio, 4 accessibility-contract, and 8 world-layout/door/pause tests |
-| `npm run build` | 91.14 kB HTML (16.00 kB gzip); 140.99 kB initial JS (41.22 kB gzip); 1,612.32 kB lazy scene (377.41 kB gzip) |
+| `npm run build` | 91.64 kB HTML (16.14 kB gzip); 141.46 kB initial JS (41.48 kB gzip); 1,613.26 kB lazy scene (379.79 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
 | `npm run smoke` | 60/60 production-browser checks in default WebGL and forced Canvas fallback |
 

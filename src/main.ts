@@ -314,6 +314,10 @@ function announce(message: string): void {
   }, 40);
 }
 
+function setInputModality(modality: "keyboard" | "pointer"): void {
+  document.documentElement.dataset.inputModality = modality;
+}
+
 function focusWorld(): void {
   if (
     !screenSandbox.classList.contains("active")
@@ -2106,6 +2110,10 @@ function finishStagePointer(event: PointerEvent, cancelled: boolean): void {
 }
 
 sandboxStage.addEventListener("pointerdown", (event) => {
+  // Clicking the canvas targets Phaser's non-focusable <canvas>, not this
+  // keyboard surface. Reclaim the stage explicitly so a prior topbar/control
+  // focus cannot leave world controls disabled indefinitely.
+  focusWorld();
   if (!isViewportTapPointer(event)) return;
   touchGestureSerial += 1;
   const startsFreshGesture = activeStagePointers.size === 0;
@@ -2133,6 +2141,29 @@ sandboxStage.addEventListener("pointerdown", (event) => {
   };
 });
 
+const markPointerInput = (): void => setInputModality("pointer");
+window.addEventListener("pointerdown", markPointerInput, {
+  capture: true,
+});
+window.addEventListener("mousedown", markPointerInput, { capture: true });
+window.addEventListener("touchstart", markPointerInput, {
+  capture: true,
+  passive: true,
+});
+document.addEventListener("click", (event) => {
+  // CDP, older WebViews, and assistive pointer bridges may emit a trusted-style
+  // click without the matching PointerEvent. Pointer clicks carry a click
+  // count or screen coordinate; keyboard/AT button clicks carry neither.
+  if (event.detail > 0 || event.clientX !== 0 || event.clientY !== 0) {
+    markPointerInput();
+  }
+}, { capture: true });
+document.addEventListener("keydown", (event) => {
+  // Some browser/automation bridges emit repeated keyCode 0 events during a
+  // pointer press. They do not represent keyboard navigation and must not
+  // resurrect a focus ring between mouse-down and click.
+  if (event.key !== "Unidentified") setInputModality("keyboard");
+}, { capture: true });
 window.addEventListener("pointermove", rejectStageTapIfDragged);
 window.addEventListener("pointerup", (event) => finishStagePointer(event, false));
 window.addEventListener("pointercancel", (event) => finishStagePointer(event, true));

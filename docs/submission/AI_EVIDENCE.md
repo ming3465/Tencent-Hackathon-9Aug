@@ -46,7 +46,7 @@ later” never closes a route. No line is generated at runtime.
 | --- | --- |
 | Strict TypeScript | `npm run typecheck` passes |
 | Unit tests | 90/90: 30 campaign, 31 match, 17 audio, 4 accessibility, 8 world/door/pause |
-| Production build | HTML 91.14 kB (16.00 kB gzip); initial JS 140.99 kB (41.22 kB gzip); lazy campaign scene 1,612.32 kB (377.41 kB gzip) |
+| Production build | HTML 91.64 kB (16.14 kB gzip); initial JS 141.46 kB (41.48 kB gzip); lazy campaign scene 1,613.26 kB (379.79 kB gzip) |
 | Dependency audit | 0 known vulnerabilities |
 | Production browser | 60/60 checks in default WebGL and forced Canvas fallback; complete full and demo campaigns in headless Chrome |
 

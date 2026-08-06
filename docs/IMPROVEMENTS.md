@@ -49,7 +49,7 @@ baseline rather than current code.
 | Custom art pass: palette constants, ground tufts/patches, kerbed paths, laundry poles, striped awnings, layered rain trees, structure outlines | 2026-08-01 |
 | Character pass: ink outlines, eyes, four skin tones across eight residents, player no longer the palest person on screen | 2026-08-01 |
 | Typography: monospace debug labels replaced with estate signage; in-world text raised to 14px+; UI type scale raised; `"OK"` badge replaced with a check glyph | 2026-08-01 |
-| Focus ring removed from the world canvas (kept on buttons/links) | 2026-08-01 |
+| Pointer-activated focus frames removed from the world and controls; high-contrast keyboard focus retained | 2026-08-06 |
 | **P0-3** dialogue focus trap now filters `display:none` | 2026-08-01 |
 | **P0-4** dialogue line node has `aria-live` and is the `aria-describedby` target | 2026-08-01 |
 | **P0-8** 320px meter-row overflow fixed | 2026-08-01 |

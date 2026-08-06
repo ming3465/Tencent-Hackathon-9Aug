@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import html from "../../../index.html?raw";
+import mainSource from "../../main.ts?raw";
 
 /**
  * Guards the accessibility promises the deck and docs/ACCESSIBILITY.md make.
@@ -48,10 +49,27 @@ describe("dialogue accessibility contract", () => {
   it("keeps a 52px target with an enclosing keyboard focus indicator", () => {
     const advance = cssRule(".dialog-advance");
     const focus = cssRule(".dialog-advance:focus-visible");
+    const pointerFocus = cssRule(
+      'html[data-input-modality="pointer"] :focus',
+    );
+    const pointerStage = cssRule(
+      'html[data-input-modality="pointer"] #sandbox-stage:focus,\n      html[data-input-modality="pointer"] .dialog-advance:focus',
+    );
     expect(advance).toMatch(/width:\s*52px/);
     expect(advance).toMatch(/height:\s*52px/);
     expect(focus).toMatch(/outline:\s*3px solid/);
     expect(focus).toMatch(/box-shadow:\s*0 0 0 6px/);
+    expect(pointerFocus).toMatch(/outline:\s*none/);
+    expect(pointerStage).toMatch(/box-shadow:\s*none/);
+    expect(mainSource).toMatch(
+      /window\.addEventListener\("pointerdown",\s*markPointerInput/,
+    );
+    expect(mainSource).toMatch(
+      /sandboxStage\.addEventListener\("pointerdown",[\s\S]*focusWorld\(\)/,
+    );
+    expect(mainSource).toMatch(
+      /event\.key !== "Unidentified"[\s\S]*setInputModality\("keyboard"\)/,
+    );
   });
 
   it("keeps Maybe later visible and stills the cue for reduced motion", () => {

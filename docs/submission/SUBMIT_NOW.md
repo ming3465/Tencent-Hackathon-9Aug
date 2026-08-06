@@ -111,12 +111,12 @@ node scripts/capture-deck.mjs
 # Rebuild the raster PDF and render all eight pages with Poppler for inspection.
 ```
 
-Current truth as of 2026-08-05: **90/90 tests (30 campaign · 31 match ·
+Current truth as of 2026-08-06: **90/90 tests (30 campaign · 31 match ·
 17 audio · 4 accessibility · 8 world/door/pause) · 60/60 browser checks in
 default WebGL and forced Canvas fallback ·
 0 known vulnerabilities at the latest audit**. Latest verified production
-build: **HTML 91.14 kB (16.00 kB gzip) · initial JS 140.99 kB (41.22 kB gzip)
-· lazy campaign scene 1,612.32 kB (377.41 kB gzip)**.
+build: **HTML 91.64 kB (16.14 kB gzip) · initial JS 141.46 kB (41.48 kB gzip)
+· lazy campaign scene 1,613.26 kB (379.79 kB gzip)**.
 If those numbers appear anywhere as something else, fix before submitting.
 
 ## Claim boundaries (unchanged, non-negotiable)

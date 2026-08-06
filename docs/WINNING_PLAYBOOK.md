@@ -15,11 +15,11 @@ TheTwoGuys | Tencent Cloud "AI CAN DO IT" Age Well Social Good Challenge, Game T
 
 The finalist cut (~Aug 7) will be decided almost entirely by our video and deck, so the 90-second video is the real submission and everything this week serves it. Our path to top-5 is to be the one team whose entry maps verbatim onto the published rules — "AI creation in at least one area: worldbuilding/narrative, artwork, security systems, or sound design" is satisfied by our creation-time AI story, and 适老化关怀 (elderly care) is a *named sub-theme* of the Social Good track — and to say both out loud on screen. Our path from top-5 to winning the track is dignity-plus-proof: the "elders as experts, not patients" thesis is literally Tencent IEG Social Value Exploration Center's own published frame, and 3–5 real older-adult playtests would convert our biggest audited weakness into strong Impact-30 evidence. On stage Aug 16, our zero-backend runtime has no model or gameplay-network dependency after its assets load. The lazy loader has recoverable slow, cancel, and retry paths, but real-device startup and human play remain unverified. Ship order: fix the judge path, record the video, get playtest receipts, and let polish stop at "the first 120 seconds are perfect," because the first 120 seconds are the judging.
 
-**Current verified engineering snapshot (2026-08-05):** 90/90 tests (30
+**Current verified engineering snapshot (2026-08-06):** 90/90 tests (30
 campaign, 31 match, 17 audio, 4 accessibility, 8 world/door/pause), 60/60
 production-browser checks in default WebGL and forced Canvas fallback, and a
-production build of HTML 91.14 kB (16.00 kB gzip), initial JS 140.99 kB
-(41.22 kB gzip), and lazy campaign scene 1,612.32 kB (377.41 kB gzip). The
+production build of HTML 91.64 kB (16.14 kB gzip), initial JS 141.46 kB
+(41.48 kB gzip), and lazy campaign scene 1,613.26 kB (379.79 kB gzip). The
 checked-in 90-second review cut predates the registry-driven world, DoorViews,
 corrected shelters, Pause/Settings, and renderer-parity gate; it
 is not current-build footage.
@@ -100,7 +100,7 @@ Why: Tencent ecosystem alignment, Singapore edge node for Singapore judges, and 
 Must not break: keep GitHub Pages live as fallback; print both URLs everywhere.
 
 **9. Rubric-map the deck with the rules' exact words. (2–3 h)**
-What: AI slide quotes the official requirement verbatim and checks off worldbuilding + artwork + sound; one line: "Elderly care (适老化关怀) is a named sub-theme of the official Social Good track"; Impact slide opens with 1-in-4 Singaporeans 65+ by 2030 and cites the official brief; Quality slide: 90/90 tests / 60/60 CDP checks / 0 vulnerabilities, with the latest build figures—HTML 91.14/16.00 kB gzip, initial JS 140.99/41.22 kB gzip, and lazy scene 1,612.32/377.41 kB gzip.
+What: AI slide quotes the official requirement verbatim and checks off worldbuilding + artwork + sound; one line: "Elderly care (适老化关怀) is a named sub-theme of the official Social Good track"; Impact slide opens with 1-in-4 Singaporeans 65+ by 2030 and cites the official brief; Quality slide: 90/90 tests / 60/60 CDP checks / 0 vulnerabilities, with the latest build figures—HTML 91.64/16.14 kB gzip, initial JS 141.46/41.48 kB gzip, and lazy scene 1,613.26/379.79 kB gzip.
 Why: Winners visibly game the rubric and balance all criteria (Square, Klaviyo method); the verbatim-compliance line pre-empts the "no runtime LLM = no AI" misread, which is our single biggest scoring risk on a 40-point criterion (Critic §A4).
 Must not break: citation honesty — every number sourced, "aligned with," never "partnered with" Age Well SG.
 
