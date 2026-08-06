@@ -269,7 +269,7 @@ function requestEntries(state: CampaignStateV1): JournalEntryView[] {
         ? complete
           ? `${npc?.name ?? "This neighbour"} remembers how you helped. You can still visit anytime.`
           : quest.summary
-        : "Leave Y's flat to meet the estate's contributors.",
+        : "Leave {player}'s flat to meet the estate's contributors.",
       meta: unlocked
         ? `${npc?.name ?? "Neighbour"} · Optional · No time limit`
         : "Meet the estate first",

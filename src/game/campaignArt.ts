@@ -4,6 +4,23 @@ import {
   type ResidentArtDefinition,
 } from "./characterArt.js";
 import type { LocationId } from "./campaignTypes.js";
+import {
+  DEFAULT_APPEARANCE,
+  type PlayerAppearance,
+} from "./playerIdentity.js";
+
+/**
+ * The minimum drawing surface the character painters need.
+ *
+ * Phaser's `Graphics` satisfies this structurally, and so does the tiny 2D
+ * canvas adapter behind the title-screen preview — which is the point. The
+ * preview runs the exact same painter as the in-game sprite, so the two can
+ * never drift apart.
+ */
+export interface PixelPainter {
+  fillStyle(colour: number, alpha?: number): PixelPainter;
+  fillRect(x: number, y: number, width: number, height: number): PixelPainter;
+}
 
 export const PALETTE = {
   ink: 0x173f4f,
@@ -368,7 +385,7 @@ function makeTexture(
 }
 
 function drawSteppedHeadBase(
-  graphics: Phaser.GameObjects.Graphics,
+  graphics: PixelPainter,
   centreX: number,
   skin: number,
 ): void {
@@ -388,7 +405,7 @@ function drawSteppedHeadBase(
 }
 
 function drawSteppedTorso(
-  graphics: Phaser.GameObjects.Graphics,
+  graphics: PixelPainter,
   x: number,
   y: number,
   width: number,
@@ -415,7 +432,7 @@ function drawSteppedTorso(
 }
 
 function drawPlayerHair(
-  graphics: Phaser.GameObjects.Graphics,
+  graphics: PixelPainter,
   facing: PlayerFacing,
   hair: number,
 ): void {
@@ -630,16 +647,14 @@ function drawResidentTote(
     .fillRect(bagX + 3, bagY + 3, 2, 5);
 }
 
-function drawPlayerFrame(
-  graphics: Phaser.GameObjects.Graphics,
+export function drawPlayerFrame(
+  graphics: PixelPainter,
   facing: PlayerFacing,
   step: WalkFrame,
   blinking = false,
+  appearance: PlayerAppearance = DEFAULT_APPEARANCE,
 ): void {
-  const skin = 0xd39c6d;
-  const hair = 0x2a2523;
-  const shirt = PALETTE.teal;
-  const trousers = 0x355b68;
+  const { skin, hair, shirt, trousers } = appearance;
   const stride = [
     { leftLegX: 11, rightLegX: 23, leftFootY: 51, rightFootY: 51, arm: 0 },
     { leftLegX: 10, rightLegX: 24, leftFootY: 53, rightFootY: 49, arm: 2 },
@@ -744,7 +759,49 @@ function drawPlayerFrame(
   }
 }
 
-function createPlayerTextures(scene: Phaser.Scene): void {
+/**
+ * The appearance the currently cached player textures were baked from.
+ *
+ * `makeTexture` skips keys that already exist, which is the right default for
+ * the ~200 static textures. The player sprite is the one texture that can
+ * legitimately change within a page session - returning to the title and
+ * starting over with a different look - so its keys are dropped first when the
+ * appearance differs. Without this the player keeps the previous body.
+ */
+let bakedAppearance: PlayerAppearance | null = null;
+
+function playerTextureKeys(): string[] {
+  const keys: string[] = [];
+  for (const facing of ["down", "up", "side"] as const) {
+    for (const step of WALK_FRAMES) {
+      keys.push(`campaign-player-${facing}-${step}`);
+    }
+    keys.push(`campaign-player-${facing}-0-blink`);
+  }
+  return keys;
+}
+
+function sameAppearance(
+  a: PlayerAppearance | null,
+  b: PlayerAppearance,
+): boolean {
+  return a !== null
+    && a.skin === b.skin
+    && a.hair === b.hair
+    && a.shirt === b.shirt
+    && a.trousers === b.trousers;
+}
+
+function createPlayerTextures(
+  scene: Phaser.Scene,
+  appearance: PlayerAppearance,
+): void {
+  if (!sameAppearance(bakedAppearance, appearance)) {
+    for (const key of playerTextureKeys()) {
+      if (scene.textures.exists(key)) scene.textures.remove(key);
+    }
+    bakedAppearance = { ...appearance };
+  }
   for (const facing of ["down", "up", "side"] as const) {
     for (const step of WALK_FRAMES) {
       makeTexture(
@@ -752,7 +809,7 @@ function createPlayerTextures(scene: Phaser.Scene): void {
         `campaign-player-${facing}-${step}`,
         40,
         56,
-        (graphics) => drawPlayerFrame(graphics, facing, step),
+        (graphics) => drawPlayerFrame(graphics, facing, step, false, appearance),
       );
     }
     makeTexture(
@@ -760,7 +817,7 @@ function createPlayerTextures(scene: Phaser.Scene): void {
       `campaign-player-${facing}-0-blink`,
       40,
       56,
-      (graphics) => drawPlayerFrame(graphics, facing, 0, true),
+      (graphics) => drawPlayerFrame(graphics, facing, 0, true, appearance),
     );
   }
 }
@@ -2651,8 +2708,11 @@ function createAmbientTextures(scene: Phaser.Scene): void {
   }
 }
 
-export function ensureCampaignArtTextures(scene: Phaser.Scene): void {
-  createPlayerTextures(scene);
+export function ensureCampaignArtTextures(
+  scene: Phaser.Scene,
+  appearance: PlayerAppearance = DEFAULT_APPEARANCE,
+): void {
+  createPlayerTextures(scene, appearance);
   for (const definition of RESIDENT_ART) {
     createResidentTextures(scene, definition);
   }

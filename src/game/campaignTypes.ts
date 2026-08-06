@@ -1,3 +1,5 @@
+import type { PlayerAppearance } from "./playerIdentity.js";
+
 export type ChapterId =
   | "prologue"
   | "chapter-1"
@@ -65,6 +67,14 @@ export interface CampaignThresholds {
 
 export interface CampaignStateV1 {
   version: 1;
+  /**
+   * What the story calls the player. Defaults to "Y" when the title-screen
+   * field is left blank, which is what every existing save and screenshot
+   * shows.
+   */
+  playerName: string;
+  /** The look chosen on the title screen; drives the baked player sprite. */
+  playerAppearance: PlayerAppearance;
   currentChapter: CampaignPhase;
   completedChapters: ChapterId[];
   completedQuests: QuestId[];

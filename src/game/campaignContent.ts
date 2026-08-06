@@ -165,9 +165,9 @@ export const CHAPTERS: readonly ChapterDefinition[] = [
   {
     id: "prologue",
     numberLabel: "Prologue",
-    title: "Y's Flat",
+    title: "{player}'s Flat",
     summary: "Wake to a familiar voice and take the first open door.",
-    journalObjective: "Listen to the Voice, then leave Y's flat.",
+    journalObjective: "Listen to the Voice, then leave {player}'s flat.",
     entryLocationId: "y-flat",
   },
   {
@@ -198,8 +198,8 @@ export const CHAPTERS: readonly ChapterDefinition[] = [
     id: "ending",
     numberLabel: "Ending",
     title: "The Last Door",
-    summary: "Return to Y's flat and learn who the Voice has been waiting for.",
-    journalObjective: "Return to Y's flat. The last door is open.",
+    summary: "Return to {player}'s flat and learn who the Voice has been waiting for.",
+    journalObjective: "Return to {player}'s flat. The last door is open.",
     entryLocationId: "y-flat",
   },
 ];
@@ -341,7 +341,7 @@ export const QUESTS: readonly QuestDefinition[] = [
 export const LOCATIONS: readonly LocationDefinition[] = [
   {
     id: "y-flat",
-    name: "Y's Flat",
+    name: "{player}'s Flat",
     kind: "home",
     description: "A muted home where one warm lamp waits beside the first door.",
     connections: ["hdb-corridor"],
@@ -897,7 +897,7 @@ const STORY_PROFILES: readonly NpcProfile[] = [
     "voice",
     "The Voice",
     ["familiar", "patient", "fading"],
-    "Y's unseen companion",
+    "{player}'s unseen companion",
     ["remembering the estate's small acts"],
     ["which door Y has not opened", "why the flat grows warmer"],
     ["remember every completed chapter", "never pressure Y to leave"],
@@ -906,9 +906,9 @@ const STORY_PROFILES: readonly NpcProfile[] = [
         id: "voice-prologue",
         npcId: "voice",
         kind: "main-story",
-        title: "Y's Flat",
+        title: "{player}'s Flat",
         lines: [
-          "Morning, Y. The estate is already awake.",
+          "Morning, {player}. The estate is already awake.",
           "Move with the arrow keys or WASD. Use E or Space when a person or doorway is near.",
           "There is no hurry. When you are ready, open the door.",
         ],
@@ -930,7 +930,7 @@ const STORY_PROFILES: readonly NpcProfile[] = [
         id: "voice-prologue-reminder",
         npcId: "voice",
         kind: "reminder",
-        title: "Y's Flat",
+        title: "{player}'s Flat",
         lines: ["The corridor is through the lit doorway. Take all the time you need."],
         eligibility: {
           chapters: ["prologue"],
@@ -947,7 +947,7 @@ const STORY_PROFILES: readonly NpcProfile[] = [
           "You thought I was leading you through the estate.",
           "I was the part of Y that had begun to fade from the doorway.",
           "But listen: Mei brought cuttings. Ravi brought chairs. Ros brought the whole kitchen.",
-          "Nobody came to rescue Y. They came because Y had already helped make room for them.",
+          "Nobody came to rescue {player}. They came because {player} had already helped make room for them.",
         ],
         choices: [
           choice(
@@ -964,7 +964,7 @@ const STORY_PROFILES: readonly NpcProfile[] = [
         id: "voice-free",
         npcId: "voice",
         kind: "reflection",
-        title: "Y's Flat",
+        title: "{player}'s Flat",
         lines: ["The door stays open now. The estate is yours to revisit in any order."],
         eligibility: { chapters: ["free-explore"] },
         chapterRelevance: 2,

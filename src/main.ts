@@ -18,6 +18,19 @@ import {
   saveCampaign,
 } from "./game/campaignSave.js";
 import {
+  DEFAULT_APPEARANCE,
+  HAIR_COLOURS,
+  MAX_PLAYER_NAME_LENGTH,
+  personalise,
+  type PlayerAppearance,
+  sanitiseAppearance,
+  sanitisePlayerName,
+  SHIRT_COLOURS,
+  SKIN_TONES,
+  TROUSER_COLOURS,
+} from "./game/playerIdentity.js";
+import { renderPlayerPreview } from "./game/playerPreview.js";
+import {
   CAMPAIGN_PORTRAITS,
   renderCampaignPortrait,
   type PortraitMood,
@@ -93,6 +106,11 @@ const screenTitle = byId<HTMLElement>("screen-title");
 const screenSandbox = byId<HTMLElement>("screen-sandbox");
 const mainElement = byId<HTMLElement>("main");
 const btnStart = byId<HTMLButtonElement>("btn-start");
+const inputPlayerName = byId<HTMLInputElement>("input-player-name");
+const identityLooks = byId<HTMLElement>("identity-looks");
+const identityCaption = byId<HTMLElement>("identity-preview-caption");
+const playerPreviewCanvas = byId<HTMLCanvasElement>("player-preview");
+const btnSurpriseLook = byId<HTMLButtonElement>("btn-surprise-look");
 const btnContinue = byId<HTMLButtonElement>("btn-continue");
 const btnStartOver = byId<HTMLButtonElement>("btn-start-over");
 const btnReturnTitle = byId<HTMLButtonElement>("btn-return-title");
@@ -254,6 +272,19 @@ function clearCampaignSafely(): boolean {
 }
 
 let campaignState = createCampaignState({ demo: DEMO_MODE });
+
+/**
+ * Resolves the `{player}` token in story text against the name the player
+ * chose on the title screen.
+ *
+ * Applied at every point story text reaches the DOM. A missed site would show
+ * a judge a literal "{player}", so `browser-smoke.mjs` scans the rendered
+ * document for unresolved tokens rather than trusting this list to be
+ * complete.
+ */
+function pn(text: string): string {
+  return personalise(text, campaignState.playerName);
+}
 let savedCampaign = loadCampaignSafely();
 let campaignHandle: CampaignGameHandle | null = null;
 let journalOpen = false;
@@ -714,7 +745,7 @@ function renderTitleActions(): void {
     const chapter = savedCampaign.currentChapter === "free-explore"
       ? "Free exploration"
       : CHAPTER_BY_ID.get(savedCampaign.currentChapter)?.title ?? "the campaign";
-    btnContinue.textContent = `Continue — ${chapter}`;
+    btnContinue.textContent = `Continue — ${pn(chapter)}`;
   }
 }
 
@@ -805,7 +836,7 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
         },
         onLocationChange: (locationId, name) => {
           if (!isCurrentCampaignAttempt(attempt)) return;
-          areaName.textContent = name;
+          areaName.textContent = pn(name);
           worldShell.classList.toggle(
             "interior-framing",
             locationId !== "estate",
@@ -874,8 +905,110 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
   }
 }
 
+/**
+ * Title-screen character customiser.
+ *
+ * The option lists come straight from the same constants that colour the baked
+ * sprite, and the preview calls the same painter, so there is exactly one
+ * source of truth for what the player looks like.
+ */
+const LOOK_GROUPS = [
+  { key: "skin", legend: "Skin", options: SKIN_TONES },
+  { key: "hair", legend: "Hair", options: HAIR_COLOURS },
+  { key: "shirt", legend: "Shirt", options: SHIRT_COLOURS },
+  { key: "trousers", legend: "Trousers", options: TROUSER_COLOURS },
+] as const;
+
+let chosenAppearance: PlayerAppearance = { ...DEFAULT_APPEARANCE };
+
+function swatchHex(colour: number): string {
+  return `#${(colour >>> 0).toString(16).padStart(6, "0")}`;
+}
+
+function refreshIdentityPreview(): void {
+  renderPlayerPreview(playerPreviewCanvas, chosenAppearance);
+  identityCaption.textContent = sanitisePlayerName(inputPlayerName.value);
+}
+
+function buildIdentityControls(): void {
+  identityLooks.replaceChildren();
+  for (const group of LOOK_GROUPS) {
+    const fieldset = document.createElement("fieldset");
+    fieldset.className = "look-group";
+    const legend = document.createElement("legend");
+    legend.className = "look-legend";
+    legend.textContent = group.legend;
+    const options = document.createElement("div");
+    options.className = "look-options";
+
+    for (const option of group.options) {
+      const label = document.createElement("label");
+      label.className = "look-option";
+
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = `look-${group.key}`;
+      radio.value = option.id;
+      radio.checked = chosenAppearance[group.key] === option.value;
+      radio.addEventListener("change", () => {
+        if (!radio.checked) return;
+        chosenAppearance = { ...chosenAppearance, [group.key]: option.value };
+        refreshIdentityPreview();
+      });
+
+      const swatch = document.createElement("span");
+      swatch.className = "look-swatch";
+      swatch.style.setProperty("--swatch", swatchHex(option.value));
+
+      const text = document.createElement("span");
+      text.className = "look-text";
+      text.textContent = option.label;
+
+      // The visible word is what the label announces; the swatch is decorative.
+      swatch.setAttribute("aria-hidden", "true");
+      label.append(radio, swatch, text);
+      options.appendChild(label);
+    }
+
+    fieldset.append(legend, options);
+    identityLooks.appendChild(fieldset);
+  }
+  refreshIdentityPreview();
+}
+
+function pickRandomLook(): void {
+  for (const group of LOOK_GROUPS) {
+    const choice = group.options[Math.floor(Math.random() * group.options.length)];
+    if (choice) chosenAppearance = { ...chosenAppearance, [group.key]: choice.value };
+  }
+  for (const group of LOOK_GROUPS) {
+    const selected = group.options.find(
+      (option) => option.value === chosenAppearance[group.key],
+    );
+    const radio = identityLooks.querySelector<HTMLInputElement>(
+      `input[name="look-${group.key}"][value="${selected?.id ?? ""}"]`,
+    );
+    if (radio) radio.checked = true;
+  }
+  refreshIdentityPreview();
+  announce("Picked a new look for your character.");
+}
+
+inputPlayerName.addEventListener("input", () => {
+  identityCaption.textContent = sanitisePlayerName(inputPlayerName.value);
+});
+btnSurpriseLook.addEventListener("click", pickRandomLook);
+inputPlayerName.maxLength = MAX_PLAYER_NAME_LENGTH;
+buildIdentityControls();
+
 function startNewCampaign(): void {
-  void startCampaign(createCampaignState({ demo: DEMO_MODE }));
+  void startCampaign(
+    createCampaignState({
+      demo: DEMO_MODE,
+      playerName: sanitisePlayerName(inputPlayerName.value),
+      playerAppearance: sanitiseAppearance(chosenAppearance),
+    }),
+  );
 }
 
 function continueCampaign(): void {
@@ -885,12 +1018,14 @@ function continueCampaign(): void {
 
 function startOver(): void {
   const confirmed = window.confirm(
-    "Start Kampung SG again from Y's flat? Your current campaign save will be replaced.",
+    pn("Start Kampung SG again from {player}'s flat? Your current campaign save will be replaced."),
   );
   if (!confirmed) return;
   clearCampaignSafely();
   savedCampaign = null;
-  void startCampaign(createCampaignState({ demo: DEMO_MODE }));
+  // Starting over replaces the save, not the person - keep whatever name and
+  // look is currently on the title screen.
+  startNewCampaign();
 }
 
 function returnToTitle(): void {
@@ -950,7 +1085,9 @@ function updateNearbyPrompt(interaction: WorldInteraction | null): void {
   const visible = interaction !== null;
   interactionPrompt.setAttribute("aria-hidden", String(!visible));
   btnTouchInteract.disabled = !visible;
-  nearbyText.textContent = interaction?.label ?? "Move closer to a person, doorway, or object.";
+  nearbyText.textContent = pn(
+    interaction?.label ?? "Move closer to a person, doorway, or object.",
+  );
   btnTouchInteract.textContent = interaction === null
     ? "Interact"
     : interaction.kind === "door" || interaction.kind === "exit"
@@ -1109,8 +1246,8 @@ function openDialogue(
   dialogOverlay.removeAttribute("inert");
   setWorldControls(false);
   audio.play("overlay-open");
-  dialogKicker.textContent = title;
-  dialogSpeaker.textContent = speaker;
+  dialogKicker.textContent = pn(title);
+  dialogSpeaker.textContent = pn(speaker);
   dialogueNpcId = npcId;
   // Set per-character accent glow for the visual-novel name plate and portrait frame
   const accentHex = npcId ? (CAMPAIGN_PORTRAITS[npcId]?.accent ?? null) : null;
@@ -1135,7 +1272,7 @@ function showDialogueScript(
   choices: readonly IntentChoiceDefinition[],
   onChoice: ((choice: IntentChoiceDefinition) => void) | null,
 ): void {
-  dialogueLines = lines;
+  dialogueLines = lines.map(pn);
   dialogueIndex = 0;
   dialogueChoicesToShow = choices;
   dialogueChoiceHandler = onChoice;
@@ -1230,7 +1367,7 @@ function finishDialogueScript(): void {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "choice-button";
-    button.textContent = choice.label;
+    button.textContent = pn(choice.label);
     button.addEventListener("click", () => {
       dialogueChoiceHandler?.(choice);
     });
@@ -1319,7 +1456,7 @@ function renderMinimap(): void {
   const locationName =
     LOCATIONS.find((location) => location.id === locationId)?.name
     ?? locationId;
-  minimapPlace.textContent = locationName;
+  minimapPlace.textContent = pn(locationName);
   estateMinimap.setAttribute(
     "aria-label",
     `Circular estate map. You are at ${locationName}.${
@@ -1340,7 +1477,7 @@ function appendTrackerCard(
   kind.className = "quest-tracker-kind";
   kind.textContent = card.kind === "story" ? "Main story" : "Tracked request";
   const title = document.createElement("strong");
-  title.textContent = card.title;
+  title.textContent = pn(card.title);
   const progress = document.createElement("span");
   progress.className = "quest-tracker-progress";
   const track = document.createElement("span");
@@ -1362,7 +1499,7 @@ function appendTrackerCard(
   if (card.nextObjective) {
     const objective = document.createElement("span");
     objective.className = "quest-tracker-objective";
-    objective.textContent = `Next · ${card.nextObjective}`;
+    objective.textContent = `Next · ${pn(card.nextObjective)}`;
     button.appendChild(objective);
   }
   button.setAttribute(
@@ -1414,7 +1551,7 @@ function renderCampaign(): void {
     : CHAPTER_BY_ID.get(campaignState.currentChapter);
   chapterLabel.textContent = campaignState.currentChapter === "free-explore"
     ? "Story complete"
-    : `${chapter?.numberLabel ?? ""} · ${chapter?.title ?? ""}`;
+    : pn(`${chapter?.numberLabel ?? ""} · ${chapter?.title ?? ""}`);
   campaignProgress.textContent = getChapterProgress(campaignState);
 }
 
@@ -1550,13 +1687,13 @@ function renderJournalDetail(
   type.className = "journal-detail-type";
   type.textContent = entry.typeLabel;
   const title = document.createElement("h3");
-  title.textContent = entry.title;
+  title.textContent = pn(entry.title);
   const meta = document.createElement("p");
   meta.className = "journal-detail-meta";
-  meta.textContent = entry.meta;
+  meta.textContent = pn(entry.meta);
   const summary = document.createElement("p");
   summary.className = "journal-detail-summary";
-  summary.textContent = entry.summary;
+  summary.textContent = pn(entry.summary);
   journalDetail.append(type, title, meta, summary);
 
   if (entry.progressTotal > 0) {
@@ -1594,7 +1731,7 @@ function renderJournalDetail(
         objective.complete ? "complete" : "",
       ].filter(Boolean).join(" ");
       const label = document.createElement("span");
-      label.textContent = objective.label;
+      label.textContent = pn(objective.label);
       item.appendChild(label);
       if (objective.progressText) {
         const progressText = document.createElement("b");
@@ -1645,7 +1782,7 @@ function renderJournalDetail(
     const button = document.createElement("button");
     button.type = "button";
     button.className = "journal-action";
-    button.textContent = action.label;
+    button.textContent = pn(action.label);
     button.disabled = action.disabled === true;
     button.addEventListener("click", action.run);
     actions.appendChild(button);
@@ -1660,8 +1797,8 @@ function renderJournal(): void {
   const stateChanged = journalRenderedRevision !== campaignState.revision;
   journalRenderedRevision = campaignState.revision;
 
-  journalChapterLabel.textContent = view.chapterLabel;
-  journalChapterTitle.textContent = view.chapterTitle;
+  journalChapterLabel.textContent = pn(view.chapterLabel);
+  journalChapterTitle.textContent = pn(view.chapterTitle);
   journalContent.innerHTML = "";
 
   for (const category of JOURNAL_CATEGORIES) {
@@ -1718,9 +1855,9 @@ function renderJournal(): void {
       kind.textContent = entry.typeLabel;
       topline.append(status, kind);
       const title = document.createElement("h3");
-      title.textContent = entry.title;
+      title.textContent = pn(entry.title);
       const summary = document.createElement("p");
-      summary.textContent = entry.summary;
+      summary.textContent = pn(entry.summary);
       select.append(topline, title, summary);
       appendJournalProgress(select, entry);
       select.addEventListener("click", () =>
@@ -1819,7 +1956,7 @@ function mainStoryActions(): readonly JournalAction[] {
     }
     case "ending":
       return [
-        { label: "Return to Y's flat", run: () => visitLocation("y-flat") },
+        { label: pn("Return to {player}'s flat"), run: () => visitLocation("y-flat") },
         { label: "Listen at the last door", run: () => openNpc("voice") },
       ];
     case "free-explore":

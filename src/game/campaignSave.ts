@@ -3,6 +3,7 @@ import type {
   CampaignStateV1,
   ScamCheckCardLayout,
 } from "./campaignTypes.js";
+import { sanitiseAppearance, sanitisePlayerName } from "./playerIdentity.js";
 
 export interface CampaignStorage {
   getItem(key: string): string | null;
@@ -68,6 +69,26 @@ export function isCampaignStateV1(value: unknown): value is CampaignStateV1 {
   return true;
 }
 
+/**
+ * Fills in the player's name and look for saves written before the title
+ * screen asked for them.
+ *
+ * Deliberately a migration rather than a validity check: rejecting those saves
+ * would silently wipe a real player's campaign, and the defaults ("Y", the
+ * original sprite colours) reproduce exactly how the game behaved when the
+ * save was written. The save format stays at version 1 for the same reason.
+ */
+function migratePlayerIdentity(state: CampaignStateV1): CampaignStateV1 {
+  const playerName = sanitisePlayerName(state.playerName);
+  const playerAppearance = sanitiseAppearance(state.playerAppearance);
+  const nameUnchanged = playerName === state.playerName;
+  const appearanceUnchanged = state.playerAppearance !== undefined
+    && (Object.keys(playerAppearance) as (keyof typeof playerAppearance)[])
+      .every((key) => state.playerAppearance[key] === playerAppearance[key]);
+  if (nameUnchanged && appearanceUnchanged) return state;
+  return { ...state, playerName, playerAppearance };
+}
+
 function migrateScamCheckCard(state: CampaignStateV1): CampaignStateV1 {
   const hasMinahClue = state.objectives.includes("ros-clue-minah");
   const hasScamCard = state.objectives.includes("scam-check-shared");
@@ -121,7 +142,8 @@ export function loadCampaign(
   if (!raw) return null;
   try {
     const parsed: unknown = JSON.parse(raw);
-    return isCampaignStateV1(parsed) ? migrateScamCheckCard(parsed) : null;
+    if (!isCampaignStateV1(parsed)) return null;
+    return migrateScamCheckCard(migratePlayerIdentity(parsed));
   } catch {
     return null;
   }

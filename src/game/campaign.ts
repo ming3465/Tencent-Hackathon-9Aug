@@ -11,6 +11,11 @@ import type {
   NpcId,
   QuestId,
 } from "./campaignTypes.js";
+import {
+  type PlayerAppearance,
+  sanitiseAppearance,
+  sanitisePlayerName,
+} from "./playerIdentity.js";
 
 export const CAMPAIGN_VERSION = 1;
 export const CAMPAIGN_SAVE_KEY = "kampung-sg.campaign.v1";
@@ -137,6 +142,8 @@ function eventBelongsToFutureChapter(
 
 export interface CreateCampaignOptions {
   demo?: boolean;
+  playerName?: string;
+  playerAppearance?: PlayerAppearance;
 }
 
 export function createCampaignState(
@@ -145,6 +152,8 @@ export function createCampaignState(
   const demo = options.demo === true;
   return {
     version: CAMPAIGN_VERSION,
+    playerName: sanitisePlayerName(options.playerName),
+    playerAppearance: sanitiseAppearance(options.playerAppearance),
     currentChapter: "prologue",
     completedChapters: [],
     completedQuests: [],
@@ -500,7 +509,7 @@ export function getChapterProgress(state: CampaignStateV1): string {
       return "Complete the calm weaving interaction.";
     }
     case "ending":
-      return "Return to Y's flat for the last door.";
+      return "Return to {player}'s flat for the last door.";
     case "free-explore":
       return "The story is complete. Every place remains open.";
   }

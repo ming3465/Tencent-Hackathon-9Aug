@@ -204,6 +204,15 @@
         min-width: 0;
       }
 
+      /* The art and the character panel share the right column so the left
+         column keeps "Start the story" above the fold. */
+      .title-side {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+        min-width: 0;
+      }
+
       .title-copy h1 {
         max-width: 8ch;
         margin: 0;
@@ -228,7 +237,7 @@
 
       .title-lede {
         max-width: 36rem;
-        margin: 1.5rem 0 1.6rem;
+        margin: 1.2rem 0 1.1rem;
         color: var(--ink-soft);
         font-family: var(--font-display);
         font-size: clamp(1.15rem, 2.3vw, 1.5rem);
@@ -242,6 +251,216 @@
         gap: 1rem;
       }
 
+      /* Identity panel: name + look, chosen before the story starts.
+         Every option carries a word as well as a colour - the accessibility
+         contract rules out colour as the sole carrier of meaning. */
+      .identity-panel {
+        margin: 0;
+        padding: 0.85rem 1rem 0.95rem;
+        border: 3px solid var(--ink);
+        border-radius: 22px;
+        background: var(--paper, #fffbef);
+        box-shadow: 0 5px 0 rgba(23, 63, 79, 0.18);
+      }
+
+      .identity-heading {
+        margin: 0 0 0.6rem;
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-size: 1.15rem;
+        line-height: 1.15;
+      }
+
+      .identity-body {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.1rem;
+        align-items: flex-start;
+      }
+
+      .identity-preview {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.6rem 0.7rem;
+        border: 3px solid var(--ink);
+        border-radius: 16px;
+        background:
+          linear-gradient(180deg, rgba(148, 187, 110, 0.28), rgba(234, 217, 183, 0.55));
+      }
+
+      #player-preview {
+        display: block;
+        width: 66px;
+        height: 92px;
+        image-rendering: pixelated;
+      }
+
+      .identity-caption {
+        margin: 0;
+        max-width: 9ch;
+        overflow-wrap: anywhere;
+        color: var(--ink);
+        font-size: 0.8rem;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .identity-fields {
+        flex: 1 1 15rem;
+        min-width: 0;
+      }
+
+      .identity-field {
+        margin: 0 0 0.65rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+      }
+
+      .identity-label {
+        color: var(--ink);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .identity-input {
+        width: 100%;
+        min-height: 48px;
+        padding: 0.55rem 0.7rem;
+        color: var(--ink);
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: 700;
+        background: var(--white, #fff);
+        border: 3px solid var(--ink);
+        border-radius: 12px;
+      }
+
+      .identity-input:focus-visible {
+        outline: 4px solid var(--coral);
+        outline-offset: 2px;
+      }
+
+      .identity-hint {
+        color: var(--ink-soft);
+        font-size: 0.76rem;
+        font-weight: 700;
+      }
+
+      .identity-looks {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.45rem 0.9rem;
+      }
+
+      .look-group {
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+
+      .look-legend {
+        padding: 0;
+        margin-bottom: 0.3rem;
+        color: var(--ink);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .look-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+      }
+
+      .look-option {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        /* 48px stays: the touch-target contract applies here too. */
+        min-height: 48px;
+        padding: 0.25rem 0.5rem 0.25rem 0.3rem;
+        border: 3px solid var(--ink);
+        border-radius: 999px;
+        background: var(--cream);
+        color: var(--ink);
+        font-size: 0.78rem;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .look-option input {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+        margin: 0;
+        cursor: pointer;
+      }
+
+      .look-swatch {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 auto;
+        border: 2px solid var(--ink);
+        border-radius: 50%;
+        background: var(--swatch, #ccc);
+      }
+
+      /* Selection is carried by a thick ring and a tick, not by colour. */
+      .look-option:has(input:checked) {
+        background: var(--ink);
+        color: var(--cream);
+        box-shadow: 0 0 0 3px var(--gold, #f2b84b);
+      }
+
+      .look-option:has(input:checked) .look-swatch {
+        border-color: var(--cream);
+      }
+
+      .look-option:has(input:checked)::after {
+        content: "✓";
+        font-weight: 900;
+      }
+
+      .look-option:has(input:focus-visible) {
+        outline: 4px solid var(--coral);
+        outline-offset: 3px;
+      }
+
+      .identity-surprise {
+        min-height: 48px;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.76rem;
+        white-space: nowrap;
+      }
+
+      @media (max-width: 860px) {
+        .identity-looks {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      @media (max-width: 640px) {
+        .identity-panel {
+          padding: 0.85rem;
+        }
+
+        .identity-body {
+          gap: 0.8rem;
+        }
+      }
+
       .control-note {
         margin: 1rem 0 0;
         color: var(--ink-soft);
@@ -252,7 +471,7 @@
       /* Reviewed title panorama; all readable copy remains semantic HTML. */
       .title-world {
         position: relative;
-        min-height: 520px;
+        min-height: clamp(200px, 32vh, 420px);
         margin: 0;
         overflow: hidden;
         border: 7px solid var(--ink);
@@ -3018,28 +3237,66 @@
             </p>
           </div>
 
-          <figure class="title-world">
-            <img
-              class="title-art"
-              src="./assets/generated/kampung-estate-title-v1.webp"
-              width="1668"
-              height="943"
-              alt="Older neighbours tend a community garden and organise a noticeboard while a younger neighbour approaches through a sunlit HDB estate."
-              decoding="async"
-              fetchpriority="high"
-            />
-            <div class="title-particles" aria-hidden="true">
-              <span class="title-particle"></span>
-              <span class="title-particle"></span>
-              <span class="title-particle"></span>
-              <span class="title-particle"></span>
-              <span class="title-particle"></span>
-              <span class="title-particle"></span>
-              <span class="title-particle leaf"></span>
-              <span class="title-particle leaf"></span>
-            </div>
-            <figcaption class="title-sign">EVERY SMALL ACT GROWS THE KAMPUNG</figcaption>
-          </figure>
+          <div class="title-side">
+            <figure class="title-world">
+              <img
+                class="title-art"
+                src="./assets/generated/kampung-estate-title-v1.webp"
+                width="1668"
+                height="943"
+                alt="Older neighbours tend a community garden and organise a noticeboard while a younger neighbour approaches through a sunlit HDB estate."
+                decoding="async"
+                fetchpriority="high"
+              />
+              <div class="title-particles" aria-hidden="true">
+                <span class="title-particle"></span>
+                <span class="title-particle"></span>
+                <span class="title-particle"></span>
+                <span class="title-particle"></span>
+                <span class="title-particle"></span>
+                <span class="title-particle"></span>
+                <span class="title-particle leaf"></span>
+                <span class="title-particle leaf"></span>
+              </div>
+              <figcaption class="title-sign">EVERY SMALL ACT GROWS THE KAMPUNG</figcaption>
+            </figure>
+            <section class="identity-panel" aria-labelledby="identity-heading">
+              <h2 id="identity-heading" class="identity-heading">Who walks into the estate?</h2>
+              <div class="identity-body">
+                <div class="identity-preview">
+                  <canvas
+                    id="player-preview"
+                    width="160"
+                    height="224"
+                    role="img"
+                    aria-label="Preview of your character"
+                  ></canvas>
+                  <p id="identity-preview-caption" class="identity-caption">Y</p>
+                  <button id="btn-surprise-look" class="secondary-button identity-surprise" type="button">
+                    Surprise me
+                  </button>
+                </div>
+                <div class="identity-fields">
+                  <p class="identity-field">
+                    <label class="identity-label" for="input-player-name">Your name</label>
+                    <input
+                      id="input-player-name"
+                      class="identity-input"
+                      type="text"
+                      autocomplete="given-name"
+                      spellcheck="false"
+                      placeholder="Y"
+                      aria-describedby="identity-name-hint"
+                    />
+                    <span id="identity-name-hint" class="identity-hint">
+                      Leave blank to stay as Y.
+                    </span>
+                  </p>
+                  <div id="identity-looks" class="identity-looks"></div>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
       </section>
 

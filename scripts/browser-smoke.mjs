@@ -43,6 +43,16 @@ const withAppQuery = (entries) => {
 const TEST_URL = withAppQuery({ smoke: "1" });
 const DEMO_TEST_URL = withAppQuery({ smoke: "1", demo: "1" });
 const SHOT_DIR = readFlag("shots", "docs/screenshots");
+/**
+ * The whole suite runs as a named player rather than the default "Y".
+ *
+ * That is deliberate: every downstream assertion then exercises the
+ * personalised text path, so a render site that forgot to resolve the
+ * `{player}` token shows up as a failure here instead of as a literal
+ * "{player}" on a judge's screen.
+ */
+const SMOKE_PLAYER_NAME = "Halimah";
+const SMOKE_PLAYER_FLAT = `${SMOKE_PLAYER_NAME}'s Flat`;
 const PORT = Number(readFlag("port", "9222"));
 const CAPTURE_LOCATION_GALLERY = args.includes("--location-gallery");
 const CAPTURE_SCREENSHOTS = !args.includes("--no-shots");
@@ -619,12 +629,19 @@ try {
         const button = buttons.find((candidate) =>
           candidate.textContent.trim().includes(${JSON.stringify(label)})
         );
-        if (!button) return false;
+        // Report what was on offer, so a label mismatch is diagnosable from
+        // one run instead of needing a bisect.
+        if (!button) return { clicked: false, seen: buttons.map((b) => b.textContent.trim()) };
         button.click();
-        return true;
+        return { clicked: true };
       })()
     `);
-    if (!clicked) throw new Error(`Could not find button "${label}" in "${section || "document"}"`);
+    if (!clicked.clicked) {
+      throw new Error(
+        `Could not find button "${label}" in "${section || "document"}". `
+          + `Saw: ${JSON.stringify(clicked.seen)}`
+      );
+    }
     if (expectedArea) {
       await waitForPageCondition(
         `document.getElementById("area-name")?.textContent?.includes(${JSON.stringify(expectedArea)})`,
@@ -854,7 +871,7 @@ try {
         `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
       );
       check(
-        "Keyboard movement responds inside Y's flat",
+        `Keyboard movement responds inside ${SMOKE_PLAYER_NAME}'s flat`,
         beforeKeyboard
           && afterKeyboard
           && beforeKeyboard.locationId === "y-flat"
@@ -1161,7 +1178,11 @@ try {
   };
 
   const completeEnding = async () => {
-    await clickButton("Return to Y's flat", "Main Story", "Y's Flat");
+    await clickButton(
+      `Return to ${SMOKE_PLAYER_NAME}'s flat`,
+      "Main Story",
+      SMOKE_PLAYER_FLAT,
+    );
     await clickButton("Listen at the last door", "Main Story");
     await completeDialogueChoice();
     check(
@@ -2422,9 +2443,147 @@ try {
       `median ${baselineFramePacing.median.toFixed(2)}ms, ` +
       `p95 ${baselineFramePacing.p95.toFixed(2)}ms`
   );
+  /**
+   * Starts the story as SMOKE_PLAYER_NAME. Every start goes through here so a
+   * later pass cannot silently fall back to the default name and mask a
+   * personalisation bug.
+   */
+  const startNamedStory = async () => {
+    await page.eval(`
+      (() => {
+        const input = document.getElementById("input-player-name");
+        if (!input) throw new Error("name field missing from the title screen");
+        input.value = ${JSON.stringify(SMOKE_PLAYER_NAME)};
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      })()
+    `);
+    await page.eval(`document.getElementById("btn-start").click()`);
+  };
+
+  const identityEvidence = await page.eval(`
+    (() => {
+      const input = document.getElementById("input-player-name");
+      const groups = [...document.querySelectorAll("#identity-looks .look-group")];
+      const canvas = document.getElementById("player-preview");
+      const context = canvas?.getContext("2d");
+      const pixels = context
+        ? context.getImageData(0, 0, canvas.width, canvas.height).data
+        : null;
+      let opaque = 0;
+      const tones = new Set();
+      if (pixels) {
+        for (let i = 0; i < pixels.length; i += 4) {
+          if (pixels[i + 3] < 200) continue;
+          opaque += 1;
+          tones.add((pixels[i] << 16) | (pixels[i + 1] << 8) | pixels[i + 2]);
+        }
+      }
+      const options = [...document.querySelectorAll("#identity-looks .look-option")];
+      return {
+        hasNameField: input instanceof HTMLInputElement,
+        namePlaceholder: input?.placeholder ?? null,
+        groups: groups.length,
+        legends: groups.map((group) => group.querySelector("legend")?.textContent?.trim()),
+        options: options.length,
+        // Every option must carry a word, not only a swatch.
+        allLabelled: options.every(
+          (option) => (option.querySelector(".look-text")?.textContent ?? "").trim().length > 0
+        ),
+        // 48px minimum touch target, same contract as the rest of the UI.
+        minTargetPx: Math.min(
+          ...options.map((option) => Math.round(option.getBoundingClientRect().height))
+        ),
+        checkedPerGroup: groups.map(
+          (group) => group.querySelectorAll("input:checked").length
+        ),
+        previewDrawn: opaque > 400,
+        previewTones: tones.size,
+        surpriseButton: Boolean(document.getElementById("btn-surprise-look")),
+      };
+    })()
+  `);
+  check(
+    "Title screen offers a name field and a labelled character customiser",
+    identityEvidence.hasNameField
+      && identityEvidence.namePlaceholder === "Y"
+      && identityEvidence.groups === 4
+      && identityEvidence.options >= 17
+      && identityEvidence.allLabelled
+      && identityEvidence.minTargetPx >= 48
+      && identityEvidence.checkedPerGroup.every((count) => count === 1)
+      && identityEvidence.surpriseButton,
+    JSON.stringify(identityEvidence)
+  );
+  const foldEvidence = await page.eval(`
+    (() => {
+      const start = document.getElementById("btn-start").getBoundingClientRect();
+      const panel = document.querySelector(".identity-panel").getBoundingClientRect();
+      return {
+        viewport: [innerWidth, innerHeight],
+        startBottom: Math.round(start.bottom),
+        startVisible: start.top >= 0 && start.bottom <= innerHeight,
+        panelVisible: panel.top >= 0 && panel.bottom <= innerHeight,
+      };
+    })()
+  `);
+  check(
+    "Start button and customiser both stay above the fold on desktop",
+    foldEvidence.startVisible && foldEvidence.panelVisible,
+    JSON.stringify(foldEvidence)
+  );
+  check(
+    "The customiser preview renders the actual player sprite",
+    identityEvidence.previewDrawn && identityEvidence.previewTones >= 8,
+    JSON.stringify(identityEvidence)
+  );
+
   await page.shot(`${SHOT_DIR}/01-title.png`);
-  await page.eval(`document.getElementById("btn-start").click()`);
+
+  // Change the look, then confirm the preview actually repaints.
+  const previewResponds = await page.eval(`
+    (() => {
+      const canvas = document.getElementById("player-preview");
+      const context = canvas.getContext("2d");
+      const before = context.getImageData(0, 0, canvas.width, canvas.height).data.join(",");
+      const shirt = document.querySelectorAll('#identity-looks input[name="look-shirt"]');
+      const target = [...shirt].find((radio) => !radio.checked);
+      if (!target) return { changed: false, reason: "no alternative shirt" };
+      target.checked = true;
+      target.dispatchEvent(new Event("change", { bubbles: true }));
+      const after = context.getImageData(0, 0, canvas.width, canvas.height).data.join(",");
+      return { changed: before !== after };
+    })()
+  `);
+  check(
+    "Choosing a different look repaints the preview",
+    previewResponds.changed === true,
+    JSON.stringify(previewResponds)
+  );
+
+  await startNamedStory();
   await sleep(2200);
+
+  const tokenLeak = await page.eval(`
+    (() => {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      const offenders = [];
+      let node;
+      while ((node = walker.nextNode())) {
+        if (!node.nodeValue || !node.nodeValue.includes("{player}")) continue;
+        const parent = node.parentElement;
+        offenders.push({
+          where: (parent?.id || parent?.className || parent?.tagName) ?? "?",
+          text: node.nodeValue.trim().slice(0, 70),
+        });
+      }
+      return { offenders: offenders.slice(0, 8), count: offenders.length };
+    })()
+  `);
+  check(
+    "No unresolved {player} token reaches the rendered page",
+    tokenLeak.count === 0,
+    JSON.stringify(tokenLeak)
+  );
 
   check(
     "Exactly one Phaser canvas is created",
@@ -3000,7 +3159,7 @@ try {
       && minimapEvidence.insideWorld
       && minimapEvidence.landmarks === 7
       && minimapEvidence.currentLandmarks === 1
-      && minimapEvidence.place === "Y's Flat"
+      && minimapEvidence.place === SMOKE_PLAYER_FLAT
       && /^translate\(/.test(minimapEvidence.playerTransform ?? ""),
     questRail:
       initialQuestTracker.cards === 1
@@ -3080,7 +3239,7 @@ try {
     JSON.stringify(journalDrawerEvidence)
   );
   await page.shot(`${SHOT_DIR}/02-neighbourhood.png`);
-  renderedLocationNames.add("Y's Flat");
+  renderedLocationNames.add(SMOKE_PLAYER_FLAT);
   await page.shot(`${SHOT_DIR}/03-nearby-resident.png`);
   await runCampaign({
     helpers: 3,
@@ -3470,7 +3629,7 @@ try {
       && document.getElementById("btn-continue").hidden
     `)
   );
-  await page.eval(`document.getElementById("btn-start").click()`);
+  await startNamedStory();
   await sleep(1600);
   await runCampaign({
     helpers: 2,

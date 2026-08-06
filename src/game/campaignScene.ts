@@ -1997,7 +1997,7 @@ abstract class WalkableScene extends Phaser.Scene {
   }
 
   private createSharedTextures(): void {
-    ensureCampaignArtTextures(this);
+    ensureCampaignArtTextures(this, this.getState().playerAppearance);
   }
 
   private setPlayerFacing(x: number, y: number): void {
@@ -2392,7 +2392,7 @@ export class EstateScene extends WalkableScene {
   create(data: SceneStartData = {}): void {
     this.locationId = "estate";
     this.cameras.main.setBackgroundColor("#9fc079");
-    ensureCampaignArtTextures(this);
+    ensureCampaignArtTextures(this, this.getState().playerAppearance);
     this.createBakedExteriorTiles();
     this.createBuildingOcclusionLayers();
     for (const zone of ESTATE_BUILDING_COLLISION_ZONES) {
@@ -3874,7 +3874,7 @@ export class InteriorScene extends WalkableScene {
     this.locationId = data.locationId ?? this.locationId;
     this.fromLocationId = data.fromLocationId ?? this.fromLocationId;
     this.cameras.main.setBackgroundColor("#ead9b7");
-    ensureCampaignArtTextures(this);
+    ensureCampaignArtTextures(this, this.getState().playerAppearance);
     this.drawRoomShell();
     this.drawLocationIdentity();
     const spawn = data.spawn ?? this.spawnForRoom();
