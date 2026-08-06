@@ -122,8 +122,10 @@ finish a work session.
   eight-slide PPTX/PDF submission artifacts to those verified figures; template
   fidelity, overflow, metadata, and all rendered pages passed inspection.
   Graphify rebuilt to 1,276 nodes / 2,541 edges / 84 communities with the four
-  known zero-node JSON warnings and stale community-label notice. No shared
-  `dist/` or gameplay screenshots, commit, push, deployment,
+  known zero-node JSON warnings and stale community-label notice. Commit
+  `9fd50a2` pushed to `main`; Pages run `31079270337` passed its build and deploy
+  jobs, and the live full/demo endpoints returned HTTP 200 with the new pointer
+  focus selector. No shared `dist/` or gameplay screenshots,
   human/device/screen-reader/200%-zoom test, or outcome claim was made.
 
 - **2026-08-06 (Codex, Hawker interior EXIT closure lane)** — Changed the

@@ -3572,6 +3572,9 @@ shared screenshot, deployment, or release lane was claimed.
   fidelity and overflow checks; PowerPoint renders and Poppler PDF renders were
   inspected page by page with no clipping, placeholder, metadata, or layout
   defect found.
+- Commit `9fd50a2` was pushed to `main`. GitHub Pages run `31079270337` passed
+  its build and deploy jobs; direct full and `?demo=1` probes returned HTTP 200,
+  and the deployed HTML contains the new pointer-focus selector.
 
 **Tooling and claim boundary:**
 
@@ -3580,9 +3583,9 @@ shared screenshot, deployment, or release lane was claimed.
   appropriate for an input-ownership defect. Graphify rebuilt to **1,276 nodes
   / 2,541 edges / 84 communities**, retaining the four known zero-node JSON
   warnings and stale community-label notice.
-- This is AI-assisted implementation and automated local browser evidence. It
-  is not a commit, push, deployment, human or older-adult playtest, real-device
-  run, screen-reader or 200% zoom session, accessibility certification,
+- This is AI-assisted implementation, automated local browser evidence, and a
+  verified GitHub Pages deployment. It is not a human or older-adult playtest,
+  real-device run, screen-reader or 200% zoom session, accessibility certification,
   social/health outcome, or new Miora/CodeBuddy evidence. No account, backend,
   analytics, personal-data collection, runtime model/network call, gameplay
   timer, failure state, energy system, or medical claim was introduced.
