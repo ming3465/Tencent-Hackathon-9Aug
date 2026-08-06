@@ -51,9 +51,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        # Held at v4 deliberately. v5 timed out waiting on the Pages backend
-        # on two consecutive runs (deployment_queued / deployment_in_progress
-        # for the full 10 minutes, then aborted), while v4 has deployed this
-        # repository reliably. A working deploy to the judged URL outranks
-        # clearing this one action's Node-20 annotation.
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+        with:
+          # The Pages backend is currently taking longer than the 10-minute
+          # default to finish a deployment. The action gave up and reported
+          # failure on three runs while the deployment itself completed - the
+          # live bundle contained the new code each time. Waiting longer turns
+          # that false negative back into a truthful signal.
+          timeout: 1800000
