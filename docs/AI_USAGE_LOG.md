@@ -3589,3 +3589,73 @@ shared screenshot, deployment, or release lane was claimed.
   social/health outcome, or new Miora/CodeBuddy evidence. No account, backend,
   analytics, personal-data collection, runtime model/network call, gameplay
   timer, failure state, energy system, or medical claim was introduced.
+
+## 2026-08-06 - Player Name, Character Customiser, and Isometric Rollback Safety
+
+**Tool:** Claude Code (Opus 5, 1M context), driven interactively.
+
+**What was asked:** give the story a player-chosen name instead of the
+hard-coded "Y", add character customisation before the game begins, and make
+the isometric build rollback-safe in case the direction is rejected.
+
+**What was built:**
+
+- The title screen now asks who is walking into the estate. A name field
+  defaults to "Y" when left blank, so every existing save, screenshot and demo
+  script still reads correctly. Story text carries a `{player}` token resolved
+  at render time by `personalise()`.
+- A look customiser covering skin, hair, shirt and trousers. Every option
+  carries a visible word as well as a colour - swatches alone would fail the
+  contract in `docs/ACCESSIBILITY.md` - on native radios at 48px targets, plus
+  a "Surprise me" randomiser.
+- The preview is not a second drawing of the character. `CanvasPixelPainter`
+  implements the same `PixelPainter` surface Phaser's `Graphics` does, so the
+  title screen calls `drawPlayerFrame` - the exact function that bakes the
+  in-game sprite. There is one painter, so preview and sprite cannot drift.
+
+**Defects found and fixed while building it:**
+
+- `makeTexture` returns early for keys that already exist. Returning to the
+  title and starting over therefore kept the previous body. Player texture keys
+  are now dropped when the appearance changes.
+- `startOver` rebuilt the campaign with `createCampaignState({ demo })`,
+  silently discarding the chosen name and look.
+- Eleven render sites reached the DOM without resolving the token. They were
+  found by the gate, not by inspection - see below.
+- The shipped campaign imported the grain pass from `src/game/iso/`, which
+  would have broken the judged build if the isometric directory were deleted.
+
+**How the token gate works:** the smoke suite plays the entire campaign as a
+named player ("Halimah") rather than the default, and scans the rendered
+document for unresolved `{player}` text. A render site that forgets to
+personalise fails the gate instead of showing a judge a literal "{player}".
+The first run reported 11 offenders with their element and text; all were
+fixed and the check now passes.
+
+**Isometric rollback:** made a genuine one-command removal. The shared grain
+pass moved to `src/game/textureGrain.ts`, and `vite.config.ts` adds the
+`iso-preview` entry only when the page exists, so no follow-up edit is needed.
+Verified by deleting the whole footprint in a throwaway git worktree and
+running the full gate there: typecheck clean, **115/125** tests (the 10
+isometric tests go with it), build green, **65/65 smoke**. Tag
+`pre-isometric` marks the last pre-slice commit as a comparison point.
+
+**Verification:** `npm run typecheck`, `npm test`, `npm run build`,
+`npm audit`, `npm run smoke` all pass - **125 unit tests** (was 100),
+**65/65 browser checks** (was 60), **0 vulnerabilities**. A layout regression
+was caught and fixed in the same pass: the panel initially pushed "Start the
+story" below the fold at 1440x813, so it moved into the right column under the
+title art and a new smoke check now prevents that regressing.
+
+**Tooling and claim boundary:**
+
+- AI-assisted implementation with automated local real-Chrome evidence via the
+  repository's CDP harness. No image generation was involved; the customiser
+  and its preview are procedurally drawn, so the "world is 100% code-drawn"
+  claim in the deck and README is unaffected.
+- This is not a human or older-adult playtest, real-device run, screen-reader
+  or 200% zoom session, accessibility certification, social/health outcome, or
+  new Miora/CodeBuddy evidence. No account, backend, analytics, personal-data
+  collection, runtime model/network call, gameplay timer, failure state, energy
+  system, or medical claim was introduced. The name is held in local campaign
+  state only and is never transmitted.
