@@ -153,7 +153,10 @@ describe("story content uses the token rather than a hard-coded Y", () => {
 
   for (const [name, value] of Object.entries(content)) {
     it(`${name} addresses the player by token, not by "Y"`, () => {
-      const offenders = stringsIn(value).filter((text) => /\bY's\b/.test(text));
+      // Standalone "Y", not just the possessive: a line like "the part of Y
+      // that had begun to fade" is just as wrong for a player called Halimah,
+      // and the possessive-only check missed exactly that.
+      const offenders = stringsIn(value).filter((text) => /\bY\b/.test(text));
       expect(offenders).toEqual([]);
     });
   }

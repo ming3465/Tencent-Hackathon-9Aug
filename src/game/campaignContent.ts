@@ -899,8 +899,8 @@ const STORY_PROFILES: readonly NpcProfile[] = [
     ["familiar", "patient", "fading"],
     "{player}'s unseen companion",
     ["remembering the estate's small acts"],
-    ["which door Y has not opened", "why the flat grows warmer"],
-    ["remember every completed chapter", "never pressure Y to leave"],
+    ["which door {player} has not opened", "why the flat grows warmer"],
+    ["remember every completed chapter", "never pressure {player} to leave"],
     [
       {
         id: "voice-prologue",
@@ -945,7 +945,7 @@ const STORY_PROFILES: readonly NpcProfile[] = [
         title: "The Last Door",
         lines: [
           "You thought I was leading you through the estate.",
-          "I was the part of Y that had begun to fade from the doorway.",
+          "I was the part of {player} that had begun to fade from the doorway.",
           "But listen: Mei brought cuttings. Ravi brought chairs. Ros brought the whole kitchen.",
           "Nobody came to rescue {player}. They came because {player} had already helped make room for them.",
         ],
