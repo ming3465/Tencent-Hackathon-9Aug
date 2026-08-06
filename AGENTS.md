@@ -60,9 +60,9 @@ npm run typecheck && npm test && npm run build && npm audit && npm run smoke
 
 `npm run smoke` is self-contained (builds, serves, drives headless Chrome
 through a full playthrough, writes screenshots to `docs/screenshots/`).
-Current truth: **90 unit tests, 60 smoke checks, 0 vulnerabilities.** The unit
-split is campaign 30, match engine 31, audio 17, accessibility contract 4, and
-world-layout/door/pause 8. If a doc
+Current truth: **100 unit tests, 60 smoke checks, 0 vulnerabilities.** The unit
+split is campaign 30, match engine 31, audio 17, accessibility contract 4,
+world-layout/door/pause 8, and isometric world 10. If a doc
 or deck quotes different numbers after your change, update them — stale
 numbers are treated as defects.
 
