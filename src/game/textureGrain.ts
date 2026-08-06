@@ -1,5 +1,10 @@
 /**
- * Per-pixel grain and light falloff for baked isometric textures.
+ * Per-pixel grain and light falloff for any baked texture.
+ *
+ * Projection-agnostic on purpose. The shipped top-down estate and the
+ * isometric preview both bake through this, so it lives outside
+ * `src/game/iso/` — that directory has to stay a self-contained unit the
+ * isometric direction can be dropped by deleting (see AGENTS.md).
  *
  * Phaser's `Graphics` can only lay down flat fills, so a purely Graphics-based
  * ground plateaus around ten thousand distinct colours no matter how many

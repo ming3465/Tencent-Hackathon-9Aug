@@ -29,7 +29,7 @@ import {
   isoCharacterTextureFor,
 } from "./game/iso/isoCharacters.js";
 import { isoCanvasForWorld, isoDepth, worldToIso } from "./game/iso/projection.js";
-import { bakeWithGrain } from "./game/iso/isoGrain.js";
+import { bakeWithGrain } from "./game/textureGrain.js";
 import {
   clampToEstate,
   isoFacingFor,

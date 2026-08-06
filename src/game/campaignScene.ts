@@ -64,7 +64,7 @@ import {
   ensureShelterTexture,
   paintThreeQuarterTerrain,
 } from "./threeQuarterArt.js";
-import { bakeWithGrain } from "./iso/isoGrain.js";
+import { bakeWithGrain } from "./textureGrain.js";
 import {
   movementSurfaceAt,
   stepIntervalFor,
