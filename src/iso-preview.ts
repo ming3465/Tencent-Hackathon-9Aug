@@ -16,6 +16,10 @@ import { ESTATE_BUILDINGS, ESTATE_TREES, ESTATE_LANDSCAPING } from "./game/estat
 import { paintIsoTerrain } from "./game/iso/isoTerrain.js";
 import { paintIsoBuilding } from "./game/iso/isoBuildings.js";
 import { ensureIsoPropTextures, isoTextureFor } from "./game/iso/isoProps.js";
+import {
+  ensureIsoCharacterTextures,
+  isoCharacterTextureFor,
+} from "./game/iso/isoCharacters.js";
 import { isoCanvasForWorld, isoDepth, worldToIso } from "./game/iso/projection.js";
 
 /**
@@ -35,6 +39,7 @@ class IsoPreviewScene extends Phaser.Scene {
   create(): void {
     ensureCampaignArtTextures(this);
     ensureIsoPropTextures(this);
+    ensureIsoCharacterTextures(this);
 
     const canvas = isoCanvasForWorld(SLICE.width, SLICE.height);
     const originX = canvas.originX;
@@ -77,14 +82,7 @@ class IsoPreviewScene extends Phaser.Scene {
         .setDepth(isoDepth(worldX, worldY, layer));
     };
 
-    const shadow = (worldX: number, worldY: number, radius: number): void => {
-      const point = worldToIso(worldX, worldY);
-      this.add
-        .ellipse(point.x + originX, point.y + originY, radius, radius * 0.5, 0x2f2a1e, 0.28)
-        .setDepth(isoDepth(worldX, worldY, 1));
-    };
-
-    // Isometric prop forms bake their own contact shadow, so no separate
+    // Isometric prop and character forms bake their own contact shadow, so no separate
     // shadow ellipse here — one shadow per object, as ACCESSIBILITY.md requires.
     for (const tree of ESTATE_TREES) {
       place(tree.anchor.x, tree.anchor.y, isoTextureFor(tree.texture), 5);
@@ -105,12 +103,10 @@ class IsoPreviewScene extends Phaser.Scene {
       [300, 700, "npc-seng-side-0"],
     ];
     for (const [worldX, worldY, texture] of cast) {
-      shadow(worldX, worldY, 34);
-      place(worldX, worldY, texture, 4);
+      place(worldX, worldY, isoCharacterTextureFor(texture), 4);
     }
 
-    shadow(760, 560, 34);
-    place(760, 560, "campaign-player-down-0", 4);
+    place(760, 560, isoCharacterTextureFor("campaign-player-down-0"), 4);
 
     const focus = worldToIso(FOCUS.x, FOCUS.y);
     this.cameras.main.setBackgroundColor("#5c6b3f");
