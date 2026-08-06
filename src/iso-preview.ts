@@ -122,6 +122,27 @@ class IsoPreviewScene extends Phaser.Scene {
       place(item.anchor.x, item.anchor.y, isoTextureFor(item.texture), 3);
     }
 
+    // Courtyard furniture at the shipped story-cluster positions. This is what
+    // carries the "somebody lives here" read in the reference art — chess
+    // players mid-game, stacked chairs, a notice board, a pergola.
+    const furniture: [number, number, string][] = [
+      [1580, 735, "iso-chess-table"],
+      [2200, 775, "iso-chess-table"],
+      [530, 325, "iso-chair-stack"],
+      [1580, 325, "iso-chair-stack"],
+      [1490, 735, "iso-cleaning-cart"],
+      [1150, 1060, "iso-cleaning-cart"],
+      [860, 690, "iso-notice-board"],
+      [1760, 1010, "iso-notice-board"],
+      [640, 980, "iso-bike-rack"],
+      [1980, 620, "iso-bike-rack"],
+      [980, 1180, "iso-shaded-seating"],
+      [1720, 1220, "iso-shaded-seating"],
+    ];
+    for (const [worldX, worldY, texture] of furniture) {
+      place(worldX, worldY, texture, 4);
+    }
+
     // A handful of residents mid-activity, matching the reference's read of
     // "elders doing things" rather than an empty courtyard.
     const cast: [number, number, string][] = [
