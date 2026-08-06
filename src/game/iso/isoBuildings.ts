@@ -26,10 +26,28 @@ const ACCENTS: Record<string, number> = {
   teal: PALETTE.teal,
 };
 
-/** Warm plaster, in the reference's register rather than the flat cream. */
-const WALL_BASE = 0xe4d5bb;
-const ROOF_BASE = 0xa8543f;
 const SHADOW = 0x2f2a1e;
+
+/**
+ * Roof materials. Eight buildings sharing one terracotta made the estate read
+ * as a tiled texture rather than a neighbourhood — the single most damning
+ * thing about the first isometric pass. Real HDB estates mix clay tile,
+ * painted metal deck and flat concrete, so the roof carries most of a
+ * building's identity from above.
+ */
+const ROOF_MATERIALS: readonly { base: number; ridge: number }[] = [
+  { base: 0xa8543f, ridge: 0xc06a4c }, // clay tile
+  { base: 0x9c6b3f, ridge: 0xb98450 }, // weathered terracotta
+  { base: 0x4f6f6a, ridge: 0x668b84 }, // painted teal metal deck
+  { base: 0x6b7a52, ridge: 0x87996a }, // olive metal deck
+  { base: 0x8a8578, ridge: 0xa39d8e }, // grey concrete flat roof
+  { base: 0x94553f, ridge: 0xb06a50 }, // deep brick tile
+];
+
+/** Wall paint. Singapore estates are pastel-washed, not uniformly cream. */
+const WALL_TINTS: readonly number[] = [
+  0xe4d5bb, 0xe8dcc4, 0xdcd0be, 0xe6d6b4, 0xdfd8c6, 0xead9bd,
+];
 
 /** Relative brightness per face. Classic readable isometric box shading. */
 const ROOF_LIGHT = 0.1;
@@ -153,14 +171,16 @@ export function paintIsoBuilding(
   // identical terracotta roofs read as a texture atlas, not a neighbourhood;
   // the reference's buildings each have their own faded paint job.
   const identity = isoHash(x, y);
+  const material = ROOF_MATERIALS[identity % ROOF_MATERIALS.length];
   const wallTint = temper(
-    shade(WALL_BASE, ((identity % 100) / 100 - 0.5) * 0.16),
+    shade(
+      WALL_TINTS[(identity >>> 5) % WALL_TINTS.length],
+      ((identity % 100) / 100 - 0.5) * 0.12,
+    ),
     ((identity >>> 7) % 100) / 100 - 0.5,
   );
-  const roofTint = temper(
-    shade(ROOF_BASE, (((identity >>> 13) % 100) / 100 - 0.5) * 0.24),
-    ((identity >>> 19) % 100) / 100 - 0.5,
-  );
+  const roofTint = shade(material.base, (((identity >>> 13) % 100) / 100 - 0.5) * 0.14);
+  const ridgeTint = material.ridge;
 
   const project = (worldX: number, worldY: number, lift = 0): Vec => {
     const point = worldToIso(worldX, worldY);
@@ -219,7 +239,7 @@ export function paintIsoBuilding(
   // --- Roof plane ---
   const roofColour = shade(roofTint, ROOF_LIGHT);
   quad(graphics, topN, topE, topS, topW, roofColour);
-  paintRoof(graphics, topN, topE, topW, definition, roofColour);
+  paintRoof(graphics, topN, topE, topW, definition, roofColour, ridgeTint);
 
   // Eave line: a darker rim where roof meets wall reads as overhang thickness.
   const eave = shade(roofColour, -0.3);
@@ -341,29 +361,90 @@ function paintFaceDetail(
     cell(0.02, 0.62, 0.98, 0.7, accent);
     cell(0.02, 0.6, 0.98, 0.62, shade(accent, -0.28));
   } else {
-    // Residential window grid.
+    // Residential window grid. Every bay is varied: shutters, awnings, AC
+    // condensers, open casements, laundry poles. A uniform grid of identical
+    // blue rectangles was the main reason the first pass read as wallpaper.
     for (let column = 0; column < columns; column += 1) {
       const u0 = 0.04 + (column * 0.92) / columns;
       const u1 = u0 + 0.92 / columns - 0.02;
       for (let row = 0; row < 2; row += 1) {
         const v0 = 0.2 + row * 0.34;
         const v1 = v0 + 0.24;
-        const seed = isoHash(column * 29 + row * 7, definition.bounds.y);
-        cell(u0, v0, u1, v1, shade(faceColour, -0.5));
-        cell(
-          u0 + 0.006,
-          v0 + 0.02,
-          u1 - 0.006,
-          v1 - 0.02,
-          seed % 4 === 0 ? glassLit : glass,
+        const seed = isoHash(
+          column * 29 + definition.bounds.x,
+          row * 7 + definition.bounds.y,
         );
+        const variant = seed % 5;
+
+        // Reveal: the window sits in a recess, so it reads as depth.
+        cell(u0, v0, u1, v1, shade(faceColour, -0.5));
+
+        if (variant === 0) {
+          // Louvred shutters, closed.
+          const slats = 5;
+          for (let slat = 0; slat < slats; slat += 1) {
+            const sv = v0 + 0.02 + (slat * (v1 - v0 - 0.04)) / slats;
+            cell(u0 + 0.006, sv, u1 - 0.006, sv + 0.022, shade(accent, -0.3), 0.95);
+          }
+        } else if (variant === 1) {
+          // Casement cracked open: one lit pane, one angled dark pane.
+          const mid = (u0 + u1) / 2;
+          cell(u0 + 0.006, v0 + 0.02, mid, v1 - 0.02, glassLit);
+          cell(mid, v0 + 0.02, u1 - 0.006, v1 - 0.02, shade(glass, -0.4));
+        } else {
+          cell(
+            u0 + 0.006,
+            v0 + 0.02,
+            u1 - 0.006,
+            v1 - 0.02,
+            variant === 2 ? glassLit : glass,
+          );
+          // Mullion.
+          const mid = (u0 + u1) / 2;
+          cell(mid - 0.002, v0 + 0.02, mid + 0.002, v1 - 0.02, shade(faceColour, -0.34));
+        }
+
         // Sill catches the light.
         cell(u0, v0 - 0.025, u1, v0, shade(faceColour, 0.2));
-        // Laundry pole flourish, the signature HDB detail.
+
+        // Awning over roughly a third of the bays.
+        if (variant === 3) {
+          cell(u0 - 0.006, v1, u1 + 0.006, v1 + 0.035, shade(accent, -0.12));
+          cell(u0 - 0.006, v1 + 0.035, u1 + 0.006, v1 + 0.05, shade(accent, -0.4));
+        }
+
+        // Air-conditioner condenser bracketed under the sill.
+        if (isFront && variant === 4) {
+          cell(u0 + 0.012, v0 - 0.075, u0 + 0.045, v0 - 0.03, shade(0xb8b3a6, -0.1));
+          cell(u0 + 0.016, v0 - 0.07, u0 + 0.041, v0 - 0.04, shade(0x8f8b80, -0.05));
+        }
+
+        // Laundry pole, the signature HDB detail.
         if (isFront && column % 3 === 1 && row === 1) {
           cell(u0, v1 + 0.02, u1, v1 + 0.04, shade(faceColour, -0.36));
-          const cloth = [PALETTE.coral, PALETTE.gold, PALETTE.teal][seed % 3];
-          cell(u0 + 0.01, v1 + 0.04, u0 + 0.03, v1 + 0.12, cloth, 0.92);
+          const cloth = [PALETTE.coral, PALETTE.gold, PALETTE.teal, 0xdcd0be][seed % 4];
+          cell(u0 + 0.01, v1 + 0.04, u0 + 0.03, v1 + 0.13, cloth, 0.92);
+          const second = [PALETTE.gold, 0xdcd0be, PALETTE.coral][(seed >>> 4) % 3];
+          cell(u0 + 0.04, v1 + 0.04, u0 + 0.058, v1 + 0.11, second, 0.9);
+        }
+      }
+    }
+
+    // Ground-floor clutter along the base: bin corrals, meter boxes, a bicycle
+    // leaned against the wall. The reference keeps its wall bases busy.
+    if (isFront) {
+      for (let item = 0; item < 4; item += 1) {
+        const seed = isoHash(item * 83 + definition.bounds.x, definition.bounds.y);
+        const u = 0.08 + ((seed % 78) / 100);
+        const kind = seed % 3;
+        if (kind === 0) {
+          cell(u, 0.06, u + 0.035, 0.17, shade(PALETTE.teal, -0.2));
+          cell(u, 0.16, u + 0.035, 0.185, shade(PALETTE.teal, 0.12));
+        } else if (kind === 1) {
+          cell(u, 0.07, u + 0.022, 0.15, shade(0x9a9384, -0.05));
+        } else {
+          cell(u, 0.06, u + 0.05, 0.08, shade(0x5f7d86, -0.15));
+          cell(u + 0.004, 0.08, u + 0.012, 0.14, shade(0x5f7d86, -0.3));
         }
       }
     }
@@ -378,6 +459,7 @@ function paintRoof(
   w: Vec,
   definition: BuildingDefinition,
   roofColour: number,
+  ridgeColour: number,
 ): void {
   // The roof diamond is a parallelogram, so its fourth corner is implied by
   // the other three: u runs N->E, v runs N->W.
@@ -438,8 +520,22 @@ function paintRoof(
       band(u0, v1 - 0.012, u1, v1, shade(roofColour, -0.3), 0.4);
     }
   }
-  // Ridge highlight last so it survives the grain pass.
+  // Ridge cap in the material's own highlight colour, plus roof furniture:
+  // water tanks, vents and AC condensers. Bare roof planes are what made the
+  // first pass read as a texture atlas.
   if (definition.roofStyle === "hipped") {
-    band(0, 0.47, 1, 0.53, shade(roofColour, 0.22), 0.7);
+    band(0, 0.47, 1, 0.53, ridgeColour, 0.9);
+    band(0, 0.5, 1, 0.515, shade(ridgeColour, 0.2), 0.8);
+  }
+  const units = 2 + (isoHash(definition.bounds.x, definition.bounds.y) % 3);
+  for (let unit = 0; unit < units; unit += 1) {
+    const seed = isoHash(unit * 71 + definition.bounds.x, definition.bounds.y);
+    const u = 0.14 + ((seed % 70) / 100);
+    const v = 0.2 + (((seed >>> 6) % 55) / 100);
+    const w = 0.05 + ((seed >>> 11) % 4) / 100;
+    // Shadow, body, lit top: three bands read as a small box on the roof.
+    band(u + 0.008, v + 0.02, u + w + 0.008, v + 0.09, SHADOW, 0.25);
+    band(u, v, u + w, v + 0.07, shade(0xb8b3a6, -0.18));
+    band(u, v, u + w, v + 0.025, shade(0xd0cabb, 0.1));
   }
 }
