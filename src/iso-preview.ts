@@ -69,7 +69,7 @@ class IsoPreviewScene extends Phaser.Scene {
       "iso-ground",
       canvas.width,
       canvas.height + 80,
-      { amplitude: 5, falloff: 0.2 },
+      { amplitude: 9, falloff: 0.22 },
     );
     this.add.image(0, 0, groundKey).setOrigin(0).setDepth(0);
 
@@ -92,7 +92,7 @@ class IsoPreviewScene extends Phaser.Scene {
         `iso-building:${definition.id}`,
         box.width,
         box.height,
-        { amplitude: 4, falloff: 0.1 },
+        { amplitude: 8, falloff: 0.12 },
       );
       this.add
         .image(box.left + originX, box.top + originY, key)

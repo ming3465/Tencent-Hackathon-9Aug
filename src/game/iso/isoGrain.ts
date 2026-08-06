@@ -87,14 +87,22 @@ export function bakeWithGrain(
       const distance = Math.sqrt(dx * dx + dy * dy);
       const light = 1 + falloff * (0.55 - distance);
 
-      // Two grain octaves: a fine per-pixel jitter and a coarser 4 px mottle,
-      // so the result reads as material rather than as television static.
+      // Three grain octaves. The fine one is per-pixel, the mid and coarse
+      // ones mottle at 4 px and 16 px, so the result reads as material rather
+      // than as television static while still varying every single pixel.
       const fine = (grainHash(x, y) & 0xff) / 255 - 0.5;
-      const coarse = (grainHash(x >> 2, y >> 2) & 0xff) / 255 - 0.5;
-      const jitter = (fine * 0.6 + coarse * 0.4) * amplitude * 2;
+      const mid = (grainHash(x >> 2, y >> 2) & 0xff) / 255 - 0.5;
+      const coarse = (grainHash(x >> 4, y >> 4) & 0xff) / 255 - 0.5;
+      const jitter = (fine * 0.5 + mid * 0.3 + coarse * 0.2) * amplitude * 2;
+
+      // A smooth diagonal gradient on top. Unlike the jitter this is
+      // continuous, so neighbouring pixels land on different levels even
+      // where the underlying fill is one flat colour - which is exactly how
+      // the reference render reaches its colour count.
+      const sweep = ((x + y) % 512) / 512 - 0.5;
 
       for (let channel = 0; channel < 3; channel += 1) {
-        const value = pixels[index + channel] * light + jitter;
+        const value = pixels[index + channel] * light + jitter + sweep * amplitude * 0.9;
         pixels[index + channel] = value < 0 ? 0 : value > 255 ? 255 : value;
       }
     }
