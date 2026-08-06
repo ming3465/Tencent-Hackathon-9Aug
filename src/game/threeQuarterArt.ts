@@ -2,6 +2,8 @@ import Phaser from "phaser";
 
 import {
   ESTATE_BUILDINGS,
+  ESTATE_LANDSCAPING,
+  ESTATE_TREES,
   PEDESTRIAN_STREETS,
   SIDEWALK_APRONS,
   type BuildingDefinition,
@@ -356,6 +358,39 @@ export function paintThreeQuarterTerrain(
           zone.height - band.depth + band.depth,
         );
     }
+  }
+
+  // Trees and landscaping get the same treatment at their own scale: a small
+  // elliptical pool under the trunk or base, so they meet the ground instead
+  // of hovering over it.
+  const contactPool = (
+    worldX: number,
+    worldY: number,
+    radiusX: number,
+    radiusY: number,
+  ): void => {
+    const localX = worldX - originX;
+    const localY = worldY - originY;
+    if (
+      localX < -160 || localX > width + 160
+      || localY < -160 || localY > height + 160
+    ) {
+      return;
+    }
+    // Shifted with the sun, same as the buildings.
+    graphics
+      .fillStyle(PALETTE.night, 0.055)
+      .fillEllipse(localX + 12, localY + 6, radiusX * 2.1, radiusY * 2.1)
+      .fillStyle(PALETTE.night, 0.09)
+      .fillEllipse(localX + 8, localY + 4, radiusX * 1.5, radiusY * 1.5)
+      .fillStyle(PALETTE.night, 0.13)
+      .fillEllipse(localX + 4, localY + 2, radiusX, radiusY);
+  };
+  for (const tree of ESTATE_TREES) {
+    contactPool(tree.anchor.x, tree.anchor.y, 34, 15);
+  }
+  for (const item of ESTATE_LANDSCAPING) {
+    contactPool(item.anchor.x, item.anchor.y, 22, 10);
   }
 
   for (const definition of ESTATE_BUILDINGS) {
