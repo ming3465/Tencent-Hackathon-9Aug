@@ -105,6 +105,21 @@ More than one agent is often live in this working tree at the same time
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-06 (Codex, Hawker interior EXIT closure lane)** — Changed the
+  Hawker Centre interior `hawker-exit` authored exception from
+  `startsOpen: true` to explicit `startsOpen: false`, so its two coral panels,
+  collision blocker, and controller now begin closed and still animate before
+  returning to the estate. Added a unit contract for the exact EXIT definition
+  and folded `hawker-exit=closed=true` into the existing 60-check door lifecycle
+  evidence without changing the test/check headlines. Graphify traced the
+  shared door registry/view seam. Strict TypeScript, 90/90 tests, the
+  91.14/140.99/1,612.32 kB private build, zero vulnerabilities, and isolated
+  60/60 WebGL plus 60/60 forced-Canvas routes passed. The first WebGL run and
+  two optional location-gallery attempts retained an upstream timeout waiting
+  for the unchanged shared-bicycle detail; the unchanged WebGL rerun and Canvas
+  run completed. No new visual capture, human/device/screen-reader/200%-zoom
+  test, deployment, or outcome claim was made.
+
 - **2026-08-05 (Codex, original door animation and ENTRY recovery)** — Restored
   the first DoorView implementation's normal movement grammar across all 22
   doors: HDB leaves narrow/shift toward the hinge, standard paired/sliding/lift

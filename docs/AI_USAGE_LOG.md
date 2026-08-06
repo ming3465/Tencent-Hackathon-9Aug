@@ -3442,3 +3442,55 @@ plant-bearing estate fixture off pedestrian paving and onto open grass.
   evidence. No account, backend, analytics, personal-data collection, runtime
   model/network call, gameplay timer, failure state, energy system, or medical
   claim was introduced.
+
+## 2026-08-06 - Hawker Interior EXIT Starts Closed
+
+**Tool:** Codex
+
+**Lane:** Hawker interior EXIT configuration and its focused regression
+evidence only. No exterior-door animation, campaign, content, art, or shared
+screenshot lane was claimed.
+
+**User-reported issue and implementation:**
+
+- The attached Hawker Centre interior capture showed the `EXIT` doorway as a
+  black opening with only a narrow coral centre strip. Code and rendered-state
+  diagnosis found that this was the intentional open transform, not ambiguous
+  façade art: `hawker-exit` alone still declared `startsOpen: true`.
+- Changed that definition to explicit `startsOpen: false`. The shared
+  `DoorView` now initializes the interior EXIT with two full-width leaves,
+  `closed` controller state, and its blocker enabled; interaction still runs
+  the standard horizontal-collapse animation and returns to the estate.
+- Added a unit assertion for the exact `hawker-exit` definition and extended
+  the existing browser door-lifecycle predicate to require the Hawker interior
+  EXIT at `closed`, blocker-enabled, zero-angle, full-scale two-leaf rest before
+  activating it. The established **90-test** and **60-check** headlines are
+  unchanged.
+
+**Verification:**
+
+- Strict TypeScript passed and Vitest passed **90/90**.
+- Private Vite build passed without touching shared `dist/`:
+  **91.14 kB HTML (16.00 kB gzip), 140.99 kB initial JavaScript
+  (41.22 kB gzip), and 1,612.32 kB lazy scene (377.41 kB gzip)**.
+- `npm audit` reported zero known vulnerabilities after the sandboxed first
+  attempt failed DNS lookup and the approved network retry succeeded.
+- Isolated WebGL and forced Canvas2D browser journeys each passed **60/60** and
+  reported `entry=closed/open/closed=true/true/true`,
+  `hawker-exit=closed=true`, reusable doors, world focus, and controls intact.
+- The first WebGL attempt and two later optional location-gallery-only attempts
+  stopped upstream of the changed door while waiting for the unchanged shared-
+  bicycle detail line. The unchanged WebGL rerun and Canvas run completed; the
+  failed attempts are retained rather than hidden. No new Hawker interior
+  screenshot was produced or visually claimed.
+
+**Tooling and claim boundary:**
+
+- Graphify identified the door registry/view seam before the surgical edit.
+  No image generation was appropriate for a state/configuration defect.
+- This is AI-assisted implementation and automated local browser evidence. It
+  is not a commit, push, deployment, human or older-adult playtest, real-device
+  run, screen-reader or 200% zoom session, accessibility certification,
+  social/health outcome, or new Miora/CodeBuddy evidence. No account, backend,
+  analytics, personal-data collection, runtime model/network call, gameplay
+  timer, failure state, energy system, or medical claim was introduced.

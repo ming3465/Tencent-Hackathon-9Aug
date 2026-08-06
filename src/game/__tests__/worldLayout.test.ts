@@ -215,8 +215,11 @@ describe("three-quarter world layout", () => {
 describe("door and pause state", () => {
   it("makes repeated door interactions idempotent", () => {
     const entryDoor = DOOR_DEFINITIONS.find(({ id }) => id === "estate-hawker");
+    const hawkerExit = DOOR_DEFINITIONS.find(({ id }) => id === "hawker-exit");
     expect(entryDoor?.placard).toBe("ENTRY");
     expect(entryDoor?.startsOpen).not.toBe(true);
+    expect(hawkerExit?.placard).toBe("EXIT");
+    expect(hawkerExit?.startsOpen).toBe(false);
     expect(doorOpenLeafTransform("hinged-hdb", { width: 70, height: 92 })).toEqual({
       scaleX: 0.12,
       scaleY: 1,

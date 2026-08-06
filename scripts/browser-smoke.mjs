@@ -1763,6 +1763,7 @@ try {
     `);
 
     await useNearbyDoor(970, 400, "estate-hawker", "hawker-centre");
+    const hawkerExitAtRest = await readReturnedDoor("hawker-exit");
     await useNearbyDoor(480, 500, "hawker-exit", "estate");
     const entryReturn = await readReturnedDoor("estate-hawker");
     await useNearbyDoor(1550, 400, "estate-kopitiam", "kopitiam");
@@ -1791,6 +1792,14 @@ try {
         && entryDoorAtRest.leafScales.every(({ x, y }) => x === 1 && y === 1),
       entryOpened: true,
       entryReturn: returnedDoorIsReusable(entryReturn),
+      hawkerExitReady:
+        hawkerExitAtRest.locationId === "hawker-centre"
+        && hawkerExitAtRest.state === "closed"
+        && hawkerExitAtRest.blockerEnabled === true
+        && hawkerExitAtRest.leafAngles.length === 2
+        && hawkerExitAtRest.leafAngles.every((angle) => angle === 0)
+        && hawkerExitAtRest.leafScales.length === 2
+        && hawkerExitAtRest.leafScales.every(({ x, y }) => x === 1 && y === 1),
       firstReturn: returnedDoorIsReusable(firstReturn),
       secondEntry: true,
       secondReturn: returnedDoorIsReusable(secondReturn),
@@ -1801,6 +1810,7 @@ try {
     diagnostics.push(
       `  DOOR  entry=closed/open/closed=${doorLifecycleEvidence.entryReady}/` +
         `${doorLifecycleEvidence.entryOpened}/${doorLifecycleEvidence.entryReturn}; ` +
+        `hawker-exit=closed=${doorLifecycleEvidence.hawkerExitReady}; ` +
         `reusable=${doorLifecycleEvidence.firstReturn}/` +
         `${doorLifecycleEvidence.secondEntry}/${doorLifecycleEvidence.secondReturn}; ` +
         `focus=${secondReturn.activeElement}/${secondReturn.documentFocused}; ` +
@@ -4114,6 +4124,7 @@ try {
       && doorLifecycleEvidence.entryReady
       && doorLifecycleEvidence.entryOpened
       && doorLifecycleEvidence.entryReturn
+      && doorLifecycleEvidence.hawkerExitReady
       && doorLifecycleEvidence.firstReturn
       && doorLifecycleEvidence.secondEntry
       && doorLifecycleEvidence.secondReturn
