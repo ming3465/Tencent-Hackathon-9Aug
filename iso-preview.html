@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kampung SG - isometric art slice (Stage 0)</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #1a2418;
+        color: #fff6dc;
+        font-family: system-ui, sans-serif;
+      }
+      #iso-stage {
+        width: 1280px;
+        height: 720px;
+        margin: 0 auto;
+      }
+      canvas { display: block; }
+      p.note {
+        max-width: 1280px;
+        margin: 8px auto;
+        font-size: 13px;
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="iso-stage"></div>
+    <p class="note">
+      Stage 0 art-direction slice. Not wired into the campaign; the shipped
+      build is unaffected.
+    </p>
+    <script type="module" src="/src/iso-preview.ts"></script>
+  </body>
+</html>
