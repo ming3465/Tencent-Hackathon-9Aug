@@ -51,4 +51,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v5
+        # Held at v4 deliberately. v5 timed out waiting on the Pages backend
+        # on two consecutive runs (deployment_queued / deployment_in_progress
+        # for the full 10 minutes, then aborted), while v4 has deployed this
+        # repository reliably. A working deploy to the judged URL outranks
+        # clearing this one action's Node-20 annotation.
+        uses: actions/deploy-pages@v4
