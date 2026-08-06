@@ -51,6 +51,7 @@ import {
   type JournalEntryView,
 } from "./game/journal.js";
 import { selectNpcIntent } from "./game/kampungMind.js";
+import { shouldAutoStartStoryBeat } from "./game/storyAutoStart.js";
 import {
   reducePauseState,
   type PauseViewState,
@@ -826,6 +827,7 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
         onNearbyInteraction: (interaction) => {
           if (isCurrentCampaignAttempt(attempt)) {
             updateNearbyPrompt(interaction);
+            maybeAutoStartStoryBeat(interaction);
           }
         },
         onInteract: (interaction) => {
@@ -842,10 +844,12 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
             locationId !== "estate",
           );
           queueCampaignViewportResize();
+          hasWalkedSinceLocationChange = false;
           dispatchCampaign({ type: "visit-location", locationId });
           announce(`${name}. Location changed.`);
         },
         onStep: (surface) => {
+          hasWalkedSinceLocationChange = true;
           if (!isCurrentCampaignAttempt(attempt)) return;
           audio.playFootstep(surface);
           renderMinimap();
@@ -1002,6 +1006,8 @@ inputPlayerName.maxLength = MAX_PLAYER_NAME_LENGTH;
 buildIdentityControls();
 
 function startNewCampaign(): void {
+  // A new run replays the story from the top.
+  autoStartedStoryBeats.clear();
   void startCampaign(
     createCampaignState({
       demo: DEMO_MODE,
@@ -1095,6 +1101,68 @@ function updateNearbyPrompt(interaction: WorldInteraction | null): void {
       : interaction.kind === "flavour" || interaction.kind === "quest-object"
         ? "Look"
         : "Talk";
+}
+
+/**
+ * Story beats that have already opened themselves on approach.
+ *
+ * Keyed by NPC and intent, so a beat fires once. Re-entering a location or
+ * walking past the same person again does not replay it, and once the state
+ * moves on to a different intent that NPC can open a new beat.
+ */
+const autoStartedStoryBeats = new Set<string>();
+
+/**
+ * Whether the player has taken a step since the current location loaded.
+ *
+ * Approach-triggered beats must be *approached*. Without this, spawning
+ * within range of someone throws a dialogue on screen before the player has
+ * seen the room or touched a key, which reads as a cutscene they did not
+ * start - and hides the "press E" affordance the rest of the game relies on.
+ */
+let hasWalkedSinceLocationChange = false;
+
+function isDialogueOpen(): boolean {
+  return dialogOverlay.getAttribute("aria-hidden") === "false";
+}
+
+/**
+ * Opens a main-story beat as soon as the player walks up to the person it
+ * belongs to, instead of waiting for a press.
+ *
+ * The story is the point of the game; making the player guess that a
+ * particular neighbour is the one holding the next scene turned authored
+ * writing into a hunt. Only `main-story` intents do this - requests,
+ * greetings and clues still wait to be chosen, so approaching someone never
+ * takes an action away from the player.
+ */
+function maybeAutoStartStoryBeat(interaction: WorldInteraction | null): void {
+  if (!interaction || interaction.kind !== "npc") return;
+
+  let intent: NpcIntentDefinition;
+  try {
+    intent = selectNpcIntent({
+      state: campaignState,
+      expertiseNeeded: currentExpertiseNeeds(),
+      npcId: interaction.npcId,
+    });
+  } catch {
+    return;
+  }
+  const key = `${interaction.npcId}:${intent.id}`;
+  if (!shouldAutoStartStoryBeat({
+    intentKind: intent.kind,
+    beatKey: key,
+    firedBeats: autoStartedStoryBeats,
+    dialogueOpen: isDialogueOpen(),
+    paused: pauseState !== "closed",
+    inWorld: screenSandbox.classList.contains("active"),
+    hasWalked: hasWalkedSinceLocationChange,
+  })) {
+    return;
+  }
+  autoStartedStoryBeats.add(key);
+  openNpc(interaction.npcId, { preferredIntentId: intent.id });
 }
 
 function handleWorldInteraction(interaction: WorldInteraction): boolean {
