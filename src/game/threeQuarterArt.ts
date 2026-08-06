@@ -310,6 +310,54 @@ export function paintThreeQuarterTerrain(
     );
   }
 
+  // Ground shadows.
+  //
+  // Nothing in the estate cast one, so every building sat on the grass like a
+  // pasted cutout. A shadow is what tells the eye an object has volume and is
+  // standing on the surface rather than printed onto it - it does more for
+  // solidity than any amount of detail on the object itself.
+  //
+  // Sun is upper-left, matching the existing highlight bands on the facades,
+  // so shadows fall down and to the right. Three stacked passes give a soft
+  // edge without a blur, which Graphics cannot do.
+  // Bands stepping away from the wall base, each fainter and shifted further
+  // right, so the shadow pools at the foot of the building and leans with the
+  // sun. Offsetting the whole footprint instead would be hidden under the
+  // facade, which is what the first attempt at this got wrong.
+  const SHADOW_BANDS = [
+    { depth: 14, shiftX: 10, alpha: 0.2 },
+    { depth: 26, shiftX: 20, alpha: 0.13 },
+    { depth: 38, shiftX: 30, alpha: 0.07 },
+  ] as const;
+  for (const definition of ESTATE_BUILDINGS) {
+    const zone = definition.bounds;
+    const baseX = zone.x - originX;
+    const baseY = zone.y - originY;
+    if (
+      baseX > width + 120
+      || baseX + zone.width < -120
+      || baseY > height + 140
+      || baseY + zone.height < -140
+    ) {
+      continue;
+    }
+    const footY = baseY + zone.height;
+    // Painted back to front so the darkest band lands nearest the wall.
+    for (const band of [...SHADOW_BANDS].reverse()) {
+      graphics
+        .fillStyle(PALETTE.night, band.alpha)
+        .fillRect(baseX + band.shiftX, footY, zone.width, band.depth)
+        // A narrow strip down the sunward-away side, so the east wall reads
+        // as having depth too rather than ending at a hard edge.
+        .fillRect(
+          baseX + zone.width,
+          baseY + band.depth,
+          band.shiftX,
+          zone.height - band.depth + band.depth,
+        );
+    }
+  }
+
   for (const definition of ESTATE_BUILDINGS) {
     if (!definition.entranceDoorId) continue;
     const anchorX = definition.minimapAnchor.x - originX;
