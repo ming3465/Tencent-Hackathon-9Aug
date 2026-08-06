@@ -15,6 +15,7 @@ import { ensureCampaignArtTextures } from "./game/campaignArt.js";
 import { ESTATE_BUILDINGS, ESTATE_TREES, ESTATE_LANDSCAPING } from "./game/estateLayout.js";
 import { paintIsoTerrain } from "./game/iso/isoTerrain.js";
 import { paintIsoBuilding } from "./game/iso/isoBuildings.js";
+import { ensureIsoPropTextures, isoTextureFor } from "./game/iso/isoProps.js";
 import { isoCanvasForWorld, isoDepth, worldToIso } from "./game/iso/projection.js";
 
 /**
@@ -33,6 +34,7 @@ class IsoPreviewScene extends Phaser.Scene {
 
   create(): void {
     ensureCampaignArtTextures(this);
+    ensureIsoPropTextures(this);
 
     const canvas = isoCanvasForWorld(SLICE.width, SLICE.height);
     const originX = canvas.originX;
@@ -82,20 +84,14 @@ class IsoPreviewScene extends Phaser.Scene {
         .setDepth(isoDepth(worldX, worldY, 1));
     };
 
+    // Isometric prop forms bake their own contact shadow, so no separate
+    // shadow ellipse here — one shadow per object, as ACCESSIBILITY.md requires.
     for (const tree of ESTATE_TREES) {
-      if (tree.anchor.x > SLICE.x + SLICE.width || tree.anchor.y > SLICE.y + SLICE.height) {
-        continue;
-      }
-      shadow(tree.anchor.x + 20, tree.anchor.y + 12, 96);
-      place(tree.anchor.x, tree.anchor.y, tree.texture, 5);
+      place(tree.anchor.x, tree.anchor.y, isoTextureFor(tree.texture), 5);
     }
 
     for (const item of ESTATE_LANDSCAPING) {
-      if (item.anchor.x > SLICE.x + SLICE.width || item.anchor.y > SLICE.y + SLICE.height) {
-        continue;
-      }
-      shadow(item.anchor.x + 10, item.anchor.y + 6, 54);
-      place(item.anchor.x, item.anchor.y, item.texture, 3);
+      place(item.anchor.x, item.anchor.y, isoTextureFor(item.texture), 3);
     }
 
     // A handful of residents mid-activity, matching the reference's read of

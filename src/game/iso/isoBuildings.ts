@@ -55,6 +55,12 @@ function shade(colour: number, amount: number): number {
   return pack(r * factor, g * factor, b * factor);
 }
 
+/** Nudges hue warm or cool without materially changing lightness. */
+function temper(colour: number, warmth: number): number {
+  const [r, g, b] = channels(colour);
+  return pack(r + warmth * 12, g + warmth * 3, b - warmth * 10);
+}
+
 interface Vec {
   x: number;
   y: number;
@@ -107,6 +113,19 @@ export function paintIsoBuilding(
   const wallHeight = wallHeightFor(definition);
   const accent = ACCENTS[definition.accent] ?? PALETTE.teal;
 
+  // Per-building wall and roof tint. Eight identical cream blocks with
+  // identical terracotta roofs read as a texture atlas, not a neighbourhood;
+  // the reference's buildings each have their own faded paint job.
+  const identity = isoHash(x, y);
+  const wallTint = temper(
+    shade(WALL_BASE, ((identity % 100) / 100 - 0.5) * 0.16),
+    ((identity >>> 7) % 100) / 100 - 0.5,
+  );
+  const roofTint = temper(
+    shade(ROOF_BASE, (((identity >>> 13) % 100) / 100 - 0.5) * 0.24),
+    ((identity >>> 19) % 100) / 100 - 0.5,
+  );
+
   const project = (worldX: number, worldY: number, lift = 0): Vec => {
     const point = worldToIso(worldX, worldY);
     return { x: point.x + originX, y: point.y + originY - lift };
@@ -134,7 +153,7 @@ export function paintIsoBuilding(
   quad(graphics, shadowN, shadowE, shadowS, shadowW, SHADOW, 0.22);
 
   // --- South wall (the y = y+height plane, facing the camera) ---
-  const southBase = shade(WALL_BASE, SOUTH_FACE_LIGHT);
+  const southBase = shade(wallTint, SOUTH_FACE_LIGHT);
   quad(graphics, groundW, groundS, topS, topW, southBase);
   paintFaceDetail(
     graphics,
@@ -148,7 +167,7 @@ export function paintIsoBuilding(
   );
 
   // --- East wall (the x = x+width plane) ---
-  const eastBase = shade(WALL_BASE, EAST_FACE_LIGHT);
+  const eastBase = shade(wallTint, EAST_FACE_LIGHT);
   quad(graphics, groundS, groundE, topE, topS, eastBase);
   paintFaceDetail(
     graphics,
@@ -162,7 +181,7 @@ export function paintIsoBuilding(
   );
 
   // --- Roof plane ---
-  const roofColour = shade(ROOF_BASE, ROOF_LIGHT);
+  const roofColour = shade(roofTint, ROOF_LIGHT);
   quad(graphics, topN, topE, topS, topW, roofColour);
   paintRoof(graphics, topN, topE, topW, definition, roofColour);
 
