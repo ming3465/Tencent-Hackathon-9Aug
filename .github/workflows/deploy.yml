@@ -14,17 +14,25 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+# Action versions are deliberately held at the set that deploys this
+# repository reliably, despite GitHub's Node 20 runtime-deprecation
+# annotation. Bumping all five (checkout v7, setup-node v7, configure-pages
+# v6, upload-pages-artifact v5, deploy-pages v5) was tried on 2026-08-06 and
+# made every deployment abort: the build passed and the artifact uploaded, but
+# the deploy step sat in deployment_in_progress until it gave up and cancelled.
+# Raising deploy-pages' `timeout` input did not help - it still aborted at ten
+# minutes - and pinning deploy-pages back to v4 alone did not either, so the
+# cause is upstream of that action. The annotation is cosmetic; a deploy that
+# cancels itself is not. Revisit after the submission window.
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@v4
         with:
-          # Matches the local development runtime, so what is verified here is
-          # what CI builds. scripts/browser-smoke.mjs requires Node 22+.
-          node-version: 24
+          node-version: 20
           cache: npm
 
       - run: npm ci
@@ -35,11 +43,9 @@ jobs:
 
       - run: npm run build
 
-      - uses: actions/configure-pages@v6
+      - uses: actions/configure-pages@v5
 
-      # v4 stopped including dotfiles in the artifact. Checked: the Vite build
-      # emits none (index.html, iso-preview.html, assets/), so this is safe.
-      - uses: actions/upload-pages-artifact@v5
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
@@ -51,11 +57,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v5
-        with:
-          # The Pages backend is currently taking longer than the 10-minute
-          # default to finish a deployment. The action gave up and reported
-          # failure on three runs while the deployment itself completed - the
-          # live bundle contained the new code each time. Waiting longer turns
-          # that false negative back into a truthful signal.
-          timeout: 1800000
+        uses: actions/deploy-pages@v4
