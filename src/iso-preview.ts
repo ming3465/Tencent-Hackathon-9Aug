@@ -1,10 +1,10 @@
 /**
- * Stage 0 vertical slice for the isometric art direction.
+ * Isometric art-direction slice — now playable (Stage 3).
  *
  * Standalone on purpose: it imports the iso modules and the existing art
- * texture factory, but touches none of the shipped campaign wiring. That keeps
- * the live build green while the art direction is evaluated, and it means this
- * file can simply be deleted if the slice does not beat the current look.
+ * texture factory, but touches none of the shipped campaign wiring. The live
+ * build stays green while the art direction is evaluated, and this file can
+ * be deleted outright if the direction is dropped.
  *
  * Served by `vite dev` at /iso-preview.html — no vite config change needed.
  */
@@ -12,7 +12,12 @@
 import Phaser from "phaser";
 
 import { ensureCampaignArtTextures } from "./game/campaignArt.js";
-import { ESTATE_BUILDINGS, ESTATE_TREES, ESTATE_LANDSCAPING } from "./game/estateLayout.js";
+import {
+  ESTATE_BUILDINGS,
+  ESTATE_TREES,
+  ESTATE_LANDSCAPING,
+  type EstateRect,
+} from "./game/estateLayout.js";
 import { paintIsoTerrain } from "./game/iso/isoTerrain.js";
 import {
   isoBuildingTextureBounds,
@@ -25,17 +30,34 @@ import {
 } from "./game/iso/isoCharacters.js";
 import { isoCanvasForWorld, isoDepth, worldToIso } from "./game/iso/projection.js";
 import { bakeWithGrain } from "./game/iso/isoGrain.js";
+import {
+  clampToEstate,
+  isoFacingFor,
+  isoInputToWorld,
+  isoWorldColliders,
+  ISO_WALK_SPEED,
+  nearestIsoDoor,
+  resolveIsoMovement,
+} from "./game/iso/isoWorld.js";
 
-/**
- * Whole world, so the camera can sit inside the projected diamond and the
- * frame fills with ground rather than showing the backdrop past its corners.
- */
 const SLICE = { x: 0, y: 0, width: 2560, height: 1600 };
-
-/** World point the preview camera looks at: the central courtyard. */
-const FOCUS = { x: 1150, y: 620 };
+const SPAWN = { x: 1150, y: 620 };
 
 class IsoPreviewScene extends Phaser.Scene {
+  private originX = 0;
+  private originY = 40;
+  /** Simulated position in top-down world space. Never drawn. */
+  private worldX = SPAWN.x;
+  private worldY = SPAWN.y;
+  /** Visible sprite drawn at the projection of the body. */
+  private avatar!: Phaser.GameObjects.Sprite;
+  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+  private keys!: Record<"up" | "down" | "left" | "right", Phaser.Input.Keyboard.Key>;
+  private walkPhase = 0;
+  private promptText!: Phaser.GameObjects.Text;
+  private colliderCount = 0;
+  private colliders: readonly EstateRect[] = [];
+
   constructor() {
     super("iso-preview");
   }
@@ -46,24 +68,32 @@ class IsoPreviewScene extends Phaser.Scene {
     ensureIsoCharacterTextures(this);
 
     const canvas = isoCanvasForWorld(SLICE.width, SLICE.height);
-    const originX = canvas.originX;
-    const originY = 40;
+    this.originX = canvas.originX;
 
-    // --- Ground plane, baked once ---
+    this.paintGround(canvas);
+    this.paintBuildings();
+    this.placeStaticProps();
+    this.createPlayer();
+    this.createColliders();
+    this.createCamera(canvas);
+    this.createPrompt();
+  }
+
+  private paintGround(canvas: { width: number; height: number }): void {
     const ground = this.make.graphics({ x: 0, y: 0 });
     paintIsoTerrain(ground, {
       worldX: SLICE.x,
       worldY: SLICE.y,
       worldWidth: SLICE.width,
       worldHeight: SLICE.height,
-      originX,
-      originY,
+      originX: this.originX,
+      originY: this.originY,
     });
     ground.generateTexture("iso-ground-flat", canvas.width, canvas.height + 80);
     ground.destroy();
     // Graphics can only lay down flat fills; the grain pass adds the
     // continuous per-pixel variation the reference art has.
-    const groundKey = bakeWithGrain(
+    const key = bakeWithGrain(
       this,
       "iso-ground-flat",
       "iso-ground",
@@ -71,12 +101,10 @@ class IsoPreviewScene extends Phaser.Scene {
       canvas.height + 80,
       { amplitude: 9, falloff: 0.22 },
     );
-    this.add.image(0, 0, groundKey).setOrigin(0).setDepth(0);
+    this.add.image(0, 0, key).setOrigin(0).setDepth(0);
+  }
 
-    // --- Buildings: projected volumes, depth-sorted by footprint front edge ---
-    // Each is baked into a texture cropped to its own artwork bounds, then run
-    // through the same grain pass as the ground so walls and roofs carry
-    // continuous variation instead of flat planes.
+  private paintBuildings(): void {
     for (const definition of ESTATE_BUILDINGS) {
       const { x, y, width, height } = definition.bounds;
       const box = isoBuildingTextureBounds(definition);
@@ -95,36 +123,29 @@ class IsoPreviewScene extends Phaser.Scene {
         { amplitude: 8, falloff: 0.12 },
       );
       this.add
-        .image(box.left + originX, box.top + originY, key)
+        .image(box.left + this.originX, box.top + this.originY, key)
         .setOrigin(0)
         .setDepth(isoDepth(x + width, y + height, 2));
     }
+  }
 
-    // --- Props and characters stay upright billboards on the iso ground ---
-    // This is how the reference art works too: only terrain and buildings are
-    // projected. It means every existing sprite is reusable unchanged.
-    const place = (worldX: number, worldY: number, texture: string, layer = 4): void => {
-      if (!this.textures.exists(texture)) return;
-      const point = worldToIso(worldX, worldY);
-      this.add
-        .sprite(point.x + originX, point.y + originY, texture)
-        .setOrigin(0.5, 1)
-        .setDepth(isoDepth(worldX, worldY, layer));
-    };
+  /** Props and characters are upright billboards standing on the iso ground. */
+  private place(worldX: number, worldY: number, texture: string, layer = 4): void {
+    if (!this.textures.exists(texture)) return;
+    const point = worldToIso(worldX, worldY);
+    this.add
+      .sprite(point.x + this.originX, point.y + this.originY, texture)
+      .setOrigin(0.5, 1)
+      .setDepth(isoDepth(worldX, worldY, layer));
+  }
 
-    // Isometric prop and character forms bake their own contact shadow, so no separate
-    // shadow ellipse here — one shadow per object, as ACCESSIBILITY.md requires.
+  private placeStaticProps(): void {
     for (const tree of ESTATE_TREES) {
-      place(tree.anchor.x, tree.anchor.y, isoTextureFor(tree.texture), 5);
+      this.place(tree.anchor.x, tree.anchor.y, isoTextureFor(tree.texture), 5);
     }
-
     for (const item of ESTATE_LANDSCAPING) {
-      place(item.anchor.x, item.anchor.y, isoTextureFor(item.texture), 3);
+      this.place(item.anchor.x, item.anchor.y, isoTextureFor(item.texture), 3);
     }
-
-    // Courtyard furniture at the shipped story-cluster positions. This is what
-    // carries the "somebody lives here" read in the reference art — chess
-    // players mid-game, stacked chairs, a notice board, a pergola.
     const furniture: [number, number, string][] = [
       [1580, 735, "iso-chess-table"],
       [2200, 775, "iso-chess-table"],
@@ -140,11 +161,8 @@ class IsoPreviewScene extends Phaser.Scene {
       [1720, 1220, "iso-shaded-seating"],
     ];
     for (const [worldX, worldY, texture] of furniture) {
-      place(worldX, worldY, texture, 4);
+      this.place(worldX, worldY, texture, 4);
     }
-
-    // A handful of residents mid-activity, matching the reference's read of
-    // "elders doing things" rather than an empty courtyard.
     const cast: [number, number, string][] = [
       [430, 520, "npc-mei-down-0"],
       [520, 560, "npc-ravi-side-0"],
@@ -154,15 +172,115 @@ class IsoPreviewScene extends Phaser.Scene {
       [300, 700, "npc-seng-side-0"],
     ];
     for (const [worldX, worldY, texture] of cast) {
-      place(worldX, worldY, isoCharacterTextureFor(texture), 4);
+      this.place(worldX, worldY, isoCharacterTextureFor(texture), 4);
     }
+  }
 
-    place(760, 560, isoCharacterTextureFor("campaign-player-down-0"), 4);
+  /**
+   * The physics body lives in top-down world space and is never drawn. The
+   * avatar is a plain sprite repositioned to the body's projection each frame.
+   */
+  private createPlayer(): void {
+    this.avatar = this.add
+      .sprite(0, 0, "iso-player-down-0")
+      .setOrigin(0.5, 1)
+      .setDepth(isoDepth(SPAWN.x, SPAWN.y, 4));
 
-    const focus = worldToIso(FOCUS.x, FOCUS.y);
+    if (!this.input.keyboard) return;
+    this.cursors = this.input.keyboard.createCursorKeys();
+    // Must be the object form: the string form returns keys named W/A/S/D,
+    // which would leave `keys.up` undefined and turn the input into NaN.
+    this.keys = this.input.keyboard.addKeys({
+      up: Phaser.Input.Keyboard.KeyCodes.W,
+      left: Phaser.Input.Keyboard.KeyCodes.A,
+      down: Phaser.Input.Keyboard.KeyCodes.S,
+      right: Phaser.Input.Keyboard.KeyCodes.D,
+    }) as typeof this.keys;
+  }
+
+  /** Collider rectangles straight from the untouched estate layout. */
+  private createColliders(): void {
+    this.colliders = isoWorldColliders();
+    this.colliderCount = this.colliders.length;
+  }
+
+  private createCamera(canvas: { width: number; height: number }): void {
     this.cameras.main.setBackgroundColor("#5c6b3f");
     this.cameras.main.setZoom(1.25);
-    this.cameras.main.centerOn(focus.x + originX, focus.y + originY);
+    this.cameras.main.setBounds(0, 0, canvas.width, canvas.height + 80);
+  }
+
+  private createPrompt(): void {
+    this.promptText = this.add
+      .text(640, 668, "", {
+        color: "#fff6dc",
+        backgroundColor: "#173f4fdd",
+        fontFamily: "system-ui, sans-serif",
+        fontSize: "17px",
+        padding: { x: 12, y: 7 },
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(1_000_000);
+  }
+
+  update(_time: number, delta: number): void {
+    if (!this.avatar) return;
+
+    const inputX =
+      Number(this.cursors?.right.isDown || this.keys?.right?.isDown) -
+      Number(this.cursors?.left.isDown || this.keys?.left?.isDown);
+    const inputY =
+      Number(this.cursors?.down.isDown || this.keys?.down?.isDown) -
+      Number(this.cursors?.up.isDown || this.keys?.up?.isDown);
+
+    // Screen-aligned keys become diagonal world motion.
+    const direction = isoInputToWorld(inputX, inputY);
+    const step = (delta / 1000) * ISO_WALK_SPEED;
+    const moved = resolveIsoMovement(
+      this.worldX,
+      this.worldY,
+      direction.x * step,
+      direction.y * step,
+      this.colliders,
+    );
+    const clamped = clampToEstate(moved.x, moved.y);
+    this.worldX = clamped.x;
+    this.worldY = clamped.y;
+
+    const moving = direction.x !== 0 || direction.y !== 0;
+    if (moving) this.walkPhase += (delta / 1000) * 7;
+
+    const { facing, flipX } = isoFacingFor(direction.x, direction.y);
+    const frame = moving ? Math.floor(this.walkPhase) % 4 : 0;
+    const key = `iso-player-${facing}-${frame}`;
+    if (this.textures.exists(key)) this.avatar.setTexture(key);
+    this.avatar.setFlipX(flipX);
+
+    // Project the simulated position onto the isometric view.
+    const point = worldToIso(this.worldX, this.worldY);
+    this.avatar.setPosition(point.x + this.originX, point.y + this.originY);
+    this.avatar.setDepth(isoDepth(this.worldX, this.worldY, 4));
+    this.cameras.main.centerOn(
+      point.x + this.originX,
+      point.y + this.originY,
+    );
+
+    const door = nearestIsoDoor(this.worldX, this.worldY);
+    this.promptText.setText(door ? door.label : "");
+
+    // Probe hook for automated verification of movement, collision and
+    // door proximity. Mirrors the shipped scene's smoke snapshot idea.
+    (window as unknown as { __isoProbe?: unknown }).__isoProbe = {
+      world: { x: this.worldX, y: this.worldY },
+      iso: { x: point.x + this.originX, y: point.y + this.originY },
+      facing,
+      moving,
+      nearbyDoor: door?.id ?? null,
+      nearbyLabel: door?.label ?? null,
+      colliderCount: this.colliderCount,
+      blocked: { x: moved.blockedX, y: moved.blockedY },
+    };
   }
 }
 
@@ -173,6 +291,6 @@ new Phaser.Game({
   height: 720,
   pixelArt: true,
   roundPixels: true,
-  backgroundColor: "#6f7f4a",
+  backgroundColor: "#5c6b3f",
   scene: [IsoPreviewScene],
 });
