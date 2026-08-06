@@ -14,13 +14,17 @@ import Phaser from "phaser";
 import { ensureCampaignArtTextures } from "./game/campaignArt.js";
 import { ESTATE_BUILDINGS, ESTATE_TREES, ESTATE_LANDSCAPING } from "./game/estateLayout.js";
 import { paintIsoTerrain } from "./game/iso/isoTerrain.js";
-import { paintIsoBuilding } from "./game/iso/isoBuildings.js";
+import {
+  isoBuildingTextureBounds,
+  paintIsoBuilding,
+} from "./game/iso/isoBuildings.js";
 import { ensureIsoPropTextures, isoTextureFor } from "./game/iso/isoProps.js";
 import {
   ensureIsoCharacterTextures,
   isoCharacterTextureFor,
 } from "./game/iso/isoCharacters.js";
 import { isoCanvasForWorld, isoDepth, worldToIso } from "./game/iso/projection.js";
+import { bakeWithGrain } from "./game/iso/isoGrain.js";
 
 /**
  * Whole world, so the camera can sit inside the projected diamond and the
@@ -55,19 +59,45 @@ class IsoPreviewScene extends Phaser.Scene {
       originX,
       originY,
     });
-    ground.generateTexture("iso-ground", canvas.width, canvas.height + 80);
+    ground.generateTexture("iso-ground-flat", canvas.width, canvas.height + 80);
     ground.destroy();
-    this.add.image(0, 0, "iso-ground").setOrigin(0).setDepth(0);
+    // Graphics can only lay down flat fills; the grain pass adds the
+    // continuous per-pixel variation the reference art has.
+    const groundKey = bakeWithGrain(
+      this,
+      "iso-ground-flat",
+      "iso-ground",
+      canvas.width,
+      canvas.height + 80,
+      { amplitude: 5, falloff: 0.2 },
+    );
+    this.add.image(0, 0, groundKey).setOrigin(0).setDepth(0);
 
     // --- Buildings: projected volumes, depth-sorted by footprint front edge ---
-    // Drawn as live Graphics rather than baked textures: a per-building texture
-    // would each be the size of the whole canvas, so eight of them would cost
-    // ~18M pixels. Stage 1 should bake them into cropped textures instead.
+    // Each is baked into a texture cropped to its own artwork bounds, then run
+    // through the same grain pass as the ground so walls and roofs carry
+    // continuous variation instead of flat planes.
     for (const definition of ESTATE_BUILDINGS) {
       const { x, y, width, height } = definition.bounds;
-      const graphics = this.add.graphics();
-      paintIsoBuilding(graphics, definition, originX, originY);
-      graphics.setDepth(isoDepth(x + width, y + height, 2));
+      const box = isoBuildingTextureBounds(definition);
+      const graphics = this.make.graphics({ x: 0, y: 0 });
+      paintIsoBuilding(graphics, definition, -box.left, -box.top);
+      const flatKey = `iso-building-flat:${definition.id}`;
+      if (this.textures.exists(flatKey)) this.textures.remove(flatKey);
+      graphics.generateTexture(flatKey, box.width, box.height);
+      graphics.destroy();
+      const key = bakeWithGrain(
+        this,
+        flatKey,
+        `iso-building:${definition.id}`,
+        box.width,
+        box.height,
+        { amplitude: 4, falloff: 0.1 },
+      );
+      this.add
+        .image(box.left + originX, box.top + originY, key)
+        .setOrigin(0)
+        .setDepth(isoDepth(x + width, y + height, 2));
     }
 
     // --- Props and characters stay upright billboards on the iso ground ---

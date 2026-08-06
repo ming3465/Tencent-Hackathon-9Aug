@@ -98,6 +98,42 @@ export function wallHeightFor(definition: BuildingDefinition): number {
 }
 
 /**
+ * Iso-space bounding box a building's artwork occupies, including its raised
+ * roof, ground shadow and eave overhang.
+ *
+ * Baking each building into a texture cropped to this box keeps them cheap:
+ * a full-canvas texture per building would cost roughly 2.3M pixels each.
+ */
+export function isoBuildingTextureBounds(definition: BuildingDefinition): {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+} {
+  const { x, y, width, height } = definition.bounds;
+  const wallHeight = wallHeightFor(definition);
+  const corners = [
+    worldToIso(x, y),
+    worldToIso(x + width, y),
+    worldToIso(x + width, y + height),
+    worldToIso(x, y + height),
+  ];
+  const shadowShift = worldToIso(SUN_OFFSET_WORLD.x, SUN_OFFSET_WORLD.y);
+  const pad = 8;
+  const left = Math.min(...corners.map((c) => c.x)) - pad;
+  const right = Math.max(...corners.map((c) => c.x)) + shadowShift.x + pad;
+  const top = Math.min(...corners.map((c) => c.y)) - wallHeight - pad;
+  // Ground shadow reaches below the footprint, and the eave adds 5px.
+  const bottom = Math.max(...corners.map((c) => c.y)) + shadowShift.y + 5 + pad;
+  return {
+    left,
+    top,
+    width: Math.ceil(right - left),
+    height: Math.ceil(bottom - top),
+  };
+}
+
+/**
  * Paints one building as an isometric prism.
  *
  * `originX`/`originY` shift projected points onto a non-negative canvas.
