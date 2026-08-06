@@ -64,6 +64,7 @@ import {
   ensureShelterTexture,
   paintThreeQuarterTerrain,
 } from "./threeQuarterArt.js";
+import { bakeWithGrain } from "./iso/isoGrain.js";
 import {
   movementSurfaceAt,
   stepIntervalFor,
@@ -2890,8 +2891,18 @@ export class EstateScene extends WalkableScene {
         const graphics = this.make.graphics({ x: 0, y: 0 });
         paintThreeQuarterTerrain(graphics, originX, originY);
         this.paintGroundDetails(graphics, originX, originY);
-        graphics.generateTexture(key, 1280, 800);
+        // Bake flat, then add per-pixel material grain. Phaser Graphics can
+        // only lay down constant fills, so the ground was built from large
+        // uniform regions; the grain pass gives concrete and turf continuous
+        // variation. Deterministic from position, baked once, so it costs
+        // nothing per frame and reduced motion is unaffected.
+        const flatKey = `${key}-flat`;
+        graphics.generateTexture(flatKey, 1280, 800);
         graphics.destroy();
+        bakeWithGrain(this, flatKey, key, 1280, 800, {
+          amplitude: 3,
+          falloff: 0.12,
+        });
       }
       this.add.image(originX, originY, key).setOrigin(0).setDepth(0);
     }
