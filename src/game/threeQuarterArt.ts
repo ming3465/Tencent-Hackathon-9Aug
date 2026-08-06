@@ -19,6 +19,41 @@ function hash(x: number, y: number): number {
   return Math.imul(value, 0xc2b2ae35) >>> 0;
 }
 
+/**
+ * Smooth low-frequency noise in [0,1], keyed on world position.
+ *
+ * The ground was built from three slab tones separated by 3-5% lightness and a
+ * single flat green, which reads as a printed grid rather than a place. Grain
+ * could not fix that: per-pixel jitter adds texture, not structure. This gives
+ * the painters large soft regions to vary against - worn patches, damp corners,
+ * sun-bleached stretches - which is what actually makes ground look crafted.
+ *
+ * Keyed on world coordinates, not tile-local ones, so patches run continuously
+ * across the seams of the four baked 1280x800 textures.
+ */
+function macroField(worldX: number, worldY: number, cell: number): number {
+  const gridX = Math.floor(worldX / cell);
+  const gridY = Math.floor(worldY / cell);
+  const fracX = worldX / cell - gridX;
+  const fracY = worldY / cell - gridY;
+  // Smoothstep, so cells blend instead of banding at their borders.
+  const ease = (t: number): number => t * t * (3 - 2 * t);
+  const easedX = ease(fracX);
+  const easedY = ease(fracY);
+  const corner = (x: number, y: number): number => (hash(x, y) % 4096) / 4096;
+  const top = corner(gridX, gridY) * (1 - easedX)
+    + corner(gridX + 1, gridY) * easedX;
+  const bottom = corner(gridX, gridY + 1) * (1 - easedX)
+    + corner(gridX + 1, gridY + 1) * easedX;
+  return top * (1 - easedY) + bottom * easedY;
+}
+
+/** Picks a tone band from a field value, dithered so bands never show a seam. */
+function tonalStep(field: number, jitter: number, steps: number): number {
+  const dithered = field + (jitter / 4096 - 0.5) * (0.9 / steps);
+  return Math.max(0, Math.min(steps - 1, Math.floor(dithered * steps)));
+}
+
 function intersect(
   rectangle: EstateRect,
   originX: number,
@@ -75,11 +110,17 @@ function paintStreet(
       const worldX = column * tileWidth + stagger;
       const x = worldX - originX;
       const seed = hash(column + (street.id.length * 7), row);
-      const tileBase = seed % 5 === 0
-        ? lightenColour(base, 0.055)
-        : seed % 7 === 0
-          ? darkenColour(base, 0.035)
-          : base;
+      // Slab tone follows a broad wear field, not just a per-slab coin flip:
+      // three tones separated by 3-5% read as a printed grid, which is what
+      // the plaza looked like. Six tones over a macro field give the surface
+      // sun-bleached runs and damp corners that span many slabs.
+      const wear = macroField(worldX, worldY, 336) * 0.7
+        + macroField(worldX + 613, worldY + 401, 112) * 0.3;
+      const SLAB_SHIFTS = [-0.085, -0.05, -0.022, 0.012, 0.045, 0.08] as const;
+      const shift = SLAB_SHIFTS[tonalStep(wear, seed % 4096, SLAB_SHIFTS.length)] ?? 0;
+      const tileBase = shift < 0
+        ? darkenColour(base, -shift)
+        : lightenColour(base, shift);
       const clippedLeft = Math.max(left, x + 1);
       const clippedTop = Math.max(top, y + 1);
       const clippedRight = Math.min(right, x + tileWidth - 2);
@@ -97,6 +138,54 @@ function paintStreet(
         graphics
           .fillStyle(darkenColour(tileBase, 0.17), 0.28)
           .fillRect(clippedLeft + 7 + seed % 9, clippedTop + 8 + (seed >>> 5) % 7, 8, 3);
+      }
+
+      // Surface wear. Slabs that are all identical read as wallpaper; a
+      // minority carrying a crack, a chipped corner, a stain or aggregate
+      // speckle is what makes paving look laid rather than printed.
+      const wide = clippedRight - clippedLeft;
+      const tall = clippedBottom - clippedTop;
+      if (wide > 20 && tall > 16) {
+        const crackShade = darkenColour(tileBase, 0.2);
+        if (seed % 11 === 4) {
+          // Hairline crack: a short stepped run, never a straight ruled line.
+          let crackX = clippedLeft + 5 + seed % Math.max(1, wide - 14);
+          let crackY = clippedTop + 3;
+          graphics.fillStyle(crackShade, 0.5);
+          for (let step = 0; step < 5 && crackY < clippedBottom - 3; step += 1) {
+            graphics.fillRect(crackX, crackY, 1, 3);
+            crackX += ((seed >>> (step * 3)) % 3) - 1;
+            crackX = Math.max(clippedLeft + 2, Math.min(clippedRight - 3, crackX));
+            crackY += 3;
+          }
+        }
+        if (seed % 17 === 7) {
+          // Chipped corner, exposing the paler bed underneath.
+          graphics
+            .fillStyle(darkenColour(tileBase, 0.13), 0.55)
+            .fillRect(clippedRight - 5, clippedBottom - 4, 4, 3)
+            .fillStyle(lightenColour(tileBase, 0.14), 0.42)
+            .fillRect(clippedRight - 4, clippedBottom - 3, 2, 1);
+        }
+        if (seed % 13 === 6) {
+          // Soft stain, larger and fainter than the existing scuff.
+          graphics
+            .fillStyle(darkenColour(tileBase, 0.11), 0.3)
+            .fillRect(clippedLeft + 3 + seed % 7, clippedTop + 4 + (seed >>> 7) % 6, 11, 6)
+            .fillStyle(darkenColour(tileBase, 0.15), 0.22)
+            .fillRect(clippedLeft + 5 + seed % 7, clippedTop + 6 + (seed >>> 7) % 6, 6, 3);
+        }
+        // Aggregate speckle: three flecks per slab, deterministic from seed.
+        graphics.fillStyle(darkenColour(tileBase, 0.14), 0.34);
+        for (let fleck = 0; fleck < 3; fleck += 1) {
+          const flake = hash(column * 31 + fleck, row * 17 + fleck);
+          graphics.fillRect(
+            clippedLeft + 3 + flake % Math.max(1, wide - 6),
+            clippedTop + 3 + (flake >>> 8) % Math.max(1, tall - 6),
+            1,
+            1,
+          );
+        }
       }
     }
   }
@@ -138,6 +227,48 @@ export function paintThreeQuarterTerrain(
   const lightGrass = lightenColour(PALETTE.grass, 0.12);
   const darkGrass = darkenColour(PALETTE.grass, 0.12);
   graphics.fillStyle(PALETTE.grass).fillRect(0, 0, width, height);
+
+  // Macro pass: mottle the turf into soft patches before any blade detail.
+  // Sub-cells are 16px so the bands read as organic variation rather than as
+  // the 32px gameplay grid, and the per-pixel grain pass softens them further.
+  const TURF_TONES = [
+    darkenColour(PALETTE.grass, 0.17),
+    darkenColour(PALETTE.grass, 0.1),
+    darkenColour(PALETTE.grass, 0.04),
+    PALETTE.grass,
+    lightenColour(PALETTE.grass, 0.05),
+    lightenColour(PALETTE.grass, 0.11),
+    lightenColour(PALETTE.grass, 0.17),
+  ] as const;
+  const MOSS = darkenColour(PALETTE.grassDark, 0.06);
+  const EARTH = 0xa88a5f;
+  const PATCH = 16;
+  for (let y = 0; y < height; y += PATCH) {
+    for (let x = 0; x < width; x += PATCH) {
+      const worldX = originX + x;
+      const worldY = originY + y;
+      const jitter = hash(worldX, worldY) % 4096;
+      // Two scales: broad meadow banding, plus finer clumping on top.
+      const meadow = macroField(worldX, worldY, 288) * 0.68
+        + macroField(worldX + 911, worldY + 137, 96) * 0.32;
+      graphics
+        .fillStyle(TURF_TONES[tonalStep(meadow, jitter, TURF_TONES.length)] ?? PALETTE.grass)
+        .fillRect(x, y, PATCH, PATCH);
+
+      // Damp shaded hollows and trodden bare earth, both rare and clustered.
+      const damp = macroField(worldX + 4231, worldY + 2087, 176);
+      if (damp > 0.86) {
+        graphics.fillStyle(MOSS, 0.5).fillRect(x, y, PATCH, PATCH);
+      } else if (damp < 0.1) {
+        graphics
+          .fillStyle(EARTH, 0.34)
+          .fillRect(x, y, PATCH, PATCH)
+          .fillStyle(darkenColour(EARTH, 0.16), 0.3)
+          .fillRect(x + 3 + jitter % 6, y + 4 + (jitter >>> 4) % 6, 4, 3);
+      }
+    }
+  }
+
   for (let y = 0; y < height; y += TILE_SIZE) {
     for (let x = 0; x < width; x += TILE_SIZE) {
       const seed = hash(Math.floor((originX + x) / TILE_SIZE), Math.floor((originY + y) / TILE_SIZE));
