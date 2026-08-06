@@ -14,25 +14,26 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
-# Action versions are deliberately held at the set that deploys this
-# repository reliably, despite GitHub's Node 20 runtime-deprecation
-# annotation. Bumping all five (checkout v7, setup-node v7, configure-pages
-# v6, upload-pages-artifact v5, deploy-pages v5) was tried on 2026-08-06 and
-# made every deployment abort: the build passed and the artifact uploaded, but
-# the deploy step sat in deployment_in_progress until it gave up and cancelled.
-# Raising deploy-pages' `timeout` input did not help - it still aborted at ten
-# minutes - and pinning deploy-pages back to v4 alone did not either, so the
-# cause is upstream of that action. The annotation is cosmetic; a deploy that
-# cancels itself is not. Revisit after the submission window.
+# 2026-08-06: GitHub Pages deployments are aborting after the deploy step
+# polls deployment_in_progress past the action's limit. This is NOT caused by
+# the action versions below - the exact workflow that had deployed
+# successfully an hour earlier was restored and failed identically. The
+# deployments do land: the live bundle contained the new code each time, the
+# action just gives up waiting and reports failure.
+#
+# So: verify a release by fetching the live URL and checking the served bundle,
+# not by trusting this workflow's conclusion, until Pages recovers.
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          # Matches the local development runtime, so what is verified here is
+          # what CI builds. scripts/browser-smoke.mjs requires Node 22+.
+          node-version: 24
           cache: npm
 
       - run: npm ci
@@ -43,9 +44,11 @@ jobs:
 
       - run: npm run build
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
-      - uses: actions/upload-pages-artifact@v3
+      # v4 stopped including dotfiles in the artifact. Checked: the Vite build
+      # emits none (index.html, iso-preview.html, assets/), so this is safe.
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -57,4 +60,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+        with:
+          # The Pages backend is currently taking longer than the 10-minute
+          # default to finish a deployment. The action gave up and reported
+          # failure on three runs while the deployment itself completed - the
+          # live bundle contained the new code each time. Waiting longer turns
+          # that false negative back into a truthful signal.
+          timeout: 1800000
