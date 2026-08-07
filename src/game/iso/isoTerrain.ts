@@ -270,7 +270,10 @@ export function paintIsoTerrain(
           Math.floor(centreY / PAVING_SLAB) !==
             Math.floor((centreY - TERRAIN_CELL) / PAVING_SLAB);
         if (onSeam) {
-          drawCell(x, y, shade(colour, -0.22), 0.5);
+          // A groove, not a filled cell. Slabs are 96px and cells 32px, so a
+          // full-strength cell here darkened five of every nine cells and the
+          // paving read as a chessboard rather than as slabs with joints.
+          drawCell(x, y, shade(colour, -0.14), 0.22);
         }
       }
 

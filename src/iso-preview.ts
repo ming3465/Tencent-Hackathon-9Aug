@@ -28,7 +28,13 @@ import {
   ensureIsoCharacterTextures,
   isoCharacterTextureFor,
 } from "./game/iso/isoCharacters.js";
-import { isoCanvasForWorld, isoDepth, worldToIso } from "./game/iso/projection.js";
+import {
+  isoCanvasForWorld,
+  isoDepth,
+  SUN_OFFSET_WORLD,
+  worldToIso,
+} from "./game/iso/projection.js";
+
 import { bakeWithGrain } from "./game/textureGrain.js";
 import {
   clampToEstate,
@@ -39,6 +45,9 @@ import {
   nearestIsoDoor,
   resolveIsoMovement,
 } from "./game/iso/isoWorld.js";
+
+/** Shared ground-shadow ink, matching the terrain painter's occlusion. */
+const ISO_CONTACT_SHADOW = 0x2f2a1e;
 
 const SLICE = { x: 0, y: 0, width: 2560, height: 1600 };
 const SPAWN = { x: 1150, y: 620 };
@@ -133,8 +142,31 @@ class IsoPreviewScene extends Phaser.Scene {
   private place(worldX: number, worldY: number, texture: string, layer = 4): void {
     if (!this.textures.exists(texture)) return;
     const point = worldToIso(worldX, worldY);
+    const screenX = point.x + this.originX;
+    const screenY = point.y + this.originY;
+
+    // Contact shadow. Buildings already cast one; trees, planting, furniture and
+    // residents did not, which is exactly why they read as stickers laid on top
+    // of the ground rather than things standing on it. One ellipse per upright,
+    // squashed to the 2:1 ground plane and pushed along the same sun vector the
+    // buildings use, so every shadow in the scene falls the same way.
+    const { width } = this.textures.get(texture).getSourceImage();
+    const sun = worldToIso(SUN_OFFSET_WORLD.x, SUN_OFFSET_WORLD.y);
     this.add
-      .sprite(point.x + this.originX, point.y + this.originY, texture)
+      .ellipse(
+        screenX + sun.x * 0.4,
+        screenY + sun.y * 0.4,
+        width * 0.74,
+        width * 0.34,
+        ISO_CONTACT_SHADOW,
+        0.28,
+      )
+      // Half a layer below the sprite: still above the ground plane it darkens,
+      // still below everything drawn at this world position.
+      .setDepth(isoDepth(worldX, worldY, layer) - 0.5);
+
+    this.add
+      .sprite(screenX, screenY, texture)
       .setOrigin(0.5, 1)
       .setDepth(isoDepth(worldX, worldY, layer));
   }
