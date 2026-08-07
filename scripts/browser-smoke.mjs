@@ -3373,6 +3373,19 @@ try {
         && !document.getElementById("btn-continue").hidden`,
       "the completed save after the day-complete capture"
     );
+    const returningProfile = await page.eval(`
+      (() => ({
+        continueLabel: document.getElementById("btn-continue").textContent.trim(),
+        nameField: document.getElementById("input-player-name").value,
+        caption: document.getElementById("identity-caption")?.textContent.trim() ?? "",
+      }))()
+    `);
+    check(
+      "A returning player is named on Continue and filled back into the customiser",
+      returningProfile.continueLabel.includes(`Continue as ${SMOKE_PLAYER_NAME}`)
+        && returningProfile.nameField === SMOKE_PLAYER_NAME,
+      JSON.stringify(returningProfile),
+    );
     await page.eval(`document.getElementById("btn-continue").click()`);
     await waitForPageCondition(
       `document.getElementById("sandbox-stage").getAttribute("aria-busy") === "false"

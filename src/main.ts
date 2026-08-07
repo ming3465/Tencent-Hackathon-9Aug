@@ -19,6 +19,7 @@ import {
 } from "./game/campaignSave.js";
 import {
   DEFAULT_APPEARANCE,
+  DEFAULT_PLAYER_NAME,
   HAIR_COLOURS,
   MAX_PLAYER_NAME_LENGTH,
   personalise,
@@ -758,7 +759,11 @@ function renderTitleActions(): void {
     const chapter = savedCampaign.currentChapter === "free-explore"
       ? "Free exploration"
       : CHAPTER_BY_ID.get(savedCampaign.currentChapter)?.title ?? "the campaign";
-    btnContinue.textContent = `Continue — ${pn(chapter)}`;
+    // Name the player on the button. On a device more than one person plays -
+    // a shared tablet at a community centre, say - "Continue" alone does not
+    // tell you whose campaign you are about to walk back into.
+    btnContinue.textContent =
+      `Continue as ${savedCampaign.playerName} — ${pn(chapter)}`;
   }
 }
 
@@ -1010,11 +1015,29 @@ function pickRandomLook(): void {
   announce("Picked a new look for your character.");
 }
 
+/**
+ * Brings the last player's name and look back to the title screen.
+ *
+ * This is the whole of "saving your account" that this game will ever do: the
+ * profile lives in the same local save as the campaign, so there is no password
+ * to forget, no server holding anyone's name, and nothing to sign in to. A
+ * returning player finds themselves already filled in; starting over keeps
+ * their character instead of resetting them to a stranger.
+ */
+function restoreSavedIdentity(): void {
+  if (!savedCampaign) return;
+  inputPlayerName.value = savedCampaign.playerName === DEFAULT_PLAYER_NAME
+    ? ""
+    : savedCampaign.playerName;
+  chosenAppearance = { ...savedCampaign.playerAppearance };
+}
+
 inputPlayerName.addEventListener("input", () => {
   identityCaption.textContent = sanitisePlayerName(inputPlayerName.value);
 });
 btnSurpriseLook.addEventListener("click", pickRandomLook);
 inputPlayerName.maxLength = MAX_PLAYER_NAME_LENGTH;
+restoreSavedIdentity();
 buildIdentityControls();
 
 function startNewCampaign(): void {
