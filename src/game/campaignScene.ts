@@ -4334,6 +4334,93 @@ export class InteriorScene extends WalkableScene {
     this.addFurnitureBlock(760, 392, 100, 34, 0x9b714b, false);
   }
 
+  /**
+   * The details that make a flat somebody's rather than a set.
+   *
+   * The room held eight objects in a 940x620 space, so most of the floor was
+   * empty and the eye had nowhere to go. These are the things a Singaporean
+   * flat actually has and a stranger would notice first: shoes left outside
+   * the door, a standing fan, laundry on an indoor pole, a wall calendar.
+   *
+   * All non-colliding and set against the walls. Density is worth adding;
+   * new obstacles in a room the player and the harness both navigate are not,
+   * and a decorative shoe rack is not worth a blocked route.
+   */
+  private drawFlatLivedInDetail(): void {
+    // Shoes by the door, paired and slightly askew.
+    const shoes = this.add.graphics().setDepth(depthFor(556, 2));
+    shoes.fillStyle(NIGHT, 0.15).fillEllipse(150, 560, 118, 15);
+    const pairs: readonly [number, number, number][] = [
+      [112, 548, CORAL],
+      [140, 552, 0x4a4f57],
+      [170, 546, TEAL],
+    ];
+    for (const [x, y, fill] of pairs) {
+      shoes
+        .fillStyle(INK)
+        .fillRect(x - 1, y - 1, 24, 13)
+        .fillStyle(fill)
+        .fillRect(x, y, 22, 11)
+        .fillStyle(lightenColour(fill, 0.24))
+        .fillRect(x + 2, y + 2, 12, 3);
+    }
+
+    // Standing fan, the one appliance no flat here is without.
+    const fan = this.add.graphics().setDepth(depthFor(500, 3));
+    fan
+      .fillStyle(NIGHT, 0.16)
+      .fillEllipse(110, 502, 54, 12)
+      .fillStyle(INK)
+      .fillRect(106, 418, 8, 82)
+      .fillRect(92, 494, 36, 8)
+      .fillStyle(CREAM)
+      .fillRect(84, 380, 52, 48)
+      .fillStyle(INK)
+      .fillRect(88, 384, 44, 40)
+      .fillStyle(lightenColour(CREAM, 0.1))
+      .fillRect(96, 392, 28, 24)
+      .fillStyle(INK)
+      .fillRect(107, 384, 6, 40)
+      .fillRect(88, 401, 44, 6);
+
+    // Laundry on an indoor pole - rain, or simply habit.
+    const laundry = this.add.graphics().setDepth(38);
+    laundry.fillStyle(INK).fillRect(300, 140, 210, 6);
+    const garments: readonly [number, number, number][] = [
+      [316, 44, GOLD],
+      [352, 58, TEAL],
+      [392, 50, CORAL],
+      [432, 62, 0x7b5aa6],
+      [470, 46, GREEN],
+    ];
+    for (const [x, length, fill] of garments) {
+      laundry
+        .fillStyle(fill)
+        .fillRect(x, 146, 26, length)
+        .fillStyle(darkenColour(fill, 0.2))
+        .fillRect(x, 146 + length - 6, 26, 6)
+        .fillStyle(lightenColour(fill, 0.2))
+        .fillRect(x + 3, 149, 7, length - 12);
+    }
+
+    // Wall calendar, still on the right month.
+    const calendar = this.add.graphics().setDepth(44);
+    calendar
+      .fillStyle(INK)
+      .fillRect(150, 74, 84, 104)
+      .fillStyle(CREAM)
+      .fillRect(154, 78, 76, 96)
+      .fillStyle(CORAL)
+      .fillRect(154, 78, 76, 22);
+    for (let row = 0; row < 4; row += 1) {
+      for (let column = 0; column < 5; column += 1) {
+        calendar
+          .fillStyle(INK, 0.3)
+          .fillRect(160 + column * 14, 108 + row * 16, 8, 8);
+      }
+    }
+  }
+
   private drawYFlat(): void {
     // Warm floor, cool sofa, rust rug. The room previously used two
     // desaturated grey-greens a few values apart, which read as one flat mass.
@@ -4401,6 +4488,7 @@ export class InteriorScene extends WalkableScene {
       }
     }
     this.addRoomPlant(820, 510);
+    this.drawFlatLivedInDetail();
     this.interactions.push({
       kind: "npc",
       id: "npc:voice",
