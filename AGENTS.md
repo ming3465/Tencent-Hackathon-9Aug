@@ -60,9 +60,10 @@ npm run typecheck && npm test && npm run build && npm audit && npm run smoke
 
 `npm run smoke` is self-contained (builds, serves, drives headless Chrome
 through a full playthrough, writes screenshots to `docs/screenshots/`).
-Current truth: **125 unit tests, 65 smoke checks, 0 vulnerabilities.** The unit
-split is campaign 30, match engine 31, audio 17, player identity 25,
-accessibility contract 4, world-layout/door/pause 8, and isometric world 10.
+Current truth: **154 unit tests, 66 smoke checks, 0 vulnerabilities.** The unit
+split is campaign 30, match engine 31, player identity 25, audio 17, carry
+errands 17, world-layout/door/pause 10, isometric world 10, story auto-start
+10, and accessibility contract 4.
 The smoke suite plays the campaign as a named player, so a render site that
 forgets to resolve the `{player}` token fails the gate. If a doc
 or deck quotes different numbers after your change, update them — stale
@@ -119,10 +120,14 @@ Nothing else needs editing. `vite.config.ts` adds the second entry only when
 exactly this reason — do not move it back).
 
 **Verified, not assumed:** run in a throwaway worktree with those paths
-deleted, the full gate passed — typecheck clean, **115/125** tests (the 10
-isometric tests go with them), build green, **65/65 smoke**. Re-verify the
-same way if the coupling ever changes, and update these numbers with what you
-actually measured.
+deleted, the full gate passed — typecheck clean, **144/154** tests (the 10
+isometric tests go with them), build green, **66/66 smoke** (re-measured
+2026-08-07). Re-verify the same way if the coupling ever changes, and update
+these numbers with what you actually measured.
+
+Note when re-verifying: the hawker-door route is intermittently flaky and has
+been since before the isometric work. A single failing run there is not
+evidence the rollback broke something — re-run before concluding anything.
 
 Tag `pre-isometric` marks the last commit before the slice began. It is a
 **comparison point, not a reset target** — unrelated work landed after it, so
