@@ -126,6 +126,16 @@ isometric tests go with them), build green, **67/67 smoke** (re-measured
 contact-shadow pass). Re-verify the same way if the coupling ever changes,
 and update these numbers with what you actually measured.
 
+**Before you diagnose a smoke failure, count the orphaned browsers.**
+`pgrep -f "user-data-dir=/var/folders/.*kampung-smoke-" | wc -l`. Each run can
+leave renderers behind, and once a few dozen accumulate the WebGL texture
+readbacks start returning nothing: `grass-colours`, `path-colours`,
+`facade-colours` and `wake-colours` all report **0** while the prop counts
+beside them stay correct. That pattern is memory pressure, not a rendering
+regression — `pkill -f "user-data-dir=/var/folders/.*kampung-smoke-"` and
+re-run before changing any code. The same pressure throttles the dialogue
+typewriter roughly tenfold, which is why the rendered-line wait allows 16s.
+
 Note when re-verifying: the hawker-door route is intermittently flaky and has
 been since before the isometric work. A single failing run there is not
 evidence the rollback broke something — re-run before concluding anything.
