@@ -133,6 +133,37 @@ never `git reset` to it.
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
 
+- **2026-08-07 (Claude Code, gameplay + surface-material lane)** — Shipped
+  carry-and-deliver errands (pick an object up, walk it across the estate, hand
+  it over; optional by design, and a test asserts running both moves neither
+  the chapter nor the completed quests). Then four surface fixes that turned
+  out to be one fault repeated: **paving, facade walls and interior floors were
+  each drawn so bright that the wear passes, macro fields and grain already
+  running on them washed into near-white.** Nothing was missing; it was too
+  pale to show what it had. Deepening the bases roughly doubled the measured
+  detail — path-colours 481→936, grass 144→276, facade colours 285→370 — from
+  very small code changes. After the third instance the `macroField` helper
+  moved from `threeQuarterArt.ts` into `textureGrain.ts` (neutral, no cycle:
+  it depends only on Phaser); paving tones stayed in the terrain module.
+  Also reframed story dialogue as a visual novel — it had been borrowing the
+  pause menu's 78% scrim, which reduced the estate to grey mush exactly when
+  the game asks you to care about it — and furnished the player's flat from the
+  scene side (shoes, fan, laundry, calendar; non-colliding, so no navigation
+  route changed). Corrected stale figures in `RUBRIC_SCORECARD.md` and
+  `SUBMIT_NOW.md`, which still claimed 90/90 tests and 60/60 checks; bundle
+  sizes re-measured from a clean HEAD worktree. Landed one small outline change
+  found uncommitted in the tree at 09:12 with no commits behind it, verified
+  green, labelled in its message as not mine rather than left at risk.
+  **Verified on the live judged URL, not just locally: 154 tests, 66/66 browser
+  checks, 0 vulnerabilities.** A first live run right after deploy showed 2
+  failures that did not reproduce on an immediate re-run — worth one more pass
+  before submission. Every remaining rubric blocker is human-gated (CodeBuddy
+  credits, Miora assets, real-device and human accessibility checks, a
+  documented playtest, video and social post). Two decisions are open: the
+  "save the account" card contradicts the published no-account/no-backend
+  constraint (alternatives noted on the card), and whether errands should be
+  promoted from side texture into a main quest gate.
+
 - **2026-08-06 (Claude Code, player-identity and isometric-rollback lane)** —
   The protagonist was hard-coded as "Y"; the title screen now asks for a name
   and a look. Story text carries a `{player}` token resolved at render time,
