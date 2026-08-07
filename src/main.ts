@@ -1036,7 +1036,7 @@ function continueCampaign(): void {
 
 function startOver(): void {
   const confirmed = window.confirm(
-    pn("Start Kampung SG again from {player}'s flat? Your current campaign save will be replaced."),
+    pn("Start Kampung SG again from {player}'s house? Your current campaign save will be replaced."),
   );
   if (!confirmed) return;
   clearCampaignSafely();
@@ -2011,7 +2011,7 @@ function mainStoryActions(): readonly JournalAction[] {
   switch (campaignState.currentChapter) {
     case "prologue":
       return campaignState.objectives.includes("heard-voice")
-        ? [{ label: "Use the first door", run: () => visitLocation("hdb-corridor") }]
+        ? [{ label: "Use the first door", run: () => visitLocation("estate") }]
         : [{ label: "Listen to the Voice", run: () => openNpc("voice") }];
     case "chapter-1":
       return campaignState.objectives.includes("mr-long-step-seen")
@@ -2046,7 +2046,7 @@ function mainStoryActions(): readonly JournalAction[] {
       }
       if (!campaignState.objectives.includes("ben-approach-chosen")) {
         return [
-          { label: "Visit Ben's flat", run: () => visitLocation("ben-flat") },
+          { label: "Visit Ben's house", run: () => visitLocation("ben-flat") },
           { label: "Talk with Ben", run: () => openNpc("ben") },
         ];
       }
@@ -2060,7 +2060,7 @@ function mainStoryActions(): readonly JournalAction[] {
     }
     case "ending":
       return [
-        { label: pn("Return to {player}'s flat"), run: () => visitLocation("y-flat") },
+        { label: pn("Return to {player}'s house"), run: () => visitLocation("y-flat") },
         { label: "Listen at the last door", run: () => openNpc("voice") },
       ];
     case "free-explore":

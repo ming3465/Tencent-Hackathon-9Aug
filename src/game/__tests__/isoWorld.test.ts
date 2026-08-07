@@ -104,9 +104,11 @@ describe("isometric collision", () => {
 
 describe("isometric door proximity", () => {
   it("reports a door when standing on its approach point", () => {
-    const door = nearestIsoDoor(610, 400);
+    // The player's own front door, on the west side of the village.
+    const door = nearestIsoDoor(205, 1120);
     expect(door).not.toBeNull();
     expect(door!.sourceLocationId).toBe("estate");
+    expect(door!.targetLocationId).toBe("y-flat");
   });
 
   it("reports nothing in open ground", () => {

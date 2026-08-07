@@ -1609,11 +1609,7 @@ abstract class WalkableScene extends Phaser.Scene {
       new DoorView(this, definition, blocker),
     );
     const isExit = definition.sourceLocationId !== "estate"
-      && (
-        definition.targetLocationId === "estate"
-        || (definition.sourceLocationId !== "hdb-corridor"
-          && definition.targetLocationId === "hdb-corridor")
-      );
+      && definition.targetLocationId === "estate";
     this.interactions.push({
       kind: isExit ? "exit" : "door",
       id: definition.id,
@@ -3909,12 +3905,8 @@ export class EstateScene extends WalkableScene {
 
 }
 
-function roomReturnLocation(locationId: LocationId): LocationId {
-  if (
-    ["y-flat", "mr-long-flat", "grandma-ros-kitchen", "ben-flat"].includes(locationId)
-  ) {
-    return "hdb-corridor";
-  }
+/** Every interior now returns to the one place outside: the village. */
+function roomReturnLocation(_locationId: LocationId): LocationId {
   return "estate";
 }
 
@@ -4024,7 +4016,6 @@ export class InteriorScene extends WalkableScene {
   private wallColour(): number {
     const colours: Partial<Record<LocationId, number>> = {
       "y-flat": 0xa9b4b0,
-      "hdb-corridor": 0xc7d6cf,
       "mr-long-flat": 0xc8b8a0,
       "grandma-ros-kitchen": 0xf0cf8d,
       "ben-flat": 0xb8c4d6,
@@ -4228,11 +4219,6 @@ export class InteriorScene extends WalkableScene {
   }
 
   private drawLocationIdentity(): void {
-    if (this.locationId === "hdb-corridor") {
-      this.drawCorridor();
-      return;
-    }
-
     const exitDoor = getDoorsForLocation(this.locationId)[0];
     if (exitDoor) this.addDoorView(exitDoor);
 
@@ -4270,68 +4256,6 @@ export class InteriorScene extends WalkableScene {
       case "estate":
         break;
     }
-  }
-
-  private drawCorridor(): void {
-    const corridor = this.add.graphics().setDepth(28);
-    corridor
-      .fillStyle(NIGHT, 0.16)
-      .fillRect(48, 276, 864, 154)
-      .fillStyle(CONCRETE)
-      .fillRect(50, 266, 860, 154)
-      .fillStyle(TEAL)
-      .fillRect(50, 250, 860, 21)
-      .fillStyle(lightenColour(TEAL, 0.2))
-      .fillRect(50, 250, 860, 5);
-    for (let x = 58; x < 910; x += 64) {
-      corridor
-        .fillStyle(CONCRETE_EDGE, 0.68)
-        .fillRect(x, 272, 3, 145);
-    }
-    corridor
-      .fillStyle(INK)
-      .fillRect(55, 417, 850, 6)
-      .fillStyle(CREAM)
-      .fillRect(60, 294, 108, 32)
-      .fillStyle(CORAL)
-      .fillRect(68, 301, 92, 5)
-      .fillStyle(TEAL)
-      .fillRect(68, 312, 62, 5);
-    this.add
-      .text(480, 82, "BLOCK 9  ·  LEVEL 9", {
-        color: "#173f4f",
-        fontFamily: "Georgia, serif",
-        fontSize: "25px",
-        fontStyle: "bold",
-        letterSpacing: 2,
-      })
-      .setOrigin(0.5)
-      .setDepth(48);
-    for (const definition of getDoorsForLocation("hdb-corridor")) {
-      this.addDoorView(definition);
-      if (definition.targetLocationId !== "estate") {
-        this.addRoomPlant(definition.anchor.x + 58, 314);
-      }
-    }
-    for (const x of [90, 870]) {
-      const pillar = this.add.graphics().setDepth(depthFor(455, 2));
-      drawPixelBlock(pillar, x - 12, 230, 24, 226, CONCRETE, 4);
-      pillar
-        .fillStyle(TEAL)
-        .fillRect(x - 34, 390, 68, 13)
-        .fillStyle(lightenColour(TEAL, 0.18))
-        .fillRect(x - 34, 390, 68, 4);
-    }
-    const rail = this.add.graphics().setDepth(depthFor(475, 3));
-    rail
-      .fillStyle(INK)
-      .fillRect(72, 466, 816, 8)
-      .fillStyle(TEAL)
-      .fillRect(76, 468, 808, 3);
-    for (let x = 82; x < 890; x += 72) {
-      rail.fillStyle(INK).fillRect(x, 472, 7, 48);
-    }
-    this.addFurnitureBlock(760, 392, 100, 34, 0x9b714b, false);
   }
 
   /**

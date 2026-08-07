@@ -94,7 +94,8 @@ function reachChapter1(demo = false): CampaignStateV1 {
   return apply(
     createCampaignState({ demo }),
     { type: "complete-objective", objectiveId: "heard-voice" },
-    { type: "visit-location", locationId: "hdb-corridor" },
+    // The first door now opens straight onto the village, not onto a corridor.
+    { type: "visit-location", locationId: "estate" },
   );
 }
 
@@ -178,7 +179,7 @@ describe("campaign ordering and alternatives", () => {
     const state = createCampaignState();
     expect(reduceCampaign(state, {
       type: "visit-location",
-      locationId: "hdb-corridor",
+      locationId: "estate",
     })).toBe(state);
   });
 
@@ -546,9 +547,9 @@ describe("campaign registries", () => {
     expect(auditEstateLayout()).toEqual([]);
     expect(ESTATE_VEHICLE_LANES).toHaveLength(0);
     expect(ESTATE_VEHICLE_ROUTES).toHaveLength(0);
-    expect(ESTATE_BUILDING_VISUAL_ZONES).toHaveLength(8);
-    expect(ESTATE_BUILDING_COLLISION_ZONES).toHaveLength(22);
-    expect(ESTATE_FACADE_DEPTH_DEFINITIONS).toHaveLength(8);
+    expect(ESTATE_BUILDING_VISUAL_ZONES).toHaveLength(12);
+    expect(ESTATE_BUILDING_COLLISION_ZONES).toHaveLength(32);
+    expect(ESTATE_FACADE_DEPTH_DEFINITIONS).toHaveLength(12);
     expect(
       new Set(
         ESTATE_FACADE_DEPTH_DEFINITIONS.map(
@@ -573,15 +574,19 @@ describe("campaign registries", () => {
         entrance.y,
       ]),
     ).toEqual([
-      ["estate-block-9", "block-9", 610, 330],
       ["estate-hawker", "hawker-centre", 970, 330],
       ["estate-kopitiam", "kopitiam", 1550, 330],
-      ["estate-provision", "provision-shop", 2140, 330],
+      ["estate-provision", "provision-shop", 2030, 330],
       ["estate-workshop", "craftsman-workshop", 870, 1050],
+      // The four homes now stand on their own, each with its own front door.
+      ["estate-y-house", "y-house", 205, 1050],
+      ["estate-mr-long", "mr-long-house", 2452, 1050],
+      ["estate-grandma-ros", "grandma-ros-house", 2395, 330],
+      ["estate-ben", "ben-house", 1270, 330],
       ["estate-community", "community-centre", 1600, 1050],
-      ["estate-prayer", "prayer-hall", 2250, 1050],
+      ["estate-prayer", "prayer-hall", 2180, 1050],
     ]);
-    expect(ESTATE_MAP_LANDMARKS).toHaveLength(7);
+    expect(ESTATE_MAP_LANDMARKS).toHaveLength(10);
     for (const location of LOCATIONS) {
       const point = getEstateMapPosition(location.id);
       expect(point.xPercent).toBeGreaterThanOrEqual(7);
@@ -589,7 +594,7 @@ describe("campaign registries", () => {
       expect(point.yPercent).toBeGreaterThanOrEqual(7);
       expect(point.yPercent).toBeLessThanOrEqual(93);
     }
-    expect(estateMapAnchorLocation("y-flat")).toBe("hdb-corridor");
+    expect(estateMapAnchorLocation("y-flat")).toBe("y-flat");
     expect(estateMapAnchorLocation("community-centre")).toBe(
       "community-centre",
     );

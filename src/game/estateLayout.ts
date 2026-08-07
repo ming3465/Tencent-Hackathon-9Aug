@@ -406,21 +406,17 @@ export const ESTATE_LANDSCAPING: readonly EstateLandscapeDefinition[] = [
   landscaping("hedge-south-east-03", "landscape-hedge", 2447, 1486),
   landscaping("hedge-east-garden-03", "landscape-hedge", 2327, 582),
   landscaping("hedge-south-centre-02", "landscape-hedge", 1495, 1294),
-  landscaping("hedge-west-verge-01", "landscape-hedge", 279, 806),
   landscaping("hedge-south-east-04", "landscape-hedge", 2295, 1598),
-  landscaping("hedge-west-verge-02", "landscape-hedge", 111, 806),
   landscaping("flower-south-west-01", "landscape-flower-bed", 1042, 1358),
   landscaping("flower-south-east-01", "landscape-flower-bed", 2290, 1382),
   landscaping("flower-south-west-02", "landscape-flower-bed", 634, 1350),
   landscaping("flower-south-west-03", "landscape-flower-bed", 634, 1454),
   landscaping("flower-south-east-02", "landscape-flower-bed", 2290, 1310),
-  landscaping("flower-west-verge-01", "landscape-flower-bed", 58, 966),
-  landscaping("flower-west-verge-02", "landscape-flower-bed", 58, 910),
+  landscaping("flower-west-verge-01", "landscape-flower-bed", 60, 762),
+  landscaping("flower-west-verge-02", "landscape-flower-bed", 60, 564),
   landscaping("flower-west-verge-03", "landscape-flower-bed", 290, 566),
   landscaping("flower-south-west-04", "landscape-flower-bed", 634, 1406),
   landscaping("flower-east-garden-01", "landscape-flower-bed", 2050, 606),
-  landscaping("flower-west-verge-04", "landscape-flower-bed", 58, 1022),
-  landscaping("flower-west-verge-05", "landscape-flower-bed", 58, 862),
   landscaping("pandan-south-west-01", "landscape-pandan", 924, 1324),
   landscaping("pandan-south-west-02", "landscape-pandan", 852, 1548),
   landscaping("pandan-south-centre-01", "landscape-pandan", 1772, 1404),
@@ -470,7 +466,6 @@ export const ESTATE_PLANTED_FEATURES: readonly EstatePlantedFeatureDefinition[] 
   { id: "east-chess-garden", texture: "prop-courtyard-planter-bed", anchor: { x: 2200, y: 780 }, spriteSize: { width: 380, height: 105 } },
   { id: "north-gap-planter", texture: "prop-planter", anchor: { x: 1240, y: 70 }, spriteSize: { width: 76, height: 64 } },
   { id: "south-west-planter", texture: "prop-planter", anchor: { x: 1080, y: 1590 }, spriteSize: { width: 76, height: 64 } },
-  { id: "east-edge-planter", texture: "prop-planter", anchor: { x: 2520, y: 900 }, spriteSize: { width: 76, height: 64 } },
   { id: "south-centre-bike-planters", texture: "prop-bike-planters", anchor: { x: 1475, y: 1595 }, spriteSize: { width: 220, height: 96 } },
   { id: "south-east-bike-planters", texture: "prop-bike-planters", anchor: { x: 2110, y: 1595 }, spriteSize: { width: 220, height: 96 } },
   { id: "south-west-shaded-seating", texture: "prop-shaded-seating", anchor: { x: 690, y: 1595 }, spriteSize: { width: 226, height: 128 } },
@@ -502,10 +497,12 @@ const building = (
 });
 
 export const ESTATE_BUILDINGS: readonly BuildingDefinition[] = [
+  // Block 9 keeps its name and its verge, but nobody in the story lives behind
+  // one shared corridor any more - the four homes are their own houses now.
   building("block-9", "Block 9", { x: 80, y: 60, width: 680, height: 270 }, {
     accent: "coral", roofStyle: "hipped", roofDepth: 34, roofInset: 24,
     roofSegments: 8, sideFaceWidth: 34, minimapAnchor: { x: 610, y: 250 },
-    minimapLabel: "9", targetLocationId: "hdb-corridor", entranceDoorId: "estate-block-9",
+    minimapLabel: "9", targetLocationId: undefined, entranceDoorId: undefined,
   }),
   building("hawker-centre", "Hawker Centre", { x: 820, y: 80, width: 300, height: 250 }, {
     accent: "coral", roofStyle: "hipped", roofDepth: 30, roofInset: 18,
@@ -517,11 +514,14 @@ export const ESTATE_BUILDINGS: readonly BuildingDefinition[] = [
     roofSegments: 5, sideFaceWidth: 27, minimapAnchor: { x: 1550, y: 235 },
     minimapLabel: "K", targetLocationId: "kopitiam", entranceDoorId: "estate-kopitiam",
   }),
-  building("provision-shop", "Provision Shop", { x: 1830, y: 70, width: 600, height: 260 }, {
+  // Narrowed from 600 wide so the north-east corner is free for Grandma Ros.
+  building("provision-shop", "Provision Shop", { x: 1830, y: 70, width: 400, height: 260 }, {
     accent: "green", roofStyle: "hipped", roofDepth: 32, roofInset: 24,
-    roofSegments: 7, sideFaceWidth: 36, minimapAnchor: { x: 2140, y: 230 },
+    roofSegments: 5, sideFaceWidth: 36, minimapAnchor: { x: 2030, y: 230 },
     minimapLabel: "S", targetLocationId: "provision-shop", entranceDoorId: "estate-provision",
   }),
+  // Already the south-west corner of the village's working row, and already its
+  // own building with its own door - it did not need moving.
   building("craftsman-workshop", "Craftsman's Workshop", { x: 680, y: 780, width: 380, height: 270 }, {
     accent: "coral", roofStyle: "sawtooth", roofDepth: 50, roofInset: 14,
     roofSegments: 4, sideFaceWidth: 28, minimapAnchor: { x: 870, y: 920 },
@@ -532,15 +532,42 @@ export const ESTATE_BUILDINGS: readonly BuildingDefinition[] = [
     roofSegments: 6, sideFaceWidth: 32, minimapAnchor: { x: 1600, y: 920 },
     minimapLabel: "CC", targetLocationId: "community-centre", entranceDoorId: "estate-community",
   }),
-  building("prayer-hall", "Prayer Hall", { x: 2030, y: 780, width: 430, height: 270 }, {
+  // Narrowed from 430 wide so the east end of the working row is free for Mr. Long.
+  building("prayer-hall", "Prayer Hall", { x: 2030, y: 780, width: 300, height: 270 }, {
     accent: "gold", roofStyle: "hipped", roofDepth: 34, roofInset: 22,
-    roofSegments: 5, sideFaceWidth: 30, minimapAnchor: { x: 2250, y: 925 },
+    roofSegments: 4, sideFaceWidth: 30, minimapAnchor: { x: 2180, y: 925 },
     minimapLabel: "P", targetLocationId: "prayer-hall", entranceDoorId: "estate-prayer",
   }),
   building("block-12", "Block 12", { x: 60, y: 1260, width: 500, height: 260 }, {
     accent: "coral", roofStyle: "hipped", roofDepth: 34, roofInset: 24,
     roofSegments: 6, sideFaceWidth: 32, minimapAnchor: { x: 310, y: 1400 },
     minimapLabel: "12", targetLocationId: undefined, entranceDoorId: undefined,
+  }),
+
+  // The four homes of the story, each its own house at its own compass point.
+  // Walking between them IS the village - which is the whole point, and what a
+  // single shared corridor could never convey. Each sits with its threshold on
+  // the bottom edge and its doorstep on a pedestrian street, so the audit can
+  // prove you can actually reach every front door.
+  building("y-house", "The player's house", { x: 60, y: 780, width: 290, height: 270 }, {
+    accent: "teal", roofStyle: "hipped", roofDepth: 30, roofInset: 18,
+    roofSegments: 3, sideFaceWidth: 26, minimapAnchor: { x: 205, y: 920 },
+    minimapLabel: "You", targetLocationId: "y-flat", entranceDoorId: "estate-y-house",
+  }),
+  building("mr-long-house", "Mr. Long's house", { x: 2350, y: 780, width: 205, height: 270 }, {
+    accent: "purple", roofStyle: "hipped", roofDepth: 32, roofInset: 20,
+    roofSegments: 3, sideFaceWidth: 26, minimapAnchor: { x: 2452, y: 920 },
+    minimapLabel: "Long", targetLocationId: "mr-long-flat", entranceDoorId: "estate-mr-long",
+  }),
+  building("grandma-ros-house", "Grandma Ros's house", { x: 2250, y: 70, width: 290, height: 260 }, {
+    accent: "gold", roofStyle: "hipped", roofDepth: 32, roofInset: 20,
+    roofSegments: 3, sideFaceWidth: 26, minimapAnchor: { x: 2395, y: 230 },
+    minimapLabel: "Ros", targetLocationId: "grandma-ros-kitchen", entranceDoorId: "estate-grandma-ros",
+  }),
+  building("ben-house", "Ben's house", { x: 1150, y: 80, width: 240, height: 250 }, {
+    accent: "green", roofStyle: "hipped", roofDepth: 30, roofInset: 18,
+    roofSegments: 3, sideFaceWidth: 26, minimapAnchor: { x: 1270, y: 230 },
+    minimapLabel: "Ben", targetLocationId: "ben-flat", entranceDoorId: "estate-ben",
   }),
 ];
 
@@ -561,24 +588,23 @@ const EXTERIOR_DOOR_SIZE = { width: 64, height: 84 } as const;
 const INTERIOR_DOOR_SIZE = { width: 70, height: 92 } as const;
 
 export const DOOR_DEFINITIONS: readonly DoorDefinition[] = [
-  door({ id: "estate-block-9", sourceLocationId: "estate", targetLocationId: "hdb-corridor", buildingId: "block-9", label: "Enter Block 9 lobby", orientation: "north", style: "hinged-hdb", anchor: { x: 610, y: 330 }, approachPoint: { x: 610, y: 400 }, returnSpawn: { x: 610, y: 405 }, dimensions: EXTERIOR_DOOR_SIZE, placard: "BLK 9" }),
   door({ id: "estate-hawker", sourceLocationId: "estate", targetLocationId: "hawker-centre", buildingId: "hawker-centre", label: "Enter the hawker centre", orientation: "north", style: "open-hawker-gate", anchor: { x: 970, y: 330 }, approachPoint: { x: 970, y: 400 }, returnSpawn: { x: 970, y: 405 }, dimensions: { width: 82, height: 84 }, placard: "ENTRY" }),
   door({ id: "estate-kopitiam", sourceLocationId: "estate", targetLocationId: "kopitiam", buildingId: "kopitiam", label: "Enter the kopitiam", orientation: "north", style: "sliding-commercial", anchor: { x: 1550, y: 330 }, approachPoint: { x: 1550, y: 400 }, returnSpawn: { x: 1550, y: 405 }, dimensions: EXTERIOR_DOOR_SIZE, placard: "KOPI" }),
-  door({ id: "estate-provision", sourceLocationId: "estate", targetLocationId: "provision-shop", buildingId: "provision-shop", label: "Enter Minah's provision shop", orientation: "north", style: "sliding-commercial", anchor: { x: 2140, y: 330 }, approachPoint: { x: 2140, y: 400 }, returnSpawn: { x: 2140, y: 405 }, dimensions: EXTERIOR_DOOR_SIZE, placard: "MINAH" }),
+  door({ id: "estate-provision", sourceLocationId: "estate", targetLocationId: "provision-shop", buildingId: "provision-shop", label: "Enter Minah's provision shop", orientation: "north", style: "sliding-commercial", anchor: { x: 2030, y: 330 }, approachPoint: { x: 2030, y: 400 }, returnSpawn: { x: 2030, y: 405 }, dimensions: EXTERIOR_DOOR_SIZE, placard: "MINAH" }),
   door({ id: "estate-workshop", sourceLocationId: "estate", targetLocationId: "craftsman-workshop", buildingId: "craftsman-workshop", label: "Enter the craftsman's workshop", orientation: "north", style: "workshop-shutter", anchor: { x: 870, y: 1050 }, approachPoint: { x: 870, y: 1120 }, returnSpawn: { x: 870, y: 1125 }, dimensions: { width: 82, height: 84 }, placard: "OPEN" }),
+
+  // The four homes, straight off the village. No lobby, no lift, no corridor.
+  door({ id: "estate-y-house", sourceLocationId: "estate", targetLocationId: "y-flat", buildingId: "y-house", label: "Go into {player}'s house", orientation: "north", style: "hinged-hdb", anchor: { x: 205, y: 1050 }, approachPoint: { x: 205, y: 1120 }, returnSpawn: { x: 205, y: 1125 }, dimensions: EXTERIOR_DOOR_SIZE, placard: "HOME" }),
+  door({ id: "estate-mr-long", sourceLocationId: "estate", targetLocationId: "mr-long-flat", buildingId: "mr-long-house", label: "Visit Mr. Long", orientation: "north", style: "hinged-hdb", anchor: { x: 2452, y: 1050 }, approachPoint: { x: 2452, y: 1120 }, returnSpawn: { x: 2452, y: 1125 }, dimensions: EXTERIOR_DOOR_SIZE, placard: "LONG" }),
+  door({ id: "estate-grandma-ros", sourceLocationId: "estate", targetLocationId: "grandma-ros-kitchen", buildingId: "grandma-ros-house", label: "Visit Grandma Ros", orientation: "north", style: "hinged-hdb", anchor: { x: 2395, y: 330 }, approachPoint: { x: 2395, y: 402 }, returnSpawn: { x: 2395, y: 407 }, dimensions: EXTERIOR_DOOR_SIZE, placard: "ROS" }),
+  door({ id: "estate-ben", sourceLocationId: "estate", targetLocationId: "ben-flat", buildingId: "ben-house", label: "Visit Ben", orientation: "north", style: "hinged-hdb", anchor: { x: 1270, y: 330 }, approachPoint: { x: 1270, y: 402 }, returnSpawn: { x: 1270, y: 407 }, dimensions: EXTERIOR_DOOR_SIZE, placard: "BEN" }),
   door({ id: "estate-community", sourceLocationId: "estate", targetLocationId: "community-centre", buildingId: "community-centre", label: "Enter the community centre", orientation: "north", style: "double-community", anchor: { x: 1600, y: 1050 }, approachPoint: { x: 1600, y: 1120 }, returnSpawn: { x: 1600, y: 1125 }, dimensions: { width: 82, height: 84 }, placard: "CC" }),
-  door({ id: "estate-prayer", sourceLocationId: "estate", targetLocationId: "prayer-hall", buildingId: "prayer-hall", label: "Enter the prayer hall", orientation: "north", style: "double-community", anchor: { x: 2250, y: 1050 }, approachPoint: { x: 2250, y: 1120 }, returnSpawn: { x: 2250, y: 1125 }, dimensions: { width: 82, height: 84 }, placard: "WELCOME" }),
+  door({ id: "estate-prayer", sourceLocationId: "estate", targetLocationId: "prayer-hall", buildingId: "prayer-hall", label: "Enter the prayer hall", orientation: "north", style: "double-community", anchor: { x: 2180, y: 1050 }, approachPoint: { x: 2180, y: 1120 }, returnSpawn: { x: 2180, y: 1125 }, dimensions: { width: 82, height: 84 }, placard: "WELCOME" }),
 
-  door({ id: "corridor-y-flat", sourceLocationId: "hdb-corridor", targetLocationId: "y-flat", label: "Enter {player}'s flat", orientation: "north", style: "hinged-hdb", anchor: { x: 150, y: 265 }, approachPoint: { x: 150, y: 350 }, returnSpawn: { x: 150, y: 350 }, dimensions: INTERIOR_DOOR_SIZE, placard: "01" }),
-  door({ id: "corridor-mr-long", sourceLocationId: "hdb-corridor", targetLocationId: "mr-long-flat", label: "Visit Mr. Long", orientation: "north", style: "hinged-hdb", anchor: { x: 350, y: 265 }, approachPoint: { x: 350, y: 350 }, returnSpawn: { x: 350, y: 350 }, dimensions: INTERIOR_DOOR_SIZE, placard: "02" }),
-  door({ id: "corridor-grandma-ros", sourceLocationId: "hdb-corridor", targetLocationId: "grandma-ros-kitchen", label: "Visit Grandma Ros", orientation: "north", style: "hinged-hdb", anchor: { x: 585, y: 265 }, approachPoint: { x: 585, y: 350 }, returnSpawn: { x: 585, y: 350 }, dimensions: INTERIOR_DOOR_SIZE, placard: "03" }),
-  door({ id: "corridor-ben", sourceLocationId: "hdb-corridor", targetLocationId: "ben-flat", label: "Visit Ben", orientation: "north", style: "hinged-hdb", anchor: { x: 805, y: 265 }, approachPoint: { x: 805, y: 350 }, returnSpawn: { x: 805, y: 350 }, dimensions: INTERIOR_DOOR_SIZE, placard: "04" }),
-  door({ id: "corridor-estate", sourceLocationId: "hdb-corridor", targetLocationId: "estate", label: "Take the lift to the estate", orientation: "south", style: "lift", anchor: { x: 480, y: 588 }, approachPoint: { x: 480, y: 510 }, returnSpawn: { x: 480, y: 510 }, dimensions: { width: 94, height: 92 }, placard: "LIFT" }),
-
-  door({ id: "y-flat-exit", sourceLocationId: "y-flat", targetLocationId: "hdb-corridor", label: "Return to the corridor", orientation: "south", style: "hinged-hdb", anchor: { x: 480, y: 588 }, approachPoint: { x: 480, y: 500 }, returnSpawn: { x: 480, y: 500 }, dimensions: INTERIOR_DOOR_SIZE, placard: "EXIT" }),
-  door({ id: "mr-long-exit", sourceLocationId: "mr-long-flat", targetLocationId: "hdb-corridor", label: "Return to the corridor", orientation: "south", style: "hinged-hdb", anchor: { x: 480, y: 588 }, approachPoint: { x: 480, y: 500 }, returnSpawn: { x: 480, y: 500 }, dimensions: INTERIOR_DOOR_SIZE, placard: "EXIT" }),
-  door({ id: "grandma-ros-exit", sourceLocationId: "grandma-ros-kitchen", targetLocationId: "hdb-corridor", label: "Return to the corridor", orientation: "south", style: "hinged-hdb", anchor: { x: 480, y: 588 }, approachPoint: { x: 480, y: 500 }, returnSpawn: { x: 480, y: 500 }, dimensions: INTERIOR_DOOR_SIZE, placard: "EXIT" }),
-  door({ id: "ben-exit", sourceLocationId: "ben-flat", targetLocationId: "hdb-corridor", label: "Return to the corridor", orientation: "south", style: "hinged-hdb", anchor: { x: 480, y: 588 }, approachPoint: { x: 480, y: 500 }, returnSpawn: { x: 480, y: 500 }, dimensions: INTERIOR_DOOR_SIZE, placard: "EXIT" }),
+  door({ id: "y-flat-exit", sourceLocationId: "y-flat", targetLocationId: "estate", label: "Step out into the village", orientation: "south", style: "hinged-hdb", anchor: { x: 480, y: 588 }, approachPoint: { x: 480, y: 500 }, returnSpawn: { x: 480, y: 500 }, dimensions: INTERIOR_DOOR_SIZE, placard: "EXIT" }),
+  door({ id: "mr-long-exit", sourceLocationId: "mr-long-flat", targetLocationId: "estate", label: "Return to the village", orientation: "south", style: "hinged-hdb", anchor: { x: 480, y: 588 }, approachPoint: { x: 480, y: 500 }, returnSpawn: { x: 480, y: 500 }, dimensions: INTERIOR_DOOR_SIZE, placard: "EXIT" }),
+  door({ id: "grandma-ros-exit", sourceLocationId: "grandma-ros-kitchen", targetLocationId: "estate", label: "Return to the village", orientation: "south", style: "hinged-hdb", anchor: { x: 480, y: 588 }, approachPoint: { x: 480, y: 500 }, returnSpawn: { x: 480, y: 500 }, dimensions: INTERIOR_DOOR_SIZE, placard: "EXIT" }),
+  door({ id: "ben-exit", sourceLocationId: "ben-flat", targetLocationId: "estate", label: "Return to the village", orientation: "south", style: "hinged-hdb", anchor: { x: 480, y: 588 }, approachPoint: { x: 480, y: 500 }, returnSpawn: { x: 480, y: 500 }, dimensions: INTERIOR_DOOR_SIZE, placard: "EXIT" }),
   door({ id: "workshop-exit", sourceLocationId: "craftsman-workshop", targetLocationId: "estate", label: "Return to the estate", orientation: "south", style: "workshop-shutter", anchor: { x: 480, y: 588 }, approachPoint: { x: 480, y: 500 }, returnSpawn: { x: 480, y: 500 }, dimensions: { width: 90, height: 92 }, placard: "EXIT" }),
   door({ id: "community-exit", sourceLocationId: "community-centre", targetLocationId: "estate", label: "Return to the estate", orientation: "south", style: "double-community", anchor: { x: 480, y: 588 }, approachPoint: { x: 480, y: 500 }, returnSpawn: { x: 480, y: 500 }, dimensions: { width: 90, height: 92 }, placard: "EXIT" }),
   door({ id: "kopitiam-exit", sourceLocationId: "kopitiam", targetLocationId: "estate", label: "Return to the estate", orientation: "south", style: "sliding-commercial", anchor: { x: 480, y: 588 }, approachPoint: { x: 480, y: 500 }, returnSpawn: { x: 480, y: 500 }, dimensions: INTERIOR_DOOR_SIZE, placard: "EXIT" }),
@@ -1044,8 +1070,8 @@ export function auditEstateLayout(): readonly string[] {
     auditPlantBounds(definition.id, plantingSpriteBounds(definition));
   }
 
-  if (DOOR_DEFINITIONS.length !== 22) {
-    issues.push(`Expected 22 contextual doors, found ${DOOR_DEFINITIONS.length}`);
+  if (DOOR_DEFINITIONS.length !== 20) {
+    issues.push(`Expected 20 contextual doors, found ${DOOR_DEFINITIONS.length}`);
   }
   for (const definition of DOOR_DEFINITIONS) {
     if (!rectangleContains(

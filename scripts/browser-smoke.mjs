@@ -52,7 +52,7 @@ const SHOT_DIR = readFlag("shots", "docs/screenshots");
  * "{player}" on a judge's screen.
  */
 const SMOKE_PLAYER_NAME = "Halimah";
-const SMOKE_PLAYER_FLAT = `${SMOKE_PLAYER_NAME}'s Flat`;
+const SMOKE_PLAYER_FLAT = `${SMOKE_PLAYER_NAME}'s House`;
 const PORT = Number(readFlag("port", "9222"));
 const CAPTURE_LOCATION_GALLERY = args.includes("--location-gallery");
 const CAPTURE_SCREENSHOTS = !args.includes("--no-shots");
@@ -349,10 +349,14 @@ try {
         );
       })()`,
       label,
-      // Long environmental-detail copy can cross five seconds when Chrome is
-      // also encoding evidence screenshots. Keep waiting for the real typing
-      // completion signal instead of weakening the rendered-line assertion.
-      8000
+      // Long environmental-detail copy can cross ten seconds when Chrome is
+      // also encoding evidence screenshots: the typewriter's setInterval(16) is
+      // throttled to roughly a tenth of its designed 125 chars/sec under that
+      // contention. Measured at ~10 chars/sec both here and at the previous
+      // release, so this is harness load, not a game regression. Keep waiting
+      // for the real typing-completion signal rather than weakening the
+      // rendered-line assertion.
+      16000
     );
 
   const sampleFramePacing = () => page.eval(`
@@ -654,6 +658,24 @@ try {
   };
 
   const clickJournalItem = async (section, title) => {
+    // Now that every home opens straight onto the village, the player is often
+    // already standing where the Journal would travel them - and "travel to
+    // here" is correctly disabled. Treat that as arrival, not as a failure.
+    if (section === "Places") {
+      const here = await page.eval(
+        `document.getElementById("area-name")?.textContent.trim() ?? ""`
+      );
+      if (here.toLowerCase() === title.toLowerCase()) {
+        const journalOpen = await page.eval(
+          `document.getElementById("journal-panel").classList.contains("open")`
+        );
+        if (journalOpen) {
+          await page.eval(`document.getElementById("btn-journal-close").click()`);
+          await sleep(200);
+        }
+        return;
+      }
+    }
     await ensureJournalOpen();
     await activateJournalSection(section);
     const selected = await page.eval(`
@@ -861,7 +883,7 @@ try {
     );
 
     if (!testPhysicalControls) {
-      await clickButton("Use the first door", "Main Story", "Block 9 Corridor");
+      await clickButton("Use the first door", "Main Story", "Kampung SG Village");
     } else {
       const beforeKeyboard = await page.eval(
         `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
@@ -871,7 +893,7 @@ try {
         `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
       );
       check(
-        `Keyboard movement responds inside ${SMOKE_PLAYER_NAME}'s flat`,
+        `Keyboard movement responds inside ${SMOKE_PLAYER_NAME}'s house`,
         beforeKeyboard
           && afterKeyboard
           && beforeKeyboard.locationId === "y-flat"
@@ -879,17 +901,17 @@ try {
           && beforeKeyboard.player.x - afterKeyboard.player.x >= 18,
         `${JSON.stringify(beforeKeyboard?.player)} -> ${JSON.stringify(afterKeyboard?.player)}`,
       );
-      await clickButton("Use the first door", "Main Story", "Block 9 Corridor");
+      await clickButton("Use the first door", "Main Story", "Kampung SG Village");
     }
     check(
-      "The first door enters the HDB corridor",
-      /Block 9 Corridor/i.test(await page.eval(`document.getElementById("area-name").textContent`))
+      "The first door opens straight onto the village, not a shared corridor",
+      /Kampung SG Village/i.test(await page.eval(`document.getElementById("area-name").textContent`))
     );
     await recordStoryTrackerTitle();
   };
 
   const inspectMrLong = async (testTouchExit) => {
-    await clickButton("Visit Mr. Long", "Main Story", "Mr. Long's Flat");
+    await clickButton("Visit Mr. Long", "Main Story", "Mr. Long's House");
     check(
       "Chapter 1 enters Mr. Long's unique flat",
       /Mr. Long/i.test(await page.eval(`document.getElementById("area-name").textContent`))
@@ -1145,7 +1167,7 @@ try {
     await clickButton("Ask Wei Ling", "Main Story");
     await completeDialogueChoice();
     check(
-      "Two authored clues unlock Ben's flat",
+      "Two authored clues unlock Ben's house",
       /Visit Ben/i.test(
         await page.eval(`
           Array.from(document.querySelectorAll("#journal-detail button"))
@@ -1153,7 +1175,7 @@ try {
         `)
       )
     );
-    await clickButton("Visit Ben's flat", "Main Story", "Ben's Flat");
+    await clickButton("Visit Ben's house", "Main Story", "Ben's House");
     await clickButton("Talk with Ben", "Main Story");
     await completeDialogueChoice();
     const approach = JSON.parse(
@@ -1179,7 +1201,7 @@ try {
 
   const completeEnding = async () => {
     await clickButton(
-      `Return to ${SMOKE_PLAYER_NAME}'s flat`,
+      `Return to ${SMOKE_PLAYER_NAME}'s house`,
       "Main Story",
       SMOKE_PLAYER_FLAT,
     );
@@ -1206,7 +1228,7 @@ try {
   };
 
   const verifyResidentLife = async () => {
-    await clickJournalItem("Places", "Kampung SG Estate");
+    await clickJournalItem("Places", "Kampung SG Village");
     await sleep(500);
     await page.eval(`document.getElementById("sandbox-stage").focus({ preventScroll: true })`);
     const initial = await page.eval(
@@ -1244,10 +1266,13 @@ try {
         : "  TILE  terrain detail evidence missing"
     );
 
-    // The shared bicycle rack now sits on Block 9's west verge in the
-    // registry-driven estate. Approach it through the north pedestrian street
-    // instead of using the former monolithic-map coordinates.
+    // The shared bicycle rack sits on Block 9's west verge. The player's own
+    // house now stands between the front door and that verge, so route north up
+    // the west sheltered walk first rather than trying to walk through it.
+    await walkToAxis("x", 480);
+    await walkToAxis("y", 470);
     await walkToAxis("x", 190);
+    // Finish walking south so the player ends up facing the rack below them.
     await walkToAxis("y", 535);
     await waitForPageCondition(
       `window.__kampungSmoke?.getMotionSnapshot?.().nearbyInteractionId
@@ -1966,7 +1991,7 @@ try {
   };
 
   const verifyReducedEnvironment = async () => {
-    await clickJournalItem("Places", "Kampung SG Estate");
+    await clickJournalItem("Places", "Kampung SG Village");
     await sleep(500);
     const before = await page.eval(
       `window.__kampungSmoke?.getMotionSnapshot?.() ?? null`
@@ -2034,7 +2059,8 @@ try {
       buildingOcclusionInstant:
         before.buildingOcclusionMotion === "instant"
         && after.buildingOcclusionMotion === "instant"
-        && after.buildingOcclusion.length === 8,
+        // Twelve buildings now that the four homes are real houses.
+        && after.buildingOcclusion.length === 12,
     };
     diagnostics.push(
       `  MOTION  reduced residents=${reducedMotionEvidence.residentsStill}; ` +
@@ -3240,7 +3266,7 @@ try {
       minimapEvidence.visible
       && minimapEvidence.circular
       && minimapEvidence.insideWorld
-      && minimapEvidence.landmarks === 7
+      && minimapEvidence.landmarks === 10
       && minimapEvidence.currentLandmarks === 1
       && minimapEvidence.place === SMOKE_PLAYER_FLAT
       && /^translate\(/.test(minimapEvidence.playerTransform ?? ""),
@@ -3353,10 +3379,9 @@ try {
   }
 
   const galleryLocations = [
-    "Block 9 Corridor",
-    "Mr. Long's Flat",
+    "Mr. Long's House",
     "Grandma Ros's Kitchen",
-    "Ben's Flat",
+    "Ben's House",
     "Craftsman's Workshop",
     "Community Centre",
     "Kopitiam",
@@ -3376,7 +3401,7 @@ try {
       throw new Error(`Expected ${locationName}, rendered ${renderedName}`);
     }
     renderedLocationNames.add(renderedName);
-    if (locationName === "Mr. Long's Flat") {
+    if (locationName === "Mr. Long's House") {
       consequenceArtEvidence.interior = await page.eval(
         `window.__kampungSmoke?.getMotionSnapshot?.().consequenceArt ?? null`
       );
@@ -3392,12 +3417,12 @@ try {
     }
   }
 
-  await clickJournalItem("Places", "Kampung SG Estate");
+  await clickJournalItem("Places", "Kampung SG Village");
   await sleep(700);
   const returnedAreaName = await page.eval(
     `document.getElementById("area-name").textContent.trim()`
   );
-  if (returnedAreaName.toLowerCase() !== "kampung sg estate") {
+  if (returnedAreaName.toLowerCase() !== "kampung sg village") {
     throw new Error(`Exterior wake retained the wrong area: ${returnedAreaName}`);
   }
   exteriorWorldWidth = await page.eval(
@@ -3444,7 +3469,7 @@ try {
       return colours.size;
     })()
   `);
-  renderedLocationNames.add("Kampung SG Estate");
+  renderedLocationNames.add("Kampung SG Village");
   await page.eval(`document.getElementById("sandbox-stage").focus({ preventScroll: true })`);
   framePacing = await profileActiveMovement();
   diagnostics.push(
@@ -4464,6 +4489,7 @@ try {
     34,
     (baselineFramePacing?.p95 ?? 31) + 3,
   );
+
   check(
     "Every location and living environment renders within the frame budget",
     consoleErrors.length === 0
@@ -4592,10 +4618,15 @@ try {
       && terrainDetailEvidence.grassColourCount >= 3
       && terrainDetailEvidence.pathColourCount >= 6
       && terrainDetailEvidence.pathEdgeTransitions >= 12
-      && terrainDetailEvidence.landscapePropCount >= 40
+      // Four houses moved onto the village and five plantings retired with the
+      // verges they lined. 41 -> 37 landscaping props, measured, not guessed:
+      // there is no unoccupied ground left beside the new houses to re-home
+      // them to, and hiding filler planting behind a facade to hold a number
+      // would make this floor meaningless.
+      && terrainDetailEvidence.landscapePropCount >= 36
       && terrainDetailEvidence.landscapeTextureCount >= 4
       && terrainDetailEvidence.foliageColourCount >= 12
-      && terrainDetailEvidence.exteriorPropCount >= 88
+      && terrainDetailEvidence.exteriorPropCount >= 84
       && terrainDetailEvidence.exteriorPropTextureCount >= 20
       && terrainDetailEvidence.storyClusterCount === 12
       && terrainDetailEvidence.storyClusterTextureCount === 6
@@ -4603,13 +4634,14 @@ try {
       && terrainDetailEvidence.facadeColourCount >= 20
       && terrainDetailEvidence.facadeEdgeTransitions >= 180
       && terrainDetailEvidence.facadeDarkPixelRatio >= 0.08
-      && terrainDetailEvidence.facadeDepthBuildingCount === 8
-      && terrainDetailEvidence.facadeEntryRecessCount === 7
+      // Twelve buildings now, not eight: the four homes became real houses.
+      && terrainDetailEvidence.facadeDepthBuildingCount === 12
+      && terrainDetailEvidence.facadeEntryRecessCount === 10
       && terrainDetailEvidence.facadeRoofStyleCount === 2
       && terrainDetailEvidence.bicycleRackCount === 3
       && terrainDetailEvidence.motorVehicleCount === 0
       && terrainDetailEvidence.layoutIssueCount === 0
-      && terrainDetailEvidence.buildingOcclusionLayerCount === 8
+      && terrainDetailEvidence.buildingOcclusionLayerCount === 12
       && facadeCollisionEvidence
       && facadeCollisionEvidence.blocked
       && facadeCollisionEvidence.faded
@@ -4664,7 +4696,9 @@ try {
       && throttledFramePacing
       && throttledFramePacing.p95 <= throttledFrameBudget
       && throttledFramePacing.taskMsPerFrame <= 20
-      && renderedLocationNames.size === 12,
+      // Eleven, not twelve: the shared Block 9 corridor retired when the four
+      // homes became their own houses on the village.
+      && renderedLocationNames.size === 11,
     [
       consoleErrors.join(" | "),
       residentMotionEvidence
@@ -4802,7 +4836,7 @@ try {
         ? `4x-p95=${throttledFramePacing.p95.toFixed(2)}ms, ` +
           `task=${throttledFramePacing.taskMsPerFrame.toFixed(2)}ms/frame`
         : "throttled frame profile missing",
-      `locations=${renderedLocationNames.size}/12`,
+      `locations=${renderedLocationNames.size}/11`,
     ].filter(Boolean).join(" | ")
   );
 } catch (error) {

@@ -35,7 +35,6 @@ export type NpcId =
 
 export type LocationId =
   | "y-flat"
-  | "hdb-corridor"
   | "estate"
   | "mr-long-flat"
   | "grandma-ros-kitchen"

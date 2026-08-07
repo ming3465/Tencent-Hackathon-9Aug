@@ -43,13 +43,6 @@ export const ESTATE_MAP_PATHS = PEDESTRIAN_STREETS.map((street) => ({
   axis: street.axis,
 }));
 
-const BLOCK_9_HOME_IDS: readonly LocationId[] = [
-  "y-flat",
-  "mr-long-flat",
-  "grandma-ros-kitchen",
-  "ben-flat",
-];
-
 const DEFAULT_ESTATE_POINT: EstateMapPoint = { x: 700, y: 400 };
 
 export function projectEstateMapPoint(point: EstateMapPoint): EstateMapPosition {
@@ -63,10 +56,13 @@ export function projectEstateMapPoint(point: EstateMapPoint): EstateMapPosition 
   };
 }
 
+/**
+ * Every home is its own house on the map now, so a location is its own anchor.
+ * Kept as a function because callers still route through it and the village may
+ * yet grow a place that borrows another's pin.
+ */
 export function estateMapAnchorLocation(locationId: LocationId): LocationId {
-  return BLOCK_9_HOME_IDS.includes(locationId)
-    ? "hdb-corridor"
-    : locationId;
+  return locationId;
 }
 
 export function getEstateMapPosition(

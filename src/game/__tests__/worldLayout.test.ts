@@ -44,7 +44,7 @@ describe("three-quarter world layout", () => {
       ["east-connector", 1810, 330, 180, 1220],
       ["central-plaza", 680, 540, 1080, 200],
     ]);
-    expect(ESTATE_BUILDINGS).toHaveLength(8);
+    expect(ESTATE_BUILDINGS).toHaveLength(12);
     for (let index = 0; index < ESTATE_BUILDINGS.length; index += 1) {
       const current = ESTATE_BUILDINGS[index];
       if (!current) continue;
@@ -54,9 +54,56 @@ describe("three-quarter world layout", () => {
     }
   });
 
-  it("defines 22 paired doors with reachable deterministic return spawns", () => {
-    expect(DOOR_DEFINITIONS).toHaveLength(22);
-    expect(new Set(DOOR_DEFINITIONS.map(({ id }) => id))).toHaveLength(22);
+  it("gives each of the four residents their own house on the village", () => {
+    // The bug this replaces: Y, Mr. Long, Grandma Ros and Ben all hung off one
+    // shared HDB corridor, so the story read as one building rather than a
+    // village. Each home must now be its own building, entered from outside.
+    const HOMES = [
+      ["y-house", "y-flat"],
+      ["mr-long-house", "mr-long-flat"],
+      ["grandma-ros-house", "grandma-ros-kitchen"],
+      ["ben-house", "ben-flat"],
+    ] as const;
+
+    for (const [buildingId, locationId] of HOMES) {
+      const house = ESTATE_BUILDINGS.find(({ id }) => id === buildingId);
+      expect(house, `${buildingId} is missing`).toBeDefined();
+      expect(house!.targetLocationId).toBe(locationId);
+
+      // Entered straight from the village - no lobby, lift or corridor hop.
+      const entrance = DOOR_DEFINITIONS.find(
+        (door) => door.id === house!.entranceDoorId,
+      );
+      expect(entrance, `${buildingId} has no entrance door`).toBeDefined();
+      expect(entrance!.sourceLocationId).toBe("estate");
+      expect(entrance!.targetLocationId).toBe(locationId);
+
+      // And the way back out lands you in the village, not indoors.
+      const exit = DOOR_DEFINITIONS.find(
+        (door) => door.sourceLocationId === locationId,
+      );
+      expect(exit, `${locationId} has no way out`).toBeDefined();
+      expect(exit!.targetLocationId).toBe("estate");
+    }
+
+    // Four distinct houses, not four doors on one building.
+    expect(new Set(HOMES.map(([id]) => id)).size).toBe(4);
+    // And they are genuinely spread across the village rather than clustered.
+    const centres = HOMES.map(([id]) => {
+      const { bounds } = ESTATE_BUILDINGS.find((b) => b.id === id)!;
+      return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+    });
+    for (let i = 0; i < centres.length; i += 1) {
+      for (const other of centres.slice(i + 1)) {
+        expect(Math.hypot(centres[i]!.x - other.x, centres[i]!.y - other.y))
+          .toBeGreaterThan(600);
+      }
+    }
+  });
+
+  it("defines 20 paired doors with reachable deterministic return spawns", () => {
+    expect(DOOR_DEFINITIONS).toHaveLength(20);
+    expect(new Set(DOOR_DEFINITIONS.map(({ id }) => id))).toHaveLength(20);
     for (const definition of DOOR_DEFINITIONS) {
       expect(getReturnSpawn(
         definition.sourceLocationId,
@@ -167,18 +214,21 @@ describe("three-quarter world layout", () => {
         .toBe(false);
     }
 
-    expect(ESTATE_LANDSCAPING).toHaveLength(41);
+    // Two hedges and two flower beds retired when the west verge they lined
+    // became the player's own house.
+    expect(ESTATE_LANDSCAPING).toHaveLength(37);
     expect(ESTATE_LANDSCAPING.reduce<Record<string, number>>((counts, planting) => {
       counts[planting.texture] = (counts[planting.texture] ?? 0) + 1;
       return counts;
     }, {})).toEqual({
-      "landscape-hedge": 12,
-      "landscape-flower-bed": 12,
+      "landscape-hedge": 10,
+      "landscape-flower-bed": 10,
       "landscape-pandan": 8,
       "landscape-shrub": 9,
     });
     expect(ESTATE_GROUND_FLOWERS).toHaveLength(23);
-    expect(ESTATE_PLANTED_FEATURES.filter(({ texture }) => texture === "prop-planter")).toHaveLength(3);
+    // The east-edge planter retired with the verge Mr. Long's house now occupies.
+    expect(ESTATE_PLANTED_FEATURES.filter(({ texture }) => texture === "prop-planter")).toHaveLength(2);
     expect(ESTATE_PLANTED_FEATURES.filter(({ texture }) => texture === "prop-bike-planters")).toHaveLength(2);
     expect(ESTATE_PLANTED_FEATURES.filter(({ texture }) => texture === "prop-shaded-seating")).toHaveLength(2);
 

@@ -105,9 +105,9 @@ export const CARRY_ERRANDS: readonly CarryErrand[] = [
     },
     dropoff: {
       locationId: "estate",
-      // The Block 9 threshold, where Mr. Long's step is.
-      x: 610,
-      y: 392,
+      // Mr. Long's own doorstep, at the east end of the village.
+      x: 2452,
+      y: 1120,
       label: "Set the offcut down by the step",
       shortLabel: "Mr. Long's step",
       lines: [

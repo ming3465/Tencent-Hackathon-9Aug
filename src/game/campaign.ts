@@ -181,12 +181,12 @@ export function canEnterLocation(
   locationId: LocationId,
 ): boolean {
   if (locationId === "y-flat") return true;
-  if (locationId === "hdb-corridor") {
-    return state.currentChapter !== "prologue"
-      || state.objectives.includes("heard-voice");
-  }
   if (locationId === "estate") {
-    return state.completedChapters.includes("prologue");
+    // The village is now the hub the corridor used to be, so the prologue's
+    // "step outside once you have heard the Voice" gate lives here.
+    return state.completedChapters.includes("prologue")
+      || state.currentChapter !== "prologue"
+      || state.objectives.includes("heard-voice");
   }
   if (locationId === "mr-long-flat") {
     return phaseIndex(state.currentChapter) >= phaseIndex("chapter-1");
@@ -228,7 +228,7 @@ function reduceVisit(
   }
 
   if (
-    locationId === "hdb-corridor"
+    locationId === "estate"
     && next.currentChapter === "prologue"
     && next.objectives.includes("heard-voice")
   ) {
