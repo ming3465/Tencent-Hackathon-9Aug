@@ -60,9 +60,9 @@ npm run typecheck && npm test && npm run build && npm audit && npm run smoke
 
 `npm run smoke` is self-contained (builds, serves, drives headless Chrome
 through a full playthrough, writes screenshots to `docs/screenshots/`).
-Current truth: **154 unit tests, 66 smoke checks, 0 vulnerabilities.** The unit
+Current truth: **155 unit tests, 67 smoke checks, 0 vulnerabilities.** The unit
 split is campaign 30, match engine 31, player identity 25, audio 17, carry
-errands 17, world-layout/door/pause 10, isometric world 10, story auto-start
+errands 17, world-layout/door/pause 11, isometric world 10, story auto-start
 10, and accessibility contract 4.
 The smoke suite plays the campaign as a named player, so a render site that
 forgets to resolve the `{player}` token fails the gate. If a doc
@@ -120,10 +120,11 @@ Nothing else needs editing. `vite.config.ts` adds the second entry only when
 exactly this reason — do not move it back).
 
 **Verified, not assumed:** run in a throwaway worktree with those paths
-deleted, the full gate passed — typecheck clean, **144/154** tests (the 10
-isometric tests go with them), build green, **66/66 smoke** (re-measured
-2026-08-07). Re-verify the same way if the coupling ever changes, and update
-these numbers with what you actually measured.
+deleted, the full gate passed — typecheck clean, **145/155** tests (the 10
+isometric tests go with them), build green, **67/67 smoke** (re-measured
+2026-08-07 at `48efcda`, after the village re-setting and the isometric
+contact-shadow pass). Re-verify the same way if the coupling ever changes,
+and update these numbers with what you actually measured.
 
 Note when re-verifying: the hawker-door route is intermittently flaky and has
 been since before the isometric work. A single failing run there is not
