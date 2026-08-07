@@ -436,6 +436,78 @@ const ACCENTS: Readonly<Record<BuildingDefinition["accent"], number>> = {
   teal: PALETTE.teal,
 };
 
+/**
+ * Painted render on a facade wall, instead of one flat fill.
+ *
+ * The wall was a single `PALETTE.cream` rect - (255, 246, 220) - across the
+ * whole building. At that brightness the facade had no material: it read as
+ * white paper with windows stuck on, and every shading pass elsewhere on the
+ * building had nothing to sit against. This is the same fault the paving had.
+ *
+ * Four cheap passes give it a surface: a warmer base, broad weathering from
+ * the macro field, rain streaks under the roof line where water actually runs,
+ * and the storey division lines these blocks are built with. All baked once
+ * into the building texture, so none of it costs a frame.
+ */
+function paintWallRender(
+  graphics: Phaser.GameObjects.Graphics,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  seed: number,
+): void {
+  // Warm off-white rather than near-white paper.
+  const base = 0xf0e2c6;
+  graphics.fillStyle(base).fillRect(x, y, width, height);
+
+  // Broad weathering, so the wall is not one value across its whole span.
+  const PATCH = 14;
+  const TONES = [
+    darkenColour(base, 0.1),
+    darkenColour(base, 0.055),
+    darkenColour(base, 0.022),
+    base,
+    lightenColour(base, 0.03),
+  ] as const;
+  for (let row = 0; row < height; row += PATCH) {
+    for (let column = 0; column < width; column += PATCH) {
+      const field = macroField(x + column + seed, y + row, 92) * 0.7
+        + macroField(x + column + seed + 313, y + row + 71, 34) * 0.3;
+      const jitter = hash(column + seed, row) % 4096;
+      graphics
+        .fillStyle(TONES[tonalStep(field, jitter, TONES.length)] ?? base)
+        .fillRect(
+          x + column,
+          y + row,
+          Math.min(PATCH, width - column),
+          Math.min(PATCH, height - row),
+        );
+    }
+  }
+
+  // Rain streaks below the roof line - the tropics write on every wall here.
+  for (let column = 6; column < width - 6; column += 17) {
+    const streak = hash(column * 7 + seed, 991);
+    if (streak % 3 !== 0) continue;
+    const length = 14 + (streak >>> 4) % Math.max(12, Math.floor(height * 0.42));
+    graphics
+      .fillStyle(darkenColour(base, 0.12), 0.5)
+      .fillRect(x + column, y, 3, Math.min(length, height))
+      .fillStyle(darkenColour(base, 0.2), 0.28)
+      .fillRect(x + column + 1, y, 1, Math.min(length - 4, height));
+  }
+
+  // Storey divisions.
+  for (let line = Math.round(height / 3); line < height - 4; line += Math.round(height / 3)) {
+    graphics
+      .fillStyle(darkenColour(base, 0.16), 0.42)
+      .fillRect(x, y + line, width, 2)
+      .fillStyle(lightenColour(base, 0.16), 0.5)
+      .fillRect(x, y + line + 2, width, 1);
+  }
+}
+
 export function ensureBuildingTexture(
   scene: Phaser.Scene,
   definition: BuildingDefinition,
@@ -460,7 +532,16 @@ export function ensureBuildingTexture(
     .fillStyle(PALETTE.ink)
     .fillRect(3, wallTop, width - 6, wallBottom - wallTop)
     .fillStyle(PALETTE.cream)
-    .fillRect(9, wallTop + 6, width - 18, wallBottom - wallTop - 10)
+    .fillRect(9, wallTop + 6, width - 18, wallBottom - wallTop - 10);
+  paintWallRender(
+    graphics,
+    9,
+    wallTop + 6,
+    width - 18,
+    wallBottom - wallTop - 10,
+    definition.id.length * 37,
+  );
+  graphics
     .fillStyle(darkenColour(PALETTE.cream, 0.14))
     .fillPoints([
       new Phaser.Geom.Point(right - definition.sideFaceWidth, wallTop + 6),
