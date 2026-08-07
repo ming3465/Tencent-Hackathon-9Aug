@@ -33,6 +33,23 @@ function hash(x: number, y: number): number {
  * Keyed on world coordinates, not tile-local ones, so patches run continuously
  * across the seams of the four baked 1280x800 textures.
  */
+/**
+ * Paving tone, defined here rather than in the shared PALETTE.
+ *
+ * Paving is roughly half of what is on screen at gameplay zoom, and at
+ * `PALETTE.sand` (234, 217, 183) it read as pale wallpaper: so light that the
+ * slab wear, the macro field and the grain all landed inside a few levels of
+ * white and vanished. Warming and deepening it toward the reference render's
+ * ochre gives every one of those passes somewhere to be seen, and lets the
+ * grass read as a different material rather than a different shade of cream.
+ *
+ * Local on purpose - these are terrain decisions, and the shared palette is
+ * used by props, UI and portraits that should not shift with the ground.
+ */
+const PAVING_SLAB = 0xdcc298;
+const PAVING_COBBLE = 0xd3b68c;
+const PAVING_KERB = 0xbfa47c;
+
 function macroField(worldX: number, worldY: number, cell: number): number {
   const gridX = Math.floor(worldX / cell);
   const gridY = Math.floor(worldY / cell);
@@ -79,17 +96,17 @@ function paintStreet(
   originY: number,
 ): void {
   const isHorizontal = street.axis === "horizontal" || street.axis === "plaza";
-  const base = street.surface === "diagonal-cobbles" ? PALETTE.concrete : PALETTE.sand;
+  const base = street.surface === "diagonal-cobbles" ? PAVING_COBBLE : PAVING_SLAB;
   const tileWidth = street.surface === "diagonal-cobbles" ? 44 : 52;
   const tileHeight = street.surface === "diagonal-cobbles" ? 32 : 40;
   graphics
     .fillStyle(PALETTE.night, 0.2)
     .fillRect(local.x + 8, local.y + 10, local.width, local.height)
-    .fillStyle(darkenColour(PALETTE.concreteEdge, 0.12))
+    .fillStyle(darkenColour(PAVING_KERB, 0.1))
     .fillRect(local.x, local.y, local.width, local.height)
-    .fillStyle(lightenColour(PALETTE.concreteEdge, 0.24))
+    .fillStyle(lightenColour(PAVING_KERB, 0.2))
     .fillRect(local.x, local.y, isHorizontal ? local.width : 6, isHorizontal ? 6 : local.height)
-    .fillStyle(PALETTE.concreteEdge)
+    .fillStyle(PAVING_KERB)
     .fillRect(local.x + 6, local.y + 6, Math.max(0, local.width - 12), Math.max(0, local.height - 12))
     .fillStyle(base)
     .fillRect(local.x + 11, local.y + 11, Math.max(0, local.width - 22), Math.max(0, local.height - 22));
