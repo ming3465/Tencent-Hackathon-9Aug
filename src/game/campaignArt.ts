@@ -65,6 +65,18 @@ export function darkenColour(colour: number, amount = 0.22): number {
  * Draws one consistent pixel-inspired structural block: contact shadow, outline,
  * body, upper-left light, and lower-right shade. Coordinates should be integers.
  */
+/**
+ * Keyline colour for an object of the given fill.
+ *
+ * A deep, slightly desaturated version of the fill, nudged toward the ink so
+ * the whole palette still hangs together. Kept dark enough to hold the
+ * outlined style at a distance.
+ */
+export function outlineColour(fill: number): number {
+  const deep = darkenColour(fill, 0.68);
+  return mixColour(deep, PALETTE.ink, 0.28);
+}
+
 export function drawPixelBlock(
   graphics: Phaser.GameObjects.Graphics,
   x: number,
@@ -80,8 +92,14 @@ export function drawPixelBlock(
       .fillStyle(PALETTE.night, 0.2)
       .fillRect(x + 7, y + 7, width, height);
   }
+  // Outline in a dark tint of the object's own fill rather than one global
+  // ink. The illustrated, outlined look is the game's identity and matches
+  // the title art, so the keyline stays - but drawing every object's keyline
+  // in the same teal flattened the palette and made unrelated things read as
+  // one mass. A hue-carrying outline keeps objects distinct and lets colour
+  // do work it could not do before.
   graphics
-    .fillStyle(PALETTE.ink)
+    .fillStyle(outlineColour(fill))
     .fillRect(
       x - outlineWeight,
       y - outlineWeight,
