@@ -820,7 +820,11 @@ try {
     const firstLine = await page.eval(`document.getElementById("dialog-text-a11y").textContent`);
     check(
       "Dialogue exposes a whole accessible line and a code-drawn portrait",
-      firstLine.length > 20
+      // Wholeness, not length: the risk this guards is the accessible node
+        // exposing a half-typed string. A line that ends in sentence punctuation
+        // is complete, and the prologue deliberately opens on two short words.
+        firstLine.trim().length >= 8
+        && /[.!?”"]$/.test(firstLine.trim())
         && (await page.eval(`!!document.querySelector("#dialog-portrait svg")`))
         && (await page.eval(`
           (() => {
