@@ -1418,8 +1418,29 @@
 
       /* ---- Visual-novel dialogue ---- */
 
+      /* The shared .modal scrim is a flat 78% wash plus blur. That is right for
+         the pause menu and the journal - they are menus, and the world behind
+         them is not the subject. It is wrong for story: a visual novel keeps
+         the scene legible behind the text, because the scene is what the line
+         is about. Story gets a gradient that is clear at the top and only
+         darkens where the card actually sits. */
+      #dialog-overlay {
+        place-items: end center;
+        background: linear-gradient(
+          180deg,
+          rgba(10, 33, 43, 0.08) 0%,
+          rgba(10, 33, 43, 0.22) 42%,
+          rgba(10, 33, 43, 0.62) 100%
+        );
+        backdrop-filter: blur(1.5px);
+        -webkit-backdrop-filter: blur(1.5px);
+      }
+
       #dialog-overlay .dialog-card {
-        width: min(940px, 100%);
+        width: min(1040px, 100%);
+        /* Anchored low, the way a visual novel frames its box, so the estate
+           above it stays part of the shot. */
+        margin-bottom: clamp(0.5rem, 2vh, 1.5rem);
         background:
           radial-gradient(circle at 18% 94%, rgba(242, 184, 75, 0.08), transparent 28%),
           radial-gradient(circle at 88% 8%, rgba(217, 103, 86, 0.06), transparent 22%),
@@ -1430,7 +1451,7 @@
 
       .dialog-stage {
         display: grid;
-        grid-template-columns: minmax(210px, 238px) minmax(0, 1fr);
+        grid-template-columns: minmax(210px, 288px) minmax(0, 1fr);
         gap: clamp(1rem, 3vw, 1.6rem);
         align-items: stretch;
       }
@@ -1570,8 +1591,8 @@
         margin: 0;
         color: var(--ink);
         font-family: var(--font-display);
-        font-size: 1.12rem;
-        line-height: 1.62;
+        font-size: clamp(1.12rem, 1.45vw, 1.34rem);
+        line-height: 1.6;
         text-shadow: 1px 1px 0 rgba(23, 63, 79, 0.1);
       }
 
