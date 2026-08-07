@@ -1,3 +1,4 @@
+import { macroField, tonalStep } from "./textureGrain.js";
 import Phaser from "phaser";
 
 import {
@@ -22,18 +23,6 @@ function hash(x: number, y: number): number {
 }
 
 /**
- * Smooth low-frequency noise in [0,1], keyed on world position.
- *
- * The ground was built from three slab tones separated by 3-5% lightness and a
- * single flat green, which reads as a printed grid rather than a place. Grain
- * could not fix that: per-pixel jitter adds texture, not structure. This gives
- * the painters large soft regions to vary against - worn patches, damp corners,
- * sun-bleached stretches - which is what actually makes ground look crafted.
- *
- * Keyed on world coordinates, not tile-local ones, so patches run continuously
- * across the seams of the four baked 1280x800 textures.
- */
-/**
  * Paving tone, defined here rather than in the shared PALETTE.
  *
  * Paving is roughly half of what is on screen at gameplay zoom, and at
@@ -49,29 +38,6 @@ function hash(x: number, y: number): number {
 const PAVING_SLAB = 0xdcc298;
 const PAVING_COBBLE = 0xd3b68c;
 const PAVING_KERB = 0xbfa47c;
-
-function macroField(worldX: number, worldY: number, cell: number): number {
-  const gridX = Math.floor(worldX / cell);
-  const gridY = Math.floor(worldY / cell);
-  const fracX = worldX / cell - gridX;
-  const fracY = worldY / cell - gridY;
-  // Smoothstep, so cells blend instead of banding at their borders.
-  const ease = (t: number): number => t * t * (3 - 2 * t);
-  const easedX = ease(fracX);
-  const easedY = ease(fracY);
-  const corner = (x: number, y: number): number => (hash(x, y) % 4096) / 4096;
-  const top = corner(gridX, gridY) * (1 - easedX)
-    + corner(gridX + 1, gridY) * easedX;
-  const bottom = corner(gridX, gridY + 1) * (1 - easedX)
-    + corner(gridX + 1, gridY + 1) * easedX;
-  return top * (1 - easedY) + bottom * easedY;
-}
-
-/** Picks a tone band from a field value, dithered so bands never show a seam. */
-function tonalStep(field: number, jitter: number, steps: number): number {
-  const dithered = field + (jitter / 4096 - 0.5) * (0.9 / steps);
-  return Math.max(0, Math.min(steps - 1, Math.floor(dithered * steps)));
-}
 
 function intersect(
   rectangle: EstateRect,

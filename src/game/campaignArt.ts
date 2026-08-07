@@ -4,6 +4,7 @@ import {
   type ResidentArtDefinition,
 } from "./characterArt.js";
 import type { LocationId } from "./campaignTypes.js";
+import { macroField, tonalStep } from "./textureGrain.js";
 import {
   DEFAULT_APPEARANCE,
   type PlayerAppearance,
@@ -2898,6 +2899,38 @@ export function createRoomBackdropTexture(
       ? 0xd8b985
       : lightenColour(PALETTE.concrete, 0.15);
   graphics.fillStyle(floorBase).fillRect(24, floorTop, 912, floorBottom - floorTop);
+
+  // Wear across the floor, before any plank or tile course is drawn.
+  //
+  // A single flat fill under a regular grid of course lines reads as
+  // panelling: correct in structure, dead in material. Rooms are walked in
+  // patterns - bright by the window, dulled along the route to the door - and
+  // the broad tonal drift is what says "lived in" before any prop does. Same
+  // fix that made the estate paving legible; baked once, so it costs nothing.
+  const FLOOR_PATCH = 18;
+  const floorTones = [
+    darkenColour(floorBase, 0.085),
+    darkenColour(floorBase, 0.045),
+    darkenColour(floorBase, 0.018),
+    floorBase,
+    lightenColour(floorBase, 0.03),
+    lightenColour(floorBase, 0.065),
+  ] as const;
+  for (let y = floorTop; y < floorBottom; y += FLOOR_PATCH) {
+    for (let x = 24; x < 936; x += FLOOR_PATCH) {
+      const field = macroField(x + hash, y, 168) * 0.68
+        + macroField(x + hash + 421, y + 233, 58) * 0.32;
+      const jitter = (Math.imul(x + hash, 0x9e3779b1) ^ Math.imul(y, 0x85ebca6b)) >>> 20;
+      graphics
+        .fillStyle(floorTones[tonalStep(field, jitter % 4096, floorTones.length)] ?? floorBase)
+        .fillRect(
+          x,
+          y,
+          Math.min(FLOOR_PATCH, 936 - x),
+          Math.min(FLOOR_PATCH, floorBottom - y),
+        );
+    }
+  }
 
   if (woodFloor) {
     // Plank courses sized against the player sprite: a board is roughly a
