@@ -135,7 +135,7 @@ Miora-specific before-and-after pipeline.
 ### Technical Execution
 
 - [x] Strict TypeScript passes.
-- [x] 90/90 tests pass: 30 campaign, 31 match, 17 audio, 4 accessibility, and 8 world/door/pause.
+- [x] 154/154 tests pass: 30 campaign · 31 match · 25 player identity · 17 audio · 17 carry errands · 10 world/door/pause · 10 isometric world · 10 story auto-start · 4 accessibility.
 - [x] 60/60 production-browser checks drive complete full and demo campaigns.
 - [x] Dependency audit has zero known vulnerabilities.
 - [x] Phaser is lazy-loaded after the title screen with visible opening and
@@ -175,7 +175,8 @@ human accessibility checks remain higher priority than adding more systems.
 
 - [x] Reproducible 90-second captioned review cut, indexed gameplay B-roll,
   AI/engineering/integrity cards, and QR end slate are preserved. The cut
-  predates the latest loader, touch, consequence-art, and 79-test build, so it
+  predates the latest loader, touch, consequence-art, carry-errand and
+  154-test build, so it
   is an earlier-build review artifact rather than current-build evidence.
 - [ ] Recapture or explicitly compare and approve every gameplay and terminal
   shot needed for a current-build final video.

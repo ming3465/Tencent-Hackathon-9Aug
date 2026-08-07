@@ -65,7 +65,7 @@ requirements.
 | # | Action | Time | Notes |
 | --- | --- | --- | --- |
 | U1 | **One genuine CodeBuddy pass + export the chat history.** | 1–2 h | The published mainland rules list CodeBuddy chat history as a submission artifact; our only artifact today is the documented *failure*. The age-signalling task has now shipped, so choose a genuinely open, tightly scoped Todo Tencent item rather than rerunning `docs/prompts/codebuddy-age-signal.txt`. Keep the failure log too — the story is "what worked, what didn't, both documented". |
-| U2 | **Refresh and finish the demo video** (historical captioned review cut ready). | 1–2 h | Start from `docs/video/kampung-sg-demo-review.mp4` as an edit reference, not current-build proof. Recapture the loader/touch/consequence and 79-test terminal evidence, or explicitly compare and approve each unchanged source. The open captions, AI receipts, integrity card, and QR end slate are already assembled. Record the human voice-over, add and verify the final sound mix by ear, confirm every spoken line still matches its open caption, obtain team approval, export with the required filename, and upload early. **Do not describe the machine-captured clips as a played session or a real-device touch test.** |
+| U2 | **Refresh and finish the demo video** (historical captioned review cut ready). | 1–2 h | Start from `docs/video/kampung-sg-demo-review.mp4` as an edit reference, not current-build proof. Recapture the loader/touch/consequence and 154-test terminal evidence, or explicitly compare and approve each unchanged source. The open captions, AI receipts, integrity card, and QR end slate are already assembled. Record the human voice-over, add and verify the final sound mix by ear, confirm every spoken line still matches its open caption, obtain team approval, export with the required filename, and upload early. **Do not describe the machine-captured clips as a played session or a real-device touch test.** |
 | U3 | **Playtest with 3–5 real older adults** (a grandparent counts). | half day | Consent script in `docs/PLAYTEST_PROTOCOL.md`. Capture: short quotes, one photo (with consent), one design change made from feedback. Quotes about fun/recognition only — never anything medical. |
 | U4 | **Miora key art** (miora.design, 1,000 free credits on signup). | 1 h | Still Miora-specific and still open. Four auditable OpenAI visual workflows now cover three human-curated code translations and one reviewed playable title asset; none is Miora. Use the prepared Miora prompt for poster/social/deck output and log the real run. Feeds U5. |
 | U5 | **Social posts** on all three platforms with the confirmed hashtags. | 1 h | Before submission. While there, spend 15 min scanning the hashtags for rival entries — free competitor intel. |
@@ -111,12 +111,13 @@ node scripts/capture-deck.mjs
 # Rebuild the raster PDF and render all eight pages with Poppler for inspection.
 ```
 
-Current truth as of 2026-08-06: **90/90 tests (30 campaign · 31 match ·
-17 audio · 4 accessibility · 8 world/door/pause) · 60/60 browser checks in
+Current truth as of 2026-08-07: **154/154 tests (30 campaign · 31 match · 25 player identity · 17 audio · 17 carry errands · 10 world/door/pause · 10 isometric world · 10 story auto-start · 4 accessibility) · 66/66 browser checks in
 default WebGL and forced Canvas fallback ·
 0 known vulnerabilities at the latest audit**. Latest verified production
-build: **HTML 91.64 kB (16.14 kB gzip) · initial JS 141.46 kB (41.48 kB gzip)
-· lazy campaign scene 1,613.26 kB (379.79 kB gzip)**.
+build: **HTML 100.25 kB (17.94 kB gzip) · initial JS 126.31 kB (39.18 kB
+gzip) · lazy campaign scene 93.39 kB (29.31 kB gzip) · lazy art chunk
+1,555.44 kB (358.19 kB gzip)**. Measured from a clean HEAD worktree, so the
+figure reflects committed code rather than whatever is in a working tree.
 If those numbers appear anywhere as something else, fix before submitting.
 
 ## Claim boundaries (unchanged, non-negotiable)
