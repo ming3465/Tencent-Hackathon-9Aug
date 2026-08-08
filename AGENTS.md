@@ -133,8 +133,10 @@ readbacks start returning nothing: `grass-colours`, `path-colours`,
 `facade-colours` and `wake-colours` all report **0** while the prop counts
 beside them stay correct. That pattern is memory pressure, not a rendering
 regression — `pkill -f "user-data-dir=/var/folders/.*kampung-smoke-"` and
-re-run before changing any code. The same pressure throttles the dialogue
-typewriter roughly tenfold, which is why the rendered-line wait allows 16s.
+re-run before changing any code. That same pressure used to throttle the
+dialogue typewriter roughly tenfold; the reveal is now derived from the wall
+clock rather than from tick counts, so a line takes the same 1.4s under load
+and simply reveals in coarser jumps.
 
 Note when re-verifying: the hawker-door route is intermittently flaky and has
 been since before the isometric work. A single failing run there is not
