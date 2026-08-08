@@ -20,6 +20,11 @@ rejected, while its stepped anatomy, grounded footwork, and readable outfit
 grammar informed an original code-drawn cast registry. All four are cross-tool
 evidence, not Miora outputs; do not relabel them as Miora.
 
+Per-character portrait prompts live in `docs/CHARACTER_PERSONAS.md` — one
+copy-paste block for each of the 19 characters, with the build, outfit and exact
+sprite colours they must match. This file owns the shared direction; that one
+owns the cast.
+
 Generate components, not complete screenshots. Interface layout, text,
 accessibility, animation timing, collision, and responsive behavior remain in
 code. This prevents generated text errors and makes the art replaceable.
