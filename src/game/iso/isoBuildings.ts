@@ -17,6 +17,7 @@ import Phaser from "phaser";
 import type { BuildingDefinition } from "../estateLayout.js";
 import { PALETTE } from "../campaignArt.js";
 import { isoHash, worldToIso, SUN_OFFSET_WORLD } from "./projection.js";
+import { SHADOW_TINT } from "../textureGrain.js";
 
 const ACCENTS: Record<string, number> = {
   coral: PALETTE.coral,
@@ -26,7 +27,8 @@ const ACCENTS: Record<string, number> = {
   teal: PALETTE.teal,
 };
 
-const SHADOW = 0x2f2a1e;
+// Sky-lit, not black: see SHADOW_TINT in textureGrain.ts.
+const SHADOW = SHADOW_TINT;
 
 /**
  * Roof materials. Eight buildings sharing one terracotta made the estate read

@@ -153,3 +153,100 @@ export function tonalStep(field: number, jitter: number, steps: number): number 
   const dithered = field + (jitter / 4096 - 0.5) * (0.9 / steps);
   return Math.max(0, Math.min(steps - 1, Math.floor(dithered * steps)));
 }
+
+/* ---- Material shading ----------------------------------------------------
+ *
+ * Four helpers that decide what a surface is made of rather than merely what
+ * colour it is. Shared by both painters, so the shipped top-down estate and the
+ * isometric build shade identically.
+ */
+
+function channelsOf(colour: number): [number, number, number] {
+  return [(colour >> 16) & 0xff, (colour >> 8) & 0xff, colour & 0xff];
+}
+
+function packChannels(r: number, g: number, b: number): number {
+  const clamp = (value: number): number =>
+    Math.max(0, Math.min(255, Math.round(value)));
+  return (clamp(r) << 16) | (clamp(g) << 8) | clamp(b);
+}
+
+function mixToward(colour: number, target: number, amount: number): number {
+  const ratio = Math.max(0, Math.min(1, amount));
+  const [r, g, b] = channelsOf(colour);
+  const [tr, tg, tb] = channelsOf(target);
+  return packChannels(
+    r + (tr - r) * ratio,
+    g + (tg - g) * ratio,
+    b + (tb - b) * ratio,
+  );
+}
+
+/**
+ * The colour shadows are mixed toward. Deliberately a desaturated blue-violet
+ * rather than black or brown.
+ *
+ * Real shadow is lit by the sky, not by nothing, so it shifts cool while it
+ * darkens. Every reference we are working from does this, and it is the single
+ * largest difference between our ground and theirs: mixing toward black gives
+ * mud, mixing toward this gives depth.
+ */
+export const SHADOW_TINT = 0x3a2f5c;
+
+/** Warm sunlight, for the lit edge of a surface facing the sun. */
+export const RIM_TINT = 0xfff2cf;
+
+/** Darkens `colour` toward sky-lit shadow. `amount` is 0-1. */
+export function shadowTint(colour: number, amount: number): number {
+  return mixToward(colour, SHADOW_TINT, amount);
+}
+
+/** Lifts `colour` toward warm sunlight. `amount` is 0-1. */
+export function rimLight(colour: number, amount: number): number {
+  return mixToward(colour, RIM_TINT, amount);
+}
+
+/**
+ * An N-tone ramp through one material, shadow-tinted at the dark end and
+ * sun-tinted at the light end.
+ *
+ * A surface painted from a ramp reads as one material under light. A surface
+ * painted from three unrelated tones reads as three materials.
+ */
+export function ramp(
+  base: number,
+  steps: number,
+  spread = 0.34,
+): readonly number[] {
+  const count = Math.max(2, Math.floor(steps));
+  const tones: number[] = [];
+  for (let index = 0; index < count; index += 1) {
+    // -1 at the shadow end, +1 at the lit end.
+    const position = (index / (count - 1)) * 2 - 1;
+    tones.push(
+      position < 0
+        ? shadowTint(base, -position * spread)
+        : rimLight(base, position * spread * 0.72),
+    );
+  }
+  return tones;
+}
+
+/**
+ * Ordered 4x4 Bayer dither. Returns true when the pixel at (x, y) should take
+ * the *lighter* of two tones for a given blend `ratio`.
+ *
+ * Used to break the boundary between two ramp steps, and to fade one material
+ * into another across a few cells, instead of banding.
+ */
+const BAYER_4X4: readonly number[] = [
+  0, 8, 2, 10,
+  12, 4, 14, 6,
+  3, 11, 1, 9,
+  15, 7, 13, 5,
+];
+
+export function dither(x: number, y: number, ratio: number): boolean {
+  const threshold = (BAYER_4X4[(y & 3) * 4 + (x & 3)] ?? 0) / 16;
+  return ratio > threshold;
+}

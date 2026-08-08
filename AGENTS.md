@@ -60,10 +60,10 @@ npm run typecheck && npm test && npm run build && npm audit && npm run smoke
 
 `npm run smoke` is self-contained (builds, serves, drives headless Chrome
 through a full playthrough, writes screenshots to `docs/screenshots/`).
-Current truth: **159 unit tests, 72 smoke checks, 0 vulnerabilities.** The unit
+Current truth: **172 unit tests, 72 smoke checks, 0 vulnerabilities.** The unit
 split is campaign 30, match engine 31, player identity 25, audio 17, carry
 errands 17, world-layout/door/pause 11, isometric world 10, story auto-start
-10, optional portraits 4, and accessibility contract 4.
+10, optional portraits 4, material shading 13, and accessibility contract 4.
 The smoke suite plays the campaign as a named player, so a render site that
 forgets to resolve the `{player}` token fails the gate. If a doc
 or deck quotes different numbers after your change, update them — stale

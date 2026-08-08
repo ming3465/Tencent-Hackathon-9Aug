@@ -28,6 +28,14 @@ import {
   type EstateRect,
 } from "../estateLayout.js";
 import { isoCellCorners, isoHash, TERRAIN_CELL, PAVING_SLAB } from "./projection.js";
+import {
+  dither,
+  ramp,
+  rimLight,
+  SHADOW_TINT,
+  shadowTint,
+  tonalStep,
+} from "../textureGrain.js";
 
 /** Warm ochre paving, sampled from the reference art. */
 export const ISO_PAVING = 0xd1a777;
@@ -35,10 +43,26 @@ export const ISO_PAVING = 0xd1a777;
 /** Olive grass, sampled from the reference art. */
 export const ISO_GRASS = 0x818d37;
 
-/** Shadow colour for baked contact shading. */
-const ISO_SHADOW = 0x2f2a1e;
+/** Shadow colour for baked contact shading. Sky-lit rather than black. */
+const ISO_SHADOW = SHADOW_TINT;
 
 type Surface = "grass" | "paving" | "apron";
+
+/**
+ * Tonal ramps, not palettes.
+ *
+ * Both grounds used to pick from a handful of unrelated tones, which reads as
+ * several materials sitting next to each other. A ramp is one material seen
+ * under light: shadow-tinted cool at the dark end, sun-tinted warm at the lit
+ * end, so a patch of turf and the turf beside it are obviously the same grass.
+ */
+const GRASS_RAMP = ramp(ISO_GRASS, 8, 0.46);
+// Paving spreads wider than turf: laid stones vary far more stone-to-stone
+// than grass varies blade-to-blade, and that variance is most of what makes a
+// path read as stone rather than as a fill.
+const PAVING_RAMP = ramp(ISO_PAVING, 9, 0.5);
+/** The joint between stones. Sky-lit, so it reads as depth and not as ink. */
+const MORTAR = shadowTint(ISO_PAVING, 0.5);
 
 function channels(colour: number): [number, number, number] {
   return [(colour >> 16) & 0xff, (colour >> 8) & 0xff, colour & 0xff];
@@ -207,11 +231,27 @@ export function paintIsoTerrain(
       const lit = (sun - 0.5) * 0.07;
 
       if (surface === "grass") {
-        // Wide continuous ramp plus a hue shift, so lush and dry grass differ
-        // in both lightness and warmth rather than being one flat green.
-        const base = temper(ISO_GRASS, (value - 0.5) * 1.4);
-        const colour = shade(base, (value - 0.5) * 0.44 + lit);
+        // Tone comes off the shared ramp, then a hue shift separates lush from
+        // dry so the two differ in warmth as well as in lightness.
+        const tone = GRASS_RAMP[
+          tonalStep(Math.max(0, Math.min(0.999, value + lit)), seed % 4096, GRASS_RAMP.length)
+        ] ?? ISO_GRASS;
+        const colour = temper(tone, (value - 0.5) * 1.1);
         drawCell(x, y, colour, 1);
+
+        // Where grass approaches paving, dither a few paving-toned cells into
+        // it. A hard cut between two materials is the most obvious tell that
+        // ground is a tile grid; a dithered margin reads as worn edge.
+        const toPaving = edgeProximity(centreX, centreY, surface, TERRAIN_CELL * 2);
+        if (toPaving < 1 && dither(x >> 3, y >> 3, (1 - toPaving) * 0.55)) {
+          drawSubCell(
+            x + (seed % 9),
+            y + ((seed >>> 7) % 9),
+            TERRAIN_CELL / 1.7,
+            shade(ISO_PAVING, -0.06),
+            0.5,
+          );
+        }
 
         // Mown banding: broad sweeps of slightly different tone, the way real
         // turf reads. Low frequency so it does not fight the noise field.
@@ -245,11 +285,40 @@ export function paintIsoTerrain(
         // means no two slabs match and no slab is internally flat.
         const slabTone = ((slabSeed % 100) / 100 - 0.5) * 0.10;
         const grain = (value - 0.5) * 0.09;
-        const colour = shade(
-          temper(paveBase, (slabSeed % 7) / 7 - 0.5),
-          slabTone + grain + lit,
+        const level = Math.max(0, Math.min(0.999, 0.5 + slabTone * 2.6 + grain * 2 + lit));
+        const colour = temper(
+          PAVING_RAMP[tonalStep(level, slabSeed % 4096, PAVING_RAMP.length)]
+            ?? paveBase,
+          (slabSeed % 7) / 7 - 0.5,
         );
-        drawCell(x, y, colour, 1);
+
+        // Individual laid stones, not a paved fill.
+        //
+        // The cell is filled with joint colour first, then a slightly smaller,
+        // slightly offset diamond is laid on top as the stone itself. That gap
+        // is the whole effect: it gives every stone its own edge, so the eye
+        // reads masonry instead of one tan expanse with tone noise on it.
+        drawCell(x, y, MORTAR, 1);
+        const jitterX = ((seed >>> 3) % 5) - 2;
+        const jitterY = ((seed >>> 11) % 5) - 2;
+        drawSubCell(
+          x + jitterX,
+          y + jitterY,
+          TERRAIN_CELL * 0.84,
+          colour,
+          1,
+        );
+        // A lit top-left lip on roughly a third of them, so the stones have a
+        // thickness rather than being decals.
+        if (seed % 3 === 0) {
+          drawSubCell(
+            x + jitterX - 2,
+            y + jitterY - 2,
+            TERRAIN_CELL * 0.42,
+            rimLight(colour, 0.16),
+            0.55,
+          );
+        }
 
         // Aggregate speckle keeps large paved spans from banding. Drawn at
         // sub-cell size so it reads as grit rather than tinting the whole slab.

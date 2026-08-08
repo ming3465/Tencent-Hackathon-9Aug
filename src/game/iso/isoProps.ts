@@ -17,8 +17,10 @@
 import Phaser from "phaser";
 
 import { isoHash } from "./projection.js";
+import { SHADOW_TINT } from "../textureGrain.js";
 
-const SHADOW = 0x2f2a1e;
+// Sky-lit, not black: see SHADOW_TINT in textureGrain.ts.
+const SHADOW = SHADOW_TINT;
 
 function channels(colour: number): [number, number, number] {
   return [(colour >> 16) & 0xff, (colour >> 8) & 0xff, colour & 0xff];
