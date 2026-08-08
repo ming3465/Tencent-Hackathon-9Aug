@@ -17,6 +17,7 @@ import {
   parseDemoMode,
   saveCampaign,
 } from "./game/campaignSave.js";
+import { startTitleCast } from "./game/titleCast.js";
 import {
   DEFAULT_APPEARANCE,
   DEFAULT_PLAYER_NAME,
@@ -120,7 +121,17 @@ const identityCaption = byId<HTMLElement>("identity-preview-caption");
 const playerPreviewCanvas = byId<HTMLCanvasElement>("player-preview");
 const btnSurpriseLook = byId<HTMLButtonElement>("btn-surprise-look");
 const btnContinue = byId<HTMLButtonElement>("btn-continue");
-const btnStartOver = byId<HTMLButtonElement>("btn-start-over");
+const btnOptions = byId<HTMLButtonElement>("btn-options");
+const btnCredits = byId<HTMLButtonElement>("btn-credits");
+const btnBegin = byId<HTMLButtonElement>("btn-begin");
+const titleCastCanvas = byId<HTMLCanvasElement>("title-cast");
+const foundTitleFrame = document.querySelector<HTMLElement>(".title-frame");
+if (!foundTitleFrame) throw new Error("Missing required .title-frame");
+const titleFrame: HTMLElement = foundTitleFrame;
+const btnTitleSound = byId<HTMLButtonElement>("btn-title-sound");
+const btnTitleFullscreen = byId<HTMLButtonElement>("btn-title-fullscreen");
+const volumeTitleMusic = byId<HTMLInputElement>("volume-title-music");
+const volumeTitleSfx = byId<HTMLInputElement>("volume-title-sfx");
 const btnReturnTitle = byId<HTMLButtonElement>("btn-return-title");
 const btnMenu = byId<HTMLButtonElement>("btn-menu");
 const worldShell = byId<HTMLElement>("world-shell");
@@ -581,7 +592,7 @@ function queueCampaignViewportResize(): void {
 function setCampaignLaunchButtonsDisabled(disabled: boolean): void {
   btnStart.disabled = disabled;
   btnContinue.disabled = disabled;
-  btnStartOver.disabled = disabled;
+  btnBegin.disabled = disabled;
 }
 
 function clearCampaignSlowTimer(): void {
@@ -752,19 +763,10 @@ if (SMOKE_MODE) {
 
 function renderTitleActions(): void {
   const hasSave = savedCampaign !== null && !DEMO_MODE;
-  btnStart.hidden = hasSave;
+  // Start always shows. With the character creator behind it, Start *is* start
+  // over - and "Begin the story" asks before it replaces anything.
+  btnStart.hidden = false;
   btnContinue.hidden = !hasSave;
-  btnStartOver.hidden = !hasSave;
-  if (savedCampaign) {
-    const chapter = savedCampaign.currentChapter === "free-explore"
-      ? "Free exploration"
-      : CHAPTER_BY_ID.get(savedCampaign.currentChapter)?.title ?? "the campaign";
-    // Name the player on the button. On a device more than one person plays -
-    // a shared tablet at a community centre, say - "Continue" alone does not
-    // tell you whose campaign you are about to walk back into.
-    btnContinue.textContent =
-      `Continue as ${savedCampaign.playerName} — ${pn(chapter)}`;
-  }
 }
 
 async function startCampaign(state: CampaignStateV1): Promise<void> {
@@ -1032,6 +1034,36 @@ function restoreSavedIdentity(): void {
   chosenAppearance = { ...savedCampaign.playerAppearance };
 }
 
+type TitleView = "menu" | "new-game" | "options" | "credits";
+
+/**
+ * Switches which panel the title screen is showing.
+ *
+ * Deliberately the same shape as `showPauseState` - one visible section at a
+ * time, focus moved to the first control in it so keyboard and screen-reader
+ * users are not left behind on a hidden button.
+ */
+function showTitleView(view: TitleView): void {
+  const views: readonly [TitleView, string][] = [
+    ["menu", "title-view-menu"],
+    ["new-game", "title-view-new-game"],
+    ["options", "title-view-options"],
+    ["credits", "title-view-credits"],
+  ];
+  for (const [id, elementId] of views) {
+    const section = document.getElementById(elementId);
+    if (section) section.hidden = id !== view;
+  }
+  titleFrame.dataset.view = view;
+  const focusTarget: Record<TitleView, HTMLElement> = {
+    menu: savedCampaign && !DEMO_MODE ? btnContinue : btnStart,
+    "new-game": inputPlayerName,
+    options: btnTitleSound,
+    credits: btnCredits,
+  };
+  focusTarget[view].focus();
+}
+
 inputPlayerName.addEventListener("input", () => {
   identityCaption.textContent = sanitisePlayerName(inputPlayerName.value);
 });
@@ -1039,6 +1071,8 @@ btnSurpriseLook.addEventListener("click", pickRandomLook);
 inputPlayerName.maxLength = MAX_PLAYER_NAME_LENGTH;
 restoreSavedIdentity();
 buildIdentityControls();
+titleFrame.dataset.view = "menu";
+startTitleCast(titleCastCanvas, { reducedMotion: REDUCED_MOTION.matches });
 
 function startNewCampaign(): void {
   // A new run replays the story from the top.
@@ -1057,15 +1091,22 @@ function continueCampaign(): void {
   void startCampaign(savedCampaign);
 }
 
-function startOver(): void {
-  const confirmed = window.confirm(
-    pn("Start Kampung SG again from {player}'s house? Your current campaign save will be replaced."),
-  );
-  if (!confirmed) return;
-  clearCampaignSafely();
-  savedCampaign = null;
-  // Starting over replaces the save, not the person - keep whatever name and
-  // look is currently on the title screen.
+/**
+ * "Begin the story" from the new-game view.
+ *
+ * There is no separate "Start over" button any more - with the creator behind
+ * Start, Start *is* start over. So the confirmation moves here, and only fires
+ * when there is actually a save to lose.
+ */
+function beginNewCampaign(): void {
+  if (savedCampaign && !DEMO_MODE) {
+    const confirmed = window.confirm(
+      pn("Start Kampung SG again from {player}'s house? Your current campaign save will be replaced."),
+    );
+    if (!confirmed) return;
+    clearCampaignSafely();
+    savedCampaign = null;
+  }
   startNewCampaign();
 }
 
@@ -1093,6 +1134,7 @@ function returnToTitle(): void {
     campaignState.demo ? null : campaignState,
   );
   renderTitleActions();
+  showTitleView("menu");
   showScreen("screen-title");
   if (isGameFullscreen()) void document.exitFullscreen();
   (savedCampaign ? btnContinue : btnStart).focus();
@@ -1447,10 +1489,20 @@ function showDialogueLine(): void {
   }
   dialogText.textContent = "";
   dialogText.classList.add("typing");
-  let index = 0;
-  const step = Math.max(1, Math.ceil(line.length / 90));
+  // Reveal against the wall clock, not against the tick count.
+  //
+  // This used to advance a fixed number of characters per `setInterval` tick,
+  // which silently assumed every tick was the 16ms it asked for. Under load -
+  // a busy machine, a throttled tab, or the modest phone an older player is
+  // actually holding - those ticks arrive far apart and the line crawled for
+  // ten seconds or more. Deriving the index from elapsed time means a line
+  // takes the same 1.4s to read out everywhere, and simply reveals in coarser
+  // jumps when frames are scarce.
+  const REVEAL_MS = 1440;
+  const startedAt = performance.now();
   typeTimer = setInterval(() => {
-    index = Math.min(line.length, index + step);
+    const progress = (performance.now() - startedAt) / REVEAL_MS;
+    const index = Math.min(line.length, Math.ceil(progress * line.length));
     dialogText.textContent = line.slice(0, index);
     if (index >= line.length) stopTyping();
   }, 16);
@@ -2197,11 +2249,47 @@ function renderSoundControls(): void {
   btnSound.textContent = settings.muted ? "Sound off" : "Sound on";
   volumeMusic.value = String(Math.round(settings.music * 100));
   volumeSfx.value = String(Math.round(settings.sfx * 100));
+  // The title's Options panel shows the same state through its own controls -
+  // separate ids because duplicating them would break every `getElementById`
+  // in this file, but one source of truth behind both.
+  btnTitleSound.setAttribute("aria-pressed", String(settings.muted));
+  btnTitleSound.setAttribute(
+    "aria-label",
+    settings.muted ? "Turn sound on" : "Mute sound",
+  );
+  btnTitleSound.textContent = settings.muted ? "Sound off" : "Sound on";
+  volumeTitleMusic.value = String(Math.round(settings.music * 100));
+  volumeTitleSfx.value = String(Math.round(settings.sfx * 100));
 }
 
-btnStart.addEventListener("click", startNewCampaign);
+btnStart.addEventListener("click", () => showTitleView("new-game"));
 btnContinue.addEventListener("click", continueCampaign);
-btnStartOver.addEventListener("click", startOver);
+btnOptions.addEventListener("click", () => showTitleView("options"));
+btnCredits.addEventListener("click", () => showTitleView("credits"));
+btnBegin.addEventListener("click", beginNewCampaign);
+for (const back of document.querySelectorAll<HTMLButtonElement>("[data-title-back]")) {
+  back.addEventListener("click", () => showTitleView("menu"));
+}
+
+btnTitleSound.addEventListener("click", () => {
+  audio.unlock();
+  audio.setMuted(!audio.getSettings().muted);
+  renderSoundControls();
+  announce(audio.getSettings().muted ? "Sound muted." : "Sound on.");
+});
+btnTitleFullscreen.addEventListener("click", () => {
+  void toggleGameFullscreen();
+});
+volumeTitleMusic.addEventListener("input", () => {
+  audio.unlock();
+  audio.setVolume("music", Number(volumeTitleMusic.value) / 100);
+  renderSoundControls();
+});
+volumeTitleSfx.addEventListener("input", () => {
+  audio.unlock();
+  audio.setVolume("sfx", Number(volumeTitleSfx.value) / 100);
+  renderSoundControls();
+});
 btnReturnTitle.addEventListener("click", returnToTitle);
 btnMenu.addEventListener("click", openPause);
 btnPauseResume.addEventListener("click", resumePause);

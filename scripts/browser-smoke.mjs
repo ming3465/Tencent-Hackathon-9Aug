@@ -2306,9 +2306,11 @@ try {
       control.prepareHeldLoad();
       const before = control.getSnapshot();
       control.failNextSave();
-      const start = document.getElementById("btn-start");
-      start.click();
-      start.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      // Start opens the character creator; "Begin the story" is what launches.
+      document.getElementById("btn-start").click();
+      const begin = document.getElementById("btn-begin");
+      begin.click();
+      begin.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       return before;
     })()
   `);
@@ -2334,7 +2336,7 @@ try {
         buttonsDisabled:
           document.getElementById("btn-start").disabled
           && document.getElementById("btn-continue").disabled
-          && document.getElementById("btn-start-over").disabled,
+          && document.getElementById("btn-begin").disabled,
         oneStart: snapshot.starts === ${loaderBefore.starts + 1},
         oneImport: snapshot.imports === ${loaderBefore.imports + 1},
         saveFailureSurvived: snapshot.storageAvailable === false,
@@ -2382,7 +2384,7 @@ try {
         controlsEnabled:
           !document.getElementById("btn-start").disabled
           && !document.getElementById("btn-continue").disabled
-          && !document.getElementById("btn-start-over").disabled,
+          && !document.getElementById("btn-begin").disabled,
         worldControlsRestored:
           !document.getElementById("sandbox-stage").hasAttribute("inert")
           && !document.getElementById("hud-rail").hasAttribute("inert")
@@ -2462,7 +2464,7 @@ try {
         controlsEnabled:
           !document.getElementById("btn-start").disabled
           && !document.getElementById("btn-continue").disabled
-          && !document.getElementById("btn-start-over").disabled,
+          && !document.getElementById("btn-begin").disabled,
         worldControlsRestored:
           !document.getElementById("sandbox-stage").hasAttribute("inert")
           && !document.getElementById("hud-rail").hasAttribute("inert")
@@ -2561,17 +2563,167 @@ try {
    * later pass cannot silently fall back to the default name and mask a
    * personalisation bug.
    */
+  /** Start -> character creator -> name -> Begin. The whole new-game flow. */
+  const openNewGameView = async () => {
+    await page.eval(`document.getElementById("btn-start").click()`);
+    await waitForPageCondition(
+      `!document.getElementById("title-view-new-game").hidden`,
+      "the character creator behind Start"
+    );
+  };
+
   const startNamedStory = async () => {
+    await openNewGameView();
     await page.eval(`
       (() => {
         const input = document.getElementById("input-player-name");
-        if (!input) throw new Error("name field missing from the title screen");
+        if (!input) throw new Error("name field missing from the character creator");
         input.value = ${JSON.stringify(SMOKE_PLAYER_NAME)};
         input.dispatchEvent(new Event("input", { bubbles: true }));
       })()
     `);
-    await page.eval(`document.getElementById("btn-start").click()`);
+    await page.eval(`window.confirm = () => true; document.getElementById("btn-begin").click()`);
   };
+
+  const menuEvidence = await page.eval(`
+    (() => {
+      const ids = ["btn-start", "btn-continue", "btn-options", "btn-credits"];
+      const buttons = ids.map((id) => document.getElementById(id));
+      const start = document.getElementById("btn-start").getBoundingClientRect();
+      const credits = document.getElementById("btn-credits").getBoundingClientRect();
+      return {
+        allPresent: buttons.every(Boolean),
+        order: buttons.filter(Boolean).map((b) => b.textContent.trim()),
+        // No save on a cleared title, so Continue is correctly out of the way.
+        continueHidden: document.getElementById("btn-continue").hidden,
+        minTargetPx: Math.min(...buttons.filter((b) => b && !b.hidden)
+          .map((b) => b.getBoundingClientRect().height)),
+        menuAboveFold: start.top >= 0 && credits.bottom <= innerHeight,
+        noOverflow: document.documentElement.scrollWidth <= innerWidth,
+        focusable: buttons.every((b) => b && b.tabIndex >= 0),
+      };
+    })()
+  `);
+  check(
+    "The title opens on a Start / Continue / Options / Credits menu",
+    menuEvidence.allPresent
+      && menuEvidence.order[0] === "Start"
+      && menuEvidence.order[1] === "Continue"
+      && menuEvidence.order[2] === "Options"
+      && menuEvidence.order[3] === "Credits"
+      && menuEvidence.continueHidden
+      && menuEvidence.minTargetPx >= 48
+      && menuEvidence.menuAboveFold
+      && menuEvidence.noOverflow
+      && menuEvidence.focusable,
+    JSON.stringify(menuEvidence)
+  );
+
+  await page.shot(`${SHOT_DIR}/01-title.png`);
+
+  // The animated cast: the same painter that bakes the in-game sprite, walking
+  // across the title. Sampled twice so a still frame cannot pass as animation.
+  const castBefore = await page.eval(`
+    (() => {
+      const c = document.getElementById("title-cast");
+      const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+      let painted = 0;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 8) painted += 1;
+      return { painted, signature: d.slice(0, 40000).join(",").length };
+    })()
+  `);
+  await sleep(600);
+  const castAfter = await page.eval(`
+    (() => {
+      const c = document.getElementById("title-cast");
+      const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+      let painted = 0, minX = 1e9, maxX = -1;
+      for (let y = 0; y < c.height; y += 1) {
+        for (let x = 0; x < c.width; x += 1) {
+          if (d[(y * c.width + x) * 4 + 3] > 8) {
+            painted += 1;
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+          }
+        }
+      }
+      return { painted, spread: maxX - minX };
+    })()
+  `);
+  check(
+    "The title cast is drawn from the game's own sprite painter and is walking",
+    castBefore.painted > 8000
+      && castAfter.painted > 8000
+      && castAfter.painted !== castBefore.painted
+      && castAfter.spread > 400,
+    JSON.stringify({ castBefore, castAfter })
+  );
+
+  const optionsEvidence = await page.eval(`
+    (() => {
+      document.getElementById("btn-options").click();
+      const view = document.getElementById("title-view-options");
+      const slider = document.getElementById("volume-title-music");
+      const before = slider.value;
+      slider.value = "15";
+      slider.dispatchEvent(new Event("input", { bubbles: true }));
+      const pauseSlider = document.getElementById("volume-music");
+      const result = {
+        opened: !view.hidden,
+        menuHidden: document.getElementById("title-view-menu").hidden,
+        before,
+        after: slider.value,
+        // One source of truth: the pause panel must agree with the title panel.
+        pauseAgrees: pauseSlider.value === slider.value,
+        soundButton: !!document.getElementById("btn-title-sound"),
+      };
+      document.querySelector("#title-view-options [data-title-back]").click();
+      result.backToMenu = !document.getElementById("title-view-menu").hidden;
+      return result;
+    })()
+  `);
+  check(
+    "Options opens, changes audio for real, and returns to the menu",
+    optionsEvidence.opened
+      && optionsEvidence.menuHidden
+      && optionsEvidence.after === "15"
+      && optionsEvidence.pauseAgrees
+      && optionsEvidence.soundButton
+      && optionsEvidence.backToMenu,
+    JSON.stringify(optionsEvidence)
+  );
+
+  const creditsEvidence = await page.eval(`
+    (() => {
+      document.getElementById("btn-credits").click();
+      const view = document.getElementById("title-view-credits");
+      const text = view.textContent;
+      const result = {
+        opened: !view.hidden,
+        team: /TheTwoGuys/.test(text),
+        members: /Sutolimin Widjaja/.test(text) && /Andreas Auwyano/.test(text),
+        challenge: /Age Well Social Good Challenge/.test(text),
+        noBackend: /no backend/i.test(text),
+      };
+      document.querySelector("#title-view-credits [data-title-back]").click();
+      result.backToMenu = !document.getElementById("title-view-menu").hidden;
+      return result;
+    })()
+  `);
+  check(
+    "Credits names the real team, the challenge, and the no-backend claim",
+    creditsEvidence.opened
+      && creditsEvidence.team
+      && creditsEvidence.members
+      && creditsEvidence.challenge
+      && creditsEvidence.noBackend
+      && creditsEvidence.backToMenu,
+    JSON.stringify(creditsEvidence)
+  );
+
+  // The character creator lives behind Start now - you choose a face when you
+  // choose to begin, not before.
+  await openNewGameView();
 
   const identityEvidence = await page.eval(`
     (() => {
@@ -2616,7 +2768,7 @@ try {
     })()
   `);
   check(
-    "Title screen offers a name field and a labelled character customiser",
+    "Start opens a name field and a labelled character customiser",
     identityEvidence.hasNameField
       && identityEvidence.namePlaceholder === "Y"
       && identityEvidence.groups === 4
@@ -2629,19 +2781,20 @@ try {
   );
   const foldEvidence = await page.eval(`
     (() => {
-      const start = document.getElementById("btn-start").getBoundingClientRect();
+      const begin = document.getElementById("btn-begin").getBoundingClientRect();
       const panel = document.querySelector(".identity-panel").getBoundingClientRect();
       return {
         viewport: [innerWidth, innerHeight],
-        startBottom: Math.round(start.bottom),
-        startVisible: start.top >= 0 && start.bottom <= innerHeight,
+        beginBottom: Math.round(begin.bottom),
+        beginVisible: begin.top >= 0 && begin.bottom <= innerHeight,
         panelVisible: panel.top >= 0 && panel.bottom <= innerHeight,
+        noOverflow: document.documentElement.scrollWidth <= innerWidth,
       };
     })()
   `);
   check(
-    "Start button and customiser both stay above the fold on desktop",
-    foldEvidence.startVisible && foldEvidence.panelVisible,
+    "Begin and the customiser both stay above the fold on desktop",
+    foldEvidence.beginVisible && foldEvidence.panelVisible && foldEvidence.noOverflow,
     JSON.stringify(foldEvidence)
   );
   check(
@@ -2649,8 +2802,6 @@ try {
     identityEvidence.previewDrawn && identityEvidence.previewTones >= 8,
     JSON.stringify(identityEvidence)
   );
-
-  await page.shot(`${SHOT_DIR}/01-title.png`);
 
   // Change the look, then confirm the preview actually repaints.
   const previewResponds = await page.eval(`
@@ -3375,15 +3526,17 @@ try {
     );
     const returningProfile = await page.eval(`
       (() => ({
+        // Continue is a button, not a status readout: no name, no chapter.
         continueLabel: document.getElementById("btn-continue").textContent.trim(),
         nameField: document.getElementById("input-player-name").value,
-        caption: document.getElementById("identity-caption")?.textContent.trim() ?? "",
+        caption: document.getElementById("identity-preview-caption")?.textContent.trim() ?? "",
       }))()
     `);
     check(
-      "A returning player is named on Continue and filled back into the customiser",
-      returningProfile.continueLabel.includes(`Continue as ${SMOKE_PLAYER_NAME}`)
-        && returningProfile.nameField === SMOKE_PLAYER_NAME,
+      "Continue reads plainly and the returning player is refilled in the creator",
+      returningProfile.continueLabel === "Continue"
+        && returningProfile.nameField === SMOKE_PLAYER_NAME
+        && returningProfile.caption === SMOKE_PLAYER_NAME,
       JSON.stringify(returningProfile),
     );
     await page.eval(`document.getElementById("btn-continue").click()`);
@@ -3714,10 +3867,11 @@ try {
     (await page.eval(`document.querySelectorAll("#sandbox-stage canvas").length`)) === 0
   );
   check(
-    "Continue and confirmed Start Over are offered for a saved campaign",
+    "A saved campaign offers a plain Continue alongside Start",
     await page.eval(`
       !document.getElementById("btn-continue").hidden
-      && !document.getElementById("btn-start-over").hidden
+      && document.getElementById("btn-continue").textContent.trim() === "Continue"
+      && !document.getElementById("btn-start").hidden
     `)
   );
   await page.send("Page.navigate", { url: TEST_URL });
@@ -3777,19 +3931,25 @@ try {
   await page.send("Page.navigate", { url: TEST_URL });
   await waitForPageCondition(
     `document.readyState === "complete"
-      && document.getElementById("btn-start-over")
-      && !document.getElementById("btn-start-over").hidden`,
-    "saved title actions before Start Over"
+      && document.getElementById("btn-continue")
+      && !document.getElementById("btn-continue").hidden`,
+    "saved title actions before starting over"
   );
-  await page.eval(`window.confirm = () => true; document.getElementById("btn-start-over").click()`);
+  // Start over is now Start -> creator -> Begin, and Begin is what asks before
+  // it replaces a save.
+  await page.eval(`
+    window.confirm = () => true;
+    document.getElementById("btn-start").click();
+    document.getElementById("btn-begin").click();
+  `);
   await sleep(1600);
   check(
-    "Confirmed Start Over replaces progress with a fresh prologue",
+    "Beginning again over a save asks first, then replaces it with a fresh prologue",
     /PROLOGUE/i.test(await page.eval(`document.getElementById("chapter-label").textContent`))
   );
   const freshSave = JSON.parse(await page.eval(`localStorage.getItem("kampung-sg.campaign.v1")`));
   check(
-    "Start Over persists a valid versioned initial save",
+    "Beginning again persists a valid versioned initial save",
     freshSave?.version === 1 && freshSave?.completedChapters?.length === 0
   );
   await page.eval(`document.getElementById("btn-return-title").click()`);
@@ -4395,7 +4555,20 @@ try {
     })()
   `);
   if (!blockedPointHitsCanvas) {
-    throw new Error("Collision-stall probe did not hit the world canvas");
+    const detail = await page.eval(`
+      (() => {
+        const hit = document.elementFromPoint(${blockedPoint.x}, ${blockedPoint.y});
+        return JSON.stringify({
+          point: [${blockedPoint.x}, ${blockedPoint.y}],
+          hit: hit ? (hit.id || hit.className || hit.tagName) : null,
+          hitTag: hit?.tagName ?? null,
+          location: window.__kampungSmoke?.getMotionSnapshot?.()?.locationId ?? null,
+          player: window.__kampungSmoke?.getMotionSnapshot?.()?.player ?? null,
+          viewport: [innerWidth, innerHeight],
+        });
+      })()
+    `);
+    throw new Error("Collision-stall probe did not hit the world canvas: " + detail);
   }
   await touchTap(blockedPoint.x, blockedPoint.y);
   await sleep(1900);

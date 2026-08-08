@@ -18,7 +18,12 @@ import type { PlayerAppearance } from "./playerIdentity.js";
 export const PREVIEW_SPRITE_WIDTH = 40;
 export const PREVIEW_SPRITE_HEIGHT = 56;
 
-class CanvasPixelPainter implements PixelPainter {
+/**
+ * Exported so anything drawing campaign art onto a plain 2D canvas — the title
+ * screen's walking cast, this preview — goes through the one painter rather
+ * than re-implementing the sprite.
+ */
+export class CanvasPixelPainter implements PixelPainter {
   private colour = "#000000";
 
   constructor(

@@ -165,90 +165,208 @@
         border: 2px solid var(--ink);
       }
 
-      .eyebrow {
-        margin: 0 0 0.7rem;
-        color: var(--coral);
-        font-size: 0.78rem;
-        font-weight: 900;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-      }
-
       /* Title */
+      /* Full bleed: the scene is the page, the way a game opens. No padding on
+         the section itself - the content frame carries the safe-area insets. */
       #screen-title {
         min-height: 0;
-        overflow-x: hidden;
+        padding: 0;
+        overflow: hidden;
+        background: var(--night);
+      }
+
+      .title-stage {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        isolation: isolate;
+      }
+
+      /* Content sits above art (0), particles (1), veil (2) and cast (3). The
+         cast is deliberately in front of the veil - the veil darkens the
+         painting so the menu reads, not the neighbours walking across it. */
+      .title-frame {
+        position: relative;
+        z-index: 4;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(1rem, 3vh, 2.2rem);
         overflow-y: auto;
         overscroll-behavior: contain;
         padding:
-          max(clamp(1rem, 4vw, 3rem), env(safe-area-inset-top))
+          max(clamp(1rem, 3vh, 2.5rem), env(safe-area-inset-top))
           max(clamp(1rem, 4vw, 3rem), env(safe-area-inset-right))
-          max(clamp(1rem, 4vw, 3rem), env(safe-area-inset-bottom))
+          max(clamp(1rem, 3vh, 2.5rem), env(safe-area-inset-bottom))
           max(clamp(1rem, 4vw, 3rem), env(safe-area-inset-left));
-        background:
-          linear-gradient(115deg, rgba(255, 246, 220, 0.98), rgba(255, 251, 239, 0.95)),
-          var(--cream);
       }
 
-      .title-shell {
-        width: min(1320px, 100%);
-        min-height: calc(100dvh - clamp(2rem, 8vw, 6rem));
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: minmax(0, 0.78fr) minmax(520px, 1.22fr);
-        align-items: center;
-        gap: clamp(2rem, 4vw, 4rem);
-      }
-
-      .title-shell > * {
+      .title-lockup {
+        text-align: center;
+        flex: 0 0 auto;
+        max-width: 100%;
         min-width: 0;
       }
 
-      /* The art and the character panel share the right column so the left
-         column keeps "Start the story" above the fold. */
-      .title-side {
+      .title-frame > * {
+        max-width: 100%;
+        min-width: 0;
+      }
+
+      .title-eyebrow {
+        margin: 0 0 0.35rem;
+        color: var(--gold);
+        font-family: var(--font-ui);
+        font-size: clamp(0.72rem, 1.5vw, 0.92rem);
+        font-weight: 900;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        text-shadow: 0 2px 0 rgba(16, 46, 59, 0.85);
+      }
+
+      .title-lockup h1 {
+        margin: 0;
+        color: var(--cream);
+        font-family: var(--font-display);
+        font-size: clamp(3.2rem, 11vw, 7.5rem);
+        line-height: 0.88;
+        letter-spacing: -0.045em;
+        /* Stacked shadows, not a filter: readable over any part of the art
+           without costing a compositing layer on every frame. */
+        text-shadow:
+          0 4px 0 rgba(16, 46, 59, 0.92),
+          0 0 34px rgba(16, 46, 59, 0.75),
+          0 0 90px rgba(16, 46, 59, 0.5);
+      }
+
+      .title-sign {
+        margin: 0.7rem 0 0;
+        display: inline-block;
+        padding: 0.42rem 0.85rem;
+        color: var(--cream);
+        background: rgba(16, 46, 59, 0.82);
+        border: 2px solid rgba(255, 246, 220, 0.6);
+        border-radius: 6px;
+        max-width: 100%;
+        font-size: clamp(0.58rem, 1.3vw, 0.78rem);
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        transform: rotate(-1.5deg);
+        box-shadow: 3px 3px 0 var(--gold);
+      }
+
+      /* Off the menu, the lockup steps back: a character creator does not need
+         a 7rem wordmark over it, and reclaiming that height is what keeps
+         "Begin the story" above the fold on a 813px-tall laptop. */
+      .title-frame[data-view]:not([data-view="menu"]) .title-lockup h1 {
+        font-size: clamp(1.7rem, 4vw, 2.6rem);
+        text-shadow: 0 3px 0 rgba(16, 46, 59, 0.9), 0 0 22px rgba(16, 46, 59, 0.7);
+      }
+
+      .title-frame[data-view]:not([data-view="menu"]) .title-eyebrow,
+      .title-frame[data-view]:not([data-view="menu"]) .title-sign {
+        display: none;
+      }
+
+      .title-view {
+        width: min(560px, 100%);
+        max-width: 100%;
+        min-width: 0;
+        flex: 0 0 auto;
         display: flex;
         flex-direction: column;
+        align-items: center;
         gap: 0.9rem;
-        min-width: 0;
       }
 
-      .title-copy h1 {
-        max-width: 8ch;
-        margin: 0;
+      .title-view[hidden] {
+        display: none;
+      }
+
+      .title-menu {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+        width: min(320px, 100%);
+      }
+
+      /* One menu row. 56px tall clears the 48px touch-target floor with room
+         for the press animation. */
+      .menu-button {
+        min-height: 56px;
+        padding: 0.7rem 1.4rem;
+        color: var(--cream);
+        background: rgba(11, 33, 43, 0.93);
+        border: 3px solid rgba(255, 246, 220, 0.9);
+        border-radius: 14px;
+        font-family: var(--font-display);
+        font-size: clamp(1.15rem, 2.6vw, 1.5rem);
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        transition: transform 120ms ease, background 160ms ease, border-color 160ms ease;
+        box-shadow: 0 4px 0 rgba(16, 46, 59, 0.55);
+      }
+
+      .menu-button:hover,
+      .menu-button:focus-visible {
+        background: var(--gold);
         color: var(--ink);
-        font-family: var(--font-display);
-        font-size: clamp(3.4rem, 7.4vw, 6.3rem);
-        line-height: 0.86;
-        letter-spacing: -0.05em;
+        border-color: var(--ink);
+        transform: translateY(-2px);
       }
 
-      .title-copy h1 span {
-        display: block;
-        color: var(--coral);
-        font-family: var(--font-ui);
-        font-size: 0.19em;
-        font-weight: 900;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        margin-bottom: 0.7rem;
-        white-space: nowrap;
+      .menu-button:active {
+        transform: translateY(2px);
+        box-shadow: 0 1px 0 rgba(16, 46, 59, 0.55);
       }
 
-      .title-lede {
-        max-width: 36rem;
-        margin: 1.2rem 0 1.1rem;
-        color: var(--ink-soft);
-        font-family: var(--font-display);
-        font-size: clamp(1.15rem, 2.3vw, 1.5rem);
-        line-height: 1.55;
+      .menu-button[disabled] {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
       }
 
-      .title-actions {
+      .title-panel {
+        width: 100%;
+        padding: 1rem 1.15rem 1.15rem;
+        border: 3px solid var(--ink);
+        border-radius: 22px;
+        background: var(--paper, #fffbef);
+        box-shadow: 0 5px 0 rgba(23, 63, 79, 0.18);
+      }
+
+      .title-view-actions {
         display: flex;
         flex-wrap: wrap;
-        align-items: center;
-        gap: 1rem;
+        justify-content: center;
+        gap: 0.8rem;
+      }
+
+      .credits-list {
+        margin: 0;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 0.35rem 0.9rem;
+        font-size: 0.92rem;
+        line-height: 1.45;
+      }
+
+      .credits-list dt {
+        color: var(--coral);
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-size: 0.74rem;
+        padding-top: 0.18em;
+      }
+
+      .credits-list dd {
+        margin: 0;
+        color: var(--ink-soft);
       }
 
       /* Identity panel: name + look, chosen before the story starts.
@@ -462,44 +580,16 @@
       }
 
       .control-note {
-        margin: 1rem 0 0;
-        color: var(--ink-soft);
-        font-size: 0.84rem;
+        margin: 0.15rem 0 0;
+        max-width: 100%;
+        color: var(--cream);
+        font-size: 0.78rem;
         font-weight: 700;
+        text-align: center;
+        text-shadow: 0 2px 6px rgba(11, 33, 43, 0.95), 0 0 14px rgba(11, 33, 43, 0.9);
       }
 
       /* Reviewed title panorama; all readable copy remains semantic HTML. */
-      .title-world {
-        position: relative;
-        min-height: clamp(200px, 32vh, 420px);
-        margin: 0;
-        overflow: hidden;
-        border: 7px solid var(--ink);
-        border-radius: 40px 40px 120px 40px;
-        background: var(--night);
-        box-shadow:
-          var(--shadow),
-          0 0 0 3px rgba(242, 184, 75, 0.3) inset,
-          0 24px 60px rgba(16, 46, 59, 0.28);
-        isolation: isolate;
-      }
-
-      .title-sign {
-        position: absolute;
-        left: 30px;
-        bottom: 26px;
-        z-index: 4;
-        padding: 0.6rem 0.9rem;
-        color: var(--cream);
-        background: var(--ink);
-        border-radius: 6px;
-        font-size: 0.8rem;
-        font-weight: 900;
-        letter-spacing: 0.08em;
-        transform: rotate(-2deg);
-        box-shadow: 4px 4px 0 var(--gold);
-      }
-
       .title-art {
         position: absolute;
         inset: 0;
@@ -515,6 +605,20 @@
       @keyframes title-pan {
         from { transform: scale(1.06) translate(1.5%, 1%); }
         to { transform: scale(1.06) translate(-1.5%, -1%); }
+      }
+
+      /* The walking cast. Sits on the art's ground line, under the particles so
+         drifting motes read as being in front of the villagers. */
+      .title-cast {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 3;
+        width: 100%;
+        height: clamp(190px, 44%, 420px);
+        pointer-events: none;
+        image-rendering: pixelated;
       }
 
       .title-particles {
@@ -567,32 +671,16 @@
         100% { transform: translate(-120px, 160px) rotate(360deg); opacity: 0; }
       }
 
-      .title-world::before {
-        content: "";
+      /* Darkens the scene just enough that cream lettering and menu rows stay
+         legible over any part of the art, without flattening it to a wash. */
+      .title-veil {
         position: absolute;
         inset: 0;
         z-index: 2;
         background:
-          linear-gradient(180deg, transparent 52%, rgba(16, 46, 59, 0.08) 72%, rgba(16, 46, 59, 0.48)),
-          linear-gradient(90deg, rgba(16, 46, 59, 0.08), transparent 24% 76%, rgba(16, 46, 59, 0.06));
+          radial-gradient(ellipse at 50% 40%, rgba(11, 33, 43, 0.82), rgba(11, 33, 43, 0.6) 42%, rgba(11, 33, 43, 0.34) 68%),
+          linear-gradient(180deg, rgba(11, 33, 43, 0.7), rgba(11, 33, 43, 0.42) 34% 56%, rgba(11, 33, 43, 0.82));
         pointer-events: none;
-      }
-
-      .title-world::after {
-        content: "";
-        position: absolute;
-        inset: 12px;
-        z-index: 3;
-        border: 2px solid rgba(255, 246, 220, 0.78);
-        border-radius: 26px 26px 96px 26px;
-        background: none;
-        box-shadow: 0 0 0 2px rgba(23, 63, 79, 0.2);
-        pointer-events: none;
-      }
-
-      .title-world .title-sign {
-        z-index: 4;
-        border: 2px solid rgba(255, 246, 220, 0.88);
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -1845,20 +1933,9 @@
           flex-direction: column;
         }
 
-        .title-shell {
-          grid-template-columns: 1fr;
-        }
-
-        .title-copy {
-          padding-top: 2rem;
-        }
-
-        .title-copy h1 {
-          max-width: none;
-        }
-
-        .title-world {
-          min-height: 440px;
+        /* Narrow: the cast band gets shorter so the menu keeps the middle. */
+        .title-cast {
+          height: clamp(140px, 34%, 260px);
         }
 
         .topbar {
@@ -1897,27 +1974,16 @@
       @media (max-width: 680px) {
         :root { font-size: 16px; }
 
-        #screen-title {
-          padding:
-            max(1rem, env(safe-area-inset-top))
-            max(1rem, env(safe-area-inset-right))
-            max(1rem, env(safe-area-inset-bottom))
-            max(1rem, env(safe-area-inset-left));
+        .title-lockup h1 {
+          font-size: clamp(2.8rem, 15vw, 4.6rem);
         }
 
-        .title-shell {
-          min-height: auto;
-          gap: 2rem;
+        .title-frame {
+          gap: 0.9rem;
         }
 
-        .title-copy h1 {
-          font-size: clamp(3.4rem, 18vw, 5.2rem);
-        }
-
-        .title-world {
-          min-height: 360px;
-          border-width: 5px;
-          border-radius: 28px 28px 70px 28px;
+        .title-menu {
+          width: 100%;
         }
 
         #screen-sandbox {
@@ -2065,14 +2131,17 @@
       }
 
       .mind-card {
-        max-width: 39rem;
-        margin: 1.3rem 0 0;
-        padding: 0.85rem 1rem;
+        max-width: min(39rem, 100%);
+        margin: 0.4rem 0 0;
+        padding: 0.7rem 0.95rem;
         border-left: 6px solid var(--gold);
-        color: var(--ink);
-        background: rgba(255, 255, 255, 0.62);
-        font-weight: 800;
+        color: var(--cream);
+        background: rgba(11, 33, 43, 0.88);
+        border-radius: 0 10px 10px 0;
+        font-size: 0.86rem;
+        font-weight: 700;
         line-height: 1.45;
+        text-align: center;
       }
 
       .mind-card strong {
@@ -3250,86 +3319,148 @@
 
     <main id="main" tabindex="-1">
       <section id="screen-title" class="screen active" aria-labelledby="game-title">
-        <div class="title-shell">
-          <div class="title-copy">
-            <p class="eyebrow">A cozy Singapore neighbourhood sandbox</p>
-            <h1 id="game-title"><span>Tencent Cloud Hackathon</span>Kampung SG</h1>
-            <p class="title-lede">
-              Step through a prologue, three connected chapters, and one last
-              door in a Singapore estate shaped by the people who know it best.
-            </p>
-            <div class="title-actions">
-              <button id="btn-start" class="primary-button" type="button">Start the story</button>
-              <button id="btn-continue" class="primary-button" type="button" hidden>Continue</button>
-              <button id="btn-start-over" class="secondary-button" type="button" hidden>Start over</button>
-            </div>
-            <p class="mind-card">
-              <strong>KampungMind</strong> — AI-authored personalities powered by
-              a private, offline NPC memory-and-decision engine.
-            </p>
-            <p class="control-note">
-              Move <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys &middot;
-              Interact <kbd>E</kbd> &middot; Hold <kbd>Shift</kbd> to hurry &middot; Touch on phones
-            </p>
+        <div class="title-stage">
+          <img
+            class="title-art"
+            src="./assets/generated/kampung-estate-title-v1.webp"
+            width="1668"
+            height="943"
+            alt="Older neighbours tend a community garden and organise a noticeboard while a younger neighbour approaches through a sunlit HDB estate."
+            decoding="async"
+            fetchpriority="high"
+          />
+          <!-- Villagers walking across the foreground, drawn by the same painter
+               that bakes the in-game sprite. See src/game/titleCast.ts. -->
+          <canvas id="title-cast" class="title-cast" aria-hidden="true"></canvas>
+          <div class="title-particles" aria-hidden="true">
+            <span class="title-particle"></span>
+            <span class="title-particle"></span>
+            <span class="title-particle"></span>
+            <span class="title-particle"></span>
+            <span class="title-particle"></span>
+            <span class="title-particle"></span>
+            <span class="title-particle leaf"></span>
+            <span class="title-particle leaf"></span>
           </div>
+          <div class="title-veil" aria-hidden="true"></div>
 
-          <div class="title-side">
-            <figure class="title-world">
-              <img
-                class="title-art"
-                src="./assets/generated/kampung-estate-title-v1.webp"
-                width="1668"
-                height="943"
-                alt="Older neighbours tend a community garden and organise a noticeboard while a younger neighbour approaches through a sunlit HDB estate."
-                decoding="async"
-                fetchpriority="high"
-              />
-              <div class="title-particles" aria-hidden="true">
-                <span class="title-particle"></span>
-                <span class="title-particle"></span>
-                <span class="title-particle"></span>
-                <span class="title-particle"></span>
-                <span class="title-particle"></span>
-                <span class="title-particle"></span>
-                <span class="title-particle leaf"></span>
-                <span class="title-particle leaf"></span>
+          <div class="title-frame">
+            <header class="title-lockup">
+              <p class="title-eyebrow">Tencent Cloud Hackathon</p>
+              <h1 id="game-title">Kampung SG</h1>
+              <p class="title-sign">EVERY SMALL ACT GROWS THE KAMPUNG</p>
+            </header>
+
+            <section id="title-view-menu" class="title-view" aria-label="Main menu">
+              <nav class="title-menu">
+                <button id="btn-start" class="menu-button" type="button">Start</button>
+                <button id="btn-continue" class="menu-button" type="button" hidden>Continue</button>
+                <button id="btn-options" class="menu-button" type="button">Options</button>
+                <button id="btn-credits" class="menu-button" type="button">Credits</button>
+              </nav>
+              <p class="mind-card">
+                <strong>KampungMind</strong> — AI-authored personalities powered by
+                a private, offline NPC memory-and-decision engine.
+              </p>
+              <p class="control-note">
+                Move <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys &middot;
+                Interact <kbd>E</kbd> &middot; Hold <kbd>Shift</kbd> to hurry &middot; Touch on phones
+              </p>
+            </section>
+
+            <section id="title-view-new-game" class="title-view" aria-labelledby="identity-heading" hidden>
+              <div class="identity-panel">
+                <h2 id="identity-heading" class="identity-heading">Who walks into the village?</h2>
+                <div class="identity-body">
+                  <div class="identity-preview">
+                    <canvas
+                      id="player-preview"
+                      width="160"
+                      height="224"
+                      role="img"
+                      aria-label="Preview of your character"
+                    ></canvas>
+                    <p id="identity-preview-caption" class="identity-caption">Y</p>
+                    <button id="btn-surprise-look" class="secondary-button identity-surprise" type="button">
+                      Surprise me
+                    </button>
+                  </div>
+                  <div class="identity-fields">
+                    <p class="identity-field">
+                      <label class="identity-label" for="input-player-name">Your name</label>
+                      <input
+                        id="input-player-name"
+                        class="identity-input"
+                        type="text"
+                        autocomplete="given-name"
+                        spellcheck="false"
+                        placeholder="Y"
+                        aria-describedby="identity-name-hint"
+                      />
+                      <span id="identity-name-hint" class="identity-hint">
+                        Leave blank to stay as Y.
+                      </span>
+                    </p>
+                    <div id="identity-looks" class="identity-looks"></div>
+                  </div>
+                </div>
               </div>
-              <figcaption class="title-sign">EVERY SMALL ACT GROWS THE KAMPUNG</figcaption>
-            </figure>
-            <section class="identity-panel" aria-labelledby="identity-heading">
-              <h2 id="identity-heading" class="identity-heading">Who walks into the estate?</h2>
-              <div class="identity-body">
-                <div class="identity-preview">
-                  <canvas
-                    id="player-preview"
-                    width="160"
-                    height="224"
-                    role="img"
-                    aria-label="Preview of your character"
-                  ></canvas>
-                  <p id="identity-preview-caption" class="identity-caption">Y</p>
-                  <button id="btn-surprise-look" class="secondary-button identity-surprise" type="button">
-                    Surprise me
-                  </button>
+              <div class="title-view-actions">
+                <button id="btn-begin" class="primary-button" type="button">Begin the story</button>
+                <button id="btn-new-game-back" class="secondary-button" type="button" data-title-back>Back</button>
+              </div>
+            </section>
+
+            <section id="title-view-options" class="title-view" aria-labelledby="title-options-heading" hidden>
+              <div class="title-panel">
+                <h2 id="title-options-heading" class="identity-heading">Options</h2>
+                <div class="pause-setting-row">
+                  <span>Sound</span>
+                  <button id="btn-title-sound" class="secondary-button" type="button" aria-label="Toggle sound; sound is on" aria-pressed="false">Sound on</button>
                 </div>
-                <div class="identity-fields">
-                  <p class="identity-field">
-                    <label class="identity-label" for="input-player-name">Your name</label>
-                    <input
-                      id="input-player-name"
-                      class="identity-input"
-                      type="text"
-                      autocomplete="given-name"
-                      spellcheck="false"
-                      placeholder="Y"
-                      aria-describedby="identity-name-hint"
-                    />
-                    <span id="identity-name-hint" class="identity-hint">
-                      Leave blank to stay as Y.
-                    </span>
-                  </p>
-                  <div id="identity-looks" class="identity-looks"></div>
+                <div class="pause-setting-row">
+                  <label for="volume-title-music">Music</label>
+                  <input id="volume-title-music" type="range" min="0" max="100" step="5" value="45" />
                 </div>
+                <div class="pause-setting-row">
+                  <label for="volume-title-sfx">Effects</label>
+                  <input id="volume-title-sfx" type="range" min="0" max="100" step="5" value="70" />
+                </div>
+                <div class="pause-setting-row">
+                  <button id="btn-title-fullscreen" class="secondary-button" type="button" aria-label="Enter full screen" aria-pressed="false">Full screen</button>
+                </div>
+                <p class="controls-reminder">
+                  <strong>Controls:</strong> WASD or arrow keys to move, E or Space to
+                  interact, Shift to hurry, or use touch controls. The game follows your
+                  system's reduced-motion setting.
+                </p>
+              </div>
+              <div class="title-view-actions">
+                <button id="btn-options-back" class="primary-button" type="button" data-title-back>Back</button>
+              </div>
+            </section>
+
+            <section id="title-view-credits" class="title-view" aria-labelledby="title-credits-heading" hidden>
+              <div class="title-panel">
+                <h2 id="title-credits-heading" class="identity-heading">Credits</h2>
+                <dl class="credits-list">
+                  <dt>Made by</dt>
+                  <dd>TheTwoGuys — Sutolimin Widjaja &amp; Andreas Auwyano</dd>
+                  <dt>For</dt>
+                  <dd>Tencent Cloud &ldquo;AI CAN DO IT&rdquo; Age Well Social Good Challenge, Game Track</dd>
+                  <dt>Built with</dt>
+                  <dd>Phaser 3 &middot; Vite &middot; TypeScript. No backend, no account, no data collection.</dd>
+                  <dt>Art</dt>
+                  <dd>
+                    Every building, resident, prop and tile in the village is drawn
+                    procedurally in code. The one image asset is this title panorama.
+                  </dd>
+                  <dt>Thanks</dt>
+                  <dd>The neighbours who taught us that ageing well means being needed, not looked after.</dd>
+                </dl>
+              </div>
+              <div class="title-view-actions">
+                <button id="btn-credits-back" class="primary-button" type="button" data-title-back>Back</button>
               </div>
             </section>
           </div>
