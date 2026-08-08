@@ -1270,7 +1270,35 @@ try {
         : "  TILE  terrain detail evidence missing"
     );
 
-    // The shared bicycle rack sits on Block 9's west verge. The player's own
+    // Losing focus must silence the estate. Not just hiding the tab - clicking
+  // onto another window on the same screen kept the footsteps audible.
+  const attentionEvidence = await page.eval(`
+    (async () => {
+      const read = () => window.__kampungSmoke?.getAudioState?.() ?? null;
+      // suspend()/resume() are async, so settle before reading the state.
+      const settle = async () => {
+        for (let i = 0; i < 40; i += 1) await new Promise((r) => setTimeout(r, 25));
+      };
+      const unlocked = read();
+      window.dispatchEvent(new Event("blur"));
+      await settle();
+      const blurred = read();
+      window.dispatchEvent(new Event("focus"));
+      await settle();
+      return { unlocked, blurred, refocused: read() };
+    })()
+  `);
+  check(
+    "Losing window focus suspends the estate's audio",
+    // A context only exists once a gesture has unlocked it; if it never
+    // started there is nothing to silence and nothing to assert.
+    attentionEvidence.unlocked === null
+      || (attentionEvidence.blurred === "suspended"
+        && attentionEvidence.refocused !== "suspended"),
+    JSON.stringify(attentionEvidence)
+  );
+
+  // The shared bicycle rack sits on Block 9's west verge. The player's own
     // house now stands between the front door and that verge, so route north up
     // the west sheltered walk first rather than trying to walk through it.
     await walkToAxis("x", 480);

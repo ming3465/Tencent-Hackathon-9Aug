@@ -227,6 +227,7 @@ const smokeWindow = window as Window & {
     resetTouchInput: () => void;
     setPlayerPosition: (x: number, y: number) => void;
     tryInteract: () => void;
+    getAudioState: () => AudioContextState | null;
   };
   __kampungLoaderSmoke?: CampaignLoaderSmokeControl;
   /** Errand registry, so the harness drives real points rather than literals. */
@@ -903,6 +904,7 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
           campaignHandle?.setPlayerPosition({ x, y });
         },
         tryInteract: () => campaignHandle?.tryInteract(),
+        getAudioState: () => audio.getContextState(),
       };
     }
     renderMinimap();

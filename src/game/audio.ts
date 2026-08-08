@@ -181,15 +181,39 @@ export class KampungAudio {
   private ambienceStep = 0;
   private eveningMood = false;
   private suspendedByVisibility = false;
+  /**
+   * Whether the window currently holds focus.
+   *
+   * Tracked from the blur/focus events rather than re-queried from
+   * `document.hasFocus()` on each one: the event is the signal, and treating it
+   * as such is both simpler and testable, since a dispatched blur cannot move
+   * what `hasFocus()` reports.
+   */
+  private windowFocused = typeof document === "undefined" || document.hasFocus();
   private pauseDucked = false;
 
   constructor(settings: AudioSettings = DEFAULT_AUDIO_SETTINGS) {
     this.settings = normalizeAudioSettings(settings);
-    document.addEventListener("visibilitychange", this.handleVisibility);
+    document.addEventListener("visibilitychange", this.handleAttention);
+    // Losing focus is not the same event as hiding the tab, and only the second
+    // one used to be handled. Click onto another window on the same screen and
+    // the estate stayed audible - footsteps included - behind whatever you had
+    // moved to. Both now mean the same thing: nobody is listening.
+    window.addEventListener("blur", this.handleBlur);
+    window.addEventListener("focus", this.handleFocus);
   }
 
   getSettings(): AudioSettings {
     return { ...this.settings };
+  }
+
+  /**
+   * Current AudioContext state, or null before the first user gesture unlocks
+   * one. Exposed so the browser harness can prove the estate actually goes
+   * quiet when the window loses focus, rather than trusting that it does.
+   */
+  getContextState(): AudioContextState | null {
+    return this.context?.state ?? null;
   }
 
   /**
@@ -343,6 +367,10 @@ export class KampungAudio {
 
   playFootstep(surface: MovementSurface): void {
     if (!this.context || !this.buses || this.settings.muted) return;
+    // A suspended context does not discard scheduled sources, it queues them -
+    // so without this an unfocused window banks every footstep and fires the
+    // whole backlog the moment you click back in.
+    if (this.isUnattended()) return;
     if (!this.canPlay("step")) return;
     this.footstep(surface);
   }
@@ -373,7 +401,9 @@ export class KampungAudio {
 
   dispose(): void {
     this.stopAmbience();
-    document.removeEventListener("visibilitychange", this.handleVisibility);
+    document.removeEventListener("visibilitychange", this.handleAttention);
+    window.removeEventListener("blur", this.handleBlur);
+    window.removeEventListener("focus", this.handleFocus);
     void this.context?.close();
     this.context = null;
     this.buses = null;
@@ -381,9 +411,29 @@ export class KampungAudio {
     this.footstepBuffer = null;
   }
 
-  private handleVisibility = (): void => {
+  /**
+   * True when the page is neither hidden nor focused - i.e. nobody is listening.
+   *
+   * `document.hasFocus()` covers the window-behind-another-window case that
+   * `document.hidden` misses entirely.
+   */
+  private isUnattended(): boolean {
+    return document.hidden || !this.windowFocused;
+  }
+
+  private handleBlur = (): void => {
+    this.windowFocused = false;
+    this.handleAttention();
+  };
+
+  private handleFocus = (): void => {
+    this.windowFocused = true;
+    this.handleAttention();
+  };
+
+  private handleAttention = (): void => {
     if (!this.context) return;
-    if (document.hidden) {
+    if (this.isUnattended()) {
       this.suspendedByVisibility = this.context.state === "running";
       if (this.suspendedByVisibility) void this.context.suspend();
     } else if (this.suspendedByVisibility) {
