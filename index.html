@@ -1590,6 +1590,20 @@
         transform-origin: bottom center;
       }
 
+      /* An illustrated portrait, when one has been dropped into
+         public/assets/portraits/. It covers the code-drawn SVG underneath
+         rather than replacing it, so a missing or slow file degrades to the
+         drawn face instead of to an empty box. */
+      .dialog-portrait-photo {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 50% 20%;
+      }
+
       #dialog-overlay[data-accent] .dialog-portrait {
         box-shadow:
           8px 8px 0 var(--ink),

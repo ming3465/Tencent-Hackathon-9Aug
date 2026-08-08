@@ -43,6 +43,7 @@ import {
   renderCampaignPortrait,
   type PortraitMood,
 } from "./game/campaignPortrait.js";
+import { applyPortraitPhoto } from "./game/portraitPhoto.js";
 import {
   ESTATE_MAP_LANDMARKS,
   ESTATE_MAP_PATHS,
@@ -1466,6 +1467,10 @@ function setDialoguePortraitMood(mood: PortraitMood): void {
     effectiveMood,
   );
   dialogPortrait.dataset.mood = effectiveMood;
+  dialogPortrait.dataset.portraitId = dialogueNpcId ?? "estate";
+  // Upgrades to an illustrated portrait if one has been dropped in; leaves the
+  // drawn one showing if not. See src/game/portraitPhoto.ts.
+  applyPortraitPhoto(dialogPortrait, dialogueNpcId);
 }
 
 function dialogueLineMood(): PortraitMood {
@@ -1559,6 +1564,8 @@ function closeDialogue(restoreFocus = true): void {
   dialogChoices.innerHTML = "";
   dialogueNpcId = null;
   delete dialogPortrait.dataset.mood;
+  delete dialogPortrait.dataset.portraitId;
+  dialogPortrait.querySelector(".dialog-portrait-photo")?.remove();
   audio.play("overlay-close");
   if (restoreFocus) focusWorld();
 }

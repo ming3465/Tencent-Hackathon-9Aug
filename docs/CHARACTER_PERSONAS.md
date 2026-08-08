@@ -4,8 +4,8 @@
 
 One copy-paste prompt per character, for generating portrait art in
 [miora.design](https://miora.design). Companion to `docs/MIORA_ASSET_BIBLE.md`,
-which owns the shared art direction, camera and palette — read that first and do
-not restate it in a prompt.
+which owns the project-wide art direction; this file owns the cast and the
+**style lock that keeps a generator from drifting into realism**.
 
 **19 characters: 18 residents who walk the village, plus the Voice.**
 
@@ -22,8 +22,10 @@ character walking around will disagree.
 1. **Match the sprite attributes.** Build, hair style, outfit and accessory are
    rendered in code today. A portrait of Mr. Long without his cane, or Auntie
    Minah without her apron, contradicts the character on screen.
-2. **Use the listed hex values** for shirt, hair and skin. They are the sprite's
-   actual colours, so a portrait built on them reads as the same person.
+2. **Use the listed hex values** for shirt, hair and skin as the *starting
+   point*, not as a paint-by-numbers. A painted portrait will shade around them;
+   what matters is that Mr. Long stays a slate-blue-shirted man with silver hair
+   so the portrait and the walking sprite are recognisably one person.
 3. **The deck currently claims the title panorama is the only image asset.**
    Adding portraits changes that. When you ship them, update the Credits panel
    in `index.html` (`title-view-credits`) and the art note in `AGENTS.md`. That
@@ -33,20 +35,109 @@ Ethnicity in each persona is read from the character's name in the Singaporean
 convention. It is an editorial call, not something the code encodes — change it
 freely if you would rather it read differently.
 
-## Shared prompt prefix
+## The head prompt (style lock)
 
-Paste this ahead of any persona so the whole cast reads as one set.
+**Paste this before every persona.** Its job is to keep 19 separately generated
+portraits looking like one cast, and to stop the generator drifting somewhere
+that will not sit in the dialogue card.
+
+### The direction
+
+**Warm, painted, semi-realistic character portraits. Not pixel art.**
+
+The title panorama at `public/assets/generated/kampung-estate-title-v1.webp` is
+already a painted illustration, and it is the first thing a judge sees. Painted
+portraits match it, so the game's two most-looked-at surfaces finally agree.
+
+The code-drawn SVG portraits in `src/game/campaignPortrait.ts` stay as the
+fallback — they are what shows for any character you have not generated yet, so
+a half-finished set never leaves an empty box.
+
+One deliberate line to hold: **believable people, not photographs.** Fully
+photoreal faces beside hand-drawn UI reads as a stock photo pasted into a game.
+Painted realism — real anatomy, real skin, visible brushwork — sits in the card
+and still looks made for it.
+
+### Head prompt — full
 
 ```
-Character portrait, bust framing, facing slightly toward the viewer, warm
-sunlit contemporary Singapore kampung setting softly blurred behind. Warm 2D
-storybook style with pixel-inspired edges, simplified geometry, tactile
-painted texture and a strong readable silhouette. Deep teal outline #173F4F,
-warm cream #FFF6DC. Light from the upper left. Calm, dignified, lived-in.
-No text, no logos, no watermark, no UI frame.
+Warm painted character portrait, semi-realistic illustrated style. Believable
+human anatomy and proportions, real facial structure, soft natural skin tones
+with visible painterly brushwork and gentle rim light. Rich but not
+photographic - the finish of a hand-painted character illustration for a
+narrative game, not a photograph and not a 3D render.
+
+Bust framing, head and shoulders, three-quarter angle turned slightly toward
+the viewer, eyes to camera. Portrait canvas 11:15, face in the upper half with
+clear headroom above the head.
+
+Setting: contemporary Singapore kampung / HDB neighbourhood, warm late-morning
+sunlight from the upper left. Background is a soft, heavily out-of-focus wash
+of that setting - warm greens and cream - never sharp scenery, never a studio
+backdrop, never a flat colour.
+
+Palette leans warm: cream #FFF6DC, warm gold #F2B84B, soft coral #D96756, deep
+teal #173F4F in the shadows. Calm, dignified, lived-in, kind.
+
+NOT pixel art, NOT voxel, NOT low-poly, NOT flat vector, NOT cel-shaded anime,
+NOT a caricature, NOT a photograph, NOT 3D rendered, NOT plastic or waxy skin.
+No text, no logos, no watermark, no signature, no border or frame, no UI.
 ```
 
-Then append one persona block below.
+### Head prompt — short
+
+For tools with a tight character limit:
+
+```
+Warm painted semi-realistic character portrait, believable anatomy and real
+skin, visible painterly brushwork, soft rim light. Bust framing, three-quarter
+angle, eyes to camera, 11:15 with headroom. Contemporary Singapore kampung
+background heavily blurred, warm late-morning light from upper left. Palette
+cream #FFF6DC, gold #F2B84B, coral #D96756, teal #173F4F shadows. NOT pixel art,
+NOT anime, NOT 3D, NOT a photograph. No text, no watermark, no frame.
+```
+
+### Negative prompt
+
+If the tool has a separate negative field, put this there and drop the "NOT"
+line from the positive prompt:
+
+```
+pixel art, voxel, low poly, flat vector, cel shaded, anime, manga, cartoon,
+caricature, chibi, photograph, photorealistic, 3D render, CGI, plastic skin,
+waxy skin, uncanny, deformed hands, extra fingers, asymmetrical eyes, sharp
+detailed background, studio backdrop, flat colour background, text, watermark,
+signature, logo, border, frame, UI elements, multiple people
+```
+
+### Why each constraint is there
+
+| Constraint | What it prevents |
+| --- | --- |
+| "semi-realistic, not photographic" | A photoreal face beside hand-drawn UI reads as a stock photo dropped into a game. |
+| "visible painterly brushwork" | Gives the generator somewhere to land between flat and photoreal, instead of defaulting to plastic 3D. |
+| 11:15, face in upper half | The card crops with `object-fit: cover` biased to the top. A centred face loses its chin. |
+| "heavily out-of-focus background" | A sharp background fights the dialogue text sitting right beside it. |
+| Named warm palette | Nineteen portraits generated separately drift apart without a shared colour anchor. |
+| "no text, no watermark" | Generated text is always wrong, and the card supplies the name itself. |
+| "multiple people" (negative) | Personas mention neighbours and crowds; generators take that as a headcount. |
+
+### How they get into the game
+
+Already wired — there is nothing to code. Save each as:
+
+```
+public/assets/portraits/<npc-id>.webp
+```
+
+using the ids in the quick-reference table (`mr-long.webp`, `grandma-ros.webp`,
+`aunty-mei.webp`, …). The dialogue card picks them up on its own, and any
+character you have not generated keeps its drawn portrait. See
+`public/assets/portraits/README.md`.
+
+**One thing to update when you ship them:** the Credits panel in `index.html`
+(`title-view-credits`) and the art note in `AGENTS.md` both currently say the
+title panorama is the only image asset. That stops being true.
 
 ## The three story elders
 
