@@ -60,7 +60,7 @@ npm run typecheck && npm test && npm run build && npm audit && npm run smoke
 
 `npm run smoke` is self-contained (builds, serves, drives headless Chrome
 through a full playthrough, writes screenshots to `docs/screenshots/`).
-Current truth: **155 unit tests, 67 smoke checks, 0 vulnerabilities.** The unit
+Current truth: **155 unit tests, 71 smoke checks, 0 vulnerabilities.** The unit
 split is campaign 30, match engine 31, player identity 25, audio 17, carry
 errands 17, world-layout/door/pause 11, isometric world 10, story auto-start
 10, and accessibility contract 4.
