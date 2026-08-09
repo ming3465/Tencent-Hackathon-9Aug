@@ -218,12 +218,6 @@ const SMOKE_MODE =
   new URLSearchParams(window.location.search).get("smoke") === "1";
 const FORCE_CANVAS =
   new URLSearchParams(window.location.search).get("renderer") === "canvas";
-/**
- * The village is isometric. `?iso=0` falls back to the original top-down
- * estate, which is kept as an escape hatch rather than deleted.
- */
-const ISOMETRIC =
-  new URLSearchParams(window.location.search).get("iso") !== "0";
 const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const audio = new KampungAudio(readStoredAudioSettings());
 const smokeWindow = window as Window & {
@@ -888,7 +882,6 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
         playerSpeed: DEMO_MODE ? 260 : undefined,
         reducedMotion: REDUCED_MOTION.matches,
         renderer: FORCE_CANVAS ? "canvas" : "auto",
-        isometric: ISOMETRIC,
       },
     );
     attemptHandle = createdHandle;

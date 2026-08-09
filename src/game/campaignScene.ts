@@ -72,20 +72,6 @@ import {
 } from "./threeQuarterArt.js";
 import { bakeWithGrain } from "./textureGrain.js";
 import {
-  isoBuildingTextureBounds,
-  paintIsoBuilding,
-} from "./iso/isoBuildings.js";
-import {
-  ensureIsoPropTextures,
-  isoTextureFor,
-} from "./iso/isoProps.js";
-import { paintIsoTerrain } from "./iso/isoTerrain.js";
-import {
-  isoCanvasForWorld,
-  isoDepth,
-  worldToIso,
-} from "./iso/projection.js";
-import {
   movementSurfaceAt,
   stepIntervalFor,
   walkFrameAt,
@@ -154,14 +140,6 @@ function scheduleWallClockSceneFallback(
 function depthFor(y: number, layer = 0): number {
   return y * 10 + layer;
 }
-
-/* ---- Projection seam ----------------------------------------------------
- *
- * Every scene positions its sprites through `screenX`/`screenY`/`depthAt`
- * rather than writing world coordinates straight onto a game object. The
- * defaults below are the identity, so top-down renders exactly as it always
- * has; an isometric scene overrides the three and nothing else has to know.
- */
 
 const PIXEL_GLYPHS: Readonly<Record<string, readonly number[]>> = {
   "0": [0b010, 0b101, 0b101, 0b101, 0b010],
@@ -334,24 +312,11 @@ export interface CampaignGameOptions {
   playerSpeed?: number;
   reducedMotion?: boolean;
   renderer?: "auto" | "canvas";
-  /**
-   * Render the estate isometrically. Opt-in while the direction is evaluated -
-   * physics stays in top-down world space either way, so this only changes
-   * where things are drawn.
-   */
-  isometric?: boolean;
-}
-
-/** How a scene turns a world point into a drawn point. See WalkableScene. */
-interface ScenePlacement {
-  screen(worldX: number, worldY: number): { x: number; y: number };
-  depth(worldX: number, worldY: number, layer: number): number;
 }
 
 class DoorView {
   readonly definition: DoorDefinition;
   private readonly scene: Phaser.Scene;
-  private readonly placement: ScenePlacement;
   private readonly blocker: Phaser.GameObjects.Rectangle;
   private readonly leaves: Phaser.GameObjects.Graphics[] = [];
   private readonly closedLeafPoses: EstatePoint[] = [];
@@ -361,12 +326,10 @@ class DoorView {
     scene: Phaser.Scene,
     definition: DoorDefinition,
     blocker: Phaser.GameObjects.Rectangle,
-    placement: ScenePlacement,
   ) {
     this.scene = scene;
     this.definition = definition;
     this.blocker = blocker;
-    this.placement = placement;
     this.controller = new DoorTransitionController(definition.startsOpen === true);
     this.draw();
     if (definition.startsOpen) {
@@ -405,8 +368,8 @@ class DoorView {
       targets,
       scaleX: pose.scaleX,
       scaleY: pose.scaleY,
-      x: this.drawnAnchor().x + pose.offsetX,
-      y: this.drawnAnchor().y + pose.offsetY,
+      x: this.definition.anchor.x + pose.offsetX,
+      y: this.definition.anchor.y + pose.offsetY,
       duration: 180,
       ease: "Sine.easeInOut",
       onComplete: finish,
@@ -428,7 +391,7 @@ class DoorView {
   resetForReuse(): void {
     this.scene.tweens.killTweensOf(this.leaves);
     this.leaves.forEach((leaf, index) => {
-      const closedPose = this.closedLeafPoses[index] ?? this.drawnAnchor();
+      const closedPose = this.closedLeafPoses[index] ?? this.definition.anchor;
       leaf
         .setPosition(closedPose.x, closedPose.y)
         .setScale(1, 1)
@@ -461,24 +424,12 @@ class DoorView {
     };
   }
 
-  /** Where this door is drawn, as opposed to where its collider lives. */
-  private drawnAnchor(): { x: number; y: number } {
-    return this.placement.screen(
-      this.definition.anchor.x,
-      this.definition.anchor.y,
-    );
-  }
-
   private draw(): void {
     const { anchor, dimensions, placard, style } = this.definition;
     const left = -dimensions.width / 2;
     const top = -dimensions.height;
-    const drawn = this.drawnAnchor();
-    const depth = this.placement.depth(anchor.x, anchor.y, 6);
-    const frame = this.scene.add
-      .graphics()
-      .setPosition(drawn.x, drawn.y)
-      .setDepth(depth);
+    const depth = depthFor(anchor.y, 6);
+    const frame = this.scene.add.graphics().setPosition(anchor.x, anchor.y).setDepth(depth);
     frame
       .fillStyle(NIGHT, 0.26)
       .fillRect(left + 8, top + 9, dimensions.width + 10, dimensions.height + 10)
@@ -537,7 +488,7 @@ class DoorView {
       this.definition.dimensions,
     );
     this.leaves.forEach((leaf, index) => {
-      const closedPose = this.closedLeafPoses[index] ?? this.drawnAnchor();
+      const closedPose = this.closedLeafPoses[index] ?? this.definition.anchor;
       leaf
         .setPosition(closedPose.x + pose.offsetX, closedPose.y + pose.offsetY)
         .setScale(pose.scaleX, pose.scaleY)
@@ -561,15 +512,6 @@ interface MarkerView {
 }
 
 interface NpcView {
-  /**
-   * Where the resident is in world space.
-   *
-   * Distinct from `sprite.x/y`, which is where they are *drawn* - the two are
-   * the same only under the identity projection. Reading the sprite instead of
-   * this is what broke resident routes the moment the estate went isometric.
-   */
-  worldX: number;
-  worldY: number;
   shadow: Phaser.GameObjects.Ellipse;
   sprite: Phaser.GameObjects.Sprite;
   texture: string;
@@ -640,9 +582,6 @@ export interface CampaignNpcMotionSnapshot {
   interactionY: number | null;
   markerX: number | null;
   markerY: number | null;
-  /** Where the resident is drawn, which is the space markers live in. */
-  drawnX: number;
-  drawnY: number;
 }
 
 export interface CampaignAmbientMotionSnapshot {
@@ -802,12 +741,6 @@ interface BuildingOcclusionView {
   zone: EstateRect;
   overlay: Phaser.GameObjects.Image;
   faded: boolean;
-  /**
-   * Where this building is drawn, in screen space. Only set in isometric,
-   * where "is the player behind it" is a question about the drawn box and the
-   * depth order rather than about the world footprint.
-   */
-  drawnBox?: { left: number; top: number; right: number; bottom: number };
 }
 
 
@@ -825,19 +758,6 @@ abstract class WalkableScene extends Phaser.Scene {
   protected readonly reducedMotion: boolean;
   protected locationId: LocationId;
   protected player!: Phaser.Physics.Arcade.Sprite;
-  /**
-   * The drawn player.
-   *
-   * `player` is the physics body and it always lives in top-down world space -
-   * every collider, door, route and spawn in `estateLayout.ts` is authored
-   * there, and re-authoring them for a projected space would be the single
-   * riskiest thing we could do. So the body stays where it is and is never
-   * drawn; this sprite is what you see, positioned at the body's projection.
-   *
-   * Under the default identity projection the two sit on the same pixel, which
-   * is why introducing this split changes nothing about the shipped build.
-   */
-  protected playerAvatar!: Phaser.GameObjects.Sprite;
   protected playerShadow!: Phaser.GameObjects.Ellipse;
   private playerGuide!: Phaser.GameObjects.Graphics;
   protected obstacles: Phaser.GameObjects.GameObject[] = [];
@@ -915,25 +835,11 @@ abstract class WalkableScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, width, height);
     this.createSharedTextures();
     this.playerShadow = this.add
-      .ellipse(
-        this.screenX(spawn.x, spawn.y),
-        this.screenY(spawn.x, spawn.y) + 23,
-        37,
-        11,
-        NIGHT,
-        0.3,
-      )
-      .setDepth(this.depthAt(spawn.x, spawn.y, 1));
+      .ellipse(spawn.x, spawn.y + 23, 37, 11, NIGHT, 0.3)
+      .setDepth(depthFor(spawn.y, 1));
     this.player = this.physics.add
       .sprite(spawn.x, spawn.y, this.playerTextureKey)
-      .setVisible(false);
-    this.playerAvatar = this.add
-      .sprite(
-        this.screenX(spawn.x, spawn.y),
-        this.screenY(spawn.x, spawn.y),
-        this.playerTextureKey,
-      )
-      .setDepth(this.depthAt(spawn.x, spawn.y, 3));
+      .setDepth(depthFor(spawn.y, 3));
     this.playerGuide = this.add
       .graphics()
       .fillStyle(NIGHT, 0.28)
@@ -944,18 +850,12 @@ abstract class WalkableScene extends Phaser.Scene {
       .fillTriangle(-9, -58, 9, -58, 0, -43)
       .fillStyle(GOLD)
       .fillTriangle(-7, -56, 7, -56, 0, -45)
-      .setPosition(this.screenX(spawn.x, spawn.y), this.screenY(spawn.x, spawn.y))
+      .setPosition(spawn.x, spawn.y)
       // Above every world object, but under interaction markers and nameplates
       // so the guide never sits on top of the name you are walking towards.
       .setDepth(100_050);
     this.tapDestinationRing = this.add
-      .circle(
-        this.screenX(spawn.x, spawn.y),
-        this.screenY(spawn.x, spawn.y),
-        14,
-        NIGHT,
-        0.18,
-      )
+      .circle(spawn.x, spawn.y, 14, NIGHT, 0.18)
       .setStrokeStyle(3, GOLD, 0.96)
       .setVisible(false)
       .setDepth(100_098);
@@ -975,7 +875,7 @@ abstract class WalkableScene extends Phaser.Scene {
     this.configureInput();
     this.createInteractionMarkers();
     this.cameras.main.startFollow(
-      this.playerAvatar,
+      this.player,
       !this.reducedMotion,
       this.reducedMotion ? 1 : 0.18,
       this.reducedMotion ? 1 : 0.18,
@@ -998,11 +898,9 @@ abstract class WalkableScene extends Phaser.Scene {
     if (!this.player?.body) return;
     this.updateStepPuffs(time);
     this.updateCarriedItemPosition();
-    const drawnX = this.screenX(this.player.x, this.player.y);
-    const drawnY = this.screenY(this.player.x, this.player.y);
     this.playerShadow
-      .setPosition(drawnX, drawnY + 23)
-      .setDepth(this.depthAt(this.player.x, this.player.y, 1))
+      .setPosition(this.player.x, this.player.y + 23)
+      .setDepth(depthFor(this.player.y, 1))
       .setScale(
         this.reducedMotion || !this.playerIsMoving
           ? 1
@@ -1011,11 +909,9 @@ abstract class WalkableScene extends Phaser.Scene {
             : 1.04,
         1,
       );
-    this.playerAvatar
-      .setPosition(drawnX, drawnY)
-      .setDepth(this.depthAt(this.player.x, this.player.y, 3));
+    this.player.setDepth(depthFor(this.player.y, 3));
     const guideBob = this.reducedMotion ? 0 : Math.sin(time / 260) * 2;
-    this.playerGuide.setPosition(drawnX, drawnY + guideBob);
+    this.playerGuide.setPosition(this.player.x, this.player.y + guideBob);
 
     if (!this.controlsEnabled) {
       this.player.setVelocity(0, 0);
@@ -1274,11 +1170,10 @@ abstract class WalkableScene extends Phaser.Scene {
         visible: this.playerGuide.visible,
         depth: this.playerGuide.depth,
       },
-      // The avatar carries the texture now; the body is never drawn.
-      playerTextureKey: this.playerAvatar.texture.key,
+      playerTextureKey: this.player.texture.key,
       playerFacing: this.playerFacing,
       playerFlipX: this.player.flipX,
-      playerIdleBlinking: this.playerAvatar.texture.key.endsWith("-blink"),
+      playerIdleBlinking: this.player.texture.key.endsWith("-blink"),
       movementSurface: this.currentSurface,
       activeStepSurfaces: this.stepPuffs
         .filter(({ dust }) => dust.visible)
@@ -1365,10 +1260,8 @@ abstract class WalkableScene extends Phaser.Scene {
         const marker = interaction ? this.markers.get(interaction.id) : undefined;
         return {
           npcId,
-          // World space, to match homeX/homeY. Reporting the drawn position
-          // would compare a projected point against an unprojected one.
-          x: view.worldX,
-          y: view.worldY,
+          x: view.sprite.x,
+          y: view.sprite.y,
           homeX: view.homeX,
           homeY: view.homeY,
           facing: view.facing,
@@ -1380,8 +1273,6 @@ abstract class WalkableScene extends Phaser.Scene {
           interactionY: interaction?.y ?? null,
           markerX: marker?.ring.x ?? null,
           markerY: marker?.ring.y ?? null,
-          drawnX: view.sprite.x,
-          drawnY: view.sprite.y,
         };
       }),
     };
@@ -1390,14 +1281,7 @@ abstract class WalkableScene extends Phaser.Scene {
   setPlayerPosition(spawn: SpawnPoint): void {
     this.cancelTapNavigation("player-position");
     this.player?.setPosition(spawn.x, spawn.y);
-    this.playerAvatar?.setPosition(
-      this.screenX(spawn.x, spawn.y),
-      this.screenY(spawn.x, spawn.y),
-    );
-    this.playerGuide?.setPosition(
-      this.screenX(spawn.x, spawn.y),
-      this.screenY(spawn.x, spawn.y),
-    );
+    this.playerGuide?.setPosition(spawn.x, spawn.y);
     this.readyForInteractionAt = this.time.now + TRANSITION_LATCH_MS;
     this.updateNearbyInteraction(true);
   }
@@ -1476,21 +1360,6 @@ abstract class WalkableScene extends Phaser.Scene {
     this.tapNavigationCancelReason = null;
   }
 
-  /** World x -> screen x. Identity in top-down. */
-  protected screenX(worldX: number, _worldY: number): number {
-    return worldX;
-  }
-
-  /** World y -> screen y. Identity in top-down. */
-  protected screenY(_worldX: number, worldY: number): number {
-    return worldY;
-  }
-
-  /** Draw order for a world position. Southern things draw in front. */
-  protected depthAt(_worldX: number, worldY: number, layer = 0): number {
-    return depthFor(worldY, layer);
-  }
-
   protected abstract drawConsequences(): void;
 
   protected clearConsequences(): void {
@@ -1515,10 +1384,7 @@ abstract class WalkableScene extends Phaser.Scene {
     this.tapNavigationOutcome = "moving";
     this.tapNavigationCancelReason = null;
     this.tapDestinationRing
-      .setPosition(
-        this.screenX(destination.x, destination.y),
-        this.screenY(destination.x, destination.y),
-      )
+      .setPosition(destination.x, destination.y)
       .setVisible(true);
     this.syncTapDestinationRingScale();
   }
@@ -1553,10 +1419,7 @@ abstract class WalkableScene extends Phaser.Scene {
       }
       navigation.destination.x = interaction.x;
       navigation.destination.y = interaction.y;
-      this.tapDestinationRing.setPosition(
-        this.screenX(interaction.x, interaction.y),
-        this.screenY(interaction.x, interaction.y),
-      );
+      this.tapDestinationRing.setPosition(interaction.x, interaction.y);
     }
 
     const progressX = this.player.x - navigation.progressAnchor.x;
@@ -1630,10 +1493,8 @@ abstract class WalkableScene extends Phaser.Scene {
     const puff = this.stepPuffs[this.nextStepPuff];
     this.nextStepPuff = (this.nextStepPuff + 1) % this.stepPuffs.length;
     puff.bornAt = time;
-    const puffWorldX = this.player.x - directionX * 11;
-    const puffWorldY = this.player.y + 18 - directionY * 5;
-    puff.originX = this.screenX(puffWorldX, puffWorldY);
-    puff.originY = this.screenY(puffWorldX, puffWorldY);
+    puff.originX = this.player.x - directionX * 11;
+    puff.originY = this.player.y + 18 - directionY * 5;
     puff.directionX = directionX;
     puff.directionY = directionY;
     puff.surface = surface;
@@ -1652,10 +1513,10 @@ abstract class WalkableScene extends Phaser.Scene {
     const fleckRightColour = surface === "grass" ? GOLD : dustColour;
     const dustAlpha =
       surface === "grass" ? 0.24 : surface === "stone" ? 0.34 : 0.18;
-    const depth = this.depthAt(this.player.x, this.player.y, 2);
+    const depth = depthFor(this.player.y, 2);
     puff.dust
       .setPosition(puff.originX, puff.originY)
-      .setDepth(depth)
+      .setDepth(depthFor(this.player.y, 2))
       .setScale(0.55)
       .setFillStyle(dustColour, 1)
       .setAlpha(dustAlpha)
@@ -1745,13 +1606,7 @@ abstract class WalkableScene extends Phaser.Scene {
     );
     this.doorViews.set(
       definition.id,
-      new DoorView(this, definition, blocker, {
-        screen: (worldX, worldY) => ({
-          x: this.screenX(worldX, worldY),
-          y: this.screenY(worldX, worldY),
-        }),
-        depth: (worldX, worldY, layer) => this.depthAt(worldX, worldY, layer),
-      }),
+      new DoorView(this, definition, blocker),
     );
     const isExit = definition.sourceLocationId !== "estate"
       && definition.targetLocationId === "estate";
@@ -1826,17 +1681,15 @@ abstract class WalkableScene extends Phaser.Scene {
       0,
     );
     const shadow = this.add
-      .ellipse(this.screenX(x, y), this.screenY(x, y) + 23, 42, 12, NIGHT, 0.27)
-      .setDepth(this.depthAt(x, y, 1));
+      .ellipse(x, y + 23, 42, 12, NIGHT, 0.27)
+      .setDepth(depthFor(y, 1));
     const sprite = this.add
-      .sprite(this.screenX(x, y), this.screenY(x, y), `${texture}-down-0`)
-      .setDepth(this.depthAt(x, y, 3));
+      .sprite(x, y, `${texture}-down-0`)
+      .setDepth(depthFor(y, 3));
     this.npcViews.set(npcId, {
       shadow,
       sprite,
       texture,
-      worldX: x,
-      worldY: y,
       homeX: x,
       homeY: y,
       facing: "down",
@@ -1863,16 +1716,12 @@ abstract class WalkableScene extends Phaser.Scene {
   protected moveNpcTo(npcId: NpcId, x: number, y: number): void {
     const view = this.npcViews.get(npcId);
     if (!view) return;
-    view.worldX = x;
-    view.worldY = y;
-    const drawnX = this.screenX(x, y);
-    const drawnY = this.screenY(x, y);
     view.shadow
-      .setPosition(drawnX, drawnY + 23)
-      .setDepth(this.depthAt(x, y, 1));
+      .setPosition(x, y + 23)
+      .setDepth(depthFor(y, 1));
     view.sprite
-      .setPosition(drawnX, drawnY)
-      .setDepth(this.depthAt(x, y, 3));
+      .setPosition(x, y)
+      .setDepth(depthFor(y, 3));
     const interaction = this.interactions.find(
       (candidate) => candidate.kind === "npc" && candidate.npcId === npcId,
     );
@@ -1881,12 +1730,12 @@ abstract class WalkableScene extends Phaser.Scene {
     interaction.y = y;
     const marker = this.markers.get(interaction.id);
     if (!marker) return;
-    const markerY = drawnY - 96;
-    marker.glow.setPosition(drawnX, markerY);
-    marker.ring.setPosition(drawnX, markerY);
-    marker.badge.setPosition(drawnX, markerY);
-    marker.plate.setPosition(drawnX, markerY + 21);
-    marker.label.setPosition(drawnX, markerY + 27);
+    const markerY = y - 96;
+    marker.glow.setPosition(x, markerY);
+    marker.ring.setPosition(x, markerY);
+    marker.badge.setPosition(x, markerY);
+    marker.plate.setPosition(x, markerY + 21);
+    marker.label.setPosition(x, markerY + 27);
   }
 
   protected restoreNpcHomes(): void {
@@ -1918,8 +1767,8 @@ abstract class WalkableScene extends Phaser.Scene {
     const stepDistance = Math.min(delta, 50) / 1000;
     const attentionDistanceSq = (INTERACTION_DISTANCE * 1.08) ** 2;
     for (const [npcId, view] of this.npcViews) {
-      const playerDx = this.player.x - view.worldX;
-      const playerDy = this.player.y - view.worldY;
+      const playerDx = this.player.x - view.sprite.x;
+      const playerDy = this.player.y - view.sprite.y;
       const attentive =
         playerDx * playerDx + playerDy * playerDy <= attentionDistanceSq;
 
@@ -1936,8 +1785,8 @@ abstract class WalkableScene extends Phaser.Scene {
         && time >= view.pauseUntil
       ) {
         const target = view.route[view.routeIndex];
-        const dx = target.x - view.worldX;
-        const dy = target.y - view.worldY;
+        const dx = target.x - view.sprite.x;
+        const dy = target.y - view.sprite.y;
         const distance = Math.hypot(dx, dy);
         const travel = view.speed * stepDistance;
         if (distance <= Math.max(1, travel)) {
@@ -1954,8 +1803,8 @@ abstract class WalkableScene extends Phaser.Scene {
         } else {
           this.moveNpcTo(
             npcId,
-            view.worldX + dx / distance * travel,
-            view.worldY + dy / distance * travel,
+            view.sprite.x + dx / distance * travel,
+            view.sprite.y + dy / distance * travel,
           );
           const facing = this.facingForVector(dx, dy);
           const flipX = facing === "side" && dx < 0;
@@ -2023,9 +1872,7 @@ abstract class WalkableScene extends Phaser.Scene {
   }
 
   protected addRoomPlant(x: number, y: number): void {
-    this.add
-      .sprite(this.screenX(x, y), this.screenY(x, y) - 32, "prop-planter")
-      .setDepth(this.depthAt(x, y, 1));
+    this.add.sprite(x, y - 32, "prop-planter").setDepth(depthFor(y, 1));
   }
 
   private configureInput(): void {
@@ -2175,18 +2022,15 @@ abstract class WalkableScene extends Phaser.Scene {
     if (!this.carriedItemView) {
       this.carriedItemView = this.add.rectangle(0, 0, 16, 12, errand.tint)
         .setStrokeStyle(2, PALETTE.ink)
-        .setDepth(this.depthAt(this.player.x, this.player.y, 6));
+        .setDepth(depthFor(this.player.y, 6));
     }
     this.carriedItemView.setFillStyle(errand.tint);
   }
 
   protected updateCarriedItemPosition(): void {
     if (!this.carriedItemView) return;
-    this.carriedItemView.setPosition(
-      this.screenX(this.player.x, this.player.y),
-      this.screenY(this.player.x, this.player.y) - 34,
-    );
-    this.carriedItemView.setDepth(this.depthAt(this.player.x, this.player.y, 6));
+    this.carriedItemView.setPosition(this.player.x, this.player.y - 34);
+    this.carriedItemView.setDepth(depthFor(this.player.y, 6));
   }
 
   private updateNearbyInteraction(force: boolean): void {
@@ -2228,10 +2072,10 @@ abstract class WalkableScene extends Phaser.Scene {
   private setPlayerFacing(x: number, y: number): void {
     if (Math.abs(x) > Math.abs(y)) {
       this.playerFacing = "side";
-      this.playerAvatar.setFlipX(x < 0);
+      this.player.setFlipX(x < 0);
     } else {
       this.playerFacing = y < 0 ? "up" : "down";
-      this.playerAvatar.setFlipX(false);
+      this.player.setFlipX(false);
     }
   }
 
@@ -2265,7 +2109,7 @@ abstract class WalkableScene extends Phaser.Scene {
     if (key === this.playerTextureKey) return;
     this.currentWalkFrame = frame;
     this.playerTextureKey = key;
-    this.playerAvatar.setTexture(key);
+    this.player.setTexture(key);
   }
 }
 
@@ -2593,9 +2437,6 @@ export class EstateScene extends WalkableScene {
   private puddleRipplePhase = 0;
   private residentArrangement: "routes" | "monsoon" | "gathering" = "routes";
   private buildingOcclusionViews: BuildingOcclusionView[] = [];
-  private readonly isometric: boolean;
-  private isoOriginX = 0;
-  private isoOriginY = 40;
   private shelterSprites: Phaser.GameObjects.Image[] = [];
   private shelterColliderIds = new Set<string>();
 
@@ -2605,28 +2446,6 @@ export class EstateScene extends WalkableScene {
     options: CampaignGameOptions,
   ) {
     super("estate", "estate", callbacks, getState, options);
-    this.isometric = options.isometric === true;
-    if (this.isometric) {
-      this.isoOriginX = isoCanvasForWorld(ESTATE_WIDTH, ESTATE_HEIGHT).originX;
-    }
-  }
-
-  /* The projection seam. Physics never sees these - they only decide where a
-     sprite is drawn and in what order. See WalkableScene.screenX. */
-
-  protected override screenX(worldX: number, worldY: number): number {
-    if (!this.isometric) return worldX;
-    return worldToIso(worldX, worldY).x + this.isoOriginX;
-  }
-
-  protected override screenY(worldX: number, worldY: number): number {
-    if (!this.isometric) return worldY;
-    return worldToIso(worldX, worldY).y + this.isoOriginY;
-  }
-
-  protected override depthAt(worldX: number, worldY: number, layer = 0): number {
-    if (!this.isometric) return super.depthAt(worldX, worldY, layer);
-    return isoDepth(worldX, worldY, layer);
   }
 
   protected cameraZoomForViewport(width: number): number {
@@ -2641,22 +2460,10 @@ export class EstateScene extends WalkableScene {
 
   create(data: SceneStartData = {}): void {
     this.locationId = "estate";
-    // Isometric projects the world into a diamond, so the corners of the
-    // viewport fall outside it. A mid-green there reads as missing ground;
-    // a deep, desaturated haze reads as distance, and the village as an island
-    // of colour in it.
-    this.cameras.main.setBackgroundColor(
-      this.isometric ? "#3f5a48" : "#9fc079",
-    );
+    this.cameras.main.setBackgroundColor("#9fc079");
     ensureCampaignArtTextures(this, this.getState().playerAppearance);
-    if (this.isometric) {
-      ensureIsoPropTextures(this);
-      this.createIsoGround();
-      this.createIsoBuildings();
-    } else {
-      this.createBakedExteriorTiles();
-      this.createBuildingOcclusionLayers();
-    }
+    this.createBakedExteriorTiles();
+    this.createBuildingOcclusionLayers();
     for (const zone of ESTATE_BUILDING_COLLISION_ZONES) {
       this.addObstacle(zone.x, zone.y, zone.width, zone.height);
     }
@@ -2692,10 +2499,6 @@ export class EstateScene extends WalkableScene {
       ESTATE_HEIGHT,
       data.spawn ?? { x: 700, y: 400 },
     );
-    if (this.isometric) {
-      const canvas = isoCanvasForWorld(ESTATE_WIDTH, ESTATE_HEIGHT);
-      this.cameras.main.setBounds(0, 0, canvas.width, canvas.height + 80);
-    }
     this.updateBuildingOcclusion();
     this.drawConsequences();
   }
@@ -2770,16 +2573,11 @@ export class EstateScene extends WalkableScene {
 
   private measureTerrainDetail(): CampaignTerrainDetailSnapshot {
     if (this.terrainDetailSnapshot) return this.terrainDetailSnapshot;
-    // Whichever ground the estate actually baked. The top-down build makes four
-    // tiles; the isometric one makes a single plane.
-    const groundKey = this.isometric ? "estate-iso-ground" : "estate-nw";
-    const source = this.textures.exists(groundKey)
-      ? this.textures.get(groundKey).getSourceImage()
-      : null;
-    const canvas =
-      source instanceof HTMLCanvasElement ? source : null;
-    const context = canvas?.getContext("2d", { willReadFrequently: true }) ?? null;
-    if (!canvas || !context) {
+    const canvas = this.textures
+      .get("estate-nw")
+      .getSourceImage() as HTMLCanvasElement;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) {
       return {
         grassColourCount: 0,
         pathColourCount: 0,
@@ -2872,10 +2670,7 @@ export class EstateScene extends WalkableScene {
     let facadeDarkPixels = 0;
     let facadeOpaquePixels = 0;
     for (const building of ESTATE_BUILDINGS) {
-      // Whichever facade the estate actually baked.
-      const textureKey = this.isometric
-        ? `iso-building:${building.id}`
-        : `building-view:${building.id}`;
+      const textureKey = `building-view:${building.id}`;
       if (!this.textures.exists(textureKey)) continue;
       const facadeCanvas = this.textures
         .get(textureKey)
@@ -2964,12 +2759,7 @@ export class EstateScene extends WalkableScene {
       bicycleRackCount: ESTATE_BICYCLE_RACKS.length,
       motorVehicleCount: ESTATE_VEHICLE_ROUTES.length,
       layoutIssueCount: auditEstateLayout().length,
-      // Isometric sorts buildings by depth instead of fading an overlay, so
-      // each building *is* its own layer. The invariant the suite cares about -
-      // every building can occlude - holds either way.
-      buildingOcclusionLayerCount: this.isometric
-        ? ESTATE_BUILDINGS.length
-        : this.buildingOcclusionViews.length,
+      buildingOcclusionLayerCount: this.buildingOcclusionViews.length,
     };
     this.terrainDetailSnapshot = detail;
     return detail;
@@ -3159,97 +2949,6 @@ export class EstateScene extends WalkableScene {
     }
   }
 
-  /**
-   * The isometric ground plane, baked once into a single texture.
-   *
-   * Same shape as the top-down bake: paint flat with Graphics, then run the
-   * per-pixel grain pass, because Graphics can only lay down constant fills.
-   */
-  /**
-   * The isometric stand-in for a shipped texture, when there is one.
-   *
-   * `isoTextureFor` returns the key unchanged for anything without an
-   * isometric version, so a prop that has not been redrawn yet keeps standing
-   * as an upright billboard rather than vanishing.
-   */
-  private propTexture(key: string): string {
-    return this.isometric ? isoTextureFor(key) : key;
-  }
-
-  private createIsoGround(): void {
-    const canvas = isoCanvasForWorld(ESTATE_WIDTH, ESTATE_HEIGHT);
-    const height = canvas.height + 80;
-    const key = "estate-iso-ground";
-    if (!this.textures.exists(key)) {
-      const graphics = this.make.graphics({ x: 0, y: 0 });
-      paintIsoTerrain(graphics, {
-        worldX: 0,
-        worldY: 0,
-        worldWidth: ESTATE_WIDTH,
-        worldHeight: ESTATE_HEIGHT,
-        originX: this.isoOriginX,
-        originY: this.isoOriginY,
-      });
-      const flatKey = `${key}-flat`;
-      graphics.generateTexture(flatKey, canvas.width, height);
-      graphics.destroy();
-      bakeWithGrain(this, flatKey, key, canvas.width, height, {
-        amplitude: 9,
-        falloff: 0.22,
-      });
-    }
-    this.add.image(0, 0, key).setOrigin(0).setDepth(0);
-  }
-
-  /**
-   * Buildings as isometric volumes.
-   *
-   * Each bakes to its own texture with its own bounds box, and sorts on its
-   * far corner so a neighbour standing behind it is drawn behind it. The
-   * top-down build's separate occlusion overlay is not needed here - depth
-   * sorting does that job.
-   */
-  private createIsoBuildings(): void {
-    for (const definition of ESTATE_BUILDINGS) {
-      const { x, y, width, height } = definition.bounds;
-      const box = isoBuildingTextureBounds(definition);
-      const key = `iso-building:${definition.id}`;
-      if (!this.textures.exists(key)) {
-        const graphics = this.make.graphics({ x: 0, y: 0 });
-        paintIsoBuilding(graphics, definition, -box.left, -box.top);
-        const flatKey = `iso-building-flat:${definition.id}`;
-        if (this.textures.exists(flatKey)) this.textures.remove(flatKey);
-        graphics.generateTexture(flatKey, box.width, box.height);
-        graphics.destroy();
-        bakeWithGrain(this, flatKey, key, box.width, box.height, {
-          amplitude: 8,
-          falloff: 0.12,
-        });
-      }
-      const left = box.left + this.isoOriginX;
-      const top = box.top + this.isoOriginY;
-      const overlay = this.add
-        .image(left, top, key)
-        .setOrigin(0)
-        .setName(`building-occluder:${definition.id}`)
-        .setDepth(isoDepth(x + width, y + height, 2));
-      // Isometric buildings are tall enough to swallow the player whole, so
-      // they fade exactly as the top-down facades do. Depth sorting alone would
-      // just hide you behind a wall.
-      this.buildingOcclusionViews.push({
-        zone: definition.bounds,
-        overlay,
-        faded: false,
-        drawnBox: {
-          left,
-          top,
-          right: left + box.width,
-          bottom: top + box.height,
-        },
-      });
-    }
-  }
-
   private createBakedExteriorTiles(): void {
     const tiles: readonly [string, number, number][] = [
       ["estate-nw", 0, 0],
@@ -3314,20 +3013,10 @@ export class EstateScene extends WalkableScene {
       const texture = ensureShelterTexture(this, definition);
       this.shelterSprites.push(
         this.add
-          .image(
-            this.screenX(definition.bounds.x, definition.bounds.y),
-            this.screenY(definition.bounds.x, definition.bounds.y),
-            texture,
-          )
+          .image(definition.bounds.x, definition.bounds.y, texture)
           .setOrigin(0)
           .setName(`shelter:${definition.id}`)
-          .setDepth(
-            this.depthAt(
-              definition.bounds.x,
-              definition.bounds.y + definition.bounds.height,
-              4,
-            ),
-          ),
+          .setDepth(depthFor(definition.bounds.y + definition.bounds.height, 4)),
       );
       for (const post of definition.posts) {
         if (this.shelterColliderIds.has(post.id)) continue;
@@ -3342,25 +3031,8 @@ export class EstateScene extends WalkableScene {
     const occludingIds = new Set(
       getOccludingBuildingIds({ x: this.player.x, y: this.player.y }),
     );
-    // In isometric the world footprint is the wrong question. A building hides
-    // you when it sorts in front of you *and* its drawn box covers where you
-    // are drawn - which is a screen-space test plus a depth comparison.
-    const drawnX = this.screenX(this.player.x, this.player.y);
-    const drawnY = this.screenY(this.player.x, this.player.y);
     for (const view of this.buildingOcclusionViews) {
-      const box = view.drawnBox;
-      const faded = box
-        // Behind both front faces of the footprint, and under the drawn box.
-        // Comparing against the *far* corner instead was wrong in a way that
-        // only showed on the way out: standing directly in front of a building
-        // still counted as behind it, so the facade faded and never restored.
-        ? this.player.x < view.zone.x + view.zone.width
-          && this.player.y < view.zone.y + view.zone.height
-          && drawnX >= box.left
-          && drawnX <= box.right
-          && drawnY >= box.top
-          && drawnY <= box.bottom
-        : occludingIds.has(view.zone.id);
+      const faded = occludingIds.has(view.zone.id);
       const companion = view.zone.id === "provision-shop"
         ? this.scamCheckCard
         : undefined;
@@ -3550,13 +3222,9 @@ export class EstateScene extends WalkableScene {
         trunkCollider.height,
       );
       const sprite = this.add
-        .sprite(
-          this.screenX(anchor.x, anchor.y),
-          this.screenY(anchor.x, anchor.y),
-          this.propTexture(definition.texture),
-        )
+        .sprite(anchor.x, anchor.y, definition.texture)
         .setOrigin(0.5, 1)
-        .setDepth(this.depthAt(anchor.x, anchor.y, definition.depthLayer));
+        .setDepth(depthFor(anchor.y, definition.depthLayer));
       this.exteriorPropSprites.push(sprite);
     }
 
@@ -3569,13 +3237,9 @@ export class EstateScene extends WalkableScene {
         collider.height,
       );
       const sprite = this.add
-        .sprite(
-          this.screenX(anchor.x, anchor.y),
-          this.screenY(anchor.x, anchor.y),
-          this.propTexture(definition.texture),
-        )
+        .sprite(anchor.x, anchor.y, definition.texture)
         .setOrigin(0.5, 1)
-        .setDepth(this.depthAt(anchor.x, anchor.y, definition.depthLayer));
+        .setDepth(depthFor(anchor.y, definition.depthLayer));
       this.landscapeSprites.push(sprite);
       this.exteriorPropSprites.push(sprite);
     }
@@ -3614,9 +3278,9 @@ export class EstateScene extends WalkableScene {
         this.addObstacle(left, top, width, height);
       }
       const sprite = this.add
-        .sprite(this.screenX(x, y), this.screenY(x, y), this.propTexture(texture))
+        .sprite(x, y, texture)
         .setOrigin(0.5, 1)
-        .setDepth(this.depthAt(x, y - 50, 2));
+        .setDepth(depthFor(y - 50, 2));
       this.exteriorPropSprites.push(sprite);
     }
 
@@ -3642,9 +3306,9 @@ export class EstateScene extends WalkableScene {
     for (const [texture, x, y, collides] of props) {
       if (collides) this.addObstacle(x - 35, y - 18, 70, 18);
       const sprite = this.add
-        .sprite(this.screenX(x, y), this.screenY(x, y), this.propTexture(texture))
+        .sprite(x, y, texture)
         .setOrigin(0.5, 1)
-        .setDepth(this.depthAt(x, y, 4));
+        .setDepth(depthFor(y, 4));
       this.exteriorPropSprites.push(sprite);
     }
 
@@ -3652,13 +3316,9 @@ export class EstateScene extends WalkableScene {
       const { anchor, collider } = definition;
       this.addObstacle(collider.x, collider.y, collider.width, collider.height);
       const sprite = this.add
-        .sprite(
-          this.screenX(anchor.x, anchor.y),
-          this.screenY(anchor.x, anchor.y),
-          this.propTexture(definition.texture),
-        )
+        .sprite(anchor.x, anchor.y, definition.texture)
         .setOrigin(0.5, 1)
-        .setDepth(this.depthAt(anchor.x, anchor.y, definition.depthLayer));
+        .setDepth(depthFor(anchor.y, definition.depthLayer));
       this.exteriorPropSprites.push(sprite);
     }
 
@@ -3670,11 +3330,7 @@ export class EstateScene extends WalkableScene {
         BICYCLE_COLLISION_DEPTH,
       );
       const sprite = this.add
-        .sprite(
-          this.screenX(rack.x, rack.y),
-          this.screenY(rack.x, rack.y),
-          this.propTexture("prop-bike-rack"),
-        )
+        .sprite(rack.x, rack.y, "prop-bike-rack")
         .setOrigin(0.5, 1)
         .setDepth(depthFor(rack.y, 4));
       this.exteriorPropSprites.push(sprite);
@@ -3695,9 +3351,9 @@ export class EstateScene extends WalkableScene {
     for (const [texture, x, y, width, height] of districtProps) {
       this.addObstacle(x - width / 2, y - height, width, height);
       const sprite = this.add
-        .sprite(this.screenX(x, y), this.screenY(x, y), this.propTexture(texture))
+        .sprite(x, y, texture)
         .setOrigin(0.5, 1)
-        .setDepth(this.depthAt(x, y, 4));
+        .setDepth(depthFor(y, 4));
       this.exteriorPropSprites.push(sprite);
     }
 
@@ -3715,9 +3371,9 @@ export class EstateScene extends WalkableScene {
         collisionHeight,
       );
       const sprite = this.add
-        .sprite(this.screenX(x, y), this.screenY(x, y), this.propTexture(texture))
+        .sprite(x, y, texture)
         .setOrigin(0.5, 1)
-        .setDepth(this.depthAt(x, y, 4));
+        .setDepth(depthFor(y, 4));
       this.storyClusterSprites.push(sprite);
       this.exteriorPropSprites.push(sprite);
     }
@@ -4264,22 +3920,6 @@ export class InteriorScene extends WalkableScene {
   ) {
     super("interior", options.initialLocation, callbacks, getState, options);
   }
-
-  /*
-   * Interiors stay head-on, deliberately, even under ?iso=1.
-   *
-   * They were tried isometric and it was worse than either pure option. The
-   * floor, walls and furniture volumes projected fine, but every room also
-   * carries wall-mounted detail - a window, a calendar, a bookshelf - authored
-   * as an elevation. Those coordinates mean "on the back wall", and projecting
-   * them lands them flat on the floor. Doing it properly is per-room art work
-   * across ten rooms, not a transform.
-   *
-   * Entering a building changing the camera is a normal convention and reads as
-   * deliberate. A room with its shelves lying on the floor does not. The
-   * projection seam on WalkableScene is still here and still identity, so
-   * whoever does that art has the hook waiting.
-   */
 
   protected cameraZoomForViewport(width: number, height: number): number {
     const horizontalFit = (width - 24) / ROOM_WIDTH;

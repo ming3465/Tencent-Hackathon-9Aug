@@ -105,36 +105,26 @@ More than one agent is often live in this working tree at the same time
 
 ## Dropping the isometric direction (rollback)
 
-**The village is isometric by default as of 2026-08-09.** The rollback below is
-inverted from what it used to say — read this, not your memory of it.
+The isometric art direction is **opt-in and unlinked**. It lives at
+`/iso-preview.html`; the judged game at `/` is untouched top-down and loads
+none of it. If the direction is rejected, remove it with one command:
 
-`EstateScene` in `campaignScene.ts` imports `iso/isoTerrain`, `iso/isoBuildings`,
-`iso/isoProps` and `iso/projection`, so deleting `src/game/iso/` breaks the build.
+```bash
+rm -rf src/game/iso src/iso-preview.ts iso-preview.html \
+       src/game/__tests__/isoWorld.test.ts
+```
 
-**To fall back visually, append `?iso=0`.** The top-down painter
-(`threeQuarterArt.ts`) is still in the tree and still exercised by that flag, so
-the old estate is one query parameter away. Keep it that way until the isometric
-direction has been in front of judges.
+Nothing else needs editing. `vite.config.ts` adds the second entry only when
+`iso-preview.html` exists, and no shipped module imports from `src/game/iso/`
+(the shared grain pass deliberately lives at `src/game/textureGrain.ts` for
+exactly this reason — do not move it back).
 
-To remove isometric outright you would need to strip the `isometric` option from
-`CampaignGameOptions`, the `screenX`/`screenY`/`depthAt` overrides and the
-`createIsoGround`/`createIsoBuildings`/`propTexture` methods from `EstateScene`,
-and flip the `ISOMETRIC` default in `main.ts`.
-
-**Interiors are head-on on purpose, in both modes.** They were tried isometric
-and reverted — every room carries wall-mounted detail authored as an elevation,
-and projecting those coordinates lays the shelves on the floor. Doing it
-properly is per-room art across ten rooms. The reasoning is recorded in
-`InteriorScene`.
-
-The projection seam itself (`screenX`/`screenY`/`depthAt` on `WalkableScene`)
-should stay either way — its defaults are the identity, it costs nothing, and it
-is what keeps physics in top-down world space while the drawing moves.
-
-That deletion was **verified green on 2026-08-07 at `48efcda`** (145/155 tests,
-67/67 smoke, in a throwaway worktree). Those figures describe the code as it was
-before the estate was wired up, and are kept only as a record — do not re-run
-that command expecting it to pass today.
+**Verified, not assumed:** run in a throwaway worktree with those paths
+deleted, the full gate passed — typecheck clean, **145/155** tests (the 10
+isometric tests go with them), build green, **67/67 smoke** (re-measured
+2026-08-07 at `48efcda`, after the village re-setting and the isometric
+contact-shadow pass). Re-verify the same way if the coupling ever changes,
+and update these numbers with what you actually measured.
 
 **Before you diagnose a smoke failure, count the orphaned browsers.**
 `pgrep -f "user-data-dir=/var/folders/.*kampung-smoke-" | wc -l`. Each run can

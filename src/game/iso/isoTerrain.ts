@@ -30,7 +30,6 @@ import {
 import { isoCellCorners, isoHash, TERRAIN_CELL, PAVING_SLAB } from "./projection.js";
 import {
   dither,
-  macroField,
   ramp,
   rimLight,
   SHADOW_TINT,
@@ -261,14 +260,7 @@ export function paintIsoTerrain(
 
         // Blade clumps drawn at quarter-cell so they read as texture rather
         // than washing the whole cell toward one average.
-        //
-        // Density follows a low-frequency lushness field, squared, exactly as
-        // the top-down ground does: thick where it is damp and sheltered, worn
-        // to nothing where people walk. A constant rate of clumps per cell is
-        // what made this plane read as flat green from any distance.
-        const lush = macroField(centreX + 51, centreY + 907, 260) * 0.62
-          + macroField(centreX + 613, centreY + 77, 88) * 0.38;
-        const clumps = Math.round(lush * lush * 10);
+        const clumps = 2 + (seed % 3);
         for (let clump = 0; clump < clumps; clump += 1) {
           const bladeSeed = isoHash(x + clump * 31, y + clump * 17);
           const offsetX = x + (bladeSeed % (TERRAIN_CELL - 8));
@@ -279,8 +271,8 @@ export function paintIsoTerrain(
           );
           drawSubCell(offsetX, offsetY, TERRAIN_CELL / 2.4, bladeTone, 0.85);
         }
-        // Blooms only where the turf is thick enough to support them.
-        if (lush > 0.56 && seed % 9 === 5) {
+        // Occasional bloom fleck, matching the reference's scattered flowers.
+        if (seed % 17 === 5) {
           const bloom = [0xe8c46a, 0xd97a58, 0xf2ead2, 0xc9a2cf][(seed >>> 5) % 4];
           drawSubCell(x + 8, y + 8, TERRAIN_CELL / 4, bloom, 0.75);
         }
