@@ -1,4 +1,4 @@
-import { macroField, tonalStep } from "./textureGrain.js";
+import { macroField, ramp, shadowTint, tonalStep } from "./textureGrain.js";
 import Phaser from "phaser";
 
 import {
@@ -74,7 +74,11 @@ function paintStreet(
     .fillRect(local.x, local.y, isHorizontal ? local.width : 6, isHorizontal ? 6 : local.height)
     .fillStyle(PAVING_KERB)
     .fillRect(local.x + 6, local.y + 6, Math.max(0, local.width - 12), Math.max(0, local.height - 12))
-    .fillStyle(base)
+    // The bed the slabs are laid on. It used to be the slab colour itself,
+    // which made the 1-2px gap between slabs invisible - the paving read as one
+    // tinted sheet. Sky-lit mortar turns that same gap into a visible joint, and
+    // the ground starts reading as laid stone.
+    .fillStyle(shadowTint(base, 0.42))
     .fillRect(local.x + 11, local.y + 11, Math.max(0, local.width - 22), Math.max(0, local.height - 22));
 
   const left = local.x + 11;
@@ -101,11 +105,13 @@ function paintStreet(
       // sun-bleached runs and damp corners that span many slabs.
       const wear = macroField(worldX, worldY, 336) * 0.7
         + macroField(worldX + 613, worldY + 401, 112) * 0.3;
-      const SLAB_SHIFTS = [-0.085, -0.05, -0.022, 0.012, 0.045, 0.08] as const;
-      const shift = SLAB_SHIFTS[tonalStep(wear, seed % 4096, SLAB_SHIFTS.length)] ?? 0;
-      const tileBase = shift < 0
-        ? darkenColour(base, -shift)
-        : lightenColour(base, shift);
+      // Nine tones off a shared ramp rather than six hand-picked percentages:
+      // one material under light, cool at the shadow end and warm at the lit
+      // end, with enough spread that neighbouring slabs are visibly different
+      // stones instead of the same stone twice.
+      const slabTones = ramp(base, 9, 0.34);
+      const tileBase = slabTones[tonalStep(wear, seed % 4096, slabTones.length)]
+        ?? base;
       const clippedLeft = Math.max(left, x + 1);
       const clippedTop = Math.max(top, y + 1);
       const clippedRight = Math.min(right, x + tileWidth - 2);
@@ -216,15 +222,9 @@ export function paintThreeQuarterTerrain(
   // Macro pass: mottle the turf into soft patches before any blade detail.
   // Sub-cells are 16px so the bands read as organic variation rather than as
   // the 32px gameplay grid, and the per-pixel grain pass softens them further.
-  const TURF_TONES = [
-    darkenColour(PALETTE.grass, 0.17),
-    darkenColour(PALETTE.grass, 0.1),
-    darkenColour(PALETTE.grass, 0.04),
-    PALETTE.grass,
-    lightenColour(PALETTE.grass, 0.05),
-    lightenColour(PALETTE.grass, 0.11),
-    lightenColour(PALETTE.grass, 0.17),
-  ] as const;
+  // One turf under light. Mixing the dark end toward sky-lit shadow rather than
+  // toward black is what stops shaded grass reading as dead grass.
+  const TURF_TONES = ramp(PALETTE.grass, 8, 0.3);
   const MOSS = darkenColour(PALETTE.grassDark, 0.06);
   const EARTH = 0xa88a5f;
   const PATCH = 16;

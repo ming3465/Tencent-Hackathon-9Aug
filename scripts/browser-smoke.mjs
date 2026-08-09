@@ -4833,8 +4833,12 @@ try {
         "Story complete · Free exploration",
       ].every((title) => questStoryTitles.has(title))
       && terrainDetailEvidence
-      && terrainDetailEvidence.grassColourCount >= 3
-      && terrainDetailEvidence.pathColourCount >= 6
+      // Raised as the material engine landed: turf shaded from a ramp with
+      // sky-lit shadows measures 341 distinct colours, up from 276. Locking a
+      // floor just under that stops the richness silently regressing.
+      && terrainDetailEvidence.grassColourCount >= 300
+      // 1285, up from 1040, once slabs got mortar joints and a 9-tone ramp.
+      && terrainDetailEvidence.pathColourCount >= 1100
       && terrainDetailEvidence.pathEdgeTransitions >= 12
       // Four houses moved onto the village and five plantings retired with the
       // verges they lined. 41 -> 37 landscaping props, measured, not guessed:
