@@ -72,6 +72,16 @@ import {
 } from "./threeQuarterArt.js";
 import { bakeWithGrain } from "./textureGrain.js";
 import {
+  isoBuildingTextureBounds,
+  paintIsoBuilding,
+} from "./iso/isoBuildings.js";
+import { paintIsoTerrain } from "./iso/isoTerrain.js";
+import {
+  isoCanvasForWorld,
+  isoDepth,
+  worldToIso,
+} from "./iso/projection.js";
+import {
   movementSurfaceAt,
   stepIntervalFor,
   walkFrameAt,
@@ -320,6 +330,12 @@ export interface CampaignGameOptions {
   playerSpeed?: number;
   reducedMotion?: boolean;
   renderer?: "auto" | "canvas";
+  /**
+   * Render the estate isometrically. Opt-in while the direction is evaluated -
+   * physics stays in top-down world space either way, so this only changes
+   * where things are drawn.
+   */
+  isometric?: boolean;
 }
 
 class DoorView {
@@ -2520,6 +2536,9 @@ export class EstateScene extends WalkableScene {
   private puddleRipplePhase = 0;
   private residentArrangement: "routes" | "monsoon" | "gathering" = "routes";
   private buildingOcclusionViews: BuildingOcclusionView[] = [];
+  private readonly isometric: boolean;
+  private isoOriginX = 0;
+  private isoOriginY = 40;
   private shelterSprites: Phaser.GameObjects.Image[] = [];
   private shelterColliderIds = new Set<string>();
 
@@ -2529,6 +2548,28 @@ export class EstateScene extends WalkableScene {
     options: CampaignGameOptions,
   ) {
     super("estate", "estate", callbacks, getState, options);
+    this.isometric = options.isometric === true;
+    if (this.isometric) {
+      this.isoOriginX = isoCanvasForWorld(ESTATE_WIDTH, ESTATE_HEIGHT).originX;
+    }
+  }
+
+  /* The projection seam. Physics never sees these - they only decide where a
+     sprite is drawn and in what order. See WalkableScene.screenX. */
+
+  protected override screenX(worldX: number, worldY: number): number {
+    if (!this.isometric) return worldX;
+    return worldToIso(worldX, worldY).x + this.isoOriginX;
+  }
+
+  protected override screenY(worldX: number, worldY: number): number {
+    if (!this.isometric) return worldY;
+    return worldToIso(worldX, worldY).y + this.isoOriginY;
+  }
+
+  protected override depthAt(worldX: number, worldY: number, layer = 0): number {
+    if (!this.isometric) return super.depthAt(worldX, worldY, layer);
+    return isoDepth(worldX, worldY, layer);
   }
 
   protected cameraZoomForViewport(width: number): number {
@@ -2545,8 +2586,13 @@ export class EstateScene extends WalkableScene {
     this.locationId = "estate";
     this.cameras.main.setBackgroundColor("#9fc079");
     ensureCampaignArtTextures(this, this.getState().playerAppearance);
-    this.createBakedExteriorTiles();
-    this.createBuildingOcclusionLayers();
+    if (this.isometric) {
+      this.createIsoGround();
+      this.createIsoBuildings();
+    } else {
+      this.createBakedExteriorTiles();
+      this.createBuildingOcclusionLayers();
+    }
     for (const zone of ESTATE_BUILDING_COLLISION_ZONES) {
       this.addObstacle(zone.x, zone.y, zone.width, zone.height);
     }
@@ -2582,6 +2628,10 @@ export class EstateScene extends WalkableScene {
       ESTATE_HEIGHT,
       data.spawn ?? { x: 700, y: 400 },
     );
+    if (this.isometric) {
+      const canvas = isoCanvasForWorld(ESTATE_WIDTH, ESTATE_HEIGHT);
+      this.cameras.main.setBounds(0, 0, canvas.width, canvas.height + 80);
+    }
     this.updateBuildingOcclusion();
     this.drawConsequences();
   }
@@ -3029,6 +3079,69 @@ export class EstateScene extends WalkableScene {
     for (const [index, [npcId, x, y]] of gathering.entries()) {
       this.moveNpcTo(npcId, x, y);
       this.poseNpc(npcId, index < 4 ? "down" : "up");
+    }
+  }
+
+  /**
+   * The isometric ground plane, baked once into a single texture.
+   *
+   * Same shape as the top-down bake: paint flat with Graphics, then run the
+   * per-pixel grain pass, because Graphics can only lay down constant fills.
+   */
+  private createIsoGround(): void {
+    const canvas = isoCanvasForWorld(ESTATE_WIDTH, ESTATE_HEIGHT);
+    const height = canvas.height + 80;
+    const key = "estate-iso-ground";
+    if (!this.textures.exists(key)) {
+      const graphics = this.make.graphics({ x: 0, y: 0 });
+      paintIsoTerrain(graphics, {
+        worldX: 0,
+        worldY: 0,
+        worldWidth: ESTATE_WIDTH,
+        worldHeight: ESTATE_HEIGHT,
+        originX: this.isoOriginX,
+        originY: this.isoOriginY,
+      });
+      const flatKey = `${key}-flat`;
+      graphics.generateTexture(flatKey, canvas.width, height);
+      graphics.destroy();
+      bakeWithGrain(this, flatKey, key, canvas.width, height, {
+        amplitude: 9,
+        falloff: 0.22,
+      });
+    }
+    this.add.image(0, 0, key).setOrigin(0).setDepth(0);
+  }
+
+  /**
+   * Buildings as isometric volumes.
+   *
+   * Each bakes to its own texture with its own bounds box, and sorts on its
+   * far corner so a neighbour standing behind it is drawn behind it. The
+   * top-down build's separate occlusion overlay is not needed here - depth
+   * sorting does that job.
+   */
+  private createIsoBuildings(): void {
+    for (const definition of ESTATE_BUILDINGS) {
+      const { x, y, width, height } = definition.bounds;
+      const box = isoBuildingTextureBounds(definition);
+      const key = `iso-building:${definition.id}`;
+      if (!this.textures.exists(key)) {
+        const graphics = this.make.graphics({ x: 0, y: 0 });
+        paintIsoBuilding(graphics, definition, -box.left, -box.top);
+        const flatKey = `iso-building-flat:${definition.id}`;
+        if (this.textures.exists(flatKey)) this.textures.remove(flatKey);
+        graphics.generateTexture(flatKey, box.width, box.height);
+        graphics.destroy();
+        bakeWithGrain(this, flatKey, key, box.width, box.height, {
+          amplitude: 8,
+          falloff: 0.12,
+        });
+      }
+      this.add
+        .image(box.left + this.isoOriginX, box.top + this.isoOriginY, key)
+        .setOrigin(0)
+        .setDepth(isoDepth(x + width, y + height, 2));
     }
   }
 

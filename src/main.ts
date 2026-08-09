@@ -218,6 +218,9 @@ const SMOKE_MODE =
   new URLSearchParams(window.location.search).get("smoke") === "1";
 const FORCE_CANVAS =
   new URLSearchParams(window.location.search).get("renderer") === "canvas";
+/** Opt into the isometric estate while the direction is being evaluated. */
+const ISOMETRIC =
+  new URLSearchParams(window.location.search).get("iso") === "1";
 const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const audio = new KampungAudio(readStoredAudioSettings());
 const smokeWindow = window as Window & {
@@ -882,6 +885,7 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
         playerSpeed: DEMO_MODE ? 260 : undefined,
         reducedMotion: REDUCED_MOTION.matches,
         renderer: FORCE_CANVAS ? "canvas" : "auto",
+        isometric: ISOMETRIC,
       },
     );
     attemptHandle = createdHandle;

@@ -105,26 +105,27 @@ More than one agent is often live in this working tree at the same time
 
 ## Dropping the isometric direction (rollback)
 
-The isometric art direction is **opt-in and unlinked**. It lives at
-`/iso-preview.html`; the judged game at `/` is untouched top-down and loads
-none of it. If the direction is rejected, remove it with one command:
+**This changed on 2026-08-09 — the one-command rollback below no longer works.**
 
-```bash
-rm -rf src/game/iso src/iso-preview.ts iso-preview.html \
-       src/game/__tests__/isoWorld.test.ts
-```
+The isometric estate is now wired into the shipped campaign behind `?iso=1`
+(`EstateScene` in `campaignScene.ts` imports `iso/isoTerrain`, `iso/isoBuildings`
+and `iso/projection`). Deleting `src/game/iso/` therefore breaks the build.
 
-Nothing else needs editing. `vite.config.ts` adds the second entry only when
-`iso-preview.html` exists, and no shipped module imports from `src/game/iso/`
-(the shared grain pass deliberately lives at `src/game/textureGrain.ts` for
-exactly this reason — do not move it back).
+`/` still renders top-down by default and is unaffected without the flag, so
+the *visual* rollback is just "do not pass `?iso=1`". To remove the direction
+outright you must now also strip the `isometric` option from
+`CampaignGameOptions`, the `screenX`/`screenY`/`depthAt` overrides and
+`createIsoGround`/`createIsoBuildings` from `EstateScene`, and the `ISOMETRIC`
+flag in `main.ts`.
 
-**Verified, not assumed:** run in a throwaway worktree with those paths
-deleted, the full gate passed — typecheck clean, **145/155** tests (the 10
-isometric tests go with them), build green, **67/67 smoke** (re-measured
-2026-08-07 at `48efcda`, after the village re-setting and the isometric
-contact-shadow pass). Re-verify the same way if the coupling ever changes,
-and update these numbers with what you actually measured.
+The projection seam itself (`screenX`/`screenY`/`depthAt` on `WalkableScene`)
+should stay either way — its defaults are the identity, it costs nothing, and it
+is what keeps physics in top-down world space while the drawing moves.
+
+That deletion was **verified green on 2026-08-07 at `48efcda`** (145/155 tests,
+67/67 smoke, in a throwaway worktree). Those figures describe the code as it was
+before the estate was wired up, and are kept only as a record — do not re-run
+that command expecting it to pass today.
 
 **Before you diagnose a smoke failure, count the orphaned browsers.**
 `pgrep -f "user-data-dir=/var/folders/.*kampung-smoke-" | wc -l`. Each run can
