@@ -1,4 +1,10 @@
-import { macroField, ramp, shadowTint, tonalStep } from "./textureGrain.js";
+import {
+  macroField,
+  ramp,
+  rimLight,
+  shadowTint,
+  tonalStep,
+} from "./textureGrain.js";
 import Phaser from "phaser";
 
 import {
@@ -215,8 +221,6 @@ export function paintThreeQuarterTerrain(
   width = 1280,
   height = 800,
 ): void {
-  const lightGrass = lightenColour(PALETTE.grass, 0.12);
-  const darkGrass = darkenColour(PALETTE.grass, 0.12);
   graphics.fillStyle(PALETTE.grass).fillRect(0, 0, width, height);
 
   // Macro pass: mottle the turf into soft patches before any blade detail.
@@ -254,28 +258,70 @@ export function paintThreeQuarterTerrain(
     }
   }
 
+  // Growth.
+  //
+  // The old pass put the same two blades and one occasional flower in every
+  // tile, which reads as texture applied at a constant rate - the eye finds the
+  // 32px grid immediately. Real ground clumps: thick where it is damp and
+  // sheltered, worn to almost nothing where people walk.
+  //
+  // So density comes off a low-frequency lushness field rather than being
+  // fixed, and each clump is a small cluster of blades around a point instead
+  // of a lone rectangle. Bare tiles are as important as thick ones; they are
+  // what make the thick ones read as growth.
+  const BLADE_TONES = ramp(PALETTE.grass, 6, 0.34);
   for (let y = 0; y < height; y += TILE_SIZE) {
     for (let x = 0; x < width; x += TILE_SIZE) {
-      const seed = hash(Math.floor((originX + x) / TILE_SIZE), Math.floor((originY + y) / TILE_SIZE));
-      graphics
-        .fillStyle(seed % 3 === 0 ? lightGrass : darkGrass, 0.34)
-        .fillRect(x + 3 + seed % 14, y + 5 + (seed >>> 6) % 13, 8 + (seed >>> 11) % 10, 4)
-        .fillRect(x + 8 + (seed >>> 3) % 12, y + 21 + (seed >>> 9) % 7, 6 + (seed >>> 14) % 7, 3)
-        .fillStyle(seed % 2 === 0 ? PALETTE.grassDark : lightGrass, 0.66)
-        .fillRect(x + 5 + (seed >>> 17) % 19, y + 8 + (seed >>> 22) % 14, 2, 7)
-        .fillRect(x + 8 + (seed >>> 17) % 19, y + 11 + (seed >>> 22) % 14, 2, 4);
-      if (seed % 7 === 2) {
+      const worldX = originX + x;
+      const worldY = originY + y;
+      const seed = hash(Math.floor(worldX / TILE_SIZE), Math.floor(worldY / TILE_SIZE));
+      const lush = macroField(worldX + 51, worldY + 907, 210) * 0.62
+        + macroField(worldX + 613, worldY + 77, 74) * 0.38;
+      const clumps = Math.round(lush * lush * 9);
+
+      for (let clump = 0; clump < clumps; clump += 1) {
+        const clumpSeed = hash(worldX + clump * 41, worldY + clump * 23);
+        const baseX = x + 2 + clumpSeed % (TILE_SIZE - 6);
+        const baseY = y + 3 + (clumpSeed >>> 7) % (TILE_SIZE - 8);
+        const tone = BLADE_TONES[(clumpSeed >>> 3) % BLADE_TONES.length]
+          ?? PALETTE.grass;
+        // Three to five blades fanning from one root, so it reads as a plant.
+        const blades = 3 + (clumpSeed >>> 13) % 3;
+        graphics.fillStyle(tone, 0.72);
+        for (let blade = 0; blade < blades; blade += 1) {
+          const lean = ((clumpSeed >>> (blade * 4)) % 5) - 2;
+          const tall = 3 + ((clumpSeed >>> (blade * 3 + 2)) % 5);
+          graphics.fillRect(baseX + lean, baseY - tall, 1, tall);
+        }
+        // A darker root shadow keeps the clump attached to the ground.
         graphics
-          .fillStyle(seed % 2 === 0 ? PALETTE.gold : PALETTE.coral, 0.78)
-          .fillRect(x + 10 + (seed >>> 17) % 14, y + 11 + (seed >>> 22) % 12, 4, 3)
-          .fillStyle(PALETTE.cream, 0.76)
-          .fillRect(x + 11 + (seed >>> 17) % 14, y + 10 + (seed >>> 22) % 12, 2, 2);
+          .fillStyle(shadowTint(tone, 0.3), 0.38)
+          .fillRect(baseX - 1, baseY, 4, 1);
       }
-      if (seed % 13 === 5) {
+
+      // Blooms only where it is thick enough to support them, and in pairs -
+      // scattered singles read as confetti.
+      if (lush > 0.58 && seed % 6 === 1) {
+        const bloom = [PALETTE.gold, PALETTE.coral, PALETTE.cream, 0xc9a2cf][
+          (seed >>> 5) % 4
+        ] ?? PALETTE.gold;
+        for (let petal = 0; petal < 2; petal += 1) {
+          const px = x + 6 + ((seed >>> (petal * 6)) % (TILE_SIZE - 12));
+          const py = y + 6 + ((seed >>> (petal * 5 + 3)) % (TILE_SIZE - 14));
+          graphics
+            .fillStyle(bloom, 0.82)
+            .fillRect(px, py, 3, 3)
+            .fillStyle(rimLight(bloom, 0.4), 0.7)
+            .fillRect(px, py, 1, 1);
+        }
+      }
+
+      // Leaf litter on the bare, trodden ground between the clumps.
+      if (lush < 0.3 && seed % 5 === 2) {
         graphics
-          .fillStyle(darkenColour(PALETTE.grass, 0.18), 0.26)
-          .fillRect(x + 4, y + 24, 13, 3)
-          .fillRect(x + 11, y + 21, 8, 3);
+          .fillStyle(shadowTint(PALETTE.grass, 0.34), 0.3)
+          .fillRect(x + 4 + seed % 12, y + 20 + (seed >>> 4) % 8, 5, 2)
+          .fillRect(x + 12 + (seed >>> 8) % 10, y + 15 + (seed >>> 11) % 9, 3, 2);
       }
     }
   }
