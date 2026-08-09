@@ -342,9 +342,16 @@ export interface CampaignGameOptions {
   isometric?: boolean;
 }
 
+/** How a scene turns a world point into a drawn point. See WalkableScene. */
+interface ScenePlacement {
+  screen(worldX: number, worldY: number): { x: number; y: number };
+  depth(worldX: number, worldY: number, layer: number): number;
+}
+
 class DoorView {
   readonly definition: DoorDefinition;
   private readonly scene: Phaser.Scene;
+  private readonly placement: ScenePlacement;
   private readonly blocker: Phaser.GameObjects.Rectangle;
   private readonly leaves: Phaser.GameObjects.Graphics[] = [];
   private readonly closedLeafPoses: EstatePoint[] = [];
@@ -354,10 +361,12 @@ class DoorView {
     scene: Phaser.Scene,
     definition: DoorDefinition,
     blocker: Phaser.GameObjects.Rectangle,
+    placement: ScenePlacement,
   ) {
     this.scene = scene;
     this.definition = definition;
     this.blocker = blocker;
+    this.placement = placement;
     this.controller = new DoorTransitionController(definition.startsOpen === true);
     this.draw();
     if (definition.startsOpen) {
@@ -396,8 +405,8 @@ class DoorView {
       targets,
       scaleX: pose.scaleX,
       scaleY: pose.scaleY,
-      x: this.definition.anchor.x + pose.offsetX,
-      y: this.definition.anchor.y + pose.offsetY,
+      x: this.drawnAnchor().x + pose.offsetX,
+      y: this.drawnAnchor().y + pose.offsetY,
       duration: 180,
       ease: "Sine.easeInOut",
       onComplete: finish,
@@ -419,7 +428,7 @@ class DoorView {
   resetForReuse(): void {
     this.scene.tweens.killTweensOf(this.leaves);
     this.leaves.forEach((leaf, index) => {
-      const closedPose = this.closedLeafPoses[index] ?? this.definition.anchor;
+      const closedPose = this.closedLeafPoses[index] ?? this.drawnAnchor();
       leaf
         .setPosition(closedPose.x, closedPose.y)
         .setScale(1, 1)
@@ -452,12 +461,24 @@ class DoorView {
     };
   }
 
+  /** Where this door is drawn, as opposed to where its collider lives. */
+  private drawnAnchor(): { x: number; y: number } {
+    return this.placement.screen(
+      this.definition.anchor.x,
+      this.definition.anchor.y,
+    );
+  }
+
   private draw(): void {
     const { anchor, dimensions, placard, style } = this.definition;
     const left = -dimensions.width / 2;
     const top = -dimensions.height;
-    const depth = depthFor(anchor.y, 6);
-    const frame = this.scene.add.graphics().setPosition(anchor.x, anchor.y).setDepth(depth);
+    const drawn = this.drawnAnchor();
+    const depth = this.placement.depth(anchor.x, anchor.y, 6);
+    const frame = this.scene.add
+      .graphics()
+      .setPosition(drawn.x, drawn.y)
+      .setDepth(depth);
     frame
       .fillStyle(NIGHT, 0.26)
       .fillRect(left + 8, top + 9, dimensions.width + 10, dimensions.height + 10)
@@ -516,7 +537,7 @@ class DoorView {
       this.definition.dimensions,
     );
     this.leaves.forEach((leaf, index) => {
-      const closedPose = this.closedLeafPoses[index] ?? this.definition.anchor;
+      const closedPose = this.closedLeafPoses[index] ?? this.drawnAnchor();
       leaf
         .setPosition(closedPose.x + pose.offsetX, closedPose.y + pose.offsetY)
         .setScale(pose.scaleX, pose.scaleY)
@@ -1702,7 +1723,13 @@ abstract class WalkableScene extends Phaser.Scene {
     );
     this.doorViews.set(
       definition.id,
-      new DoorView(this, definition, blocker),
+      new DoorView(this, definition, blocker, {
+        screen: (worldX, worldY) => ({
+          x: this.screenX(worldX, worldY),
+          y: this.screenY(worldX, worldY),
+        }),
+        depth: (worldX, worldY, layer) => this.depthAt(worldX, worldY, layer),
+      }),
     );
     const isExit = definition.sourceLocationId !== "estate"
       && definition.targetLocationId === "estate";
@@ -4164,6 +4191,22 @@ export class InteriorScene extends WalkableScene {
   ) {
     super("interior", options.initialLocation, callbacks, getState, options);
   }
+
+  /*
+   * Interiors stay head-on, deliberately, even under ?iso=1.
+   *
+   * They were tried isometric and it was worse than either pure option. The
+   * floor, walls and furniture volumes projected fine, but every room also
+   * carries wall-mounted detail - a window, a calendar, a bookshelf - authored
+   * as an elevation. Those coordinates mean "on the back wall", and projecting
+   * them lands them flat on the floor. Doing it properly is per-room art work
+   * across ten rooms, not a transform.
+   *
+   * Entering a building changing the camera is a normal convention and reads as
+   * deliberate. A room with its shelves lying on the floor does not. The
+   * projection seam on WalkableScene is still here and still identity, so
+   * whoever does that art has the hook waiting.
+   */
 
   protected cameraZoomForViewport(width: number, height: number): number {
     const horizontalFit = (width - 24) / ROOM_WIDTH;
