@@ -4853,7 +4853,9 @@ try {
       && terrainDetailEvidence.storyClusterCount === 12
       && terrainDetailEvidence.storyClusterTextureCount === 6
       && terrainDetailEvidence.groundAccentCount >= 54
-      && terrainDetailEvidence.facadeColourCount >= 20
+      // 758, up from 371, once walls took a 9-tone ramp plus sky falloff and
+      // a ground contact skirt.
+      && terrainDetailEvidence.facadeColourCount >= 650
       && terrainDetailEvidence.facadeEdgeTransitions >= 180
       && terrainDetailEvidence.facadeDarkPixelRatio >= 0.08
       // Twelve buildings now, not eight: the four homes became real houses.

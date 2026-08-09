@@ -428,21 +428,24 @@ function paintWallRender(
   graphics.fillStyle(base).fillRect(x, y, width, height);
 
   // Broad weathering, so the wall is not one value across its whole span.
+  //
+  // The old tones spanned 10% of the base, which is why every facade read as a
+  // single flat cream rectangle from across the estate. Nine ramp tones over a
+  // 22% spread give the wall visible weathering at a distance.
   const PATCH = 14;
-  const TONES = [
-    darkenColour(base, 0.1),
-    darkenColour(base, 0.055),
-    darkenColour(base, 0.022),
-    base,
-    lightenColour(base, 0.03),
-  ] as const;
+  const TONES = ramp(base, 9, 0.22);
   for (let row = 0; row < height; row += PATCH) {
+    // Walls are lit from the sky, so they are brightest just under the eaves
+    // and sink toward ground shadow at the base. A wall lit evenly top to
+    // bottom is the clearest tell that a facade is a rectangle of fill.
+    const drop = height <= 0 ? 0 : row / height;
     for (let column = 0; column < width; column += PATCH) {
       const field = macroField(x + column + seed, y + row, 92) * 0.7
         + macroField(x + column + seed + 313, y + row + 71, 34) * 0.3;
       const jitter = hash(column + seed, row) % 4096;
+      const tone = TONES[tonalStep(field, jitter, TONES.length)] ?? base;
       graphics
-        .fillStyle(TONES[tonalStep(field, jitter, TONES.length)] ?? base)
+        .fillStyle(shadowTint(tone, drop * 0.26))
         .fillRect(
           x + column,
           y + row,
@@ -450,6 +453,15 @@ function paintWallRender(
           Math.min(PATCH, height - row),
         );
     }
+  }
+
+  // Where the wall meets the ground, a tighter band of contact shadow. Cheap,
+  // and it is most of what stops a building looking pasted onto the terrain.
+  const skirt = Math.min(14, Math.max(4, Math.round(height * 0.09)));
+  for (let step = 0; step < skirt; step += 1) {
+    graphics
+      .fillStyle(shadowTint(base, 0.4), (1 - step / skirt) * 0.34)
+      .fillRect(x, y + height - skirt + step, width, 1);
   }
 
   // Rain streaks below the roof line - the tropics write on every wall here.
