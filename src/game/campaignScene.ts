@@ -75,6 +75,10 @@ import {
   isoBuildingTextureBounds,
   paintIsoBuilding,
 } from "./iso/isoBuildings.js";
+import {
+  ensureIsoPropTextures,
+  isoTextureFor,
+} from "./iso/isoProps.js";
 import { paintIsoTerrain } from "./iso/isoTerrain.js";
 import {
   isoCanvasForWorld,
@@ -2584,9 +2588,16 @@ export class EstateScene extends WalkableScene {
 
   create(data: SceneStartData = {}): void {
     this.locationId = "estate";
-    this.cameras.main.setBackgroundColor("#9fc079");
+    // Isometric projects the world into a diamond, so the corners of the
+    // viewport fall outside it. A mid-green there reads as missing ground;
+    // a deep, desaturated haze reads as distance, and the village as an island
+    // of colour in it.
+    this.cameras.main.setBackgroundColor(
+      this.isometric ? "#3f5a48" : "#9fc079",
+    );
     ensureCampaignArtTextures(this, this.getState().playerAppearance);
     if (this.isometric) {
+      ensureIsoPropTextures(this);
       this.createIsoGround();
       this.createIsoBuildings();
     } else {
@@ -3088,6 +3099,17 @@ export class EstateScene extends WalkableScene {
    * Same shape as the top-down bake: paint flat with Graphics, then run the
    * per-pixel grain pass, because Graphics can only lay down constant fills.
    */
+  /**
+   * The isometric stand-in for a shipped texture, when there is one.
+   *
+   * `isoTextureFor` returns the key unchanged for anything without an
+   * isometric version, so a prop that has not been redrawn yet keeps standing
+   * as an upright billboard rather than vanishing.
+   */
+  private propTexture(key: string): string {
+    return this.isometric ? isoTextureFor(key) : key;
+  }
+
   private createIsoGround(): void {
     const canvas = isoCanvasForWorld(ESTATE_WIDTH, ESTATE_HEIGHT);
     const height = canvas.height + 80;
@@ -3209,10 +3231,20 @@ export class EstateScene extends WalkableScene {
       const texture = ensureShelterTexture(this, definition);
       this.shelterSprites.push(
         this.add
-          .image(definition.bounds.x, definition.bounds.y, texture)
+          .image(
+            this.screenX(definition.bounds.x, definition.bounds.y),
+            this.screenY(definition.bounds.x, definition.bounds.y),
+            texture,
+          )
           .setOrigin(0)
           .setName(`shelter:${definition.id}`)
-          .setDepth(depthFor(definition.bounds.y + definition.bounds.height, 4)),
+          .setDepth(
+            this.depthAt(
+              definition.bounds.x,
+              definition.bounds.y + definition.bounds.height,
+              4,
+            ),
+          ),
       );
       for (const post of definition.posts) {
         if (this.shelterColliderIds.has(post.id)) continue;
@@ -3418,9 +3450,13 @@ export class EstateScene extends WalkableScene {
         trunkCollider.height,
       );
       const sprite = this.add
-        .sprite(anchor.x, anchor.y, definition.texture)
+        .sprite(
+          this.screenX(anchor.x, anchor.y),
+          this.screenY(anchor.x, anchor.y),
+          this.propTexture(definition.texture),
+        )
         .setOrigin(0.5, 1)
-        .setDepth(depthFor(anchor.y, definition.depthLayer));
+        .setDepth(this.depthAt(anchor.x, anchor.y, definition.depthLayer));
       this.exteriorPropSprites.push(sprite);
     }
 
@@ -3433,9 +3469,13 @@ export class EstateScene extends WalkableScene {
         collider.height,
       );
       const sprite = this.add
-        .sprite(anchor.x, anchor.y, definition.texture)
+        .sprite(
+          this.screenX(anchor.x, anchor.y),
+          this.screenY(anchor.x, anchor.y),
+          this.propTexture(definition.texture),
+        )
         .setOrigin(0.5, 1)
-        .setDepth(depthFor(anchor.y, definition.depthLayer));
+        .setDepth(this.depthAt(anchor.x, anchor.y, definition.depthLayer));
       this.landscapeSprites.push(sprite);
       this.exteriorPropSprites.push(sprite);
     }
@@ -3474,9 +3514,9 @@ export class EstateScene extends WalkableScene {
         this.addObstacle(left, top, width, height);
       }
       const sprite = this.add
-        .sprite(x, y, texture)
+        .sprite(this.screenX(x, y), this.screenY(x, y), this.propTexture(texture))
         .setOrigin(0.5, 1)
-        .setDepth(depthFor(y - 50, 2));
+        .setDepth(this.depthAt(x, y - 50, 2));
       this.exteriorPropSprites.push(sprite);
     }
 
@@ -3502,9 +3542,9 @@ export class EstateScene extends WalkableScene {
     for (const [texture, x, y, collides] of props) {
       if (collides) this.addObstacle(x - 35, y - 18, 70, 18);
       const sprite = this.add
-        .sprite(x, y, texture)
+        .sprite(this.screenX(x, y), this.screenY(x, y), this.propTexture(texture))
         .setOrigin(0.5, 1)
-        .setDepth(depthFor(y, 4));
+        .setDepth(this.depthAt(x, y, 4));
       this.exteriorPropSprites.push(sprite);
     }
 
@@ -3512,9 +3552,13 @@ export class EstateScene extends WalkableScene {
       const { anchor, collider } = definition;
       this.addObstacle(collider.x, collider.y, collider.width, collider.height);
       const sprite = this.add
-        .sprite(anchor.x, anchor.y, definition.texture)
+        .sprite(
+          this.screenX(anchor.x, anchor.y),
+          this.screenY(anchor.x, anchor.y),
+          this.propTexture(definition.texture),
+        )
         .setOrigin(0.5, 1)
-        .setDepth(depthFor(anchor.y, definition.depthLayer));
+        .setDepth(this.depthAt(anchor.x, anchor.y, definition.depthLayer));
       this.exteriorPropSprites.push(sprite);
     }
 
@@ -3526,7 +3570,11 @@ export class EstateScene extends WalkableScene {
         BICYCLE_COLLISION_DEPTH,
       );
       const sprite = this.add
-        .sprite(rack.x, rack.y, "prop-bike-rack")
+        .sprite(
+          this.screenX(rack.x, rack.y),
+          this.screenY(rack.x, rack.y),
+          this.propTexture("prop-bike-rack"),
+        )
         .setOrigin(0.5, 1)
         .setDepth(depthFor(rack.y, 4));
       this.exteriorPropSprites.push(sprite);
@@ -3547,9 +3595,9 @@ export class EstateScene extends WalkableScene {
     for (const [texture, x, y, width, height] of districtProps) {
       this.addObstacle(x - width / 2, y - height, width, height);
       const sprite = this.add
-        .sprite(x, y, texture)
+        .sprite(this.screenX(x, y), this.screenY(x, y), this.propTexture(texture))
         .setOrigin(0.5, 1)
-        .setDepth(depthFor(y, 4));
+        .setDepth(this.depthAt(x, y, 4));
       this.exteriorPropSprites.push(sprite);
     }
 
@@ -3567,9 +3615,9 @@ export class EstateScene extends WalkableScene {
         collisionHeight,
       );
       const sprite = this.add
-        .sprite(x, y, texture)
+        .sprite(this.screenX(x, y), this.screenY(x, y), this.propTexture(texture))
         .setOrigin(0.5, 1)
-        .setDepth(depthFor(y, 4));
+        .setDepth(this.depthAt(x, y, 4));
       this.storyClusterSprites.push(sprite);
       this.exteriorPropSprites.push(sprite);
     }
