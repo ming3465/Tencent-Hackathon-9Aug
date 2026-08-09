@@ -141,6 +141,14 @@ function depthFor(y: number, layer = 0): number {
   return y * 10 + layer;
 }
 
+/* ---- Projection seam ----------------------------------------------------
+ *
+ * Every scene positions its sprites through `screenX`/`screenY`/`depthAt`
+ * rather than writing world coordinates straight onto a game object. The
+ * defaults below are the identity, so top-down renders exactly as it always
+ * has; an isometric scene overrides the three and nothing else has to know.
+ */
+
 const PIXEL_GLYPHS: Readonly<Record<string, readonly number[]>> = {
   "0": [0b010, 0b101, 0b101, 0b101, 0b010],
   "1": [0b010, 0b110, 0b010, 0b010, 0b111],
@@ -758,6 +766,19 @@ abstract class WalkableScene extends Phaser.Scene {
   protected readonly reducedMotion: boolean;
   protected locationId: LocationId;
   protected player!: Phaser.Physics.Arcade.Sprite;
+  /**
+   * The drawn player.
+   *
+   * `player` is the physics body and it always lives in top-down world space -
+   * every collider, door, route and spawn in `estateLayout.ts` is authored
+   * there, and re-authoring them for a projected space would be the single
+   * riskiest thing we could do. So the body stays where it is and is never
+   * drawn; this sprite is what you see, positioned at the body's projection.
+   *
+   * Under the default identity projection the two sit on the same pixel, which
+   * is why introducing this split changes nothing about the shipped build.
+   */
+  protected playerAvatar!: Phaser.GameObjects.Sprite;
   protected playerShadow!: Phaser.GameObjects.Ellipse;
   private playerGuide!: Phaser.GameObjects.Graphics;
   protected obstacles: Phaser.GameObjects.GameObject[] = [];
@@ -835,11 +856,25 @@ abstract class WalkableScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, width, height);
     this.createSharedTextures();
     this.playerShadow = this.add
-      .ellipse(spawn.x, spawn.y + 23, 37, 11, NIGHT, 0.3)
-      .setDepth(depthFor(spawn.y, 1));
+      .ellipse(
+        this.screenX(spawn.x, spawn.y),
+        this.screenY(spawn.x, spawn.y) + 23,
+        37,
+        11,
+        NIGHT,
+        0.3,
+      )
+      .setDepth(this.depthAt(spawn.x, spawn.y, 1));
     this.player = this.physics.add
       .sprite(spawn.x, spawn.y, this.playerTextureKey)
-      .setDepth(depthFor(spawn.y, 3));
+      .setVisible(false);
+    this.playerAvatar = this.add
+      .sprite(
+        this.screenX(spawn.x, spawn.y),
+        this.screenY(spawn.x, spawn.y),
+        this.playerTextureKey,
+      )
+      .setDepth(this.depthAt(spawn.x, spawn.y, 3));
     this.playerGuide = this.add
       .graphics()
       .fillStyle(NIGHT, 0.28)
@@ -850,12 +885,18 @@ abstract class WalkableScene extends Phaser.Scene {
       .fillTriangle(-9, -58, 9, -58, 0, -43)
       .fillStyle(GOLD)
       .fillTriangle(-7, -56, 7, -56, 0, -45)
-      .setPosition(spawn.x, spawn.y)
+      .setPosition(this.screenX(spawn.x, spawn.y), this.screenY(spawn.x, spawn.y))
       // Above every world object, but under interaction markers and nameplates
       // so the guide never sits on top of the name you are walking towards.
       .setDepth(100_050);
     this.tapDestinationRing = this.add
-      .circle(spawn.x, spawn.y, 14, NIGHT, 0.18)
+      .circle(
+        this.screenX(spawn.x, spawn.y),
+        this.screenY(spawn.x, spawn.y),
+        14,
+        NIGHT,
+        0.18,
+      )
       .setStrokeStyle(3, GOLD, 0.96)
       .setVisible(false)
       .setDepth(100_098);
@@ -875,7 +916,7 @@ abstract class WalkableScene extends Phaser.Scene {
     this.configureInput();
     this.createInteractionMarkers();
     this.cameras.main.startFollow(
-      this.player,
+      this.playerAvatar,
       !this.reducedMotion,
       this.reducedMotion ? 1 : 0.18,
       this.reducedMotion ? 1 : 0.18,
@@ -898,9 +939,11 @@ abstract class WalkableScene extends Phaser.Scene {
     if (!this.player?.body) return;
     this.updateStepPuffs(time);
     this.updateCarriedItemPosition();
+    const drawnX = this.screenX(this.player.x, this.player.y);
+    const drawnY = this.screenY(this.player.x, this.player.y);
     this.playerShadow
-      .setPosition(this.player.x, this.player.y + 23)
-      .setDepth(depthFor(this.player.y, 1))
+      .setPosition(drawnX, drawnY + 23)
+      .setDepth(this.depthAt(this.player.x, this.player.y, 1))
       .setScale(
         this.reducedMotion || !this.playerIsMoving
           ? 1
@@ -909,9 +952,11 @@ abstract class WalkableScene extends Phaser.Scene {
             : 1.04,
         1,
       );
-    this.player.setDepth(depthFor(this.player.y, 3));
+    this.playerAvatar
+      .setPosition(drawnX, drawnY)
+      .setDepth(this.depthAt(this.player.x, this.player.y, 3));
     const guideBob = this.reducedMotion ? 0 : Math.sin(time / 260) * 2;
-    this.playerGuide.setPosition(this.player.x, this.player.y + guideBob);
+    this.playerGuide.setPosition(drawnX, drawnY + guideBob);
 
     if (!this.controlsEnabled) {
       this.player.setVelocity(0, 0);
@@ -1170,10 +1215,11 @@ abstract class WalkableScene extends Phaser.Scene {
         visible: this.playerGuide.visible,
         depth: this.playerGuide.depth,
       },
-      playerTextureKey: this.player.texture.key,
+      // The avatar carries the texture now; the body is never drawn.
+      playerTextureKey: this.playerAvatar.texture.key,
       playerFacing: this.playerFacing,
       playerFlipX: this.player.flipX,
-      playerIdleBlinking: this.player.texture.key.endsWith("-blink"),
+      playerIdleBlinking: this.playerAvatar.texture.key.endsWith("-blink"),
       movementSurface: this.currentSurface,
       activeStepSurfaces: this.stepPuffs
         .filter(({ dust }) => dust.visible)
@@ -1281,7 +1327,14 @@ abstract class WalkableScene extends Phaser.Scene {
   setPlayerPosition(spawn: SpawnPoint): void {
     this.cancelTapNavigation("player-position");
     this.player?.setPosition(spawn.x, spawn.y);
-    this.playerGuide?.setPosition(spawn.x, spawn.y);
+    this.playerAvatar?.setPosition(
+      this.screenX(spawn.x, spawn.y),
+      this.screenY(spawn.x, spawn.y),
+    );
+    this.playerGuide?.setPosition(
+      this.screenX(spawn.x, spawn.y),
+      this.screenY(spawn.x, spawn.y),
+    );
     this.readyForInteractionAt = this.time.now + TRANSITION_LATCH_MS;
     this.updateNearbyInteraction(true);
   }
@@ -1360,6 +1413,21 @@ abstract class WalkableScene extends Phaser.Scene {
     this.tapNavigationCancelReason = null;
   }
 
+  /** World x -> screen x. Identity in top-down. */
+  protected screenX(worldX: number, _worldY: number): number {
+    return worldX;
+  }
+
+  /** World y -> screen y. Identity in top-down. */
+  protected screenY(_worldX: number, worldY: number): number {
+    return worldY;
+  }
+
+  /** Draw order for a world position. Southern things draw in front. */
+  protected depthAt(_worldX: number, worldY: number, layer = 0): number {
+    return depthFor(worldY, layer);
+  }
+
   protected abstract drawConsequences(): void;
 
   protected clearConsequences(): void {
@@ -1384,7 +1452,10 @@ abstract class WalkableScene extends Phaser.Scene {
     this.tapNavigationOutcome = "moving";
     this.tapNavigationCancelReason = null;
     this.tapDestinationRing
-      .setPosition(destination.x, destination.y)
+      .setPosition(
+        this.screenX(destination.x, destination.y),
+        this.screenY(destination.x, destination.y),
+      )
       .setVisible(true);
     this.syncTapDestinationRingScale();
   }
@@ -1419,7 +1490,10 @@ abstract class WalkableScene extends Phaser.Scene {
       }
       navigation.destination.x = interaction.x;
       navigation.destination.y = interaction.y;
-      this.tapDestinationRing.setPosition(interaction.x, interaction.y);
+      this.tapDestinationRing.setPosition(
+        this.screenX(interaction.x, interaction.y),
+        this.screenY(interaction.x, interaction.y),
+      );
     }
 
     const progressX = this.player.x - navigation.progressAnchor.x;
@@ -1493,8 +1567,10 @@ abstract class WalkableScene extends Phaser.Scene {
     const puff = this.stepPuffs[this.nextStepPuff];
     this.nextStepPuff = (this.nextStepPuff + 1) % this.stepPuffs.length;
     puff.bornAt = time;
-    puff.originX = this.player.x - directionX * 11;
-    puff.originY = this.player.y + 18 - directionY * 5;
+    const puffWorldX = this.player.x - directionX * 11;
+    const puffWorldY = this.player.y + 18 - directionY * 5;
+    puff.originX = this.screenX(puffWorldX, puffWorldY);
+    puff.originY = this.screenY(puffWorldX, puffWorldY);
     puff.directionX = directionX;
     puff.directionY = directionY;
     puff.surface = surface;
@@ -1513,10 +1589,10 @@ abstract class WalkableScene extends Phaser.Scene {
     const fleckRightColour = surface === "grass" ? GOLD : dustColour;
     const dustAlpha =
       surface === "grass" ? 0.24 : surface === "stone" ? 0.34 : 0.18;
-    const depth = depthFor(this.player.y, 2);
+    const depth = this.depthAt(this.player.x, this.player.y, 2);
     puff.dust
       .setPosition(puff.originX, puff.originY)
-      .setDepth(depthFor(this.player.y, 2))
+      .setDepth(depth)
       .setScale(0.55)
       .setFillStyle(dustColour, 1)
       .setAlpha(dustAlpha)
@@ -1681,11 +1757,11 @@ abstract class WalkableScene extends Phaser.Scene {
       0,
     );
     const shadow = this.add
-      .ellipse(x, y + 23, 42, 12, NIGHT, 0.27)
-      .setDepth(depthFor(y, 1));
+      .ellipse(this.screenX(x, y), this.screenY(x, y) + 23, 42, 12, NIGHT, 0.27)
+      .setDepth(this.depthAt(x, y, 1));
     const sprite = this.add
-      .sprite(x, y, `${texture}-down-0`)
-      .setDepth(depthFor(y, 3));
+      .sprite(this.screenX(x, y), this.screenY(x, y), `${texture}-down-0`)
+      .setDepth(this.depthAt(x, y, 3));
     this.npcViews.set(npcId, {
       shadow,
       sprite,
@@ -1716,12 +1792,14 @@ abstract class WalkableScene extends Phaser.Scene {
   protected moveNpcTo(npcId: NpcId, x: number, y: number): void {
     const view = this.npcViews.get(npcId);
     if (!view) return;
+    const drawnX = this.screenX(x, y);
+    const drawnY = this.screenY(x, y);
     view.shadow
-      .setPosition(x, y + 23)
-      .setDepth(depthFor(y, 1));
+      .setPosition(drawnX, drawnY + 23)
+      .setDepth(this.depthAt(x, y, 1));
     view.sprite
-      .setPosition(x, y)
-      .setDepth(depthFor(y, 3));
+      .setPosition(drawnX, drawnY)
+      .setDepth(this.depthAt(x, y, 3));
     const interaction = this.interactions.find(
       (candidate) => candidate.kind === "npc" && candidate.npcId === npcId,
     );
@@ -1730,12 +1808,12 @@ abstract class WalkableScene extends Phaser.Scene {
     interaction.y = y;
     const marker = this.markers.get(interaction.id);
     if (!marker) return;
-    const markerY = y - 96;
-    marker.glow.setPosition(x, markerY);
-    marker.ring.setPosition(x, markerY);
-    marker.badge.setPosition(x, markerY);
-    marker.plate.setPosition(x, markerY + 21);
-    marker.label.setPosition(x, markerY + 27);
+    const markerY = drawnY - 96;
+    marker.glow.setPosition(drawnX, markerY);
+    marker.ring.setPosition(drawnX, markerY);
+    marker.badge.setPosition(drawnX, markerY);
+    marker.plate.setPosition(drawnX, markerY + 21);
+    marker.label.setPosition(drawnX, markerY + 27);
   }
 
   protected restoreNpcHomes(): void {
@@ -1872,7 +1950,9 @@ abstract class WalkableScene extends Phaser.Scene {
   }
 
   protected addRoomPlant(x: number, y: number): void {
-    this.add.sprite(x, y - 32, "prop-planter").setDepth(depthFor(y, 1));
+    this.add
+      .sprite(this.screenX(x, y), this.screenY(x, y) - 32, "prop-planter")
+      .setDepth(this.depthAt(x, y, 1));
   }
 
   private configureInput(): void {
@@ -2022,15 +2102,18 @@ abstract class WalkableScene extends Phaser.Scene {
     if (!this.carriedItemView) {
       this.carriedItemView = this.add.rectangle(0, 0, 16, 12, errand.tint)
         .setStrokeStyle(2, PALETTE.ink)
-        .setDepth(depthFor(this.player.y, 6));
+        .setDepth(this.depthAt(this.player.x, this.player.y, 6));
     }
     this.carriedItemView.setFillStyle(errand.tint);
   }
 
   protected updateCarriedItemPosition(): void {
     if (!this.carriedItemView) return;
-    this.carriedItemView.setPosition(this.player.x, this.player.y - 34);
-    this.carriedItemView.setDepth(depthFor(this.player.y, 6));
+    this.carriedItemView.setPosition(
+      this.screenX(this.player.x, this.player.y),
+      this.screenY(this.player.x, this.player.y) - 34,
+    );
+    this.carriedItemView.setDepth(this.depthAt(this.player.x, this.player.y, 6));
   }
 
   private updateNearbyInteraction(force: boolean): void {
@@ -2072,10 +2155,10 @@ abstract class WalkableScene extends Phaser.Scene {
   private setPlayerFacing(x: number, y: number): void {
     if (Math.abs(x) > Math.abs(y)) {
       this.playerFacing = "side";
-      this.player.setFlipX(x < 0);
+      this.playerAvatar.setFlipX(x < 0);
     } else {
       this.playerFacing = y < 0 ? "up" : "down";
-      this.player.setFlipX(false);
+      this.playerAvatar.setFlipX(false);
     }
   }
 
@@ -2109,7 +2192,7 @@ abstract class WalkableScene extends Phaser.Scene {
     if (key === this.playerTextureKey) return;
     this.currentWalkFrame = frame;
     this.playerTextureKey = key;
-    this.player.setTexture(key);
+    this.playerAvatar.setTexture(key);
   }
 }
 
