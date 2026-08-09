@@ -105,18 +105,27 @@ More than one agent is often live in this working tree at the same time
 
 ## Dropping the isometric direction (rollback)
 
-**This changed on 2026-08-09 — the one-command rollback below no longer works.**
+**The village is isometric by default as of 2026-08-09.** The rollback below is
+inverted from what it used to say — read this, not your memory of it.
 
-The isometric estate is now wired into the shipped campaign behind `?iso=1`
-(`EstateScene` in `campaignScene.ts` imports `iso/isoTerrain`, `iso/isoBuildings`
-and `iso/projection`). Deleting `src/game/iso/` therefore breaks the build.
+`EstateScene` in `campaignScene.ts` imports `iso/isoTerrain`, `iso/isoBuildings`,
+`iso/isoProps` and `iso/projection`, so deleting `src/game/iso/` breaks the build.
 
-`/` still renders top-down by default and is unaffected without the flag, so
-the *visual* rollback is just "do not pass `?iso=1`". To remove the direction
-outright you must now also strip the `isometric` option from
-`CampaignGameOptions`, the `screenX`/`screenY`/`depthAt` overrides and
-`createIsoGround`/`createIsoBuildings` from `EstateScene`, and the `ISOMETRIC`
-flag in `main.ts`.
+**To fall back visually, append `?iso=0`.** The top-down painter
+(`threeQuarterArt.ts`) is still in the tree and still exercised by that flag, so
+the old estate is one query parameter away. Keep it that way until the isometric
+direction has been in front of judges.
+
+To remove isometric outright you would need to strip the `isometric` option from
+`CampaignGameOptions`, the `screenX`/`screenY`/`depthAt` overrides and the
+`createIsoGround`/`createIsoBuildings`/`propTexture` methods from `EstateScene`,
+and flip the `ISOMETRIC` default in `main.ts`.
+
+**Interiors are head-on on purpose, in both modes.** They were tried isometric
+and reverted — every room carries wall-mounted detail authored as an elevation,
+and projecting those coordinates lays the shelves on the floor. Doing it
+properly is per-room art across ten rooms. The reasoning is recorded in
+`InteriorScene`.
 
 The projection seam itself (`screenX`/`screenY`/`depthAt` on `WalkableScene`)
 should stay either way — its defaults are the identity, it costs nothing, and it

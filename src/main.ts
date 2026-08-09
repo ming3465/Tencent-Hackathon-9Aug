@@ -218,9 +218,12 @@ const SMOKE_MODE =
   new URLSearchParams(window.location.search).get("smoke") === "1";
 const FORCE_CANVAS =
   new URLSearchParams(window.location.search).get("renderer") === "canvas";
-/** Opt into the isometric estate while the direction is being evaluated. */
+/**
+ * The village is isometric. `?iso=0` falls back to the original top-down
+ * estate, which is kept as an escape hatch rather than deleted.
+ */
 const ISOMETRIC =
-  new URLSearchParams(window.location.search).get("iso") === "1";
+  new URLSearchParams(window.location.search).get("iso") !== "0";
 const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const audio = new KampungAudio(readStoredAudioSettings());
 const smokeWindow = window as Window & {

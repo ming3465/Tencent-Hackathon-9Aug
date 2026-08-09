@@ -1678,8 +1678,11 @@ try {
         && npc.markerY !== null
         && Math.abs(npc.x - npc.interactionX) < 0.1
         && Math.abs(npc.y - npc.interactionY) < 0.1
-        && Math.abs(npc.x - npc.markerX) < 0.1
-        && Math.abs(npc.y - 96 - npc.markerY) < 0.1
+        // Markers live in drawn space, the resident's x/y in world space.
+        // Comparing them directly only worked while the two were the same
+        // thing, which stopped being true when the estate went isometric.
+        && Math.abs(npc.drawnX - npc.markerX) < 0.1
+        && Math.abs(npc.drawnY - 96 - npc.markerY) < 0.1
     );
     residentMotionEvidence = {
       movedNpcIds,

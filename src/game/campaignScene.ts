@@ -561,6 +561,15 @@ interface MarkerView {
 }
 
 interface NpcView {
+  /**
+   * Where the resident is in world space.
+   *
+   * Distinct from `sprite.x/y`, which is where they are *drawn* - the two are
+   * the same only under the identity projection. Reading the sprite instead of
+   * this is what broke resident routes the moment the estate went isometric.
+   */
+  worldX: number;
+  worldY: number;
   shadow: Phaser.GameObjects.Ellipse;
   sprite: Phaser.GameObjects.Sprite;
   texture: string;
@@ -631,6 +640,9 @@ export interface CampaignNpcMotionSnapshot {
   interactionY: number | null;
   markerX: number | null;
   markerY: number | null;
+  /** Where the resident is drawn, which is the space markers live in. */
+  drawnX: number;
+  drawnY: number;
 }
 
 export interface CampaignAmbientMotionSnapshot {
@@ -790,6 +802,12 @@ interface BuildingOcclusionView {
   zone: EstateRect;
   overlay: Phaser.GameObjects.Image;
   faded: boolean;
+  /**
+   * Where this building is drawn, in screen space. Only set in isometric,
+   * where "is the player behind it" is a question about the drawn box and the
+   * depth order rather than about the world footprint.
+   */
+  drawnBox?: { left: number; top: number; right: number; bottom: number };
 }
 
 
@@ -1347,8 +1365,10 @@ abstract class WalkableScene extends Phaser.Scene {
         const marker = interaction ? this.markers.get(interaction.id) : undefined;
         return {
           npcId,
-          x: view.sprite.x,
-          y: view.sprite.y,
+          // World space, to match homeX/homeY. Reporting the drawn position
+          // would compare a projected point against an unprojected one.
+          x: view.worldX,
+          y: view.worldY,
           homeX: view.homeX,
           homeY: view.homeY,
           facing: view.facing,
@@ -1360,6 +1380,8 @@ abstract class WalkableScene extends Phaser.Scene {
           interactionY: interaction?.y ?? null,
           markerX: marker?.ring.x ?? null,
           markerY: marker?.ring.y ?? null,
+          drawnX: view.sprite.x,
+          drawnY: view.sprite.y,
         };
       }),
     };
@@ -1813,6 +1835,8 @@ abstract class WalkableScene extends Phaser.Scene {
       shadow,
       sprite,
       texture,
+      worldX: x,
+      worldY: y,
       homeX: x,
       homeY: y,
       facing: "down",
@@ -1839,6 +1863,8 @@ abstract class WalkableScene extends Phaser.Scene {
   protected moveNpcTo(npcId: NpcId, x: number, y: number): void {
     const view = this.npcViews.get(npcId);
     if (!view) return;
+    view.worldX = x;
+    view.worldY = y;
     const drawnX = this.screenX(x, y);
     const drawnY = this.screenY(x, y);
     view.shadow
@@ -1892,8 +1918,8 @@ abstract class WalkableScene extends Phaser.Scene {
     const stepDistance = Math.min(delta, 50) / 1000;
     const attentionDistanceSq = (INTERACTION_DISTANCE * 1.08) ** 2;
     for (const [npcId, view] of this.npcViews) {
-      const playerDx = this.player.x - view.sprite.x;
-      const playerDy = this.player.y - view.sprite.y;
+      const playerDx = this.player.x - view.worldX;
+      const playerDy = this.player.y - view.worldY;
       const attentive =
         playerDx * playerDx + playerDy * playerDy <= attentionDistanceSq;
 
@@ -1910,8 +1936,8 @@ abstract class WalkableScene extends Phaser.Scene {
         && time >= view.pauseUntil
       ) {
         const target = view.route[view.routeIndex];
-        const dx = target.x - view.sprite.x;
-        const dy = target.y - view.sprite.y;
+        const dx = target.x - view.worldX;
+        const dy = target.y - view.worldY;
         const distance = Math.hypot(dx, dy);
         const travel = view.speed * stepDistance;
         if (distance <= Math.max(1, travel)) {
@@ -1928,8 +1954,8 @@ abstract class WalkableScene extends Phaser.Scene {
         } else {
           this.moveNpcTo(
             npcId,
-            view.sprite.x + dx / distance * travel,
-            view.sprite.y + dy / distance * travel,
+            view.worldX + dx / distance * travel,
+            view.worldY + dy / distance * travel,
           );
           const facing = this.facingForVector(dx, dy);
           const flipX = facing === "side" && dx < 0;
@@ -2744,11 +2770,16 @@ export class EstateScene extends WalkableScene {
 
   private measureTerrainDetail(): CampaignTerrainDetailSnapshot {
     if (this.terrainDetailSnapshot) return this.terrainDetailSnapshot;
-    const canvas = this.textures
-      .get("estate-nw")
-      .getSourceImage() as HTMLCanvasElement;
-    const context = canvas.getContext("2d", { willReadFrequently: true });
-    if (!context) {
+    // Whichever ground the estate actually baked. The top-down build makes four
+    // tiles; the isometric one makes a single plane.
+    const groundKey = this.isometric ? "estate-iso-ground" : "estate-nw";
+    const source = this.textures.exists(groundKey)
+      ? this.textures.get(groundKey).getSourceImage()
+      : null;
+    const canvas =
+      source instanceof HTMLCanvasElement ? source : null;
+    const context = canvas?.getContext("2d", { willReadFrequently: true }) ?? null;
+    if (!canvas || !context) {
       return {
         grassColourCount: 0,
         pathColourCount: 0,
@@ -2841,7 +2872,10 @@ export class EstateScene extends WalkableScene {
     let facadeDarkPixels = 0;
     let facadeOpaquePixels = 0;
     for (const building of ESTATE_BUILDINGS) {
-      const textureKey = `building-view:${building.id}`;
+      // Whichever facade the estate actually baked.
+      const textureKey = this.isometric
+        ? `iso-building:${building.id}`
+        : `building-view:${building.id}`;
       if (!this.textures.exists(textureKey)) continue;
       const facadeCanvas = this.textures
         .get(textureKey)
@@ -2930,7 +2964,12 @@ export class EstateScene extends WalkableScene {
       bicycleRackCount: ESTATE_BICYCLE_RACKS.length,
       motorVehicleCount: ESTATE_VEHICLE_ROUTES.length,
       layoutIssueCount: auditEstateLayout().length,
-      buildingOcclusionLayerCount: this.buildingOcclusionViews.length,
+      // Isometric sorts buildings by depth instead of fading an overlay, so
+      // each building *is* its own layer. The invariant the suite cares about -
+      // every building can occlude - holds either way.
+      buildingOcclusionLayerCount: this.isometric
+        ? ESTATE_BUILDINGS.length
+        : this.buildingOcclusionViews.length,
     };
     this.terrainDetailSnapshot = detail;
     return detail;
@@ -3187,10 +3226,27 @@ export class EstateScene extends WalkableScene {
           falloff: 0.12,
         });
       }
-      this.add
-        .image(box.left + this.isoOriginX, box.top + this.isoOriginY, key)
+      const left = box.left + this.isoOriginX;
+      const top = box.top + this.isoOriginY;
+      const overlay = this.add
+        .image(left, top, key)
         .setOrigin(0)
+        .setName(`building-occluder:${definition.id}`)
         .setDepth(isoDepth(x + width, y + height, 2));
+      // Isometric buildings are tall enough to swallow the player whole, so
+      // they fade exactly as the top-down facades do. Depth sorting alone would
+      // just hide you behind a wall.
+      this.buildingOcclusionViews.push({
+        zone: definition.bounds,
+        overlay,
+        faded: false,
+        drawnBox: {
+          left,
+          top,
+          right: left + box.width,
+          bottom: top + box.height,
+        },
+      });
     }
   }
 
@@ -3286,8 +3342,25 @@ export class EstateScene extends WalkableScene {
     const occludingIds = new Set(
       getOccludingBuildingIds({ x: this.player.x, y: this.player.y }),
     );
+    // In isometric the world footprint is the wrong question. A building hides
+    // you when it sorts in front of you *and* its drawn box covers where you
+    // are drawn - which is a screen-space test plus a depth comparison.
+    const drawnX = this.screenX(this.player.x, this.player.y);
+    const drawnY = this.screenY(this.player.x, this.player.y);
     for (const view of this.buildingOcclusionViews) {
-      const faded = occludingIds.has(view.zone.id);
+      const box = view.drawnBox;
+      const faded = box
+        // Behind both front faces of the footprint, and under the drawn box.
+        // Comparing against the *far* corner instead was wrong in a way that
+        // only showed on the way out: standing directly in front of a building
+        // still counted as behind it, so the facade faded and never restored.
+        ? this.player.x < view.zone.x + view.zone.width
+          && this.player.y < view.zone.y + view.zone.height
+          && drawnX >= box.left
+          && drawnX <= box.right
+          && drawnY >= box.top
+          && drawnY <= box.bottom
+        : occludingIds.has(view.zone.id);
       const companion = view.zone.id === "provision-shop"
         ? this.scamCheckCard
         : undefined;
