@@ -31,7 +31,21 @@ import {
   renderCampaignPortrait,
 } from "../campaignPortrait.js";
 import { getCharacterArtAudit } from "../characterArt.js";
-import { selectNpcIntent } from "../kampungMind.js";
+import {
+  chooseIntentVoicing,
+  selectNpcIntent,
+  traceNpcIntent,
+} from "../kampungMind.js";
+
+/**
+ * Stand-in phrasings for the voicing tests. Deliberately fixtures rather than
+ * shipped content: these assert the selector's behaviour, and should keep
+ * passing whatever a curated authoring run eventually adds.
+ */
+const VOICINGS: readonly (readonly string[])[] = [
+  ["A second way of saying it, {player}."],
+  ["A third way of saying it, {player}."],
+];
 import {
   auditEstateLayout,
   ESTATE_BICYCLE_RACKS,
@@ -520,6 +534,145 @@ describe("KampungMind", () => {
       selectNpcIntent({ state, npcId: "pak-yusof" }).id
     );
     expect(new Set(ids).size).toBe(1);
+  });
+
+  it("traces the same winner the campaign path selects", () => {
+    for (const npcId of NPC_PROFILES.map((profile) => profile.id)) {
+      for (const state of [createCampaignState(), inspectMrLong(), reachChapter2()]) {
+        let expected: string | null = null;
+        try {
+          expected = selectNpcIntent({ state, npcId }).id;
+        } catch {
+          expected = null;
+        }
+        expect(traceNpcIntent({ state, npcId }).selectedIntentId).toBe(expected);
+      }
+    }
+  });
+
+  it("reports every authored intent, and names the rule that rejected each one", () => {
+    const trace = traceNpcIntent({ state: createCampaignState(), npcId: "aunty-mei" });
+    expect(trace.considered).toBe(
+      NPC_PROFILES.find((profile) => profile.id === "aunty-mei")?.intents.length,
+    );
+    expect(trace.rows.length).toBe(trace.considered);
+    for (const row of trace.rows) {
+      // A row is rejected with a reason, or eligible with a score. Never both,
+      // never neither — that is what makes the panel readable.
+      expect(row.eligible).toBe(row.rejectedBecause === null);
+      expect(row.eligible).toBe(row.score !== null);
+      if (row.rejectedBecause !== null) expect(row.rejectedBecause.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("shows a score breakdown that adds up to the score it reports", () => {
+    let state = inspectMrLong();
+    state = completeRequest(state, REQUEST_ROUTES[0]);
+    const trace = traceNpcIntent({ state, npcId: "aunty-mei" });
+    const scored = trace.rows.filter((row) => row.score !== null);
+    expect(scored.length).toBeGreaterThan(0);
+    for (const row of scored) {
+      const summed = row.contributions.reduce((total, entry) => total + entry.points, 0);
+      expect(summed).toBe(row.score);
+    }
+  });
+
+  it("shows the estate remembering: helping someone re-ranks their intents", () => {
+    const before = traceNpcIntent({ state: inspectMrLong(), npcId: "aunty-mei" });
+    const after = traceNpcIntent({
+      state: completeRequest(inspectMrLong(), REQUEST_ROUTES[0]),
+      npcId: "aunty-mei",
+    });
+
+    // The demo beat: the same person, the same code, a different winner —
+    // because a memory was written in between.
+    expect(before.selectedIntentId).not.toBe(after.selectedIntentId);
+    expect(before.facts.memories).toHaveLength(0);
+    expect(after.facts.memories).toContain("helped:garden-request");
+    expect(
+      after.rows
+        .find((row) => row.selected)
+        ?.contributions.map((entry) => entry.label),
+    ).toContain("remembers being helped");
+  });
+
+  it("uses the authored lines when no variant has been curated in", () => {
+    const state = inspectMrLong();
+    const intent = selectNpcIntent({ state, npcId: "aunty-mei" });
+    // Identity, not equality: nothing is copied or rebuilt for an intent that
+    // has no variants, so today's dialogue is byte-for-byte what it was.
+    expect(chooseIntentVoicing(intent, { state, npcId: "aunty-mei" }).lines)
+      .toBe(intent.lines);
+  });
+
+  it("picks a voicing deterministically for identical context", () => {
+    const state = inspectMrLong();
+    const intent = { ...selectNpcIntent({ state, npcId: "aunty-mei" }), variants: VOICINGS };
+    const picked = Array.from({ length: 12 }, () =>
+      chooseIntentVoicing(intent, { state, npcId: "aunty-mei" }).index);
+    expect(new Set(picked).size).toBe(1);
+  });
+
+  it("changes the phrasing once the resident remembers you", () => {
+    const before = inspectMrLong();
+    const after = completeRequest(inspectMrLong(), REQUEST_ROUTES[0]);
+    const intent = { ...selectNpcIntent({ state: before, npcId: "aunty-mei" }), variants: VOICINGS };
+
+    const first = chooseIntentVoicing(intent, { state: before, npcId: "aunty-mei" });
+    const second = chooseIntentVoicing(intent, { state: after, npcId: "aunty-mei" });
+
+    expect(first.total).toBe(VOICINGS.length + 1);
+    expect(second.index).not.toBe(first.index);
+    expect(first.reason).toContain("nothing");
+    expect(second.reason).toMatch(/remembers \d+ thing/);
+  });
+
+  it("never selects a voicing outside the authored pool", () => {
+    const intent = { ...selectNpcIntent({ state: inspectMrLong(), npcId: "aunty-mei" }), variants: VOICINGS };
+    // Walk a resident's memory count far past the pool size: the index must
+    // stay in range rather than falling off the end into the authored default.
+    for (let remembered = 0; remembered < 40; remembered += 1) {
+      const state = {
+        ...inspectMrLong(),
+        npcMemories: { "aunty-mei": Array.from({ length: remembered }, (_, i) => `m:${i}`) },
+      };
+      const choice = chooseIntentVoicing(intent, { state, npcId: "aunty-mei" });
+      expect(choice.index).toBeGreaterThanOrEqual(0);
+      expect(choice.index).toBeLessThan(choice.total);
+      expect(choice.lines.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("rejects any placeholder a curated variant might smuggle in", () => {
+    // The renderer resolves exactly one token. A model asked to rephrase a line
+    // containing "{player}" can easily return "{name}" or "{Player}", which
+    // would reach a judge as literal text. This guards curated variants — and
+    // asserts the rule itself bites, so it does not quietly pass as a vacuous
+    // loop while no variants have been curated in yet.
+    const offendingTokens = (line: string): readonly string[] =>
+      (line.match(/\{[^}]*\}/g) ?? []).filter((token) => token !== "{player}");
+
+    expect(offendingTokens("Morning, {player}.")).toEqual([]);
+    expect(offendingTokens("Morning, {name} and {Player}.")).toEqual(["{name}", "{Player}"]);
+
+    for (const profile of NPC_PROFILES) {
+      for (const intent of profile.intents) {
+        for (const variant of intent.variants ?? []) {
+          for (const line of variant) {
+            expect(offendingTokens(line), `${intent.id}: ${line}`).toEqual([]);
+          }
+        }
+      }
+    }
+  });
+
+  it("puts the winner first and the rejected intents last", () => {
+    const trace = traceNpcIntent({ state: reachChapter2(), npcId: "aunty-mei" });
+    expect(trace.rows[0]?.selected).toBe(true);
+    const firstRejected = trace.rows.findIndex((row) => !row.eligible);
+    if (firstRejected !== -1) {
+      expect(trace.rows.slice(firstRejected).every((row) => !row.eligible)).toBe(true);
+    }
   });
 });
 

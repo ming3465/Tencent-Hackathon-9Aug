@@ -59,7 +59,12 @@ import {
   type JournalCategory,
   type JournalEntryView,
 } from "./game/journal.js";
-import { selectNpcIntent } from "./game/kampungMind.js";
+import {
+  chooseIntentVoicing,
+  selectNpcIntent,
+  traceNpcIntent,
+} from "./game/kampungMind.js";
+import { LlmVoice, mayRevoice } from "./game/llmVoice.js";
 import { shouldAutoStartStoryBeat } from "./game/storyAutoStart.js";
 import {
   reducePauseState,
@@ -193,6 +198,11 @@ if (!dialogScroll) throw new Error("Missing required .dialog-scroll");
 const btnDialogAdvance = byId<HTMLButtonElement>("btn-dialog-advance");
 const dialogChoices = byId<HTMLElement>("dialog-choices");
 const btnDialogClose = byId<HTMLButtonElement>("btn-dialog-close");
+const mindInspector = byId<HTMLElement>("mind-inspector");
+const mindInspectorSubject = byId<HTMLElement>("mind-inspector-subject");
+const mindInspectorFacts = byId<HTMLElement>("mind-inspector-facts");
+const mindInspectorRows = byId<HTMLElement>("mind-inspector-rows");
+const mindInspectorFoot = byId<HTMLElement>("mind-inspector-foot");
 
 const pauseOverlay = byId<HTMLElement>("pause-overlay");
 const pausePanel = byId<HTMLElement>("pause-panel");
@@ -218,6 +228,42 @@ const SMOKE_MODE =
   new URLSearchParams(window.location.search).get("smoke") === "1";
 const FORCE_CANVAS =
   new URLSearchParams(window.location.search).get("renderer") === "canvas";
+/**
+ * Shows KampungMind's working while you play. Off everywhere except an
+ * explicit `?inspect=1`, so the judged routes (`/` and `?demo=1`) are
+ * untouched.
+ */
+const INSPECT_MODE =
+  new URLSearchParams(window.location.search).get("inspect") === "1";
+if (INSPECT_MODE) {
+  // Lets the stylesheet clear a column for the panel without any of that
+  // layout leaking into the judged routes.
+  document.documentElement.dataset.inspect = "1";
+}
+/**
+ * Re-voices low-stakes NPC lines through the browser's own on-device model.
+ * Off everywhere except an explicit `?llm=1`, so `/` and `?demo=1` still make
+ * no model call at all.
+ */
+const LLM_MODE =
+  new URLSearchParams(window.location.search).get("llm") === "1";
+const llmVoice = new LlmVoice();
+/**
+ * Re-voiced lines, keyed `npcId:intentId`, filled while the player walks up to
+ * someone. Generation takes about a second; the walk takes longer, so the
+ * dialogue still opens instantly and simply uses whatever is ready.
+ */
+const revoicedBeats = new Map<string, readonly string[]>();
+let revoicingInFlight: string | null = null;
+/**
+ * Who the player is currently standing next to.
+ *
+ * `onNearbyInteraction` only fires when the target *changes*, so without this
+ * a session that finishes starting while the player is already beside someone
+ * would never warm that beat — which is exactly the common case, since the
+ * first resident is close to where the story begins.
+ */
+let nearbyNpcId: NpcId | null = null;
 const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const audio = new KampungAudio(readStoredAudioSettings());
 const smokeWindow = window as Window & {
@@ -229,6 +275,14 @@ const smokeWindow = window as Window & {
     setPlayerPosition: (x: number, y: number) => void;
     tryInteract: () => void;
     getAudioState: () => AudioContextState | null;
+    getLlmVoice: () => {
+      mode: boolean;
+      state: string;
+      counts: { accepted: number; rejected: number };
+      lastRejection: string | null;
+      lastLatencyMs: number | null;
+      revoicedBeats: readonly string[];
+    };
   };
   __kampungLoaderSmoke?: CampaignLoaderSmokeControl;
   /** Errand registry, so the harness drives real points rather than literals. */
@@ -848,6 +902,8 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
         onNearbyInteraction: (interaction) => {
           if (isCurrentCampaignAttempt(attempt)) {
             updateNearbyPrompt(interaction);
+            nearbyNpcId = interaction?.kind === "npc" ? interaction.npcId : null;
+            if (nearbyNpcId) prewarmRevoicing(nearbyNpcId);
             maybeAutoStartStoryBeat(interaction);
           }
         },
@@ -906,6 +962,14 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
         },
         tryInteract: () => campaignHandle?.tryInteract(),
         getAudioState: () => audio.getContextState(),
+        getLlmVoice: () => ({
+          mode: LLM_MODE,
+          state: llmVoice.state,
+          counts: llmVoice.counts,
+          lastRejection: llmVoice.lastRejection,
+          lastLatencyMs: llmVoice.lastLatencyMs,
+          revoicedBeats: [...revoicedBeats.keys()],
+        }),
       };
     }
     renderMinimap();
@@ -1102,6 +1166,17 @@ function continueCampaign(): void {
  * when there is actually a save to lose.
  */
 function beginNewCampaign(): void {
+  // Built here because this click is a real user gesture. Chrome refuses
+  // `LanguageModel.create()` without one while the model is still
+  // `downloadable`, so a page cannot silently pull several gigabytes — and the
+  // session is then warm long before the player reaches anyone to talk to.
+  if (LLM_MODE && llmVoice.state !== "ready") {
+    void llmVoice.start().then(() => {
+      // Building the session takes a few seconds. Whoever the player has
+      // already walked up to in the meantime still deserves a warm beat.
+      if (nearbyNpcId) prewarmRevoicing(nearbyNpcId);
+    });
+  }
   if (savedCampaign && !DEMO_MODE) {
     const confirmed = window.confirm(
       pn("Start Kampung SG again from {player}'s house? Your current campaign save will be replaced."),
@@ -1330,6 +1405,7 @@ function openNpc(
       preferredIntentId: options.preferredIntentId,
       expertiseNeeded: currentExpertiseNeeds(),
     });
+    renderMindInspector(npcId, intent);
 
     if (intent.kind === "offer-request") {
       const requestEvent = intent.choices
@@ -1349,7 +1425,15 @@ function openNpc(
     openDialogue(
       intent.title,
       profile.name,
-      intent.lines,
+      // A live re-voicing if one finished during the walk over, otherwise the
+      // phrasing KampungMind picked from what she remembers. Either way the
+      // beat, its choices and its events are identical.
+      revoicedBeats.get(`${npcId}:${intent.id}`)
+        ?? chooseIntentVoicing(intent, {
+          state: campaignState,
+          npcId,
+          expertiseNeeded: currentExpertiseNeeds(),
+        }).lines,
       intent.choices ?? [],
       npcId,
       (selectedChoice) => {
@@ -1372,6 +1456,158 @@ function openNpc(
       npcId,
     );
   }
+}
+
+/**
+ * Draws KampungMind's decision for one NPC into the `?inspect=1` panel.
+ *
+ * Everything here is read-only text: no buttons, no tabbable nodes, and the
+ * panel stays `aria-hidden`, so it cannot disturb the dialogue focus trap or
+ * the accessibility contract the suite asserts.
+ */
+function renderMindInspector(npcId: NpcId, playing: NpcIntentDefinition): void {
+  if (!INSPECT_MODE) return;
+
+  let trace;
+  try {
+    trace = traceNpcIntent({
+      state: campaignState,
+      npcId,
+      expertiseNeeded: currentExpertiseNeeds(),
+    });
+  } catch {
+    return;
+  }
+
+  // The rows are traced without the caller's preference, so the panel shows
+  // what the campaign's own facts decided rather than a forced beat scoring
+  // +10,000 and drowning out the reasoning. The voicing, though, is read off
+  // the intent actually being spoken — otherwise the panel could explain a
+  // phrasing that is not the one on screen.
+  const voicingOf = chooseIntentVoicing(playing, {
+    state: campaignState,
+    npcId,
+    expertiseNeeded: currentExpertiseNeeds(),
+  });
+
+  mindInspector.hidden = false;
+  mindInspectorSubject.textContent = `${trace.npcName} · ${trace.npcId}`;
+  // The footer is a claim, so it has to track the mode. Under `?llm=1` the
+  // director is still offline and still makes no network call, but it is no
+  // longer deterministic — a screenshot saying otherwise would be wrong.
+  mindInspectorFoot.textContent = LLM_MODE
+    ? "On-device model · no server · no API key"
+    : "Offline · deterministic · no network call";
+
+  const memories = trace.facts.memories.length > 0
+    ? trace.facts.memories.join(", ")
+    : "nothing yet";
+  // Only worth a line once more than one phrasing has been curated in;
+  // "voicing 1 of 1" reads as an unfinished feature rather than a decision.
+  const voicing = voicingOf.total > 1
+    ? ` · voicing ${voicingOf.index + 1} of ${voicingOf.total} (${voicingOf.reason})`
+    : "";
+
+  // The evidence line: whether this beat was re-voiced on-device, and if not,
+  // exactly why not. A rejection is as interesting as an acceptance here.
+  const live = (() => {
+    if (!LLM_MODE) return "";
+    if (llmVoice.state !== "ready") return ` · live voice ${llmVoice.state}`;
+    if (!mayRevoice(playing.kind)) {
+      return ` · authored — ${playing.kind} carries a consequence, never re-voiced`;
+    }
+    if (revoicedBeats.has(`${npcId}:${playing.id}`)) {
+      return ` · re-voiced on-device in ${llmVoice.lastLatencyMs ?? "?"}ms`;
+    }
+    return ` · authored fallback${llmVoice.lastRejection ? ` — ${llmVoice.lastRejection}` : ""}`;
+  })();
+  mindInspectorFacts.textContent =
+    `chapter ${trace.facts.chapter} · needs [${trace.facts.expertiseNeeded.join(", ") || "—"}]`
+    + ` · knows [${trace.facts.expertise.join(", ")}]`
+    + ` · remembers ${memories}`
+    + ` · ${trace.eligibleCount} of ${trace.considered} intents eligible`
+    + voicing
+    + live;
+
+  mindInspectorRows.replaceChildren(
+    ...trace.rows.map((row) => {
+      const item = document.createElement("li");
+      item.className = "mind-row "
+        + (row.selected ? "selected" : row.eligible ? "eligible" : "rejected");
+
+      const top = document.createElement("div");
+      top.className = "mind-row-top";
+      const id = document.createElement("span");
+      id.className = "mind-row-id";
+      id.textContent = `${row.selected ? "▶ " : "  "}${row.intentId}  (${row.kind})`;
+      const score = document.createElement("span");
+      score.className = "mind-row-score";
+      score.textContent = row.score === null ? "—" : String(row.score);
+      top.append(id, score);
+
+      const why = document.createElement("div");
+      why.className = "mind-row-why";
+      why.textContent = row.eligible
+        ? row.contributions
+          .map((entry) => `${entry.points >= 0 ? "+" : ""}${entry.points} ${entry.label}`)
+          .join("  ")
+        : `rejected — ${row.rejectedBecause}`;
+
+      item.append(top, why);
+      return item;
+    }),
+  );
+}
+
+/**
+ * Starts re-voicing the beat this resident is about to play, while the player
+ * is still walking towards them.
+ *
+ * Fire-and-forget on purpose: it resolves into `revoicedBeats` or it does not,
+ * and `openNpc` never waits. If the whole beat cannot be re-voiced the authored
+ * lines are used unchanged — a scene half in one voice and half in another
+ * reads worse than one that was never touched.
+ */
+function prewarmRevoicing(npcId: NpcId): void {
+  if (!LLM_MODE || llmVoice.state !== "ready") return;
+
+  let intent: NpcIntentDefinition;
+  try {
+    intent = selectNpcIntent({
+      state: campaignState,
+      npcId,
+      expertiseNeeded: currentExpertiseNeeds(),
+    });
+  } catch {
+    return;
+  }
+  if (!mayRevoice(intent.kind)) return;
+
+  const key = `${npcId}:${intent.id}`;
+  if (revoicedBeats.has(key) || revoicingInFlight === key) return;
+  const profile = NPC_BY_ID.get(npcId);
+  if (!profile) return;
+
+  revoicingInFlight = key;
+  const source = chooseIntentVoicing(intent, {
+    state: campaignState,
+    npcId,
+    expertiseNeeded: currentExpertiseNeeds(),
+  }).lines;
+
+  void (async () => {
+    const rewritten: string[] = [];
+    for (const line of source) {
+      const next = await llmVoice.revoice(intent.kind, profile.name, profile.traits, line);
+      if (next === null) {
+        revoicingInFlight = null;
+        return;
+      }
+      rewritten.push(next);
+    }
+    revoicedBeats.set(key, rewritten);
+    revoicingInFlight = null;
+  })();
 }
 
 function currentExpertiseNeeds(): readonly string[] {

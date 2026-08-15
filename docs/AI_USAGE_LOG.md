@@ -3659,3 +3659,235 @@ title art and a new smoke check now prevents that regressing.
   collection, runtime model/network call, gameplay timer, failure state, energy
   system, or medical claim was introduced. The name is held in local campaign
   state only and is never transmitted.
+
+## 2026-08-15 - Pre-Presentation Audit and the KampungMind Inspector
+
+**Tool:** Claude Code (Opus 5)
+
+**Goal:** Audit the repository the day before the Singapore Demo Day pitch, and
+answer the question "how do we prove the AI-driven NPC is real?" without
+breaking a published claim.
+
+**What was measured, not assumed:**
+
+- `npx tsc --noEmit` - clean.
+- `npx vitest run` - **172/172** at `924377f`, **177/177** after this session's
+  five new tests.
+- `npx vite build` - green. HTML 112.77 kB (20.97 gzip), initial JS 135.67 kB
+  (42.40 gzip), lazy campaign scene 91.89 kB (28.97 gzip), lazy art chunk
+  1,558.00 kB (361.26 gzip).
+- `npm audit` - 0 vulnerabilities.
+- Live judged URL - HTTP 200 on both `/` and `?demo=1`, serving the same asset
+  hashes as the current `main` build.
+- `npm run smoke` - **72/72**, after four aborted attempts. See below.
+
+**Smoke suite: four aborted runs, then a clean pass, and why the aborts were
+never a code regression.** The first four runs aborted after 13, 18, 32 and 40
+checks with a Chrome DevTools Protocol timeout (`Runtime.evaluate` three times,
+`Input.dispatchKeyEvent` once). No assertion failed in any of them, the abort
+point moved every time, and each run reached further as background CPU
+contention dropped. The machine was carrying a load average of 12-14 with an
+unrelated game process pinning a full core for three days. A direct measurement
+ruled out the obvious suspect: world creation takes 117 ms to first canvas and
+trivial `Runtime.evaluate` round-trips return in 0-3 ms, so the main thread is
+never blocked by scene baking.
+
+Seven runs were attempted in total. **Five aborted on CDP timeouts (13, 18, 27,
+32 and 40 checks in), one reached 71/72, and one passed 72 of 72 with zero
+failures** - with no code change between any of them. The gate is therefore
+achievable on this tree, and this machine completes it roughly one run in
+seven. The cause never actually went away: `ps` confirmed an unrelated game
+process pinning a full core for three days and five hours, plus a VM holding a
+third of another, on an eight-core machine. The 72/72 run caught a momentary
+dip in load rather than a cleared machine.
+
+The single 71/72 run failed only the composite frame-budget check, and every
+value that check prints was healthy and identical to the passing run. Its
+unprinted conditions are motion samples - `movedFlutterIds.length >= 6`,
+`movedAmbientIds.length === 2`, `laundryChanged`, `pondAnimated` - which compare
+sprite positions between two frames and soften under scheduler jitter. That is
+recorded in `AGENTS.md` so the next person does not bisect the art for it.
+
+All of this is logged rather than reduced to the one good number. A harness that
+aborts under CPU pressure is a real property of this gate, and the honest
+summary is "72/72 proven, on a machine that manages it about one run in seven"
+- not "72/72".
+
+**Stale published figures corrected.** The deck carried three different test
+counts across three slides (90 on slide 5, 100 on slide 6, 90 on slide 7)
+against an actual 172, and build figures three generations old. `README.md`,
+`AGENTS.md`, `DEMO_SCRIPT.md`, `RUBRIC_SCORECARD.md`, `SUBMIT_NOW.md` and
+`WINNING_PLAYBOOK.md` were each carrying a different stale pair. All were
+synchronised to measured values. Note that the checked-in PPTX and PDF were
+exported on 2026-08-06 and are ~50 commits behind; the HTML deck source is now
+correct but the binaries still need a re-capture and re-export.
+
+**KampungMind Inspector (`?inspect=1`).** The engine was always real and always
+invisible - a judge sees a line of dialogue and cannot distinguish a
+state-conditioned choice from a fixed script. `traceNpcIntent()` now returns
+the whole decision rather than only its conclusion: every authored intent
+considered, the first eligibility rule that rejected each one in plain
+language, and a named score breakdown that sums to the score shown. A panel
+renders it live beside the dialogue.
+
+- `selectNpcIntent()` is unchanged in behaviour; both it and the trace run the
+  same `eligibilityFailure` and `scoreWithReasons` helpers, so they cannot
+  disagree. The 172 pre-existing tests passed unmodified across the refactor.
+- The panel is `aria-hidden`, has zero focusable children and no pointer
+  events, so it cannot enter the tab order, disturb the dialogue focus trap, or
+  intercept a tap. Verified in real Chrome: 0 tabbable nodes inside it.
+- Verified in real Chrome that `?demo=1&inspect=1` renders it and that the
+  judged `?demo=1` route leaves it `hidden` with zero rows.
+- Five new tests cover winner agreement with the campaign path across every
+  resident in three campaign states, complete intent coverage, rejection
+  reasons, score arithmetic, row ordering, and the demo beat itself: helping a
+  resident re-ranks their intents and `+14 remembers being helped` appears in
+  the winner's breakdown.
+- Documented for the presenter in `docs/KAMPUNGMIND_INSPECTOR.md`.
+
+**A runtime language model was considered and deliberately not built.** It
+would contradict the published no-backend/no-runtime-LLM constraint twelve
+hours before the pitch, undercut the team's own competitor-positioning line,
+require either a shipped API key or a backend, and introduce venue-wifi and
+latency failure modes into a live demo. The glass box answers the same question
+- "is it real?" - with something a judge can verify on stage, offline, with no
+latency. That is a recommendation, not a decision taken on the team's behalf;
+the runtime path remains available if they want it.
+
+**Voicings, and the authoring pipeline that feeds them.** An intent can now
+carry `variants`: alternate phrasings of the *same* beat.
+`chooseIntentVoicing()` picks between them from facts already in campaign state
+- this resident's memory count plus a stable FNV-1a hash of the intent ID - so
+the selection is deterministic and reproducible on every machine, and a
+resident words the same beat differently once she remembers you. The inspector
+shows which phrasing was used and what decided it.
+
+The boundary is deliberate and is the whole safety argument: **a voicing
+changes how something is said, never what happens.** The beat, its choices and
+its events are identical whichever phrasing is selected, so no generated or
+model-drafted text can introduce a quest, an obligation, a failure state or a
+claim. A variant that adds a fact is a different beat and belongs in its own
+intent. A test rejects any variant carrying a placeholder other than
+`{player}`, and asserts that rule bites rather than passing vacuously.
+
+`scripts/author-intents.mjs` drafts those phrasings. It runs
+`docs/prompts/gemini-kampungmind-authoring.txt` **verbatim** - the prompt
+written for the 2026-08-03 Gemini attempt that failed on a free-tier auth error
+and produced nothing. The prompt was never what failed, so it is reused rather
+than rewritten. Defaults to Tencent Hunyuan with Qwen behind `--provider qwen`;
+both are OpenAI-compatible, so it is one `fetch` call and no new dependency.
+Key from `process.env` only. It writes the raw answer plus a JSON receipt
+(model, timestamp, prompt SHA-256, token usage) to `docs/prompts/out/` and
+stops - **it never writes to `campaignContent.ts`.** A human curates, which is
+the same accept/reject discipline the four OpenAI visual workflows use.
+
+**No model has been run yet.** The script's dry-run and both failure paths were
+exercised; no API key was available in this session, so no authoring output,
+no curated line, and no Hunyuan or Qwen usage is claimed. `variants` ships
+empty, which means dialogue today is byte-for-byte what it was - a test asserts
+the no-variant path returns the authored `lines` by identity, not by copy.
+
+**A local Qwen runtime was costed and rejected for now.** WebLLM's
+`Qwen3-0.6B-q4f16_1-MLC` is a **614 MB** download needing ~1,403 MB of VRAM,
+against a complete game bundle of ~1.8 MB - roughly 340x the whole product. It
+is therefore permanently off the judged path, and off the pre-pitch path
+entirely. The design for an opt-in `?llm=1` lane exists but is deliberately
+unbuilt: it would require re-scoping the published "no runtime LLM" claim, and
+that is a decision for the team rather than a side effect of a build.
+
+**Tooling and claim boundary:**
+
+- AI-assisted implementation and audit with local real-Chrome evidence via the
+  repository's CDP harness and four purpose-built measurement scripts. No
+  image generation was involved.
+- No runtime model, network call, backend, account, analytics, personal-data
+  collection, timer, failure state, energy system, or medical claim was
+  introduced. `?inspect=1` performs no inference; it displays the existing
+  deterministic engine's own working. `scripts/author-intents.mjs` is a
+  developer tool that ships in no bundle and is never called at play time.
+- This is not a human or older-adult playtest, real-device run, screen-reader
+  or 200% zoom session, accessibility certification, social/health outcome, or
+  new Miora/CodeBuddy evidence. Nothing was committed, pushed, or deployed.
+
+## 2026-08-15 - On-Device Runtime Model: Live NPC Re-Voicing
+
+**Tool:** Claude Code (Opus 5). Runtime model: **Gemini Nano**, via Chrome's
+built-in Prompt API (`LanguageModel`).
+
+**Goal:** ship a genuine runtime language model - the first in this project -
+without changing how the game looks, without a server, and without letting
+generated text change what happens in the story.
+
+**Why this shape.** The earlier plan assumed WebLLM plus Qwen3-0.6B: a 614 MB
+download against a 1.8 MB game, which is why it was deferred. Probing Chrome
+151 on 2026-08-15 replaced that assumption. `LanguageModel` is present,
+`availability()` returns a usable state, **no feature flags are required**, and
+it works on the live judged URL. The model ships with the browser, so the game
+adds **0 KB**, needs no API key, no backend and no network call at play time.
+
+**Measured, not assumed:**
+
+- First attempt failed: `NotAllowedError: Requires a user gesture when
+  availability is "downloading" or "downloadable"`. Chrome will not let a page
+  silently fetch several gigabytes. Driving a real click made it work, and the
+  shipped feature therefore starts its session from the "Begin" button.
+- Download: 0 -> 100% in about two minutes and fifteen seconds.
+- Latency: ~800-1000 ms in isolation; **2334-2686 ms with the game rendering
+  beside it.** An initial 1200 ms timeout silently rejected every good line as
+  "timed out", which is exactly how a feature ships looking broken. Raised to
+  5000 ms - safe because generation runs while the player walks towards
+  someone, never while they wait.
+
+**The quality finding that shaped the design.** Asked twice, with an explicit
+rule and a few-shot example forbidding it, Nano rewrote Mdm Siti's
+
+> That route floods every monsoon, {player}. We should shelter it properly.
+
+as "...we really must reinforce the drainage properly." Her quest builds a
+**sheltered linkway** and the game renders it. Drainage is a different thing.
+Round one was worse: it addressed Aunty Mei by name instead of speaking as her,
+and six of eight runs invented a `{player}` token that was not in the source.
+
+Meaning drift of that kind is fluent, plausible, and **undetectable by any
+validator**. So consequence-bearing lines are never sent to the model at all.
+Re-voicing is restricted by `intent.kind` to `greeting`, `reflection` and
+`memory-reaction` - kinds that name no world change. That is a construction-time
+guarantee, not a filter.
+
+**What shipped:** `src/game/llmVoice.ts` behind `?llm=1`. KampungMind still
+selects the beat; the model only re-words the line it chose, and never sees or
+writes campaign state. Every candidate must pass `validateRevoicing()` - no
+invented numbers, no unknown tokens, no dropped `{player}`, no third-person
+self-reference, no medical vocabulary, sane length - and if any line in a beat
+fails, the whole beat falls back to authored text. Verified in the real game:
+
+> Authored:  Uncle Ravi looks up with an easy nod. There is always room to talk.
+> Re-voiced: I nod, always welcome a chat. Plenty of time for a cuppa and a bit
+>            of gossip, you know.
+
+Two integration bugs were found by playing rather than by testing, and both are
+now regression-tested: the prologue speaker is named "The Voice", so the
+third-person check treated the article "the" as a name and rejected every line
+containing it; and prewarming only ran on a nearby-target *change*, so a session
+that finished starting while the player already stood beside someone never
+warmed that beat.
+
+**Published claims re-scoped, in the same pass.** "No runtime LLM" was true and
+is now too blunt. `README.md`, `docs/DEMO_SCRIPT.md`, the deck integrity slide
+and `docs/IMPROVEMENTS.md` now say: the default build generates no text at
+runtime, and the opt-in `?llm=1` lane re-words low-stakes lines using the
+browser's own on-device model, with no server and no key. The
+"Explicitly NOT doing" entry for runtime LLM dialogue is marked **reversed**
+with its reasoning rather than deleted, because the original argument still
+holds for anything that *decides* the story.
+
+**Claim boundary:**
+
+- The judged routes `/` and `?demo=1` were verified to make **no model call**
+  (`mode:false, state:"off"`, zero accepted, zero rejected).
+- Chrome desktop only. Safari, Firefox, mobile and older Chrome fall back to
+  authored lines, which is the current shipped experience unchanged.
+- No API key, no server, no telemetry; nothing leaves the device.
+- This is not a human or older-adult playtest, real-device pass, screen-reader
+  or 200%-zoom session, and it is not Miora or CodeBuddy evidence. Nothing was
+  committed, pushed or deployed.

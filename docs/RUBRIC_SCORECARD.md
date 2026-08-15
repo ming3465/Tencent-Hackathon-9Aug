@@ -100,6 +100,30 @@ evidence.
   collision-aware cluster placements on open campaign routes.
 - [x] All four OpenAI workflows are explicitly not relabelled as Miora.
 
+### Runtime Model Evidence (on-device)
+
+- [x] A genuine language model runs at play time behind `?llm=1`: Chrome's
+  built-in Prompt API (Gemini Nano), on-device, adding **0 KB** to the bundle
+  with no API key, no server and no network call.
+- [x] Verified in the running game, not in isolation: Uncle Ravi's authored
+  greeting re-voiced on-device in 1832–2686 ms across runs, captured in
+  `docs/screenshots/34-llm-revoicing.png`.
+- [x] The judged routes `/` and `?demo=1` were verified to make **zero** model
+  calls, so the default experience is unchanged.
+- [x] Safety is structural, not filtered: only `greeting`, `reflection` and
+  `memory-reaction` may be re-voiced. Consequence-bearing kinds never reach the
+  model, because measurement showed it rewriting "we should shelter it properly"
+  as "reinforce the drainage" — which would contradict the sheltered linkway the
+  game renders.
+- [x] Every generated line must pass `validateRevoicing()`; if any line in a
+  beat fails, the whole beat falls back to authored text. 17 unit tests, two of
+  them regressions from bugs found by playing.
+- [x] The model's failures are recorded in `AI_USAGE_LOG.md` alongside its
+  successes, including the 1200 ms timeout that silently rejected every good
+  line until real in-game latency was measured.
+- [ ] A human has played the `?llm=1` lane in a headed browser on the demo
+  machine.
+
 ### AI Attention to Detail
 
 - [x] AI instructions include accessibility, privacy, medical-claim, testing,
@@ -113,8 +137,10 @@ evidence.
 
 ### Current Risk
 
-This remains the largest scoring risk. CodeBuddy credits are exhausted and no
-Miora asset has been generated yet. Three OpenAI direction studies → human
+This remains a scoring risk, but a materially smaller one than it was: the
+project now ships a real on-device runtime model with reproducible evidence and
+documented failure modes, which is the strongest AI artifact it has. CodeBuddy
+credits are still exhausted and no Miora asset has been generated yet. Three OpenAI direction studies → human
 review → verified code-drawn translations, plus the fourth
 reject/edit/optimize → playable-title pipeline, provide strong visual AI
 evidence. They do not replace the planned second CodeBuddy task or
@@ -135,15 +161,15 @@ Miora-specific before-and-after pipeline.
 ### Technical Execution
 
 - [x] Strict TypeScript passes.
-- [x] 154/154 tests pass: 30 campaign · 31 match · 25 player identity · 17 audio · 17 carry errands · 10 world/door/pause · 10 isometric world · 10 story auto-start · 4 accessibility.
-- [x] 60/60 production-browser checks drive complete full and demo campaigns.
+- [x] 199/199 tests pass: 40 campaign · 17 llm-voice · 31 match · 25 player identity · 17 audio · 17 carry errands · 13 material shading · 11 world/door/pause · 10 isometric world · 10 story auto-start · 4 optional portraits · 4 accessibility.
+- [x] 72/72 production-browser checks drive complete full and demo campaigns, re-measured 2026-08-15. Needs a quiet machine — under heavy background CPU load the harness aborts on CDP timeouts with no assertion failure.
 - [x] Dependency audit has zero known vulnerabilities.
 - [x] Phaser is lazy-loaded after the title screen with visible opening and
   slow states, cancellation, retry after failure, focus restoration, and
   duplicate-start protection covered by browser automation.
-- [x] Latest verified production build is HTML 91.64 kB (16.14 kB gzip),
-  initial JS 141.46 kB (41.48 kB gzip), and lazy campaign scene 1,613.26 kB
-  (379.79 kB gzip).
+- [x] Latest verified production build is HTML 112.77 kB (20.97 kB gzip),
+  initial JS 135.67 kB (42.40 kB gzip), lazy campaign scene 91.89 kB
+  (28.97 kB gzip), and lazy art chunk 1,558.00 kB (361.26 kB gzip).
 - [x] No backend or network dependency is required to play.
 - [x] The Phaser bundle-size warning is accepted or reduced with documented
   reasoning.

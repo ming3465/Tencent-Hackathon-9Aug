@@ -111,14 +111,25 @@ node scripts/capture-deck.mjs
 # Rebuild the raster PDF and render all eight pages with Poppler for inspection.
 ```
 
-Current truth as of 2026-08-07: **154/154 tests (30 campaign · 31 match · 25 player identity · 17 audio · 17 carry errands · 10 world/door/pause · 10 isometric world · 10 story auto-start · 4 accessibility) · 66/66 browser checks in
-default WebGL and forced Canvas fallback ·
-0 known vulnerabilities at the latest audit**. Latest verified production
-build: **HTML 100.25 kB (17.94 kB gzip) · initial JS 126.31 kB (39.18 kB
-gzip) · lazy campaign scene 93.39 kB (29.31 kB gzip) · lazy art chunk
-1,555.44 kB (358.19 kB gzip)**. Measured from a clean HEAD worktree, so the
-figure reflects committed code rather than whatever is in a working tree.
+Current truth as of 2026-08-15: **199/199 tests (40 campaign · 17 llm-voice · 31 match ·
+25 player identity · 17 audio · 17 carry errands · 13 material shading ·
+11 world/door/pause · 10 isometric world · 10 story auto-start · 4 optional
+portraits · 4 accessibility) · strict TypeScript clean · 0 known
+vulnerabilities**. Latest measured production build: **HTML 112.77 kB
+(20.97 kB gzip) · initial JS 135.67 kB (42.40 kB gzip) · lazy campaign scene
+91.89 kB (28.97 kB gzip) · lazy art chunk 1,558.00 kB (361.26 kB gzip)**.
 If those numbers appear anywhere as something else, fix before submitting.
+
+**Browser checks: 72/72 proven on 2026-08-15 — but budget several attempts,
+and run it yourself on the presenting machine.** Seven runs that day: five
+aborted on Chrome DevTools Protocol timeouts (13, 18, 27, 32 and 40 checks in),
+one reached 71/72 on a motion-sampling assertion, and one passed 72/72 — with
+no code change between any of them. The machine was never actually quiet: an
+unrelated game process held a full core for three days and a VM a third of
+another, on eight cores. **Quit those first.** The pass is real, but a laptop
+in that state completes the suite about one run in seven, so do not leave this
+until the morning of the pitch if you need a terminal shot of it. Before you quote the figure on stage, quit anything eating a core
+and run `npm run smoke` to completion.
 
 ## Claim boundaries (unchanged, non-negotiable)
 

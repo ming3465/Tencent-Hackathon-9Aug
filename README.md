@@ -22,8 +22,12 @@ Each resident has authored personality, community role, expertise, knowledge,
 memory rules, and dialogue intents. KampungMind deterministically selects an
 eligible greeting, clue, request, reminder, contribution, remembered reaction,
 or reflection from chapter context and player choices. Stable IDs break ties.
-There is no runtime text generation, network call, API key, backend, or
-hallucination path.
+The default build performs no runtime text generation, and there is no network
+call, API key or backend anywhere. The opt-in `?llm=1` lane additionally
+re-words *low-stakes* lines using the language model already built into the
+browser — on-device, still with no server and no key. Consequence-bearing lines
+are never sent to a model, so no generated text can change what happens in the
+story. See `docs/KAMPUNGMIND_INSPECTOR.md`.
 
 ## What ships
 
@@ -125,7 +129,8 @@ hallucination path.
   selectively translated rather than copied; the separately reviewed title
   panorama is the only generated raster intentionally shipped at runtime
 - No timer, failure state, energy system, account, analytics, personal-data
-  collection, backend, or runtime LLM
+  collection, backend, or runtime LLM on the default route (`?llm=1` opts into
+  on-device re-voicing through the browser's own model; still no server, no key)
 
 The project does not diagnose, measure, prevent, delay, or treat any medical
 condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
@@ -135,10 +140,10 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | Gate | Result |
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
-| `npm test` | 90/90: 30 campaign, 31 match-engine, 17 audio, 4 accessibility-contract, and 8 world-layout/door/pause tests |
-| `npm run build` | 91.64 kB HTML (16.14 kB gzip); 141.46 kB initial JS (41.48 kB gzip); 1,613.26 kB lazy scene (379.79 kB gzip) |
+| `npm test` | 199/199: 40 campaign, 17 llm-voice, 31 match-engine, 25 player-identity, 17 audio, 17 carry-errands, 13 material-shading, 11 world-layout/door/pause, 10 isometric-world, 10 story-auto-start, 4 optional-portrait, and 4 accessibility-contract tests |
+| `npm run build` | 112.77 kB HTML (20.97 kB gzip); 135.67 kB initial JS (42.40 kB gzip); 91.89 kB lazy campaign scene (28.97 kB gzip); 1,558.00 kB lazy art chunk (361.26 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
-| `npm run smoke` | 60/60 production-browser checks in default WebGL and forced Canvas fallback |
+| `npm run smoke` | 72/72 production-browser checks in default WebGL and forced Canvas fallback. Needs a quiet machine: under heavy background CPU load the harness aborts on CDP timeouts partway through, with no assertion failure — that is the machine, not the build. |
 
 The smoke harness drives complete full and demo campaigns through production
 JavaScript, instantiates all 12 locations, proves resident route movement,

@@ -458,7 +458,7 @@
           <td><strong>CodeBuddy CLI 2.127.0</strong> authored the first 10 files, including the match engine that still ships today</td>
           <td>Overran its 50-turn limit. <strong>2 TypeScript errors &middot; 3 failing tests &middot; 1 unused dependency &middot; 4 audit findings &middot; 1 stale-timer race</strong></td>
           <td>Rewrote tests off an invalid constant-RNG shuffle assumption; added session-aware timer cancellation</td>
-          <td><strong>tsc clean &middot; 90/90 tests &middot; 0 vulnerabilities &middot; 60/60 browser smoke</strong></td>
+          <td><strong>tsc clean &middot; 199/199 tests &middot; 0 vulnerabilities &middot; 72/72 browser smoke</strong></td>
         </tr>
       </table>
       <div class="callout">
@@ -501,16 +501,16 @@
       <span class="kicker">Engineering</span>
       <h1>Fast, private, tested, no backend.</h1>
       <div class="stats">
-        <div class="stat"><b>100</b><span>Passing tests</span></div>
+        <div class="stat"><b>199</b><span>Passing tests</span></div>
         <div class="stat"><b>0</b><span>Vulnerabilities</span></div>
-        <div class="stat"><b>112.88 kB</b><span>Initial JavaScript</span></div>
+        <div class="stat"><b>135.67 kB</b><span>Initial JavaScript</span></div>
         <div class="stat"><b>0</b><span>Bytes collected</span></div>
       </div>
       <div class="split engineering-body">
         <ul>
-          <li>Vite + strict TypeScript + Phaser 3 &middot; 30 campaign, 31 match, 17 audio, 4 accessibility, 8 world-layout, 10 isometric tests</li>
+          <li>Vite + strict TypeScript + Phaser 3 &middot; 40 campaign, 17 llm-voice, 31 match, 25 player identity, 17 audio, 17 carry errands, 13 material shading, 11 world-layout/door/pause, 10 isometric, 10 story auto-start, 4 portrait, 4 accessibility tests</li>
           <li>Connection-aware idle prefetch after title art &middot; cached Start with cancel/retry recovery</li>
-          <li>60-check Chrome DevTools smoke test drives full and demo campaigns</li>
+          <li>72-check Chrome DevTools smoke test drives full and demo campaigns</li>
           <li>Keyboard, touch controls, tap-to-walk/approach, or Journal; circular map opens Places</li>
           <li>No account, no analytics, no backend, no personal data</li>
           <li><b>All audio synthesised at runtime &mdash; zero audio files shipped</b></li>
@@ -518,8 +518,9 @@
         <img class="shot" src="../screenshots/09-mobile-360.png" alt="Kampung SG at a 360px mobile viewport" />
       </div>
       <div class="callout engineering-callout">
-        <b>Current private build:</b> 89.57 kB HTML &middot; 112.88 kB initial JS
-        &middot; 1,489.19 kB shared engine chunk (352.45 gzip). KampungMind stays offline.
+        <b>Current build:</b> 112.77 kB HTML (20.97 gzip) &middot; 135.67 kB initial JS
+        (42.40 gzip) &middot; 91.89 kB lazy campaign scene (28.97 gzip) &middot; 1,558.00 kB
+        lazy art chunk (361.26 gzip). KampungMind stays offline.
       </div>
       <p class="brandmark">KAMPUNG SG &middot; THETWOGUYS</p>
       <p class="slide-num">06</p>
@@ -533,10 +534,11 @@
         <div class="col support">
           <h3>What we can support</h3>
           <ul>
-            <li>Strict TypeScript, 90 passing tests, 0 vulnerabilities</li>
-            <li>60/60 production-browser checks across full and demo campaigns</li>
+            <li>Strict TypeScript, 199 passing tests, 0 vulnerabilities</li>
+            <li>72/72 production-browser checks across full and demo campaigns</li>
             <li>Keyboard and touch entry, focus return and correct return doors</li>
-            <li>No data collection, no account, no network dependency</li>
+            <li>No data collection, no account, no network dependency, no API key</li>
+            <li>Default build generates no text at runtime; <code>?llm=1</code> re-voices low-stakes lines on-device via the browser's own model</li>
             <li>Versioned autosave, Continue, confirmed Start Over and demo isolation</li>
           </ul>
         </div>

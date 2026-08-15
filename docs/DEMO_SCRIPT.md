@@ -32,11 +32,18 @@ interaction has an equivalent Journal action.
 - “KampungMind uses AI-authored personalities through a private, offline
   deterministic memory-and-decision engine.”
 - “Maybe later never closes a route.”
-- “There is no timer, energy system, failure state, account, analytics,
-  backend, or runtime language model.”
-- “Current gate: 90 out of 90 unit tests—30 campaign, 31 match, 17 audio,
-  4 accessibility, and 8 world-layout tests—plus 60 out of 60 production-browser
-  checks and zero known vulnerabilities.”
+- “There is no timer, energy system, failure state, account, analytics or
+  backend. The default build generates no text at runtime.”
+- “And if you want to see a model run: add `?llm=1`. The residents re-word
+  their own greetings using the language model built into your browser —
+  on-device, no server, no API key. Lines that change the world are never sent
+  to it.”
+- “Current gate: 199 out of 199 unit tests, a clean strict-TypeScript build,
+  and zero known vulnerabilities, plus a 72-check production-browser harness
+  that plays the full and demo campaigns in real Chrome.”
+- “KampungMind is not a black box. Add `?inspect=1` and you can watch it
+  decide.” (See `docs/KAMPUNGMIND_INSPECTOR.md` — rehearse the Aunty Mei
+  before/after beat.)
 
 If a judge asks about load behavior, say that the campaign scene is lazy-loaded
 behind opening, slow, cancel, retry, and back-to-title states. Those paths are
@@ -49,6 +56,13 @@ automated; startup on a real phone is still an open check.
 - Any medical, cognitive, memory, or dementia benefit
 - A completed Gemini authoring pass
 
+The browser gate is 72/72, re-measured 2026-08-15. Re-run it on the presenting
+machine the morning of the pitch anyway: four earlier runs that day aborted
+partway on Chrome DevTools Protocol timeouts, with no assertion failing, purely
+because the machine was at load average 12–14. Quit anything pinning a core (a
+long-running game, a VM) before the run — and before the demo itself.
+
 For the edited 90-second video, use `docs/submission/VIDEO_SCRIPT.md`.
-The checked-in review cut predates the latest loader, touch, consequence-art,
-and 79-test build; do not present it as footage of the current build.
+The checked-in review cut predates the current title screen, character
+creator, carry errands, material-shading pass and 199-test build; do not
+present it as footage of the current build.

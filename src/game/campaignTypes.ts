@@ -164,6 +164,19 @@ export interface NpcIntentDefinition {
   kind: NpcIntentKind;
   title: string;
   lines: readonly string[];
+  /**
+   * Alternate phrasings of `lines` for the same beat — model-drafted via
+   * `scripts/author-intents.mjs`, then curated by a human.
+   *
+   * These change how a resident says something, never what happens: the beat,
+   * its choices and its events are the same whichever voicing is picked. That
+   * boundary is the whole safety argument, so keep it — a variant that adds a
+   * fact, a number or an obligation is a rewrite of the beat, not a voicing of
+   * it, and belongs in its own intent.
+   *
+   * Optional. Every intent without one simply always uses `lines`.
+   */
+  variants?: readonly (readonly string[])[];
   choices?: readonly IntentChoiceDefinition[];
   eligibility: NpcIntentEligibility;
   chapterRelevance: number;

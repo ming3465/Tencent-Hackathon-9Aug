@@ -15,14 +15,17 @@ TheTwoGuys | Tencent Cloud "AI CAN DO IT" Age Well Social Good Challenge, Game T
 
 The finalist cut (~Aug 7) will be decided almost entirely by our video and deck, so the 90-second video is the real submission and everything this week serves it. Our path to top-5 is to be the one team whose entry maps verbatim onto the published rules — "AI creation in at least one area: worldbuilding/narrative, artwork, security systems, or sound design" is satisfied by our creation-time AI story, and 适老化关怀 (elderly care) is a *named sub-theme* of the Social Good track — and to say both out loud on screen. Our path from top-5 to winning the track is dignity-plus-proof: the "elders as experts, not patients" thesis is literally Tencent IEG Social Value Exploration Center's own published frame, and 3–5 real older-adult playtests would convert our biggest audited weakness into strong Impact-30 evidence. On stage Aug 16, our zero-backend runtime has no model or gameplay-network dependency after its assets load. The lazy loader has recoverable slow, cancel, and retry paths, but real-device startup and human play remain unverified. Ship order: fix the judge path, record the video, get playtest receipts, and let polish stop at "the first 120 seconds are perfect," because the first 120 seconds are the judging.
 
-**Current verified engineering snapshot (2026-08-06):** 90/90 tests (30
-campaign, 31 match, 17 audio, 4 accessibility, 8 world/door/pause), 60/60
-production-browser checks in default WebGL and forced Canvas fallback, and a
-production build of HTML 91.64 kB (16.14 kB gzip), initial JS 141.46 kB
-(41.48 kB gzip), and lazy campaign scene 1,613.26 kB (379.79 kB gzip). The
-checked-in 90-second review cut predates the registry-driven world, DoorViews,
-corrected shelters, Pause/Settings, and renderer-parity gate; it
-is not current-build footage.
+**Current verified engineering snapshot (2026-08-15):** 199/199 tests (40
+campaign, 17 llm-voice, 31 match, 25 player identity, 17 audio, 17 carry errands, 13
+material shading, 11 world/door/pause, 10 isometric world, 10 story auto-start,
+4 optional portraits, 4 accessibility), strict TypeScript clean, 0
+vulnerabilities, and a production build of HTML 112.77 kB (20.97 kB gzip),
+initial JS 135.67 kB (42.40 kB gzip), lazy campaign scene 91.89 kB (28.97 kB
+gzip), and lazy art chunk 1,558.00 kB (361.26 kB gzip), and 72/72
+production-browser checks in default WebGL and forced Canvas fallback.
+The checked-in 90-second review cut predates the current title screen,
+character creator, carry errands and material-shading pass; it is not
+current-build footage.
 
 ---
 
@@ -100,7 +103,7 @@ Why: Tencent ecosystem alignment, Singapore edge node for Singapore judges, and 
 Must not break: keep GitHub Pages live as fallback; print both URLs everywhere.
 
 **9. Rubric-map the deck with the rules' exact words. (2–3 h)**
-What: AI slide quotes the official requirement verbatim and checks off worldbuilding + artwork + sound; one line: "Elderly care (适老化关怀) is a named sub-theme of the official Social Good track"; Impact slide opens with 1-in-4 Singaporeans 65+ by 2030 and cites the official brief; Quality slide: 90/90 tests / 60/60 CDP checks / 0 vulnerabilities, with the latest build figures—HTML 91.64/16.14 kB gzip, initial JS 141.46/41.48 kB gzip, and lazy scene 1,613.26/379.79 kB gzip.
+What: AI slide quotes the official requirement verbatim and checks off worldbuilding + artwork + sound; one line: "Elderly care (适老化关怀) is a named sub-theme of the official Social Good track"; Impact slide opens with 1-in-4 Singaporeans 65+ by 2030 and cites the official brief; Quality slide: 199/199 tests / 72/72 CDP checks / 0 vulnerabilities, with the latest build figures—HTML 112.77/20.97 kB gzip, initial JS 135.67/42.40 kB gzip, lazy campaign scene 91.89/28.97 kB gzip, and lazy art chunk 1,558.00/361.26 kB gzip. Add the `?inspect=1` KampungMind glass box to this slide: it is the only direct answer to "is your NPC AI actually real?".
 Why: Winners visibly game the rubric and balance all criteria (Square, Klaviyo method); the verbatim-compliance line pre-empts the "no runtime LLM = no AI" misread, which is our single biggest scoring risk on a 40-point criterion (Critic §A4).
 Must not break: citation honesty — every number sourced, "aligned with," never "partnered with" Age Well SG.
 
@@ -143,7 +146,7 @@ Keep 90 s total. Burn open captions on every shot (most judges watch muted); mix
 - **5–15 s — Genre → hook:** walk into a resident conversation (genre), immediately a dialogue choice and the world visibly responding (hook). Caption the thesis.
 - **15–48 s — Three resident beats:** title card → 6–8 s interaction → visible consequence, per resident. Jump-cut ALL traversal. Vary locations and framing hard (silhouette-repetition defense). Include the scam beat as one of the three. No memory-match.
 - **48–60 s — Payoff:** calm weaving → Last Door → gathered residents and free exploration. Card: “No timer. No failure state. No medical claims.”
-- **60–82 s — AI receipts montage, dense:** KampungMind personality/intents → pure reducer/save → current terminal shot of 90/90 tests + 60/60 CDP checks → honest card: “What worked, what did not — every run documented.”
+- **60–82 s — AI receipts montage, dense:** KampungMind personality/intents → the `?inspect=1` panel showing a rejected intent become the winner once the estate remembers you → pure reducer/save → current terminal shot of the passing gate → honest card: “What worked, what did not — every run documented.”
 - **82–90 s — End slate, 8–10 s (not 4):** title, play-now URL + QR, team, event hashtags, one-line vision.
 
 **Deviation from the old 64/22/4 script:** restructure gameplay from "a playthrough" to Genre→Hook→Beats→Payoff; extend the close to 8–10 s; do NOT lengthen the AI segment — instead caption AI evidence *during* gameplay beats ("AI-generated visual target → human-curated code-drawn activity scenes") so effective AI coverage reaches ~35–40 s while Impact+Quality footage still dominates.
