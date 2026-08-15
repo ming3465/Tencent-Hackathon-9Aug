@@ -86,11 +86,16 @@ The 71/72 run is worth knowing separately: the composite **"Every location and
 living environment renders within the frame budget"** check printed healthy
 values for everything it reports (343 grass colours, 758 façade colours, 137
 obstacles, p95 9.90 ms against a 28 ms budget, 11/11 locations, doors
-`closed/open/closed`). What it does *not* print are its motion-sampling
-conditions — `movedFlutterIds.length >= 6`, `movedAmbientIds.length === 2`,
-`laundryChanged`, `pondAnimated` — which compare sprite positions between two
-frames and therefore soften under scheduler jitter. If that check fails while
-every printed number looks right, suspect those before suspecting the art.
+`closed/open/closed`). Its motion-sampling conditions — `pondAnimated`, `laundryChanged`,
+`movedFlutterIds.length >= 6`, `movedAmbientIds.length === 2` — compare sprite
+positions between two frames and therefore soften under scheduler jitter.
+
+**Confirmed 2026-08-15 against the deployed URL:** a full 72-check run returned
+71/72 with `pond=false` in the resident-motion evidence and every other value
+healthy (p95 9.10 ms against a 28 ms budget, 11/11 locations, 137 obstacles).
+The pond had simply not moved between the two samples. If this check fails while
+the printed numbers all look right, read the `pond=` / `laundry=` / `flutter=`
+flags in the first evidence section before suspecting the art.
 The smoke suite plays the campaign as a named player, so a render site that
 forgets to resolve the `{player}` token fails the gate. If a doc
 or deck quotes different numbers after your change, update them — stale
