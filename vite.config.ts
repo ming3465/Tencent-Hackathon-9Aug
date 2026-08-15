@@ -22,6 +22,13 @@ if (existsSync(isoPreview)) {
   input["iso-preview"] = isoPreview;
 }
 
+const nanoProof = resolve(__dirname, "nano.html");
+if (existsSync(nanoProof)) {
+  // The on-device model, shown at a size a room can read. Same conditional
+  // pattern as above, so `rm nano.html src/nano.ts` removes it completely.
+  input.nano = nanoProof;
+}
+
 export default defineConfig({
   base: "./",
   build: {

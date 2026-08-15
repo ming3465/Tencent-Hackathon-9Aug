@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kampung SG — On-device model proof</title>
+    <!--
+      A separate page on purpose, exactly like iso-preview.html: reviewable on
+      the deployed URL without touching the judged game, and removable with one
+      `rm`. Nothing in the campaign imports it.
+    -->
+    <style>
+      :root {
+        --night: #102e3b;
+        --ink: #173f4f;
+        --cream: #fff6dc;
+        --paper: #fffbef;
+        --coral: #d96756;
+        --gold: #f2b84b;
+        --teal: #287271;
+        --green: #4a7a49;
+        color-scheme: dark;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: clamp(1rem, 3vw, 2.5rem);
+        background: var(--night);
+        color: var(--cream);
+        font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+        font-size: clamp(16px, 1.6vw, 21px);
+        line-height: 1.5;
+      }
+      main { max-width: 68rem; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem; }
+      h1 {
+        font-family: Georgia, serif;
+        font-weight: 400;
+        font-size: clamp(1.8rem, 4vw, 3rem);
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+      h1 small { display: block; font-size: 0.42em; color: var(--gold); letter-spacing: 0.14em; text-transform: uppercase; font-family: inherit; }
+      .status { display: flex; align-items: center; gap: 0.7rem; font-size: 0.95em; }
+      #status-dot { width: 0.9rem; height: 0.9rem; border-radius: 50%; background: #8aa; flex: none; }
+      #status-dot[data-state="good"] { background: #7fd07a; box-shadow: 0 0 12px #7fd07a; }
+      #status-dot[data-state="bad"] { background: var(--coral); }
+      #status-dot[data-state="wait"] { background: var(--gold); }
+      .facts { display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem; font-size: 0.85em; color: #bcd; border-top: 1px solid rgba(242,184,75,0.3); border-bottom: 1px solid rgba(242,184,75,0.3); padding: 0.7rem 0; }
+      .facts b { color: var(--gold); }
+      .panel { background: rgba(255,246,220,0.06); border: 1px solid rgba(242,184,75,0.28); border-radius: 6px; padding: 1rem 1.1rem; }
+      label { display: block; font-size: 0.75em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.4rem; }
+      textarea, select {
+        width: 100%; background: rgba(0,0,0,0.28); color: var(--cream);
+        border: 1px solid rgba(242,184,75,0.35); border-radius: 4px;
+        padding: 0.6rem 0.7rem; font: inherit; font-size: 0.95em;
+      }
+      textarea { min-height: 4.2rem; resize: vertical; }
+      .row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
+      .row > * { flex: 1 1 14rem; }
+      button {
+        font: inherit; font-weight: 700; cursor: pointer;
+        background: var(--gold); color: var(--night);
+        border: 0; border-radius: 4px; padding: 0.75rem 1.4rem;
+      }
+      button:disabled { opacity: 0.5; cursor: default; }
+      button:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
+      #presets { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+      #presets button { background: transparent; color: var(--cream); border: 1px solid rgba(242,184,75,0.5); font-weight: 400; padding: 0.4rem 0.8rem; font-size: 0.85em; }
+      .io { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+      @media (min-width: 60rem) { .io { grid-template-columns: 1fr 1fr; } }
+      .big { font-family: Georgia, serif; font-size: clamp(1.1rem, 2.1vw, 1.55rem); line-height: 1.4; }
+      .verdict { font-size: 0.85em; letter-spacing: 0.04em; margin-top: 0.6rem; }
+      .verdict.ok { color: #7fd07a; }
+      .verdict.no { color: var(--coral); }
+      #latency { font-family: ui-monospace, Menlo, monospace; font-size: 0.8em; color: var(--gold); }
+      details { font-size: 0.8em; color: #bcd; }
+      pre { white-space: pre-wrap; font-family: ui-monospace, Menlo, monospace; font-size: 0.82em; background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 4px; overflow-x: auto; }
+      footer { font-size: 0.8em; color: #9ab; border-top: 1px solid rgba(242,184,75,0.25); padding-top: 0.9rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1><small>Kampung SG</small>The model is in the browser.</h1>
+
+      <p class="status"><span id="status-dot" data-state="wait"></span><span id="status-text">checking…</span></p>
+
+      <p class="facts">
+        <span><b>0 KB</b> added to the game</span>
+        <span><b>No</b> API key</span>
+        <span><b>No</b> server</span>
+        <span>Network requests while generating: <b id="net-count">0</b></span>
+      </p>
+
+      <div class="panel">
+        <div class="row">
+          <div>
+            <label for="source">A line one of our residents says</label>
+            <textarea id="source" spellcheck="false">Morning. The kettle just boiled if you want some.</textarea>
+          </div>
+          <div style="flex: 0 1 13rem">
+            <label for="kind">What kind of line</label>
+            <select id="kind">
+              <option value="greeting">greeting (bar 0.55)</option>
+              <option value="reflection">reflection (bar 0.55)</option>
+              <option value="memory-reaction">memory-reaction (bar 0.55)</option>
+              <option value="offer-request">offer-request (bar 0.80)</option>
+              <option value="reminder">reminder (bar 0.80)</option>
+              <option value="clue">clue (bar 0.80)</option>
+              <option value="main-story">main-story (bar 0.80)</option>
+            </select>
+          </div>
+        </div>
+        <p id="presets" style="margin: 0.9rem 0 0">
+          <button type="button" data-preset="greeting">Try a greeting</button>
+          <button type="button" data-preset="reflection">Try a reflection</button>
+          <button type="button" data-preset="request">Try the line with most at stake</button>
+        </p>
+      </div>
+
+      <p><button id="run" type="button" disabled>Re-voice this line</button>
+        <span id="latency"></span></p>
+
+      <div class="io">
+        <div class="panel">
+          <label>What our writer wrote</label>
+          <p class="big" id="authored">Morning. The kettle just boiled if you want some.</p>
+        </div>
+        <div class="panel">
+          <label>What the model said, just now, on this machine</label>
+          <p class="big" id="output">—</p>
+          <p class="verdict" id="verdict"></p>
+        </div>
+      </div>
+
+      <details>
+        <summary>The exact prompt sent to the model</summary>
+        <pre id="prompt">(press the button)</pre>
+      </details>
+
+      <footer>
+        <p><b>Why the refusals matter.</b> Our engine picks which line a resident
+        says; the model only chooses the words. Left unguarded, this model
+        rewrote <i>shelter the walkway</i> as <i>fix the drainage</i> — and that
+        quest builds a sheltered walkway the game draws. So we measure how much
+        of the meaning survives, and lines that carry a consequence must keep
+        80% of it. Anything below that is thrown away and the written line is
+        used instead. A model that can be overruled is safer than one that
+        cannot.</p>
+        <p><b>Try it yourself:</b> turn off the wifi and press the button again.
+        Or open the console and run
+        <code>await LanguageModel.availability()</code>.</p>
+      </footer>
+    </main>
+    <script type="module" src="/src/nano.ts"></script>
+  </body>
+</html>
