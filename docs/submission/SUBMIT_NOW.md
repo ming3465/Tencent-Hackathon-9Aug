@@ -111,7 +111,7 @@ node scripts/capture-deck.mjs
 # Rebuild the raster PDF and render all eight pages with Poppler for inspection.
 ```
 
-Current truth as of 2026-08-15: **199/199 tests (40 campaign · 17 llm-voice · 31 match ·
+Current truth as of 2026-08-15: **207/207 tests (40 campaign · 25 llm-voice · 31 match ·
 25 player identity · 17 audio · 17 carry errands · 13 material shading ·
 11 world/door/pause · 10 isometric world · 10 story auto-start · 4 optional
 portraits · 4 accessibility) · strict TypeScript clean · 0 known

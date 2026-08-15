@@ -161,7 +161,7 @@ Miora-specific before-and-after pipeline.
 ### Technical Execution
 
 - [x] Strict TypeScript passes.
-- [x] 199/199 tests pass: 40 campaign · 17 llm-voice · 31 match · 25 player identity · 17 audio · 17 carry errands · 13 material shading · 11 world/door/pause · 10 isometric world · 10 story auto-start · 4 optional portraits · 4 accessibility.
+- [x] 207/207 tests pass: 40 campaign · 25 llm-voice · 31 match · 25 player identity · 17 audio · 17 carry errands · 13 material shading · 11 world/door/pause · 10 isometric world · 10 story auto-start · 4 optional portraits · 4 accessibility.
 - [x] 72/72 production-browser checks drive complete full and demo campaigns, re-measured 2026-08-15. Needs a quiet machine — under heavy background CPU load the harness aborts on CDP timeouts with no assertion failure.
 - [x] Dependency audit has zero known vulnerabilities.
 - [x] Phaser is lazy-loaded after the title screen with visible opening and

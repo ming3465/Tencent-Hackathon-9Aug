@@ -38,7 +38,7 @@ interaction has an equivalent Journal action.
   their own greetings using the language model built into your browser —
   on-device, no server, no API key. Lines that change the world are never sent
   to it.”
-- “Current gate: 199 out of 199 unit tests, a clean strict-TypeScript build,
+- “Current gate: 207 out of 207 unit tests, a clean strict-TypeScript build,
   and zero known vulnerabilities, plus a 72-check production-browser harness
   that plays the full and demo campaigns in real Chrome.”
 - “KampungMind is not a black box. Add `?inspect=1` and you can watch it
@@ -64,5 +64,5 @@ long-running game, a VM) before the run — and before the demo itself.
 
 For the edited 90-second video, use `docs/submission/VIDEO_SCRIPT.md`.
 The checked-in review cut predates the current title screen, character
-creator, carry errands, material-shading pass and 199-test build; do not
+creator, carry errands, material-shading pass and 207-test build; do not
 present it as footage of the current build.

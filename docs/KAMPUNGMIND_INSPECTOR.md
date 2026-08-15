@@ -111,10 +111,11 @@ same — which is to say, nearly nothing for a few thousand tokens.
 
 Compose it with the others: `?demo=1&inspect=1&llm=1`.
 
-Residents re-word their own lines at play time using **the language model
-already built into the browser** (Chrome's Prompt API / Gemini Nano). The game
-downloads nothing, ships no model, holds no API key and contacts no server. The
-default routes `/` and `?demo=1` make no model call at all — verified.
+Residents re-word **every kind of line** at play time using **the language
+model already built into the browser** (Chrome's Prompt API / Gemini Nano). The
+game downloads nothing, ships no model, holds no API key and contacts no
+server. The default routes `/` and `?demo=1` make no model call at all —
+verified.
 
 Measured 2026-08-15 in the real game:
 
@@ -122,30 +123,57 @@ Measured 2026-08-15 in the real game:
 > **Re-voiced:** *I nod, always welcome a chat. Plenty of time for a cuppa and a bit of gossip, you know.*
 > Panel: `re-voiced on-device in 2686ms`
 
-### Only low-stakes lines, and why
+### Every line, guarded by content retention
 
-Re-voicing is restricted by `intent.kind` to **greeting**, **reflection** and
-**memory-reaction**. Everything else — requests, reminders, invitations, clues,
-contributions, main-story — is authored-only, permanently.
+All nine intent kinds are re-voiced. Safety is not an allowlist — it is a
+measured bar each rewrite has to clear.
 
-That is not caution for its own sake. Asked twice, with an explicit rule and a
-few-shot example forbidding it, the model rewrote Mdm Siti's
+Wholesale meaning drift has one reliable signature: **the original's content
+words stop appearing.** So `retentionRatio()` scores how much of the source's
+meaning survives, after stripping filler and lightly stemming so
+*shelter / sheltered / shelters* count as one word. The bar depends on what the
+line does:
 
-> That route floods every monsoon, {player}. We should shelter it properly.
+| Kind | Bar | Why |
+|---|---|---|
+| `offer-request`, `reminder`, `invitation`, `contribution`, `clue`, `main-story` | **0.80** | These name something the world then does. Free phrasing, near-verbatim content. |
+| `greeting`, `reflection`, `memory-reaction` | **0.55** | Nothing downstream depends on the words. |
 
-as *"...we really must reinforce the drainage properly."* Her quest builds a
-**sheltered linkway** and the game draws it. A resident asking for drainage
-beside a covered walkway is worse than never re-voicing her. Meaning drift is
-fluent, plausible and undetectable by any validator — so those kinds never
-reach the model at all.
+The same extraction that scores the answer also tells the model what to keep,
+so the instruction and the check can never disagree:
+
+```
+MUST KEEP these words, or a close form of each: route, flood, monsoon, shelter
+MUST KEEP the exact text {player} — it is the player's name, not a word to replace.
+ORIGINAL: That route floods every monsoon, {player}. We should shelter it properly.
+```
+
+**Why this exists.** Before the guard, asked twice with an explicit rule
+forbidding it, the model rewrote that exact line as *"…we really must reinforce
+the **drainage** properly."* Mdm Siti's quest builds a **sheltered linkway**
+that the game draws. A resident asking for drainage beside a covered walkway
+contradicts the art, and no grammatical check catches it — the sentence is
+fluent and plausible. Retention catches it because *shelter* is simply gone.
+
+With the guard and the must-keep list, the same line now comes back as
+*"That route floods every monsoon, {player}. We need to find a proper shelter
+for it, you know."* — retention 1.00.
+
+**Measured acceptance, 2 runs over 8 real authored lines: 13/16 (81%).**
+By kind: main-story 4/4, greeting 2/2, reflection 2/2, offer-request 5/6,
+clue 0/2. Rejections cost nothing — the authored line was already the fallback.
 
 ### What still gets checked
 
-Every generated line must survive `validateRevoicing()` or the authored line is
-used: no invented numbers, no unknown `{tokens}`, no dropped `{player}`, no
-third-person self-reference, no medical or diagnostic vocabulary, sane length.
-If **any** line in a beat fails, the whole beat falls back — half-authored,
-half-generated reads worse than untouched.
+Beyond retention, every candidate must also survive `validateRevoicing()`: no
+invented numbers, no unknown `{tokens}`, no dropped `{player}`, no third-person
+self-reference, no medical or diagnostic vocabulary, sane length. If **any**
+line in a beat fails, the whole beat falls back — half-authored, half-generated
+reads worse than untouched.
+
+The banned-vocabulary list is deliberately broad (it rejects "prevent" even in
+"prevent further damage"). Over-rejecting is free here; a medical claim reaching
+a player is not.
 
 ### Why you never wait for it
 

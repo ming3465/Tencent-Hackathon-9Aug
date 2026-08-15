@@ -3891,3 +3891,55 @@ holds for anything that *decides* the story.
 - This is not a human or older-adult playtest, real-device pass, screen-reader
   or 200%-zoom session, and it is not Miora or CodeBuddy evidence. Nothing was
   committed, pushed or deployed.
+
+## 2026-08-15 - Re-Voicing Every Line, Held by a Retention Guard
+
+**Tool:** Claude Code (Opus 5). Runtime model: **Gemini Nano**, on-device.
+
+**Goal:** remove the restriction that limited live re-voicing to 3 of 9 intent
+kinds, without reintroducing the meaning drift that caused it.
+
+**The problem being solved.** Consequence-bearing lines were excluded because
+Nano rewrote Mdm Siti's "we should **shelter** it properly" as "reinforce the
+**drainage** properly" - and her quest builds a sheltered linkway the game
+draws. That is not a grammar error; the sentence is fluent and plausible. No
+shape-based validator can catch it.
+
+**The guard.** Wholesale drift has one reliable signature: the source's content
+words stop appearing. `retentionRatio()` scores survival after dropping filler
+and lightly stemming, so *shelter / sheltered / shelters* compare equal. The bar
+is per kind - **0.80** for anything naming a world change, **0.55** for
+greetings, reflections and memory reactions. The same extraction also feeds a
+`MUST KEEP` list into the prompt, so instruction and check cannot disagree.
+
+This works because **rejection is free**: generation is pre-warmed during the
+walk-up, so an over-strict guard costs the player nothing.
+
+**Measured, 8 real authored lines x 2 runs.** First pass 12/16. Mdm Siti's line
+now kept "shelter" both times at retention 1.00 - the original failure is fixed
+- but was rejected for dropping `{player}`: the model replaced the player's name
+with "dear". `contentWords` strips the token, so it never reached the MUST KEEP
+list. Adding an explicit token instruction took it to **13/16 (81%)**:
+main-story 4/4, greeting 2/2, reflection 2/2, offer-request 5/6, clue 0/2. The
+clue rejections were the third-person check correctly catching the model calling
+Minah "Auntie Minah" in her own mouth.
+
+**A second guard came out of playing, not measuring.** With coverage expanded,
+the live game produced *"Always room to talk, lah."* The system prompt forbids
+"lah" explicitly and the model did it anyway. `docs/IMPROVEMENTS.md` treats
+caricatured Singlish as a credibility defect a Singapore judge catches instantly
+- the same class as the "kopi-o kosong, half sugar" error. Sentence-final
+particles are now rejected when the *source* did not use them, so authored
+Singlish is untouched but generated caricature cannot ship. That is the third
+time tonight a prompt rule failed and only a check held; instructions are not
+controls.
+
+**Verified in the running game** after both guards: "Uncle Ravi looks up with an
+easy nod. There's always room to talk." - re-voiced on-device in 2375 ms, no
+caricature, meaning intact.
+
+**Claim boundary:** unchanged from the previous entry. On-device only, no key,
+no server, nothing leaves the device; `/` and `?demo=1` still make no model
+call. 81% is an acceptance rate on eight lines, not a quality guarantee - the
+remaining 19% silently fall back to authored text, which is the current shipped
+experience. No human playtest, real-device or accessibility claim is made.

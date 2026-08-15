@@ -28,20 +28,113 @@ import type { NpcIntentKind } from "./campaignTypes.js";
  */
 
 /**
- * Intent kinds whose lines may be re-voiced.
+ * How much of the original's meaning a rewrite must carry, by intent kind.
  *
- * Deliberately a small allowlist rather than a blocklist: a new intent kind
- * defaults to authored-only, which is the safe direction to fail.
+ * Safety lives in this number, not in an allowlist. Every kind may be
+ * re-voiced; the ones that name a world change simply have to stay much closer
+ * to what was authored.
+ *
+ * 0.8 for anything consequence-bearing: a request, reminder, invitation,
+ * contribution, clue or story beat can be reworded freely but may not shed its
+ * content. 0.55 for greetings, reflections and memory reactions, where drift
+ * costs nothing because nothing downstream depends on the words.
  */
-export const REVOICEABLE_KINDS: ReadonlySet<NpcIntentKind> = new Set<NpcIntentKind>([
-  "greeting",
-  "reflection",
-  "memory-reaction",
-]);
+const RETENTION_BY_KIND: Readonly<Record<NpcIntentKind, number>> = {
+  "offer-request": 0.8,
+  reminder: 0.8,
+  invitation: 0.8,
+  contribution: 0.8,
+  clue: 0.8,
+  "main-story": 0.8,
+  greeting: 0.55,
+  reflection: 0.55,
+  "memory-reaction": 0.55,
+};
+
+export const REVOICEABLE_KINDS: ReadonlySet<NpcIntentKind> = new Set(
+  Object.keys(RETENTION_BY_KIND) as NpcIntentKind[],
+);
 
 export function mayRevoice(kind: NpcIntentKind): boolean {
   return REVOICEABLE_KINDS.has(kind);
 }
+
+export function retentionThreshold(kind: NpcIntentKind): number {
+  return RETENTION_BY_KIND[kind] ?? 0.8;
+}
+
+/** Words carrying no meaning worth preserving, so drift is measured on the rest. */
+const STOPWORDS = new Set([
+  "the", "and", "for", "but", "you", "your", "yours", "our", "ours", "its",
+  "that", "this", "these", "those", "there", "here", "with", "from", "into",
+  "have", "has", "had", "will", "would", "should", "could", "can", "are", "was",
+  "were", "been", "being", "not", "all", "any", "some", "just", "then", "than",
+  "when", "what", "who", "how", "why", "she", "her", "him", "his", "they",
+  "them", "their", "one", "two", "get", "got", "let", "lets", "about", "still",
+]);
+
+/**
+ * Strips the endings that make the same word look like two.
+ *
+ * Crude by design — it only has to make "shelter", "sheltered" and "shelters"
+ * compare equal, so that legitimate rephrasing is not mistaken for drift.
+ */
+function stem(word: string): string {
+  return word
+    .replace(/(ing|ed|ly|es|s)$/u, "")
+    .replace(/i$/u, "y");
+}
+
+/**
+ * The meaning-bearing words of a line, stemmed and deduplicated.
+ *
+ * `{player}` is dropped: it is a token, not content, and the model adds it
+ * unprompted often enough that counting it would distort the ratio.
+ */
+export function contentWords(text: string): ReadonlySet<string> {
+  const words = text
+    .toLowerCase()
+    .replace(/\{player\}/gu, " ")
+    .replace(/[^\p{L}\p{N}\s-]/gu, " ")
+    .split(/[\s-]+/u)
+    .filter((word) => word.length >= 3 && !STOPWORDS.has(word))
+    .map(stem)
+    .filter((word) => word.length >= 3);
+  return new Set(words);
+}
+
+/**
+ * How much of the source's content survives in the candidate, 0 to 1.
+ *
+ * This is the guard that lets consequence-bearing lines be re-voiced at all.
+ * Wholesale meaning drift has one reliable signature: the original's content
+ * words stop appearing. Measured on Gemini Nano, "we should shelter it
+ * properly" became "reinforce the drainage properly" — fluent, plausible, and
+ * contradicting the sheltered linkway the game renders. No grammatical check
+ * catches that; this does, because "shelter" is simply gone.
+ */
+export function retentionRatio(source: string, candidate: string): number {
+  const wanted = contentWords(source);
+  if (wanted.size === 0) return 1;
+  const got = contentWords(candidate);
+  let kept = 0;
+  for (const word of wanted) if (got.has(word)) kept += 1;
+  return kept / wanted.size;
+}
+
+/**
+ * Sentence-final particles the project deliberately avoids.
+ *
+ * `docs/IMPROVEMENTS.md` treats caricatured Singlish as a credibility defect a
+ * Singapore judge catches instantly — the same class of error as the
+ * "kopi-o kosong, half sugar" line. The authoring prompt already forbids these,
+ * and the model produced "Always room to talk, lah." anyway. Instructions are
+ * not a control; this is.
+ *
+ * Only rejected when the *source* did not already use them, so authored
+ * Singlish stays untouched.
+ */
+const CARICATURE = /\b(lah|leh|lor|meh|hor|sia)\b|\bya\?/iu;
 
 /** Claim vocabulary that must never reach a player, generated or not. */
 const BANNED = [
@@ -63,6 +156,7 @@ export function validateRevoicing(
   source: string,
   candidate: string,
   speakerName: string,
+  kind: NpcIntentKind,
 ): VoiceCheck {
   // Models like to wrap answers in quotes or prefix them with a label.
   const line = candidate
@@ -109,6 +203,10 @@ export function validateRevoicing(
   }
 
   const lowered = line.toLowerCase();
+  const caricature = line.match(CARICATURE);
+  if (caricature && !CARICATURE.test(source)) {
+    return { ok: false, reason: `added "${caricature[0]}"` };
+  }
   for (const term of BANNED) {
     if (lowered.includes(term) && !source.toLowerCase().includes(term)) {
       return { ok: false, reason: `introduced "${term.trim()}"` };
@@ -117,6 +215,19 @@ export function validateRevoicing(
 
   // No point swapping a line for itself.
   if (lowered === source.toLowerCase()) return { ok: false, reason: "unchanged" };
+
+  // Last and most important: did the meaning survive? Everything above checks
+  // the shape of the sentence; only this checks that it still says the same
+  // thing. Rejection here is free — the authored line is already on screen's
+  // critical path, so over-rejecting costs the player nothing.
+  const threshold = retentionThreshold(kind);
+  const retained = retentionRatio(source, line);
+  if (retained < threshold) {
+    return {
+      ok: false,
+      reason: `dropped the meaning (retention ${retained.toFixed(2)} < ${threshold.toFixed(2)})`,
+    };
+  }
 
   return { ok: true, line };
 }
@@ -149,7 +260,23 @@ export function buildVoicePrompt(
   traits: readonly string[],
   line: string,
 ): string {
-  return `Character: ${speakerName}. Traits: ${traits.join(", ")}.\nORIGINAL: ${line}`;
+  // The must-keep list comes from the same `contentWords` that scores the
+  // answer, so the instruction and the check can never disagree. Without it,
+  // raising the retention bar would just push acceptance to zero.
+  const keep = [...contentWords(line)].slice(0, 12);
+  const mustKeep = keep.length > 0
+    ? `MUST KEEP these words, or a close form of each: ${keep.join(", ")}\n`
+    : "";
+  // `contentWords` strips the token, so it needs saying separately — left out,
+  // the model reliably swaps the player's chosen name for "dear" and the line
+  // is rejected for losing personalisation it was never told to keep.
+  const keepToken = line.includes("{player}")
+    ? "MUST KEEP the exact text {player} — it is the player's name, not a word to replace.\n"
+    : "";
+  return `Character: ${speakerName}. Traits: ${traits.join(", ")}.\n`
+    + mustKeep
+    + keepToken
+    + `ORIGINAL: ${line}`;
 }
 
 export type LlmVoiceState =
@@ -300,7 +427,7 @@ export class LlmVoice {
         { signal: controller.signal },
       );
       this.#lastLatencyMs = Date.now() - started;
-      const verdict = validateRevoicing(line, raw, speakerName);
+      const verdict = validateRevoicing(line, raw, speakerName, kind);
       if (!verdict.ok) {
         this.#rejected += 1;
         this.#lastRejection = verdict.reason;

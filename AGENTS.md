@@ -60,7 +60,7 @@ npm run typecheck && npm test && npm run build && npm audit && npm run smoke
 
 `npm run smoke` is self-contained (builds, serves, drives headless Chrome
 through a full playthrough, writes screenshots to `docs/screenshots/`).
-Current truth: **199 unit tests, 72 smoke checks, 0 vulnerabilities.** The unit
+Current truth: **207 unit tests, 72 smoke checks, 0 vulnerabilities.** The unit
 split is campaign 40, match engine 31, player identity 25, audio 17, carry
 errands 17, material shading 13, world-layout/door/pause 11, isometric world
 10, story auto-start 10, optional portraits 4, and accessibility contract 4.
@@ -177,6 +177,28 @@ never `git reset` to it.
 
 This section is the cross-agent handoff trail. Append a dated line when you
 finish a work session.
+
+- **2026-08-15 (Claude Code, retention guard: re-voicing every line)** —
+  Removed the 3-of-9-kinds restriction on live re-voicing by building a guard
+  strong enough to make it unnecessary. Meaning drift has one signature — the
+  source's content words stop appearing — so `retentionRatio()` scores survival
+  after stemming, with a per-kind bar: **0.80** for anything that names a world
+  change, **0.55** for greetings/reflections/memory-reactions. The same
+  extraction feeds a `MUST KEEP` list into the prompt, so instruction and check
+  cannot disagree. This is affordable because **rejection is free** — generation
+  is pre-warmed during the walk-up, so over-rejecting costs the player nothing.
+  Measured on 8 real authored lines x 2 runs: **13/16 (81%)**. Mdm Siti's
+  "shelter it properly" — the line that forced the restriction — now returns
+  keeping both *shelter* and `{player}` at retention 1.00. Getting there needed
+  an explicit token instruction: `contentWords` strips `{player}`, so the model
+  kept swapping the player's name for "dear" and the line was rejected for
+  losing personalisation it was never asked to keep. **A second guard came from
+  playing, not measuring:** with coverage expanded the game produced "Always
+  room to talk, lah." The prompt forbids "lah"; the model did it anyway.
+  Sentence-final particles are now rejected when the source did not use them,
+  so authored Singlish survives and generated caricature cannot — the credibility
+  defect `IMPROVEMENTS.md` warns about. Third time tonight a prompt rule failed
+  and only a check held. **207 tests.**
 
 - **2026-08-15 (Claude Code, on-device runtime model)** — Shipped the first
   genuine runtime language model in this project, behind `?llm=1`: residents

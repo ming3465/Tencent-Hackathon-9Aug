@@ -140,7 +140,7 @@ condition. See `docs/RESEARCH.md` for the claim guardrails written before code.
 | Gate | Result |
 | --- | --- |
 | `npm run typecheck` | strict TypeScript passes |
-| `npm test` | 199/199: 40 campaign, 17 llm-voice, 31 match-engine, 25 player-identity, 17 audio, 17 carry-errands, 13 material-shading, 11 world-layout/door/pause, 10 isometric-world, 10 story-auto-start, 4 optional-portrait, and 4 accessibility-contract tests |
+| `npm test` | 207/207: 40 campaign, 25 llm-voice, 31 match-engine, 25 player-identity, 17 audio, 17 carry-errands, 13 material-shading, 11 world-layout/door/pause, 10 isometric-world, 10 story-auto-start, 4 optional-portrait, and 4 accessibility-contract tests |
 | `npm run build` | 112.77 kB HTML (20.97 kB gzip); 135.67 kB initial JS (42.40 kB gzip); 91.89 kB lazy campaign scene (28.97 kB gzip); 1,558.00 kB lazy art chunk (361.26 kB gzip) |
 | `npm audit` | 0 known vulnerabilities |
 | `npm run smoke` | 72/72 production-browser checks in default WebGL and forced Canvas fallback. Needs a quiet machine: under heavy background CPU load the harness aborts on CDP timeouts partway through, with no assertion failure — that is the machine, not the build. |
