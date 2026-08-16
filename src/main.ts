@@ -1165,6 +1165,32 @@ buildIdentityControls();
 titleFrame.dataset.view = "menu";
 startTitleCast(titleCastCanvas, { reducedMotion: REDUCED_MOTION.matches });
 
+/**
+ * Builds the model session, from whichever button took the player into the game.
+ *
+ * Must run inside a real click: Chrome refuses `LanguageModel.create()` without
+ * a user gesture while the model is still downloadable, so a page cannot
+ * silently pull several gigabytes.
+ *
+ * Called from Begin *and* Continue. It used to hang off Begin alone, which
+ * meant a returning player — anyone with a save, which on a demo machine is
+ * everyone — pressed Continue, never started the session, and got authored
+ * lines for the whole session with nothing in the console to explain why.
+ */
+function startLlmVoiceIfNeeded(): void {
+  if (!LLM_MODE || llmVoice.state === "ready") return;
+  llmLog("Starting the on-device model…");
+  void llmVoice.start().then((state) => {
+    if (state !== "ready") {
+      llmLog(`Model unavailable (${state}) — every line stays authored`);
+      return;
+    }
+    // Building the session takes a few seconds. Whoever the player has already
+    // walked up to in the meantime still deserves a warm beat.
+    if (nearbyNpcId) prewarmRevoicing(nearbyNpcId);
+  });
+}
+
 function startNewCampaign(): void {
   // A new run replays the story from the top.
   autoStartedStoryBeats.clear();
@@ -1179,6 +1205,7 @@ function startNewCampaign(): void {
 
 function continueCampaign(): void {
   if (!savedCampaign) return;
+  startLlmVoiceIfNeeded();
   void startCampaign(savedCampaign);
 }
 
@@ -1190,17 +1217,7 @@ function continueCampaign(): void {
  * when there is actually a save to lose.
  */
 function beginNewCampaign(): void {
-  // Built here because this click is a real user gesture. Chrome refuses
-  // `LanguageModel.create()` without one while the model is still
-  // `downloadable`, so a page cannot silently pull several gigabytes — and the
-  // session is then warm long before the player reaches anyone to talk to.
-  if (LLM_MODE && llmVoice.state !== "ready") {
-    void llmVoice.start().then(() => {
-      // Building the session takes a few seconds. Whoever the player has
-      // already walked up to in the meantime still deserves a warm beat.
-      if (nearbyNpcId) prewarmRevoicing(nearbyNpcId);
-    });
-  }
+  startLlmVoiceIfNeeded();
   if (savedCampaign && !DEMO_MODE) {
     const confirmed = window.confirm(
       pn("Start Kampung SG again from {player}'s house? Your current campaign save will be replaced."),
@@ -1599,7 +1616,11 @@ function renderMindInspector(npcId: NpcId, playing: NpcIntentDefinition): void {
  * reads worse than one that was never touched.
  */
 function prewarmRevoicing(npcId: NpcId): void {
-  if (!LLM_MODE || llmVoice.state !== "ready") return;
+  if (!LLM_MODE) return;
+  if (llmVoice.state !== "ready") {
+    llmLog(`Skipped — model not ready (${llmVoice.state})`);
+    return;
+  }
 
   let intent: NpcIntentDefinition;
   try {
@@ -1609,12 +1630,20 @@ function prewarmRevoicing(npcId: NpcId): void {
       expertiseNeeded: currentExpertiseNeeds(),
     });
   } catch {
+    llmLog(`Skipped — no eligible beat for ${npcId}`);
     return;
   }
-  if (!mayRevoice(intent.kind)) return;
+  if (!mayRevoice(intent.kind)) {
+    llmLog(`Skipped — ${intent.kind} is never re-voiced`);
+    return;
+  }
 
   const key = `${npcId}:${intent.id}`;
-  if (revoicedBeats.has(key) || revoicingInFlight === key) return;
+  if (revoicedBeats.has(key)) {
+    llmLog(`Already generated: ${key}`);
+    return;
+  }
+  if (revoicingInFlight === key) return;
   llmLog(`Prewarming: ${intent.kind} (${intent.id})`);
   const profile = NPC_BY_ID.get(npcId);
   if (!profile) return;

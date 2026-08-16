@@ -451,13 +451,14 @@ export class LlmVoice {
       log("Calling LanguageModel.prompt()");
       // The exact request, so a judge can read what was sent and compare it to
       // an empty network panel.
-      log(`REQUEST ↓\n${prompt}`);
+      log(`REQUEST ↓\n${prompt}\n`);
       const raw = await this.#session.prompt(
         prompt,
         { signal: controller.signal },
       );
       this.#lastLatencyMs = Date.now() - started;
-      log(`RESPONSE ↓\n${String(raw).trim()}`);
+      log(`BEFORE: ${line}`);
+      log(`AFTER:  ${String(raw).trim().replace(/\n+/g, " ")}`);
       log(`Generated in ${this.#lastLatencyMs}ms`);
       const verdict = validateRevoicing(line, raw, speakerName, kind);
       log(
