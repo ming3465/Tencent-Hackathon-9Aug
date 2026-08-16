@@ -64,7 +64,7 @@ import {
   selectNpcIntent,
   traceNpcIntent,
 } from "./game/kampungMind.js";
-import { LlmVoice, mayRevoice } from "./game/llmVoice.js";
+import { LlmVoice, mayRevoice, setVoiceLogger } from "./game/llmVoice.js";
 import { shouldAutoStartStoryBeat } from "./game/storyAutoStart.js";
 import {
   reducePauseState,
@@ -248,6 +248,27 @@ if (INSPECT_MODE) {
 const LLM_MODE =
   new URLSearchParams(window.location.search).get("llm") === "1";
 const llmVoice = new LlmVoice();
+if (LLM_MODE) {
+  // Narrate the model's work to the console, so the feature can be audited
+  // live with developer tools open: the call, the request, the answer, the
+  // guard's arithmetic — beside a network panel that stays empty. Installed
+  // only under `?llm=1`, so the judged routes log nothing.
+  setVoiceLogger((message) => {
+    console.info(
+      `%c[LLM]%c ${message}`,
+      "color:#f2b84b;font-weight:700",
+      "color:inherit",
+    );
+  });
+}
+const llmLog = (message: string): void => {
+  if (!LLM_MODE) return;
+  console.info(
+    `%c[LLM]%c ${message}`,
+    "color:#f2b84b;font-weight:700",
+    "color:inherit",
+  );
+};
 /**
  * Re-voiced lines, keyed `npcId:intentId`, filled while the player walks up to
  * someone. Generation takes about a second; the walk takes longer, so the
@@ -903,7 +924,10 @@ async function startCampaign(state: CampaignStateV1): Promise<void> {
           if (isCurrentCampaignAttempt(attempt)) {
             updateNearbyPrompt(interaction);
             nearbyNpcId = interaction?.kind === "npc" ? interaction.npcId : null;
-            if (nearbyNpcId) prewarmRevoicing(nearbyNpcId);
+            if (nearbyNpcId) {
+              llmLog(`NPC nearby: ${nearbyNpcId}`);
+              prewarmRevoicing(nearbyNpcId);
+            }
             maybeAutoStartStoryBeat(interaction);
           }
         },
@@ -1407,6 +1431,13 @@ function openNpc(
     });
     renderMindInspector(npcId, intent);
 
+    const revoiced = revoicedBeats.get(`${npcId}:${intent.id}`);
+    if (LLM_MODE) {
+      llmLog(revoiced
+        ? "[Dialogue] Using locally generated revoice"
+        : "[Dialogue] Using the authored line");
+    }
+
     if (intent.kind === "offer-request") {
       const requestEvent = intent.choices
         ?.flatMap((candidate) => candidate.events)
@@ -1428,8 +1459,7 @@ function openNpc(
       // A live re-voicing if one finished during the walk over, otherwise the
       // phrasing KampungMind picked from what she remembers. Either way the
       // beat, its choices and its events are identical.
-      revoicedBeats.get(`${npcId}:${intent.id}`)
-        ?? chooseIntentVoicing(intent, {
+      revoiced ?? chooseIntentVoicing(intent, {
           state: campaignState,
           npcId,
           expertiseNeeded: currentExpertiseNeeds(),
@@ -1585,6 +1615,7 @@ function prewarmRevoicing(npcId: NpcId): void {
 
   const key = `${npcId}:${intent.id}`;
   if (revoicedBeats.has(key) || revoicingInFlight === key) return;
+  llmLog(`Prewarming: ${intent.kind} (${intent.id})`);
   const profile = NPC_BY_ID.get(npcId);
   if (!profile) return;
 
@@ -1600,12 +1631,14 @@ function prewarmRevoicing(npcId: NpcId): void {
     for (const line of source) {
       const next = await llmVoice.revoice(intent.kind, profile.name, profile.traits, line);
       if (next === null) {
+        llmLog(`Beat kept as authored — ${llmVoice.lastRejection ?? "no answer"}`);
         revoicingInFlight = null;
         return;
       }
       rewritten.push(next);
     }
     revoicedBeats.set(key, rewritten);
+    llmLog(`Cached: ${key}`);
     revoicingInFlight = null;
   })();
 }

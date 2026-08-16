@@ -279,6 +279,26 @@ export function buildVoicePrompt(
     + `ORIGINAL: ${line}`;
 }
 
+/**
+ * Narrates what the model is doing, for a demo with developer tools open.
+ *
+ * Off unless something installs a logger, so the judged routes stay silent.
+ * The point is to make an invisible feature auditable: a judge watching the
+ * console sees the call happen, sees how long it took, and sees the guard's
+ * arithmetic — while the network panel stays empty.
+ */
+export type VoiceLogger = (message: string) => void;
+
+let logger: VoiceLogger | null = null;
+
+export function setVoiceLogger(next: VoiceLogger | null): void {
+  logger = next;
+}
+
+function log(message: string): void {
+  logger?.(message);
+}
+
 export type LlmVoiceState =
   | "off"
   | "unsupported"
@@ -353,6 +373,7 @@ export class LlmVoice {
     }
     try {
       const availability = await api.availability();
+      log(`Chrome AI: ${availability}`);
       this.#state = availability === "available"
         ? "downloadable"
         : availability === "downloading"
@@ -377,6 +398,7 @@ export class LlmVoice {
   async start(onProgress?: (loaded: number) => void): Promise<LlmVoiceState> {
     const api = languageModel();
     if (!api) {
+      log("Chrome AI: unavailable in this browser");
       this.#state = "unsupported";
       return this.#state;
     }
@@ -386,6 +408,7 @@ export class LlmVoice {
     }
     try {
       this.#state = "starting";
+      log("Calling LanguageModel.create()");
       this.#session = await api.create({
         temperature: 0.9,
         topK: 8,
@@ -398,9 +421,11 @@ export class LlmVoice {
         },
       });
       this.#state = "ready";
+      log("Session ready — model resident on this device");
     } catch {
       this.#session = null;
       this.#state = "error";
+      log("Session failed to start");
     }
     return this.#state;
   }
@@ -422,24 +447,38 @@ export class LlmVoice {
     const timer = setTimeout(() => controller.abort(), this.#timeoutMs);
     const started = Date.now();
     try {
+      const prompt = buildVoicePrompt(speakerName, traits, line);
+      log("Calling LanguageModel.prompt()");
+      // The exact request, so a judge can read what was sent and compare it to
+      // an empty network panel.
+      log(`REQUEST ↓\n${prompt}`);
       const raw = await this.#session.prompt(
-        buildVoicePrompt(speakerName, traits, line),
+        prompt,
         { signal: controller.signal },
       );
       this.#lastLatencyMs = Date.now() - started;
+      log(`RESPONSE ↓\n${String(raw).trim()}`);
+      log(`Generated in ${this.#lastLatencyMs}ms`);
       const verdict = validateRevoicing(line, raw, speakerName, kind);
+      log(
+        `Semantic retention: ${retentionRatio(line, raw).toFixed(2)}`
+        + ` (needs ${retentionThreshold(kind).toFixed(2)})`,
+      );
       if (!verdict.ok) {
         this.#rejected += 1;
         this.#lastRejection = verdict.reason;
+        log(`Validation: FAIL — ${verdict.reason}`);
         return null;
       }
       this.#accepted += 1;
       this.#lastRejection = null;
+      log("Validation: PASS");
       return verdict.line;
     } catch {
       this.#lastLatencyMs = Date.now() - started;
       this.#rejected += 1;
       this.#lastRejection = "timed out";
+      log("Validation: FAIL — timed out");
       return null;
     } finally {
       clearTimeout(timer);
