@@ -19,12 +19,46 @@
 
 import type { NpcId } from "./campaignTypes.js";
 
-/** Where a portrait file for `npcId` is looked for, most-preferred first. */
+/**
+ * Filenames present in `public/assets/portraits/` when this build was made,
+ * injected by `vite.config.ts`.
+ *
+ * Discovering portraits by *trying to load* them meant a 404 in the console for
+ * every character without one - which, while that folder holds no images, is
+ * every character in the game. Roughly forty failed requests a session, in
+ * front of anyone who opens developer tools. The list is rebuilt on every
+ * build, so dropping a file in still works; it only stops the browser asking
+ * for files nobody shipped.
+ */
+declare const __PORTRAIT_FILES__: readonly string[] | undefined;
+
+function shippedPortraits(): readonly string[] {
+  // Guarded because unit tests import this module without Vite's `define`.
+  return typeof __PORTRAIT_FILES__ === "undefined" ? [] : __PORTRAIT_FILES__;
+}
+
+/**
+ * Where a portrait for `npcId` would live, most-preferred first.
+ *
+ * Pure and exported for testing: it describes the naming contract, and says
+ * nothing about whether the files exist.
+ */
 export function portraitPhotoCandidates(npcId: NpcId): readonly string[] {
   return [
     `./assets/portraits/${npcId}.webp`,
     `./assets/portraits/${npcId}.png`,
   ];
+}
+
+/** The candidates that this build actually shipped a file for. */
+export function shippedPortraitCandidates(
+  npcId: NpcId,
+  shipped: readonly string[] = shippedPortraits(),
+): readonly string[] {
+  const names = new Set(shipped);
+  return portraitPhotoCandidates(npcId).filter((path) =>
+    names.has(path.slice(path.lastIndexOf("/") + 1))
+  );
 }
 
 type Availability = "present" | "absent";
@@ -68,7 +102,10 @@ export async function findPortraitPhoto(
   npcId: NpcId | null,
 ): Promise<string | null> {
   if (!npcId) return null;
-  for (const candidate of portraitPhotoCandidates(npcId)) {
+  // Only files this build shipped are requested at all. The probe is still run
+  // on those, so a corrupt or unreadable image degrades to the drawn portrait
+  // rather than showing a broken-image icon.
+  for (const candidate of shippedPortraitCandidates(npcId)) {
     const found = await probe(candidate);
     if (found) return found;
   }

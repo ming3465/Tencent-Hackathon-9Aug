@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { defineConfig } from "vite";
@@ -29,7 +29,28 @@ if (existsSync(nanoProof)) {
   input.nano = nanoProof;
 }
 
+/**
+ * Which portrait files actually exist, read once at build time.
+ *
+ * Without this the runtime had to discover them by trying to load each one,
+ * which meant a 404 in the console for every character that has no portrait —
+ * and today that is all of them. The drop-a-file-in contract is unchanged:
+ * this list is regenerated on every build, so adding `aunty-mei.webp` still
+ * just works. It only stops the browser asking for files nobody shipped.
+ *
+ * Dev note: the list is read when Vite starts, so adding a portrait during
+ * `npm run dev` needs a restart to be picked up.
+ */
+function portraitManifest(): readonly string[] {
+  const dir = resolve(__dirname, "public/assets/portraits");
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir).filter((name) => /\.(webp|png)$/i.test(name));
+}
+
 export default defineConfig({
+  define: {
+    __PORTRAIT_FILES__: JSON.stringify(portraitManifest()),
+  },
   base: "./",
   build: {
     target: "es2020",
